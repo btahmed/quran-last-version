@@ -1,140 +1,309 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QuranReview - Quran Memorization & Review</title>
-    <meta name="description" content="Comprehensive Quran review and memorization application">
-    <meta name="keywords" content="Quran, memorization, review, Islamic, learning">
-    <meta name="author" content="QuranReview Team">
+    <title>مراجعة القرآن - تطبيق حفظ ومراجعة القرآن</title>
+    <meta name="description" content="تطبيق احترافي لحفظ ومراجعة القرآن الكريم">
+    <meta name="keywords" content="قرآن, حفظ, مراجعة, إسلامي, تعلم">
+    <meta name="author" content="فريق مراجعة القرآن">
     
     <!-- PWA Meta Tags -->
-    <meta name="theme-color" content="#1e40af">
+    <meta name="theme-color" content="#2d5016">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="QuranReview">
+    <meta name="apple-mobile-web-app-title" content="مراجعة القرآن">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Naskh+Arabic:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css">
     
     <!-- Icons -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%231e40af'><path d='M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z'/></svg>">
-    
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-        }
-        
-        .container {
-            text-align: center;
-            padding: 2rem;
-            max-width: 600px;
-        }
-        
-        .logo {
-            font-size: 4rem;
-            margin-bottom: 1rem;
-        }
-        
-        h1 {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-            font-weight: 700;
-        }
-        
-        .subtitle {
-            font-size: 1.2rem;
-            margin-bottom: 2rem;
-            opacity: 0.9;
-        }
-        
-        .features {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin: 2rem 0;
-        }
-        
-        .feature-card {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            padding: 1.5rem;
-            border-radius: 1rem;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        
-        .feature-icon {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-        }
-        
-        .coming-soon {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 1rem;
-            border-radius: 0.5rem;
-            margin-top: 2rem;
-        }
-        
-        @media (max-width: 768px) {
-            .container {
-                padding: 1rem;
-            }
-            
-            h1 {
-                font-size: 2rem;
-            }
-            
-            .logo {
-                font-size: 3rem;
-            }
-        }
-    </style>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%232d5016'><path d='M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z'/></svg>">
 </head>
 <body>
-    <div class="container">
-        <div class="logo">🕌</div>
-        <h1>QuranReview</h1>
-        <p class="subtitle">Comprehensive Quran Memorization & Review Application</p>
-        
-        <div class="features">
-            <div class="feature-card">
-                <div class="feature-icon">📖</div>
-                <h3>Quran Reading</h3>
-                <p>Read and review Quran verses with proper tajweed</p>
-            </div>
-            
-            <div class="feature-card">
-                <div class="feature-icon">🧠</div>
-                <h3>Memorization</h3>
-                <p>Track your memorization progress and schedule reviews</p>
-            </div>
-            
-            <div class="feature-card">
-                <div class="feature-icon">📊</div>
-                <h3>Analytics</h3>
-                <p>Monitor your learning progress with detailed analytics</p>
-            </div>
-            
-            <div class="feature-card">
-                <div class="feature-icon">🎯</div>
-                <h3>Smart Review</h3>
-                <p>Intelligent review system based on spaced repetition</p>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div>
+                    <h1>🕌 مراجعة القرآن</h1>
+                    <p class="header-subtitle">تطبيق احترافي لحفظ ومراجعة القرآن الكريم</p>
+                </div>
+                <div class="nav">
+                    <a href="#" class="nav-link active" data-page="home">الرئيسية</a>
+                    <a href="#" class="nav-link" data-page="memorization">الحفظ اليومي</a>
+                    <a href="#" class="nav-link" data-page="progress">التقدم</a>
+                    <a href="#" class="nav-link" data-page="settings">الإعدادات</a>
+                    <button id="theme-toggle" class="theme-toggle">🌙</button>
+                </div>
             </div>
         </div>
-        
-        <div class="coming-soon">
-            <h3>🚀 Coming Soon</h3>
-            <p>This application is currently under development. Stay tuned for updates!</p>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="container">
+            
+            <!-- Home Page -->
+            <div id="home-page" class="page active">
+                <!-- Daily Motivation -->
+                <div class="card motivation-card">
+                    <div class="card-header">
+                        <h2 class="card-title">🌟 حكمة اليوم</h2>
+                    </div>
+                    <div class="motivation-text arabic-large" id="motivation-text">
+                        خَيْرُكُمْ مَنْ تَعَلَّمَ الْقُرْآنَ وَعَلَّمَهُ
+                    </div>
+                    <div class="motivation-source" id="motivation-source">
+                        رواه البخاري
+                    </div>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">📊 إحصائيات سريعة</h2>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-number" id="home-total-surahs">0</div>
+                            <div class="stat-label">إجمالي السور</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="home-mastered">0</div>
+                            <div class="stat-label">متقنة</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="home-weak">0</div>
+                            <div class="stat-label">ضعيفة</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="home-new">0</div>
+                            <div class="stat-label">جديدة</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Features -->
+                <div class="features-grid">
+                    <div class="card feature-card">
+                        <div class="feature-icon">📖</div>
+                        <h3 class="feature-title">القراءة والحفظ</h3>
+                        <p class="feature-description">قراءة ومراجعة آيات القرآن الكريم مع التجويد الصحيح</p>
+                    </div>
+                    
+                    <div class="card feature-card">
+                        <div class="feature-icon">🧠</div>
+                        <h3 class="feature-title">تتبع الحفظ</h3>
+                        <p class="feature-description">مراقبة تقدم الحفظ وجدولة المراجعات الذكية</p>
+                    </div>
+                    
+                    <div class="card feature-card">
+                        <div class="feature-icon">📈</div>
+                        <h3 class="feature-title">التحليلات</h3>
+                        <p class="feature-description">مراقبة التقدم التعلمي مع تحليلات مفصلة</p>
+                    </div>
+                    
+                    <div class="card feature-card">
+                        <div class="feature-icon">🎯</div>
+                        <h3 class="feature-title">مراجعة ذكية</h3>
+                        <p class="feature-description">نظام مراجعة ذكي يعتمد على التكرار المتباعد</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Memorization Page -->
+            <div id="memorization-page" class="page">
+                <!-- Add New Memorization -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">➕ إضافة حفظ جديد</h2>
+                    </div>
+                    <form id="add-memorization-form" class="settings-form">
+                        <div class="form-group">
+                            <label class="form-label" for="surah-select">اختر السورة</label>
+                            <select id="surah-select" class="form-select" required>
+                                <option value="">-- اختر السورة --</option>
+                                <option value="1">الفاتحة (7 آيات)</option>
+                                <option value="2">البقرة (286 آية)</option>
+                                <option value="3">آل عمران (200 آية)</option>
+                                <option value="4">النساء (176 آية)</option>
+                                <option value="5">المائدة (120 آية)</option>
+                                <option value="6">الأنعام (165 آية)</option>
+                                <option value="7">الأعراف (206 آيات)</option>
+                                <option value="8">الأنفال (75 آية)</option>
+                                <option value="9">التوبة (129 آية)</option>
+                                <option value="10">يونس (109 آيات)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="from-ayah">من الآية</label>
+                            <input type="number" id="from-ayah" class="form-input" min="1" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="to-ayah">إلى الآية</label>
+                            <input type="number" id="to-ayah" class="form-input" min="1" required>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <span>➕</span>
+                            إضافة الحفظ
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Memorization Table -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">📋 جدول الحفظ اليومي</h2>
+                        <p class="text-secondary">يوم <span id="today-date"></span></p>
+                    </div>
+                    
+                    <table class="memorization-table">
+                        <thead>
+                            <tr>
+                                <th>السورة</th>
+                                <th>الآيات</th>
+                                <th>الحالة</th>
+                                <th>آخر مراجعة</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="memorization-table-body">
+                            <!-- Will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Progress Page -->
+            <div id="progress-page" class="page">
+                <!-- Progress Stats -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">📊 إحصائيات التقدم</h2>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-number" id="progress-total">0</div>
+                            <div class="stat-label">إجمالي الحفظ</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="progress-mastered">0</div>
+                            <div class="stat-label">سور متقنة</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="progress-weak">0</div>
+                            <div class="stat-label">تحتاج مراجعة</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="progress-new">0</div>
+                            <div class="stat-label">جديدة</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Progress Chart -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">📈 مراجعات آخر 7 أيام</h2>
+                    </div>
+                    <div class="progress-chart" id="progress-chart">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Average Stats -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">📈 متوسطات الأداء</h2>
+                    </div>
+                    <div style="text-align: center; padding: 2rem;">
+                        <div style="font-size: 3rem; font-weight: bold; color: var(--accent-green);" id="progress-average">0</div>
+                        <div style="color: var(--text-secondary);">متوسط عدد المراجعات لكل سورة</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Page -->
+            <div id="settings-page" class="page">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">⚙️ الإعدادات</h2>
+                    </div>
+                    
+                    <form id="settings-form" class="settings-form">
+                        <div class="form-group">
+                            <label class="form-label" for="user-name">اسم المستخدم</label>
+                            <input type="text" id="user-name" class="form-input" placeholder="أدخل اسمك">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="daily-goal">هدف الحفظ اليومي (سور)</label>
+                            <input type="number" id="daily-goal" class="form-input" min="1" max="20" value="5">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="notifications">التنبيهات</label>
+                            <label class="switch">
+                                <input type="checkbox" id="notifications">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <span>💾</span>
+                            حفظ الإعدادات
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Data Management -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">🗂️ إدارة البيانات</h2>
+                    </div>
+                    
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <button class="btn btn-secondary" onclick="QuranReview.exportData()">
+                            <span>📤</span>
+                            تصدير البيانات
+                        </button>
+                        <button class="btn btn-secondary" onclick="QuranReview.importData()">
+                            <span>📥</span>
+                            استيراد البيانات
+                        </button>
+                        <button class="btn btn-danger" onclick="QuranReview.clearData()">
+                            <span>🗑️</span>
+                            مسح البيانات
+                        </button>
+                    </div>
+                </div>
+            </div>
+
         </div>
-    </div>
+    </main>
+
+    <!-- JavaScript -->
+    <script src="script.js"></script>
+    
+    <!-- Update today's date -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const todayElement = document.getElementById('today-date');
+            if (todayElement) {
+                const today = new Date();
+                const options = { year: 'numeric', month: 'long', day: 'numeric' };
+                todayElement.textContent = today.toLocaleDateString('ar-SA', options);
+            }
+        });
+    </script>
 </body>
 </html>
