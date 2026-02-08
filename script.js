@@ -497,6 +497,14 @@ const QuranReview = {
             });
         }
         
+        // Audio source selector
+        const audioSourceSelector = document.getElementById('ward-audio-source');
+        if (audioSourceSelector) {
+            audioSourceSelector.addEventListener('change', () => {
+                this.updateWardAudioSource();
+            });
+        }
+        
         // Image quality selector
         const imageQualitySelector = document.getElementById('ward-image-quality');
         if (imageQualitySelector) {
@@ -595,6 +603,17 @@ const QuranReview = {
             if (QuranAudio.setBitrate(bitrate)) {
                 this.showNotification(`تم تغيير جودة الصوت إلى: ${bitrate} kbps`, 'success');
             }
+        }
+    },
+    
+    updateWardAudioSource() {
+        const audioSourceSelector = document.getElementById('ward-audio-source');
+        
+        if (audioSourceSelector) {
+            const source = audioSourceSelector.value;
+            this.state.settings.audioSource = source;
+            this.showNotification(`تم تغيير مصدر الصوت إلى: ${source === 'local' ? 'ملفات محلية' : 'عبر الإنترنت'}`, 'success');
+            console.log(`🎵 Audio source updated to: ${source}`);
         }
     },
     
@@ -1560,6 +1579,68 @@ const QuranReview = {
         const surah = this.config.surahs.find(s => s.id === surahId);
         if (!surah) return;
         
+        // Check audio source
+        const audioSource = this.state.settings.audioSource || 'cdn';
+        
+        if (audioSource === 'local') {
+            // Play local MP3 file for full surah
+            this.playLocalSurah(surahId, surah);
+        } else {
+            // Play ayah by ayah from CDN
+            this.playFullSurahAyahByAyah(surahId, surah);
+        }
+    },
+    
+    playLocalSurah(surahId, surah) {
+        // Format surah ID as 3-digit number (001, 002, etc.)
+        const surahNumber = surahId.toString().padStart(3, '0');
+        const audioUrl = `audio/${surahNumber}.mp3`;
+        
+        console.log(`🎵 Playing local surah: ${audioUrl}`);
+        
+        // Setup ward player state for full surah
+        this.state.wardPlayer = {
+            isPlaying: true,
+            currentAyah: 1,
+            totalAyahs: surah.ayahs,
+            mode: 'surah-local',
+            surahId: surahId,
+            fromAyah: 1,
+            toAyah: surah.ayahs
+        };
+        
+        // Create audio element for full surah
+        const audio = new Audio(audioUrl);
+        
+        audio.onended = () => {
+            console.log('✅ Full surah finished playing');
+            this.stopWardPlayback();
+            this.showNotification('تم الانتهاء من تشغيل السورة', 'success');
+        };
+        
+        audio.onerror = () => {
+            console.error('❌ Error playing local surah:', audioUrl);
+            this.showNotification('خطأ في تشغيل السورة المحلية', 'error');
+            // Fallback to CDN
+            this.playFullSurahAyahByAyah(surahId, surah);
+        };
+        
+        // Update display
+        this.updateWardDisplay();
+        this.updateWardAyahDisplay(surahId, 1);
+        
+        // Play audio
+        audio.play().catch(error => {
+            console.error('❌ Error playing local audio:', error);
+            this.showNotification('خطأ في تشغيل السورة المحلية', 'error');
+            // Fallback to CDN
+            this.playFullSurahAyahByAyah(surahId, surah);
+        });
+        
+        this.showNotification(`📖 جاري تشغيل سورة ${surah.name} كاملة (ملف محلي)`, 'success');
+    },
+    
+    playFullSurahAyahByAyah(surahId, surah) {
         // Setup ward player state for full surah
         this.state.wardPlayer = {
             isPlaying: true,
@@ -1575,7 +1656,7 @@ const QuranReview = {
         this.updateWardDisplay();
         this.playCurrentWardAyah();
         
-        this.showNotification(`📖 جاري تشغيل سورة ${surah.name} كاملة`, 'success');
+        this.showNotification(`📖 جاري تشغيل سورة ${surah.name} كاملة (CDN)`, 'success');
         console.log('✅ Full Surah playback started successfully');
     },
     
@@ -1920,17 +2001,16 @@ const QuranReview = {
     // TARTEEL INTEGRATION
     // ===================================
     
-    openTarteel(surahId, fromAyah, toAyah) {
-        try {
-            // Official Tarteel smart deep link
-            const url = 'https://tarteel.go.link/?adj_t=1d1pgcav&adj_engagement_type=fallback_click';
-            window.open(url, '_blank', 'noopener,noreferrer');
-            
-            console.log(`🎧 Opening Tarteel for Surah ${surahId}, Ayahs ${fromAyah}-${toAyah}`);
-        } catch (error) {
-            console.error('❌ Error opening Tarteel:', error);
-            this.showNotification('خطأ في فتح تطبيق ترتيل', 'error');
-        }
+    openTarteel() {
+        console.log('🎧 Opening Tarteel app...');
+        
+        // Try to open Tarteel app with smart link
+        const tarteelSmartLink = 'https://tarteel.go.link/?adj_t=1d1pgcav&adj_engagement_type=fallback_click';
+        
+        // Open in new tab
+        window.open(tarteelSmartLink, '_blank');
+        
+        this.showNotification('🎧 جاري فتح تطبيق ترتيل', 'success');
     },
     
     // ===================================
