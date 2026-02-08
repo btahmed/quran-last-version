@@ -1442,6 +1442,8 @@ const QuranReview = {
     },
     
     playWard() {
+        console.log('🎵 Starting Ward playback - stopping any current playback first...');
+        
         // Stop any current playback first
         this.stopWardPlayback();
         
@@ -1478,10 +1480,13 @@ const QuranReview = {
         this.updateWardDisplay();
         this.playCurrentWardAyah();
         
-        this.showNotification(`جاري تشغيل ورد ${surah.name} (${fromAyah}-${toAyah})`, 'success');
+        this.showNotification(`🎧 جاري تشغيل ورد ${surah.name} (${fromAyah}-${toAyah})`, 'success');
+        console.log('✅ Ward playback started successfully');
     },
     
     playFullSurah() {
+        console.log('📖 Starting Full Surah playback - stopping any current playback first...');
+        
         // Stop any current playback first
         this.stopWardPlayback();
         
@@ -1513,7 +1518,8 @@ const QuranReview = {
         this.updateWardDisplay();
         this.playCurrentWardAyah();
         
-        this.showNotification(`جاري تشغيل سورة ${surah.name} كاملة`, 'success');
+        this.showNotification(`📖 جاري تشغيل سورة ${surah.name} كاملة`, 'success');
+        console.log('✅ Full Surah playback started successfully');
     },
     
     playCurrentWardAyah() {
