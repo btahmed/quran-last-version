@@ -362,6 +362,9 @@ const QuranReview = {
             case 'memorization':
                 this.renderMemorizationPage();
                 break;
+            case 'ward':
+                this.renderWardPage();
+                break;
             case 'reading':
                 this.renderReadingPage();
                 break;
@@ -392,6 +395,13 @@ const QuranReview = {
         this.renderMemorizationTable();
         this.setupMemorizationActions();
         console.log('✅ Memorization page rendered');
+    },
+    
+    renderWardPage() {
+        console.log('🔄 Rendering ward page...');
+        this.setupWardControls();
+        this.populateWardSurahSelect();
+        console.log('✅ Ward page rendered');
     },
     
     renderProgressPage() {
@@ -437,6 +447,146 @@ const QuranReview = {
         if (masteredElement) masteredElement.textContent = stats.mastered;
         if (weakElement) weakElement.textContent = stats.weak;
         if (newElement) newElement.textContent = stats.new;
+    },
+    
+    // ===================================
+    // WARD CONTROLS
+    // ===================================
+    
+    setupWardControls() {
+        // Surah selector
+        const surahSelect = document.getElementById('ward-surah-select');
+        if (surahSelect) {
+            surahSelect.addEventListener('change', () => {
+                this.updateWardAyahLimits();
+            });
+        }
+        
+        // From/To ayah inputs
+        const fromAyahInput = document.getElementById('ward-from-ayah');
+        const toAyahInput = document.getElementById('ward-to-ayah');
+        
+        if (fromAyahInput) {
+            fromAyahInput.addEventListener('input', () => {
+                this.updateWardAyahLimits();
+            });
+        }
+        
+        if (toAyahInput) {
+            toAyahInput.addEventListener('input', () => {
+                this.updateWardAyahLimits();
+            });
+        }
+        
+        // Reciter selector
+        const reciterSelector = document.getElementById('ward-reciter-selector');
+        if (reciterSelector) {
+            reciterSelector.addEventListener('change', () => {
+                this.updateWardReciter();
+            });
+        }
+        
+        // Audio quality selector
+        const audioQualitySelector = document.getElementById('ward-audio-quality');
+        if (audioQualitySelector) {
+            audioQualitySelector.addEventListener('change', () => {
+                this.updateWardAudioQuality();
+            });
+        }
+        
+        // Image quality selector
+        const imageQualitySelector = document.getElementById('ward-image-quality');
+        if (imageQualitySelector) {
+            imageQualitySelector.addEventListener('change', () => {
+                this.updateWardImageQuality();
+            });
+        }
+        
+        console.log('✅ Ward controls setup completed');
+    },
+    
+    populateWardSurahSelect() {
+        const surahSelect = document.getElementById('ward-surah-select');
+        if (!surahSelect) return;
+        
+        // Clear existing options except the first one
+        while (surahSelect.children.length > 1) {
+            surahSelect.removeChild(surahSelect.lastChild);
+        }
+        
+        // Add all 114 surahs with correct ayah counts
+        this.config.surahs.forEach(surah => {
+            const option = document.createElement('option');
+            option.value = surah.id;
+            option.textContent = `${surah.name} (${surah.ayahs} آيات)`;
+            surahSelect.appendChild(option);
+        });
+        
+        console.log('📋 Ward surah select populated with 114 surahs');
+    },
+    
+    updateWardAyahLimits() {
+        const surahSelect = document.getElementById('ward-surah-select');
+        const fromAyahInput = document.getElementById('ward-from-ayah');
+        const toAyahInput = document.getElementById('ward-to-ayah');
+        
+        if (!surahSelect || !fromAyahInput || !toAyahInput) return;
+        
+        const surahId = parseInt(surahSelect.value);
+        if (!surahId) return;
+        
+        const surah = this.config.surahs.find(s => s.id === surahId);
+        if (!surah) return;
+        
+        // Update max values
+        fromAyahInput.max = surah.ayahs;
+        toAyahInput.max = surah.ayahs;
+        
+        // Update placeholder
+        fromAyahInput.placeholder = `من 1 إلى ${surah.ayahs}`;
+        toAyahInput.placeholder = `من 1 إلى ${surah.ayahs}`;
+        
+        // Clear current values if they exceed the limit
+        if (parseInt(fromAyahInput.value) > surah.ayahs) {
+            fromAyahInput.value = '';
+        }
+        if (parseInt(toAyahInput.value) > surah.ayahs) {
+            toAyahInput.value = '';
+        }
+        
+        console.log(`📊 Updated ward ayah limits for Surah ${surahId}: 1-${surah.ayahs}`);
+    },
+    
+    updateWardReciter() {
+        const reciterSelector = document.getElementById('ward-reciter-selector');
+        
+        if (reciterSelector && window.QuranAudio) {
+            const selectedReciter = reciterSelector.value;
+            QuranAudio.setReciter(selectedReciter);
+            console.log('🎵 Ward reciter updated to:', selectedReciter);
+            this.showNotification(`تم تغيير القارئ إلى: ${QuranAudio.getReciterName(selectedReciter)}`, 'success');
+        }
+    },
+    
+    updateWardAudioQuality() {
+        const audioQualitySelector = document.getElementById('ward-audio-quality');
+        
+        if (audioQualitySelector && window.QuranAudio) {
+            const bitrate = parseInt(audioQualitySelector.value);
+            if (QuranAudio.setBitrate(bitrate)) {
+                this.showNotification(`تم تغيير جودة الصوت إلى: ${bitrate} kbps`, 'success');
+            }
+        }
+    },
+    
+    updateWardImageQuality() {
+        const imageQualitySelector = document.getElementById('ward-image-quality');
+        
+        if (imageQualitySelector) {
+            const quality = imageQualitySelector.value;
+            this.state.imageQuality = quality;
+            this.showNotification(`تم تغيير جودة الصور إلى: ${quality === 'high' ? 'عالية الدقة' : 'عادية'}`, 'success');
+        }
     },
     
     // ===================================
@@ -1292,9 +1442,9 @@ const QuranReview = {
     },
     
     playWard() {
-        const surahSelect = document.getElementById('surah-select');
-        const fromAyahInput = document.getElementById('from-ayah');
-        const toAyahInput = document.getElementById('to-ayah');
+        const surahSelect = document.getElementById('ward-surah-select');
+        const fromAyahInput = document.getElementById('ward-from-ayah');
+        const toAyahInput = document.getElementById('ward-to-ayah');
         
         if (!surahSelect || !fromAyahInput || !toAyahInput) return;
         
@@ -1322,7 +1472,6 @@ const QuranReview = {
         };
         
         // Show and update ward player
-        this.showWardPlayer();
         this.updateWardDisplay();
         this.playCurrentWardAyah();
         
@@ -1330,7 +1479,7 @@ const QuranReview = {
     },
     
     playFullSurah() {
-        const surahSelect = document.getElementById('surah-select');
+        const surahSelect = document.getElementById('ward-surah-select');
         
         if (!surahSelect) return;
         
@@ -1355,7 +1504,6 @@ const QuranReview = {
         };
         
         // Show and update ward player
-        this.showWardPlayer();
         this.updateWardDisplay();
         this.playCurrentWardAyah();
         

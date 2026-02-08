@@ -55,14 +55,15 @@
                     <h1>🕌 مراجعة القرآن</h1>
                     <p class="header-subtitle">تطبيق احترافي لحفظ ومراجعة القرآن الكريم</p>
                 </div>
-                <div class="nav">
-                    <a href="#" class="nav-link active" data-page="home">الرئيسية</a>
+                <nav class="nav">
+                    <a href="#" class="nav-link" data-page="home">الرئيسية</a>
                     <a href="#" class="nav-link" data-page="memorization">الحفظ اليومي</a>
+                    <a href="#" class="nav-link" data-page="ward">الورد</a>
                     <a href="#" class="nav-link" data-page="reading">القراءة</a>
                     <a href="#" class="nav-link" data-page="progress">التقدم</a>
                     <a href="#" class="nav-link" data-page="settings">الإعدادات</a>
                     <button id="theme-toggle" class="theme-toggle">🌙</button>
-                </div>
+                </nav>
             </div>
         </div>
     </header>
@@ -149,7 +150,111 @@
                 </div>
             </div>
 
-            <!-- Memorization Page -->
+            <!-- Ward Page -->
+            <div id="ward-page" class="page">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">🎧 مشغل الورد</h2>
+                        <p class="text-secondary">استماع وتلاوة الورد اليومي</p>
+                    </div>
+                    
+                    <!-- Ward Selection -->
+                    <div class="ward-selection">
+                        <div class="form-group">
+                            <label class="form-label" for="ward-surah-select">اختر السورة</label>
+                            <select id="ward-surah-select" class="form-select">
+                                <option value="">-- اختر السورة --</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label" for="ward-from-ayah">من الآية</label>
+                                <input type="number" id="ward-from-ayah" class="form-input" min="1" placeholder="من">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="ward-to-ayah">إلى الآية</label>
+                                <input type="number" id="ward-to-ayah" class="form-input" min="1" placeholder="إلى">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ward Player -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">🎵 مشغل الورد</h2>
+                    </div>
+                    
+                    <!-- Ward Controls -->
+                    <div class="ward-player">
+                        <h3>🎧 مشغل الورد</h3>
+                        <div class="ward-controls">
+                            <button id="play-ward-btn" class="btn btn-primary">
+                                <span>▶️</span>
+                                استماع للورد
+                            </button>
+                            <button id="play-surah-btn" class="btn btn-secondary">
+                                <span>📖</span>
+                                استماع للسورة كاملة
+                            </button>
+                            <button id="stop-ward-btn" class="btn btn-danger">
+                                <span>⏹️</span>
+                                إيقاف
+                            </button>
+                        </div>
+                        <div class="ward-progress">
+                            <div class="ward-progress-info">
+                                <span id="current-ayah-info">الآية الحالية: -</span>
+                                <span id="ward-progress-text">0 / 0</span>
+                            </div>
+                            <div class="ward-progress-bar-container">
+                                <div id="ward-progress-bar" class="ward-progress-bar"></div>
+                            </div>
+                        </div>
+                        <div class="ward-display">
+                            <div id="ward-ayah-image" class="ward-ayah-image">
+                                <img id="ward-image" src="" alt="Ayah Image" style="display: none;">
+                            </div>
+                            <div id="ward-ayah-text" class="ward-ayah-text" style="display: none;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reciter Settings -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">⚙️ إعدادات التلاوة</h2>
+                    </div>
+                    <div class="settings-form">
+                        <div class="form-group">
+                            <label class="form-label" for="ward-reciter-selector">القارئ</label>
+                            <select id="ward-reciter-selector" class="form-select">
+                                <option value="alafasy">مشاري بن راشد العفاسي</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="ward-audio-quality">جودة الصوت</label>
+                            <select id="ward-audio-quality" class="form-select">
+                                <option value="192">عالية (192 kbps)</option>
+                                <option value="128" selected>متوسطة (128 kbps)</option>
+                                <option value="64">منخفضة (64 kbps)</option>
+                                <option value="32">منخفضة جداً (32 kbps)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="ward-image-quality">جودة الصور</label>
+                            <select id="ward-image-quality" class="form-select">
+                                <option value="normal">عادية</option>
+                                <option value="high">عالية الدقة</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div id="memorization-page" class="page">
                 <!-- Add New Memorization -->
                 <div class="card">
@@ -209,40 +314,6 @@
                             <div id="audio-info" style="color: var(--text-secondary); font-size: 0.9rem;">
                                 <div id="audio-surah-name">اختر سورة للاستماع</div>
                                 <div id="audio-reciter">القارئ: مشاري بن راشد العفاسي</div>
-                            </div>
-                        </div>
-                        
-                        <!-- Ward Player Controls -->
-                        <div id="ward-player" class="ward-player" style="display: block !important; background: red; border: 2px solid blue; padding: 20px;">
-                            <h3>🎧 مشغل الورد (DEBUG MODE)</h3>
-                            <div class="ward-controls">
-                                <button id="play-ward-btn" class="btn btn-primary">
-                                    <span>▶️</span>
-                                    استماع للورد
-                                </button>
-                                <button id="play-surah-btn" class="btn btn-secondary">
-                                    <span>📖</span>
-                                    استماع للسورة كاملة
-                                </button>
-                                <button id="stop-ward-btn" class="btn btn-danger">
-                                    <span>⏹️</span>
-                                    إيقاف
-                                </button>
-                            </div>
-                            <div class="ward-progress">
-                                <div class="ward-progress-info">
-                                    <span id="current-ayah-info">الآية الحالية: -</span>
-                                    <span id="ward-progress-text">0 / 0</span>
-                                </div>
-                                <div class="ward-progress-bar-container">
-                                    <div id="ward-progress-bar" class="ward-progress-bar"></div>
-                                </div>
-                            </div>
-                            <div class="ward-display">
-                                <div id="ward-ayah-image" class="ward-ayah-image">
-                                    <img id="ward-image" src="" alt="Ayah Image" style="display: none;">
-                                </div>
-                                <div id="ward-ayah-text" class="ward-ayah-text" style="display: none;"></div>
                             </div>
                         </div>
                     </div>
