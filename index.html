@@ -213,9 +213,9 @@
                         </div>
                         
                         <!-- Ward Player Controls -->
-                        <div id="ward-player" style="margin-top: 1rem; padding: 1rem; background: var(--primary-light); border-radius: 8px; display: none;">
-                            <h3 style="margin-bottom: 1rem; color: var(--text-primary);">🎧 مشغل الورد</h3>
-                            <div style="display: grid; gap: 1rem;">
+                        <div id="ward-player" class="ward-player" style="display: none;">
+                            <h3>🎧 مشغل الورد</h3>
+                            <div class="ward-controls">
                                 <button id="play-ward-btn" class="btn btn-primary">
                                     <span>▶️</span>
                                     استماع للورد
@@ -229,20 +229,20 @@
                                     إيقاف
                                 </button>
                             </div>
-                            <div id="ward-progress" style="margin-top: 1rem;">
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <div class="ward-progress">
+                                <div class="ward-progress-info">
                                     <span id="current-ayah-info">الآية الحالية: -</span>
                                     <span id="ward-progress-text">0 / 0</span>
                                 </div>
-                                <div style="background: var(--border-color); height: 4px; border-radius: 2px;">
-                                    <div id="ward-progress-bar" style="background: var(--accent-green); height: 100%; width: 0%; border-radius: 2px; transition: width 0.3s;"></div>
+                                <div class="ward-progress-bar-container">
+                                    <div id="ward-progress-bar" class="ward-progress-bar"></div>
                                 </div>
                             </div>
-                            <div id="ward-display" style="margin-top: 1rem; text-align: center;">
-                                <div id="ward-ayah-image" style="margin-bottom: 1rem;">
-                                    <img id="ward-image" src="" alt="Ayah Image" style="max-width: 100%; height: auto; border-radius: 8px; display: none;">
+                            <div class="ward-display">
+                                <div id="ward-ayah-image" class="ward-ayah-image">
+                                    <img id="ward-image" src="" alt="Ayah Image" style="display: none;">
                                 </div>
-                                <div id="ward-ayah-text" style="font-size: 1.5rem; line-height: 2; color: var(--text-primary); display: none;"></div>
+                                <div id="ward-ayah-text" class="ward-ayah-text" style="display: none;"></div>
                             </div>
                         </div>
                     </div>

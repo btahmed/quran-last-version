@@ -840,6 +840,30 @@ const QuranReview = {
         if (surahSelect) {
             surahSelect.addEventListener('change', () => {
                 this.updateAyahLimits();
+                // Show ward player when surah is selected
+                if (surahSelect.value) {
+                    this.showWardPlayer();
+                }
+            });
+        }
+        
+        // From/To ayah inputs
+        const fromAyahInput = document.getElementById('from-ayah');
+        const toAyahInput = document.getElementById('to-ayah');
+        
+        if (fromAyahInput) {
+            fromAyahInput.addEventListener('input', () => {
+                if (surahSelect.value && fromAyahInput.value && toAyahInput.value) {
+                    this.showWardPlayer();
+                }
+            });
+        }
+        
+        if (toAyahInput) {
+            toAyahInput.addEventListener('input', () => {
+                if (surahSelect.value && fromAyahInput.value && toAyahInput.value) {
+                    this.showWardPlayer();
+                }
             });
         }
         
