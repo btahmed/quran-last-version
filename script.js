@@ -168,32 +168,64 @@ const QuranReview = {
     
     init() {
         console.log('🕌 QuranReview App Initializing...');
+        console.log('📋 Configuration:', {
+            appName: this.config.appName,
+            version: this.config.version,
+            storageKey: this.config.storageKey,
+            themeKey: this.config.themeKey
+        });
         
         // Load saved data
+        console.log('📁 Loading saved data...');
         this.loadData();
+        console.log('✅ Data loaded:', {
+            memorizationData: this.state.memorizationData.length + ' items',
+            settings: Object.keys(this.state.settings),
+            todayDate: this.state.todayDate
+        });
         
         // Initialize theme
+        console.log('🎨 Initializing theme...');
         this.initTheme();
+        console.log('✅ Theme initialized:', this.state.settings.theme);
         
         // Setup navigation
+        console.log('🧭 Setting up navigation...');
         this.setupNavigation();
+        console.log('✅ Navigation setup complete');
         
         // Setup forms
+        console.log('📝 Setting up forms...');
         this.setupForms();
+        console.log('✅ Forms setup complete');
         
         // Initialize audio player
+        console.log('🎵 Initializing audio player...');
         this.initAudioPlayer();
+        console.log('✅ Audio player initialized');
         
         // Populate surah select
+        console.log('📖 Populating surah select...');
         this.populateSurahSelect();
+        console.log('✅ Surah select populated with 114 surahs');
         
         // Render initial page
+        console.log('🏠 Rendering initial page...');
         this.navigateTo('home');
+        console.log('✅ Initial page rendered');
         
         // Setup auto-save
+        console.log('💾 Setting up auto-save...');
         this.setupAutoSave();
+        console.log('✅ Auto-save setup complete');
         
-        console.log('✅ QuranReview App Ready!');
+        console.log('🎉 QuranReview App Ready!');
+        console.log('🌐 App URL: https://btahmed.github.io/QuranReview/');
+        console.log('📊 Current state:', {
+            currentPage: this.state.currentPage,
+            totalMemorization: this.state.memorizationData.length,
+            settings: this.state.settings
+        });
     },
     
     // ===================================
@@ -323,27 +355,34 @@ const QuranReview = {
     
     navigateTo(pageName) {
         console.log('🔄 Navigating to:', pageName);
+        console.log('📊 Navigation details:', {
+            fromPage: this.state.currentPage,
+            toPage: pageName,
+            timestamp: new Date().toISOString()
+        });
         
         // Update navigation
+        console.log('🧭 Updating navigation links...');
         document.querySelectorAll('.nav-link').forEach(link => {
             link.classList.remove('active');
         });
         const activeLink = document.querySelector(`[data-page="${pageName}"]`);
         if (activeLink) {
             activeLink.classList.add('active');
-            console.log('✅ Navigation link updated');
+            console.log('✅ Navigation link updated:', pageName);
         } else {
             console.error('❌ Navigation link not found:', pageName);
         }
         
         // Update pages
+        console.log('📄 Updating page elements...');
         document.querySelectorAll('.page').forEach(page => {
             page.classList.remove('active');
         });
         const targetPage = document.getElementById(`${pageName}-page`);
         if (targetPage) {
             targetPage.classList.add('active');
-            console.log('✅ Page element updated');
+            console.log('✅ Page element updated:', `${pageName}-page`);
         } else {
             console.error('❌ Page element not found:', `${pageName}-page`);
         }
@@ -351,9 +390,15 @@ const QuranReview = {
         this.state.currentPage = pageName;
         
         // Render page content
+        console.log('🎨 Rendering page content...');
         this.renderPage(pageName);
         
         console.log('📍 Navigation completed to:', pageName);
+        console.log('📊 New state:', {
+            currentPage: this.state.currentPage,
+            activeElements: document.querySelectorAll('.page.active').length,
+            activeLinks: document.querySelectorAll('.nav-link.active').length
+        });
     },
     
     // ===================================
@@ -1308,22 +1353,37 @@ const QuranReview = {
     // ===================================
     
     playAyahRange(surahId, fromAyah, toAyah) {
+        console.log('🎵 Starting sequential ayah playback');
+        console.log('📊 Playback parameters:', {
+            surahId: surahId,
+            fromAyah: fromAyah,
+            toAyah: toAyah,
+            totalAyahs: toAyah - fromAyah + 1
+        });
+        
         try {
             if (!window.QuranAudio) {
+                console.error('❌ QuranAudio not loaded');
                 this.showNotification('Configuration audio non chargée', 'error');
                 return;
             }
             
             const surah = this.config.surahs.find(s => s.id === surahId);
             if (!surah) {
+                console.error('❌ Surah not found:', surahId);
                 this.showNotification('السورة غير موجودة', 'error');
                 return;
             }
             
+            console.log('📖 Surah found:', surah.name);
+            
             // Get ayah range URLs
+            console.log('🔗 Getting ayah range URLs...');
             const ayahUrls = QuranAudio.getAyahRangeAudioUrls(surahId, fromAyah, toAyah);
+            console.log('📝 Generated URLs:', ayahUrls.length, 'URLs');
             
             if (ayahUrls.length === 0) {
+                console.error('❌ No audio URLs generated');
                 this.showNotification('لا توجد آيات صوتية', 'error');
                 return;
             }
@@ -1339,10 +1399,14 @@ const QuranReview = {
                 currentAudioIndex: 0
             };
             
+            console.log('🎧 Audio state configured:', this.audioState);
+            
             // Start playing first ayah
+            console.log('▶️ Starting playback...');
             this.playNextAyahInQueue();
             
             this.showNotification(`جاري تشغيل ${surah.name} من الآية ${fromAyah} إلى ${toAyah}`, 'success');
+            console.log('✅ Sequential playback started successfully');
             
         } catch (error) {
             console.error('❌ Error playing ayah range:', error);
