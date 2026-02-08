@@ -704,7 +704,7 @@ const QuranReview = {
         if (todayData.previouslyMemorized.length > 0) {
             html += `
                 <tr class="section-header">
-                    <td colspan="7" style="background: var(--accent-green); color: white; text-align: center; font-weight: bold;">
+                    <td colspan="3" style="background: #2d5016; color: white; text-align: center; font-weight: bold;">
                         📚 محفوظ سابقًا (للتثبيت)
                     </td>
                 </tr>
@@ -716,7 +716,7 @@ const QuranReview = {
         if (todayData.todayReview.length > 0) {
             html += `
                 <tr class="section-header">
-                    <td colspan="7" style="background: var(--accent-gold); color: white; text-align: center; font-weight: bold;">
+                    <td colspan="3" style="background: #d4a574; color: white; text-align: center; font-weight: bold;">
                         📋 مراجعة اليوم
                     </td>
                 </tr>
@@ -728,7 +728,7 @@ const QuranReview = {
         if (todayData.newMemorization.length > 0) {
             html += `
                 <tr class="section-header">
-                    <td colspan="7" style="background: var(--accent-red); color: white; text-align: center; font-weight: bold;">
+                    <td colspan="3" style="background: #8b2635; color: white; text-align: center; font-weight: bold;">
                         ✨ حفظ جديد
                     </td>
                 </tr>
@@ -742,7 +742,7 @@ const QuranReview = {
             todayData.newMemorization.length === 0) {
             html += `
                 <tr>
-                    <td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                    <td colspan="3" style="text-align: center; padding: 2rem; color: #6c757d;">
                         لا توجد عناصر للحفظ اليوم. أضف حفظًا جديدًا للبدء!
                     </td>
                 </tr>
