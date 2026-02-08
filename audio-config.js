@@ -147,8 +147,15 @@ const QuranAudio = {
     getAudioUrl: function(surahNumber, reciter = this.currentReciter) {
         const fileName = surahNumber.toString().padStart(3, '0');
         
-        // Use local audio files
-        return `./audio/abdul_basit/${fileName}.mp3`;
+        // Use reliable CDN for GitHub Pages
+        const cdnUrls = {
+            'abdul_basit': `https://everyayah.com/data/Abdul_Basit_Mujawwad_128kbps/${fileName}.mp3`,
+            'sudais': `https://everyayah.com/data/AbdulRahman_Al-Sudais_128kbps/${fileName}.mp3`,
+            'minshawi': `https://everyayah.com/data/Mohammad_Siddiq_Al-Minshawi_128kbps/${fileName}.mp3`,
+            'husary': `https://everyayah.com/data/Mahmoud_Khalil_Al-Husary_128kbps/${fileName}.mp3`
+        };
+        
+        return cdnUrls[reciter] || cdnUrls['abdul_basit'];
     },
 
     // Get surah name
