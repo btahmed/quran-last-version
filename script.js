@@ -147,7 +147,19 @@ const QuranReview = {
         currentPage: 'home',
         memorizationData: [],
         settings: {},
-        todayDate: new Date().toISOString().split('T')[0]
+        todayDate: new Date().toISOString().split('T')[0],
+        imageQuality: 'normal'
+    },
+    
+    // Audio player state
+    audioState: {
+        isPlaying: false,
+        currentMode: 'single', // 'single', 'ayah-range', 'surah'
+        currentSurah: null,
+        currentAyah: null,
+        toAyah: null,
+        audioQueue: [],
+        currentAudioIndex: 0
     },
     
     // ===================================
@@ -740,35 +752,49 @@ const QuranReview = {
         tableBody.innerHTML = html;
     },
     
-    createTableRow(item) {
-        return `
-            <tr>
-                <td class="arabic-text">${item.surahName}</td>
-                <td>${item.fromAyah} - ${item.toAyah}</td>
-                <td>${this.getStatusBadge(item.status)}</td>
-                <td>${item.lastReviewed ? new Date(item.lastReviewed).toLocaleDateString('ar-SA') : 'لم يراجع بعد'}</td>
-                <td>${item.reviewCount || 0}</td>
-                <td>${this.getNextReviewDate(item)}</td>
-                <td>
-                    <button class="btn btn-sm btn-primary" onclick="QuranReview.markAsReviewed(${item.id})" title="تسجيل المراجعة">
-                        ✓ مراجعة
-                    </button>
-                    <button class="btn btn-sm btn-success" onclick="QuranReview.playSurahAudio(${item.surahId})" title="استماع للسورة">
-                        🎵 استماع
-                    </button>
-                    <button class="btn btn-sm btn-secondary" onclick="QuranReview.openTarteel(${item.surahId}, ${item.fromAyah}, ${item.toAyah})" title="فتح في تطبيق ترتيل">
-                        🎧 ترتيل
-                    </button>
-                    <button class="btn btn-sm btn-danger" onclick="QuranReview.deleteItem(${item.id})" title="حذف العنصر">
-                        حذف
-                    </button>
-                </td>
-            </tr>
+    createTableRow(item, type) {
+        const row = document.createElement('tr');
+        
+        // Status badge
+        const statusBadge = document.createElement('td');
+        statusBadge.innerHTML = `<span class="status-badge status-${item.status}">${this.getStatusText(item.status)}</span>`;
+        row.appendChild(statusBadge);
+        
+        // Surah info
+        const surahCell = document.createElement('td');
+        surahCell.innerHTML = `
+            <div>
+                <strong>${item.surahName}</strong><br>
+                <small>من ${item.fromAyah} إلى ${item.toAyah}</small>
+            </div>
         `;
+        row.appendChild(surahCell);
+        
+        // Actions
+        const actionsCell = document.createElement('td');
+        actionsCell.innerHTML = `
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <button class="btn btn-sm btn-primary" onclick="QuranReview.playAyahRange(${item.surahId}, ${item.fromAyah}, ${item.toAyah})">
+                    استماع للآيات
+                </button>
+                <button class="btn btn-sm btn-secondary" onclick="QuranReview.playSurahAudio(${item.surahId})">
+                    استماع للسورة
+                </button>
+                ${type === 'today-review' ? `
+                    <button class="btn btn-sm btn-primary" onclick="QuranReview.markAsReviewed(${item.id})">
+                        تم المراجعة
+                    </button>
+                ` : ''}
+                <button class="btn btn-sm btn-danger" onclick="QuranReview.deleteItem(${item.id})">
+                    حذف
+                </button>
+            </div>
+        `;
+        row.appendChild(actionsCell);
+        
+        return row;
     },
     
-        
-        
     getStatusBadge(status) {
         const badges = {
             mastered: '<span class="status-badge status-mastered">✓ متقن</span>',
@@ -1275,6 +1301,120 @@ const QuranReview = {
             console.error('❌ Error playing audio:', error);
             this.showNotification('خطأ في تشغيل الصوت', 'error');
         }
+    },
+    
+    // ===================================
+    // SEQUENTIAL AUDIO PLAYBACK
+    // ===================================
+    
+    playAyahRange(surahId, fromAyah, toAyah) {
+        try {
+            if (!window.QuranAudio) {
+                this.showNotification('Configuration audio non chargée', 'error');
+                return;
+            }
+            
+            const surah = this.config.surahs.find(s => s.id === surahId);
+            if (!surah) {
+                this.showNotification('السورة غير موجودة', 'error');
+                return;
+            }
+            
+            // Get ayah range URLs
+            const ayahUrls = QuranAudio.getAyahRangeAudioUrls(surahId, fromAyah, toAyah);
+            
+            if (ayahUrls.length === 0) {
+                this.showNotification('لا توجد آيات صوتية', 'error');
+                return;
+            }
+            
+            // Setup audio state
+            this.audioState = {
+                isPlaying: true,
+                currentMode: 'ayah-range',
+                currentSurah: surahId,
+                currentAyah: fromAyah,
+                toAyah: toAyah,
+                audioQueue: ayahUrls,
+                currentAudioIndex: 0
+            };
+            
+            // Start playing first ayah
+            this.playNextAyahInQueue();
+            
+            this.showNotification(`جاري تشغيل ${surah.name} من الآية ${fromAyah} إلى ${toAyah}`, 'success');
+            
+        } catch (error) {
+            console.error('❌ Error playing ayah range:', error);
+            this.showNotification('خطأ في تشغيل الآيات', 'error');
+        }
+    },
+    
+    playNextAyahInQueue() {
+        if (this.audioState.currentAudioIndex >= this.audioState.audioQueue.length) {
+            this.stopSequentialAudio();
+            this.showNotification('انتهى تشغيل الآيات', 'success');
+            return;
+        }
+        
+        const audioElement = document.getElementById('audio-element');
+        const audioSource = document.getElementById('audio-source');
+        const surahNameElement = document.getElementById('audio-surah-name');
+        const reciterElement = document.getElementById('audio-reciter');
+        
+        if (!audioElement || !audioSource) {
+            this.showNotification('مشغل الصوت غير متاح', 'error');
+            return;
+        }
+        
+        const currentUrl = this.audioState.audioQueue[this.audioState.currentAudioIndex];
+        const currentAyah = this.audioState.currentAyah + this.audioState.currentAudioIndex;
+        const surah = this.config.surahs.find(s => s.id === this.audioState.currentSurah);
+        
+        // Set audio source
+        audioSource.src = currentUrl;
+        
+        // Update UI
+        if (surahNameElement) {
+            surahNameElement.textContent = `${surah.name} - الآية ${currentAyah}`;
+        }
+        
+        if (reciterElement) {
+            reciterElement.textContent = `القارئ: ${QuranAudio.getReciterName()}`;
+        }
+        
+        // Setup ended event for next ayah
+        audioElement.onended = () => {
+            this.audioState.currentAudioIndex++;
+            this.playNextAyahInQueue();
+        };
+        
+        // Load and play
+        audioElement.load();
+        audioElement.play()
+            .then(() => {
+                console.log(`🎵 Playing ayah ${currentAyah} of ${surah.name}`);
+            })
+            .catch(error => {
+                console.error('❌ Error playing ayah:', error);
+                this.audioState.currentAudioIndex++;
+                this.playNextAyahInQueue();
+            });
+    },
+    
+    stopSequentialAudio() {
+        const audioElement = document.getElementById('audio-element');
+        if (audioElement) {
+            audioElement.pause();
+            audioElement.onended = null;
+        }
+        
+        this.audioState.isPlaying = false;
+        this.audioState.currentMode = 'single';
+        this.audioState.audioQueue = [];
+        this.audioState.currentAudioIndex = 0;
+        
+        console.log('⏹️ Sequential audio stopped');
     },
     
     updateReciter() {
