@@ -1188,8 +1188,9 @@ const QuranReview = {
             const audioSource = document.getElementById('audio-source');
             const surahNameElement = document.getElementById('audio-surah-name');
             
-            if (!window.QuranAudio || !QuranAudio.hasAudio(surahNumber)) {
-                this.showNotification('الملف الصوتي غير متاح لهذه السورة', 'warning');
+            if (!window.QuranAudio) {
+                console.error('❌ QuranAudio not loaded');
+                this.showNotification('Configuration audio non chargée', 'error');
                 return;
             }
             
@@ -1201,13 +1202,12 @@ const QuranReview = {
             console.log('🎵 Surah Number:', surahNumber);
             console.log('🎵 QuranAudio available:', !!window.QuranAudio);
             console.log('🎵 Current reciter:', QuranAudio?.currentReciter);
-            console.log('🎵 Reciter in function:', reciter);
             console.log('🎵 Audio config loaded:', !!window.QuranAudio);
             
-            // Force reload audio config if needed
-            if (!window.QuranAudio || !QuranAudio.getAudioUrl) {
-                console.error('❌ QuranAudio not properly loaded');
-                this.showNotification('Configuration audio non chargée', 'error');
+            // Validate URL
+            if (!audioUrl || !audioUrl.startsWith('https://')) {
+                console.error('❌ Invalid audio URL:', audioUrl);
+                this.showNotification('رابط الصوت غير صالح', 'error');
                 return;
             }
             
