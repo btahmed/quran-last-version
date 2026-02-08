@@ -130,6 +130,17 @@ const AudioManager = {
 
             console.log(` Playing ayah ${ayahNumber} (${i}/${urls.length})`);
 
+            // UPDATE PROGRESS DISPLAY FOR EACH AYAH
+            if (window.QuranReview) {
+                // Update current ayah in state
+                if (window.QuranReview.state.wardPlayer) {
+                    window.QuranReview.state.wardPlayer.currentAyah = ayahNumber;
+                }
+                // Update display
+                window.QuranReview.updateWardDisplay();
+                window.QuranReview.updateWardAyahDisplay(surahId, ayahNumber);
+            }
+
             // Create new audio element for this ayah
             this.currentAudio = new Audio(url);
 
