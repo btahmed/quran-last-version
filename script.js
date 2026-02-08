@@ -353,8 +353,8 @@ const QuranReview = {
             case 'home':
                 this.renderHomePage();
                 break;
-            case 'memorization':
-                this.renderMemorizationPage();
+            case 'reading':
+                this.renderReadingPage();
                 break;
             case 'progress':
                 this.renderProgressPage();
@@ -371,6 +371,11 @@ const QuranReview = {
         
         // Update stats
         this.updateHomeStats();
+    },
+    
+    renderReadingPage() {
+        this.setupReadingControls();
+        this.populateReadingSurahSelect();
     },
     
     renderMemorizationPage() {
@@ -423,6 +428,247 @@ const QuranReview = {
         if (masteredElement) masteredElement.textContent = stats.mastered;
         if (weakElement) weakElement.textContent = stats.weak;
         if (newElement) newElement.textContent = stats.new;
+    },
+    
+    // ===================================
+    // READING PAGE FUNCTIONS
+    // ===================================
+    
+    setupReadingControls() {
+        const surahSelect = document.getElementById('reading-surah-select');
+        const ayahSelect = document.getElementById('reading-ayah-select');
+        const prevBtn = document.getElementById('prev-ayah');
+        const nextBtn = document.getElementById('next-ayah');
+        const playBtn = document.getElementById('play-ayah');
+        const toggleBtn = document.getElementById('toggle-image-text');
+        const downloadBtn = document.getElementById('download-image');
+        
+        // Surah selection
+        if (surahSelect) {
+            surahSelect.addEventListener('change', () => {
+                this.populateAyahSelect();
+                this.updateAyahDisplay();
+            });
+        }
+        
+        // Ayah selection
+        if (ayahSelect) {
+            ayahSelect.addEventListener('change', () => {
+                this.updateAyahDisplay();
+            });
+        }
+        
+        // Navigation buttons
+        if (prevBtn) {
+            prevBtn.addEventListener('click', () => {
+                this.navigateAyah(-1);
+            });
+        }
+        
+        if (nextBtn) {
+            nextBtn.addEventListener('click', () => {
+                this.navigateAyah(1);
+            });
+        }
+        
+        // Play ayah audio
+        if (playBtn) {
+            playBtn.addEventListener('click', () => {
+                this.playCurrentAyah();
+            });
+        }
+        
+        // Toggle image/text
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', () => {
+                this.toggleImageText();
+            });
+        }
+        
+        // Download image
+        if (downloadBtn) {
+            downloadBtn.addEventListener('click', () => {
+                this.downloadAyahImage();
+            });
+        }
+    },
+    
+    populateReadingSurahSelect() {
+        const surahSelect = document.getElementById('reading-surah-select');
+        if (!surahSelect) return;
+        
+        // Clear existing options except the first one
+        while (surahSelect.children.length > 1) {
+            surahSelect.removeChild(surahSelect.lastChild);
+        }
+        
+        // Add all surahs
+        this.config.surahs.forEach(surah => {
+            const option = document.createElement('option');
+            option.value = surah.id;
+            option.textContent = `${surah.name} (${surah.ayahs} آيات)`;
+            surahSelect.appendChild(option);
+        });
+    },
+    
+    populateAyahSelect() {
+        const surahSelect = document.getElementById('reading-surah-select');
+        const ayahSelect = document.getElementById('reading-ayah-select');
+        
+        if (!surahSelect || !ayahSelect) return;
+        
+        const surahId = parseInt(surahSelect.value);
+        const surah = this.config.surahs.find(s => s.id === surahId);
+        
+        if (!surah) return;
+        
+        // Clear existing options
+        ayahSelect.innerHTML = '<option value="">-- اختر الآية --</option>';
+        
+        // Add ayah options
+        for (let i = 1; i <= surah.ayahs; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = `الآية ${i}`;
+            ayahSelect.appendChild(option);
+        }
+        
+        // Enable navigation buttons
+        this.updateNavigationButtons();
+    },
+    
+    updateAyahDisplay() {
+        const surahSelect = document.getElementById('reading-surah-select');
+        const ayahSelect = document.getElementById('reading-ayah-select');
+        const ayahImage = document.getElementById('ayah-image');
+        const ayahText = document.getElementById('ayah-text');
+        const ayahInfo = document.getElementById('current-ayah-info');
+        
+        if (!surahSelect || !ayahSelect) return;
+        
+        const surahId = parseInt(surahSelect.value);
+        const ayahNumber = parseInt(ayahSelect.value);
+        
+        if (!surahId || !ayahNumber) return;
+        
+        const surah = this.config.surahs.find(s => s.id === surahId);
+        if (!surah) return;
+        
+        // Update info
+        if (ayahInfo) {
+            ayahInfo.textContent = `${surah.name} - الآية ${ayahNumber}`;
+        }
+        
+        // Update image
+        if (ayahImage && window.QuranAudio) {
+            const imageUrl = QuranAudio.getAyahImageUrl(surahId, ayahNumber);
+            ayahImage.src = imageUrl;
+            ayahImage.style.display = 'block';
+            ayahImage.onerror = () => {
+                ayahImage.style.display = 'none';
+                if (ayahText) {
+                    ayahText.textContent = `${surah.name} - الآية ${ayahNumber}`;
+                    ayahText.style.display = 'block';
+                }
+            };
+        }
+        
+        // Hide text initially
+        if (ayahText) {
+            ayahText.style.display = 'none';
+        }
+        
+        // Update navigation buttons
+        this.updateNavigationButtons();
+    },
+    
+    updateNavigationButtons() {
+        const surahSelect = document.getElementById('reading-surah-select');
+        const ayahSelect = document.getElementById('reading-ayah-select');
+        const prevBtn = document.getElementById('prev-ayah');
+        const nextBtn = document.getElementById('next-ayah');
+        
+        if (!surahSelect || !ayahSelect || !prevBtn || !nextBtn) return;
+        
+        const surahId = parseInt(surahSelect.value);
+        const ayahNumber = parseInt(ayahSelect.value);
+        
+        if (!surahId || !ayahNumber) {
+            prevBtn.disabled = true;
+            nextBtn.disabled = true;
+            return;
+        }
+        
+        const surah = this.config.surahs.find(s => s.id === surahId);
+        if (!surah) return;
+        
+        prevBtn.disabled = ayahNumber <= 1;
+        nextBtn.disabled = ayahNumber >= surah.ayahs;
+    },
+    
+    navigateAyah(direction) {
+        const ayahSelect = document.getElementById('reading-ayah-select');
+        if (!ayahSelect) return;
+        
+        const currentAyah = parseInt(ayahSelect.value);
+        const newAyah = currentAyah + direction;
+        
+        if (newAyah >= 1) {
+            ayahSelect.value = newAyah;
+            this.updateAyahDisplay();
+        }
+    },
+    
+    playCurrentAyah() {
+        const surahSelect = document.getElementById('reading-surah-select');
+        const ayahSelect = document.getElementById('reading-ayah-select');
+        
+        if (!surahSelect || !ayahSelect) return;
+        
+        const surahId = parseInt(surahSelect.value);
+        const ayahNumber = parseInt(ayahSelect.value);
+        
+        if (!surahId || !ayahNumber) return;
+        
+        // Convert to global ayah number
+        const globalAyahNumber = window.QuranAudio ? 
+            QuranAudio.surahAyahToGlobal(surahId, ayahNumber) : 
+            (surahId * 1000 + ayahNumber); // Fallback
+        
+        // Play ayah audio
+        if (window.QuranAudio) {
+            const audioUrl = QuranAudio.getAyahAudioUrl(globalAyahNumber);
+            console.log('🎵 Playing ayah audio:', audioUrl);
+            window.open(audioUrl, '_blank', 'noopener,noreferrer');
+            this.showNotification('تم فتح الآية في نافذة جديدة', 'info');
+        }
+    },
+    
+    toggleImageText() {
+        const ayahImage = document.getElementById('ayah-image');
+        const ayahText = document.getElementById('ayah-text');
+        
+        if (!ayahImage || !ayahText) return;
+        
+        if (ayahImage.style.display === 'none') {
+            ayahImage.style.display = 'block';
+            ayahText.style.display = 'none';
+        } else {
+            ayahImage.style.display = 'none';
+            ayahText.style.display = 'block';
+        }
+    },
+    
+    downloadAyahImage() {
+        const ayahImage = document.getElementById('ayah-image');
+        if (!ayahImage || !ayahImage.src) return;
+        
+        const link = document.createElement('a');
+        link.href = ayahImage.src;
+        link.download = `ayah_${Date.now()}.png`;
+        link.click();
+        
+        this.showNotification('تم تحميل صورة الآية', 'success');
     },
     
     // ===================================

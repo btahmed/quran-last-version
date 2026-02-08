@@ -163,6 +163,43 @@ const QuranAudio = {
         return cdnUrls[reciter] || cdnUrls['alafasy'];
     },
 
+    // Get audio URL for a specific ayah
+    getAyahAudioUrl: function(ayahNumber, reciter = this.currentReciter) {
+        // Use Islamic Network CDN for ayah-by-ayah audio
+        const cdnUrls = {
+            'alafasy': `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${ayahNumber}.mp3`,
+            'abdul_basit': `https://cdn.islamic.network/quran/audio/128/ar.abdulbasit/${ayahNumber}.mp3`,
+            'sudais': `https://cdn.islamic.network/quran/audio/128/ar.sudais/${ayahNumber}.mp3`,
+            'minshawi': `https://cdn.islamic.network/quran/audio/128/ar.minshawi_mujawwad/${ayahNumber}.mp3`,
+            'husary': `https://cdn.islamic.network/quran/audio/128/ar.husary/${ayahNumber}.mp3`
+        };
+        
+        return cdnUrls[reciter] || cdnUrls['alafasy'];
+    },
+
+    // Get image URL for a specific ayah
+    getAyahImageUrl: function(surahNumber, ayahNumber, highRes = false) {
+        const baseUrl = highRes ? 
+            'https://cdn.islamic.network/quran/images/high-resolution' :
+            'https://cdn.islamic.network/quran/images';
+        
+        return `${baseUrl}/${surahNumber}_${ayahNumber}.png`;
+    },
+
+    // Convert surah:ayah to global ayah number
+    surahAyahToGlobal: function(surahNumber, ayahNumber) {
+        // This would need a complete mapping of all ayahs
+        // For now, return a simple calculation (approximate)
+        const ayahCounts = [7, 286, 200, 176, 120, 165, 206, 75, 129, 109];
+        let globalNumber = 0;
+        
+        for (let i = 0; i < surahNumber - 1; i++) {
+            globalNumber += ayahCounts[i] || 0;
+        }
+        
+        return globalNumber + ayahNumber;
+    },
+
     // Get surah name
     getSurahName: function(surahNumber) {
         return this.surahNames[surahNumber] || `سورة ${surahNumber}`;

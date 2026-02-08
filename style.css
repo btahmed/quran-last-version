@@ -517,6 +517,90 @@ input:checked + .slider:before {
     transform: translateX(26px);
 }
 
+/* Reading Page Styles */
+.reading-controls {
+    display: grid;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.reading-navigation {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.reading-navigation .btn {
+    flex: 1;
+    min-width: 120px;
+}
+
+.ayah-display {
+    text-align: center;
+}
+
+.ayah-image-container {
+    margin-bottom: 1.5rem;
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ayah-image-container img {
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    max-width: 100%;
+    height: auto;
+}
+
+.ayah-text {
+    font-size: 2rem;
+    line-height: 2.5;
+    color: var(--text-primary);
+    text-align: right;
+    padding: 2rem;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.ayah-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* Mobile responsive for reading page */
+@media (max-width: 768px) {
+    .reading-navigation {
+        flex-direction: column;
+    }
+    
+    .reading-navigation .btn {
+        width: 100%;
+        max-width: 300px;
+    }
+    
+    .ayah-text {
+        font-size: 1.5rem;
+        padding: 1rem;
+    }
+    
+    .ayah-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .ayah-actions .btn {
+        width: 100%;
+        max-width: 250px;
+    }
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .container {

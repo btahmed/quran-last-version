@@ -58,6 +58,7 @@
                 <div class="nav">
                     <a href="#" class="nav-link active" data-page="home">الرئيسية</a>
                     <a href="#" class="nav-link" data-page="memorization">الحفظ اليومي</a>
+                    <a href="#" class="nav-link" data-page="reading">القراءة</a>
                     <a href="#" class="nav-link" data-page="progress">التقدم</a>
                     <a href="#" class="nav-link" data-page="settings">الإعدادات</a>
                     <button id="theme-toggle" class="theme-toggle">🌙</button>
@@ -240,6 +241,80 @@
                                 <!-- Will be populated by JavaScript -->
                             </tbody>
                         </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reading Page -->
+            <div id="reading-page" class="page">
+                <!-- Reading Controls -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">📖 القراءة بالآيات</h2>
+                    </div>
+                    
+                    <div class="reading-controls">
+                        <div class="form-group">
+                            <label class="form-label" for="reading-surah-select">اختر السورة</label>
+                            <select id="reading-surah-select" class="form-select">
+                                <option value="">-- اختر السورة --</option>
+                                <option value="1">الفاتحة (7 آيات)</option>
+                                <option value="2">البقرة (286 آية)</option>
+                                <option value="3">آل عمران (200 آية)</option>
+                                <option value="4">النساء (176 آية)</option>
+                                <option value="5">المائدة (120 آية)</option>
+                                <option value="82">الانفطار (19 آية)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="reading-ayah-select">اختر الآية</label>
+                            <select id="reading-ayah-select" class="form-select">
+                                <option value="">-- اختر الآية --</option>
+                            </select>
+                        </div>
+                        
+                        <div class="reading-navigation">
+                            <button id="prev-ayah" class="btn btn-secondary" disabled>
+                                <span>⬅️</span>
+                                السابق
+                            </button>
+                            <button id="play-ayah" class="btn btn-primary">
+                                <span>🎵</span>
+                                استماع الآية
+                            </button>
+                            <button id="next-ayah" class="btn btn-secondary" disabled>
+                                التالي
+                                <span>➡️</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ayah Display -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title" id="current-ayah-info">سورة - آية</h3>
+                    </div>
+                    
+                    <div class="ayah-display">
+                        <div class="ayah-image-container">
+                            <img id="ayah-image" src="" alt="صورة الآية" style="max-width: 100%; height: auto; display: none;">
+                            <div id="ayah-text" class="ayah-text" style="display: none;">
+                                <!-- Ayah text will be displayed here -->
+                            </div>
+                        </div>
+                        
+                        <div class="ayah-actions">
+                            <button id="toggle-image-text" class="btn btn-secondary">
+                                <span>🔄</span>
+                                تبديل الصورة/النص
+                            </button>
+                            <button id="download-image" class="btn btn-secondary">
+                                <span>💾</span>
+                                تحميل الصورة
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
