@@ -219,6 +219,7 @@ const QuranReview = {
         appName: 'QuranReview',
         version: '1.0.0',
         storageKey: 'quranreview_data',
+        settingsKey: 'quranreview_settings',  // Ajouté clé séparée pour settings
         themeKey: 'quranreview_theme',
         
         // Default Settings
@@ -422,8 +423,8 @@ const QuranReview = {
     
     loadData() {
         try {
-            // Load settings - CORRECT KEY
-            const savedSettings = localStorage.getItem(this.config.storageKey);
+            // Load settings with SEPARATE KEY
+            const savedSettings = localStorage.getItem(this.config.settingsKey);
             this.state.settings = savedSettings ? 
                 JSON.parse(savedSettings) : 
                 { ...this.config.defaultSettings };
@@ -431,7 +432,7 @@ const QuranReview = {
             console.log('🔍 DEBUG: Loaded settings:', this.state.settings);
             console.log(`🔍 DEBUG: autoPlayNext = ${this.state.settings.autoPlayNext}`);
             
-            // Load memorization data
+            // Load memorization data with storage key
             const savedData = localStorage.getItem(this.config.storageKey);
             this.state.memorizationData = savedData ? 
                 JSON.parse(savedData) : 
@@ -447,8 +448,12 @@ const QuranReview = {
     
     saveData() {
         try {
+            // Save settings with SEPARATE KEY
+            localStorage.setItem(this.config.settingsKey, JSON.stringify(this.state.settings));
+            
+            // Save memorization data with storage key
             localStorage.setItem(this.config.storageKey, JSON.stringify(this.state.memorizationData));
-            localStorage.setItem(this.config.themeKey, JSON.stringify(this.state.settings));
+            
             console.log('💾 Data saved successfully');
         } catch (error) {
             console.error('❌ Error saving data:', error);
