@@ -20,7 +20,10 @@ const QuranReview = {
             userName: '',
             dailyGoal: 5,
             theme: 'light',
-            notifications: true
+            notifications: true,
+            // Ward Player Settings
+            ayahDelay: 2.0, // seconds between ayahs
+            autoPlayNext: true
         },
         
         // Quran Data - Complete 114 Surahs
@@ -502,6 +505,22 @@ const QuranReview = {
             });
         }
         
+        // Ayah delay selector
+        const ayahDelaySelector = document.getElementById('ward-ayah-delay');
+        if (ayahDelaySelector) {
+            ayahDelaySelector.addEventListener('change', () => {
+                this.updateWardAyahDelay();
+            });
+        }
+        
+        // Auto play next checkbox
+        const autoPlayNextCheckbox = document.getElementById('ward-autoplay-next');
+        if (autoPlayNextCheckbox) {
+            autoPlayNextCheckbox.addEventListener('change', () => {
+                this.updateWardAutoPlayNext();
+            });
+        }
+        
         console.log('✅ Ward controls setup completed');
     },
     
@@ -586,6 +605,28 @@ const QuranReview = {
             const quality = imageQualitySelector.value;
             this.state.imageQuality = quality;
             this.showNotification(`تم تغيير جودة الصور إلى: ${quality === 'high' ? 'عالية الدقة' : 'عادية'}`, 'success');
+        }
+    },
+    
+    updateWardAyahDelay() {
+        const ayahDelaySelector = document.getElementById('ward-ayah-delay');
+        
+        if (ayahDelaySelector) {
+            const delay = parseFloat(ayahDelaySelector.value);
+            this.state.settings.ayahDelay = delay;
+            this.showNotification(`تم تغيير مدة الآية إلى: ${delay} ثانية`, 'success');
+            console.log(`⏱️ Ayah delay updated to: ${delay} seconds`);
+        }
+    },
+    
+    updateWardAutoPlayNext() {
+        const autoPlayNextCheckbox = document.getElementById('ward-autoplay-next');
+        
+        if (autoPlayNextCheckbox) {
+            const autoPlayNext = autoPlayNextCheckbox.checked;
+            this.state.settings.autoPlayNext = autoPlayNext;
+            this.showNotification(`تم ${autoPlayNext ? 'تفعيل تشغيل الآية التالية' : 'إيقاف تشغيل الآية التالية'}`, 'success');
+            console.log(`🔄 Auto-play next: ${autoPlayNext}`);
         }
     },
     
@@ -1548,12 +1589,29 @@ const QuranReview = {
         // Get global ayah number
         const globalAyahNumber = QuranAudio.surahAyahToGlobal(surahId, currentAyah);
         const audioUrl = QuranAudio.getAyahAudioUrl(globalAyahNumber);
+        const surah = this.config.surahs.find(s => s.id === surahId);
+        
+        console.log(`🎵 Playing ayah ${currentAyah} of surah ${surahId} (${globalAyahNumber})`);
         
         // Create audio element for this ayah
         const audio = new Audio(audioUrl);
         
         audio.onended = () => {
-            this.playNextWardAyah();
+            console.log(`✅ Ayah ${currentAyah} finished playing`);
+            
+            // Check if auto-play next is enabled
+            if (this.state.settings.autoPlayNext && this.state.wardPlayer.isPlaying) {
+                console.log('🔄 Auto-playing next ayah...');
+                
+                // Add delay before playing next ayah
+                const delay = (this.state.settings.ayahDelay || 2.0) * 1000; // Convert to milliseconds
+                setTimeout(() => {
+                    this.playNextWardAyah();
+                }, delay);
+            } else {
+                console.log('⏹️ Auto-play next is disabled or playback stopped');
+                this.playNextWardAyah();
+            }
         };
         
         audio.onerror = () => {
