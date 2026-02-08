@@ -124,19 +124,19 @@ const QuranAudio = {
     reciters: {
         'abdul_basit': {
             name: 'عبد الباسط عبد الصمد',
-            baseUrl: 'https://audio.qurancdn.com/audio/ar.abdul_basit_mujawwad'
+            baseUrl: 'https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasy'
         },
         'sudais': {
             name: 'عبد الرحمن السديس',
-            baseUrl: 'https://audio.qurancdn.com/audio/ar.abdurrahmaansudais'
+            baseUrl: 'https://download.quranicaudio.com/quran/abdulrahman_al_sudais'
         },
         'minshawi': {
             name: 'محمد صديق المنشاوي',
-            baseUrl: 'https://audio.qurancdn.com/audio/ar.mohammad_siddiq_al_minshaawi'
+            baseUrl: 'https://download.quranicaudio.com/quran/mohammad_siddiq_al_minshawi'
         },
         'husary': {
             name: 'محمود خليل الحصري',
-            baseUrl: 'https://audio.qurancdn.com/audio/ar.mahmoud_khalil_al_husary'
+            baseUrl: 'https://download.quranicaudio.com/quran/mahmoud_khalil_al_husary'
         }
     },
 
@@ -145,13 +145,10 @@ const QuranAudio = {
 
     // Get audio URL for a surah
     getAudioUrl: function(surahNumber, reciter = this.currentReciter) {
-        if (!this.reciters[reciter]) {
-            reciter = this.currentReciter;
-        }
-        
-        const baseUrl = this.reciters[reciter].baseUrl;
         const fileName = surahNumber.toString().padStart(3, '0');
-        return `${baseUrl}/${fileName}.mp3`;
+        
+        // Use local audio files
+        return `./audio/abdul_basit/${fileName}.mp3`;
     },
 
     // Get surah name

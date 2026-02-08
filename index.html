@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>مراجعة القرآن - تطبيق حفظ ومراجعة القرآن</title>
     <meta name="description" content="تطبيق احترافي لحفظ ومراجعة القرآن الكريم">
     <meta name="keywords" content="قرآن, حفظ, مراجعة, إسلامي, تعلم">
@@ -22,8 +22,29 @@
     <!-- Styles -->
     <link rel="stylesheet" href="style.css">
     
+    <!-- Audio Configuration -->
+    <script src="audio-config.js"></script>
+    
     <!-- Icons -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%232d5016'><path d='M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z'/></svg>">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then((registration) => {
+                        console.log('🕌 Service Worker registered:', registration);
+                    })
+                    .catch((error) => {
+                        console.log('🕌 Service Worker registration failed:', error);
+                    });
+            });
+        }
+    </script>
 </head>
 <body>
     <!-- Header -->
@@ -114,6 +135,16 @@
                         <h3 class="feature-title">مراجعة ذكية</h3>
                         <p class="feature-description">نظام مراجعة ذكي يعتمد على التكرار المتباعد</p>
                     </div>
+                    
+                    <div class="card feature-card">
+                        <div class="feature-icon">🎧</div>
+                        <h3 class="feature-title">تطبيق ترتيل</h3>
+                        <p class="feature-description">فتح تطبيق ترتيل للمساعدة في الحفظ والمراجعة</p>
+                        <button class="btn btn-primary" onclick="QuranReview.openTarteel()" style="margin-top: 1rem;">
+                            <span>🎧</span>
+                            فتح تطبيق ترتيل
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -159,6 +190,32 @@
                     </form>
                 </div>
 
+                <!-- Audio Player -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">🎵 القرآن الصوتي</h2>
+                    </div>
+                    <div style="padding: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                            <select id="reciter-selector" class="form-select" style="flex: 1;">
+                                <option value="abdul_basit">عبد الباسط عبد الصمد</option>
+                                <option value="sudais">عبد الرحمن السديس</option>
+                                <option value="minshawi">محمد صديق المنشاوي</option>
+                                <option value="husary">محمود خليل الحصري</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <audio id="audio-element" controls style="flex: 1;">
+                                <source id="audio-source" src="" type="audio/mpeg">
+                            </audio>
+                            <div id="audio-info" style="color: var(--text-secondary); font-size: 0.9rem;">
+                                <div id="audio-surah-name">اختر سورة للاستماع</div>
+                                <div id="audio-reciter">القارئ: عبد الباسط عبد الصمد</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Memorization Table -->
                 <div class="card">
                     <div class="card-header">
@@ -166,20 +223,24 @@
                         <p class="text-secondary">يوم <span id="today-date"></span></p>
                     </div>
                     
-                    <table class="memorization-table">
-                        <thead>
-                            <tr>
-                                <th>السورة</th>
-                                <th>الآيات</th>
-                                <th>الحالة</th>
-                                <th>آخر مراجعة</th>
-                                <th>الإجراءات</th>
-                            </tr>
-                        </thead>
-                        <tbody id="memorization-table-body">
-                            <!-- Will be populated by JavaScript -->
-                        </tbody>
-                    </table>
+                    <div class="table-container">
+                        <table class="memorization-table">
+                            <thead>
+                                <tr>
+                                    <th>السورة</th>
+                                    <th>الآيات</th>
+                                    <th>الحالة</th>
+                                    <th>آخر مراجعة</th>
+                                    <th>المراجعات</th>
+                                    <th>التالي</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="memorization-table-body">
+                                <!-- Will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
@@ -254,6 +315,14 @@
                             <label class="form-label" for="notifications">التنبيهات</label>
                             <label class="switch">
                                 <input type="checkbox" id="notifications">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="prefer-tarteel">تفضيل فتح تطبيق ترتيل</label>
+                            <label class="switch">
+                                <input type="checkbox" id="prefer-tarteel">
                                 <span class="slider"></span>
                             </label>
                         </div>

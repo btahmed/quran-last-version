@@ -23,7 +23,7 @@ const QuranReview = {
             notifications: true
         },
         
-        // Quran Data (Simplified for demo)
+        // Quran Data - Complete 114 Surahs
         surahs: [
             { id: 1, name: 'الفاتحة', englishName: 'Al-Fatihah', ayahs: 7, type: 'meccan' },
             { id: 2, name: 'البقرة', englishName: 'Al-Baqarah', ayahs: 286, type: 'medinan' },
@@ -34,7 +34,111 @@ const QuranReview = {
             { id: 7, name: 'الأعراف', englishName: 'Al-A\'raf', ayahs: 206, type: 'meccan' },
             { id: 8, name: 'الأنفال', englishName: 'Al-Anfal', ayahs: 75, type: 'medinan' },
             { id: 9, name: 'التوبة', englishName: 'At-Tawbah', ayahs: 129, type: 'medinan' },
-            { id: 10, name: 'يونس', englishName: 'Yunus', ayahs: 109, type: 'meccan' }
+            { id: 10, name: 'يونس', englishName: 'Yunus', ayahs: 109, type: 'meccan' },
+            { id: 11, name: 'هود', englishName: 'Hud', ayahs: 123, type: 'meccan' },
+            { id: 12, name: 'يوسف', englishName: 'Yusuf', ayahs: 111, type: 'meccan' },
+            { id: 13, name: 'الرعد', englishName: 'Ar-Ra\'d', ayahs: 43, type: 'medinan' },
+            { id: 14, name: 'إبراهيم', englishName: 'Ibrahim', ayahs: 52, type: 'meccan' },
+            { id: 15, name: 'الحجر', englishName: 'Al-Hijr', ayahs: 99, type: 'meccan' },
+            { id: 16, name: 'النحل', englishName: 'An-Nahl', ayahs: 128, type: 'meccan' },
+            { id: 17, name: 'الإسراء', englishName: 'Al-Isra', ayahs: 111, type: 'meccan' },
+            { id: 18, name: 'الكهف', englishName: 'Al-Kahf', ayahs: 110, type: 'meccan' },
+            { id: 19, name: 'مريم', englishName: 'Maryam', ayahs: 98, type: 'meccan' },
+            { id: 20, name: 'طه', englishName: 'Ta-Ha', ayahs: 135, type: 'meccan' },
+            { id: 21, name: 'الأنبياء', englishName: 'Al-Anbiya', ayahs: 112, type: 'meccan' },
+            { id: 22, name: 'الحج', englishName: 'Al-Hajj', ayahs: 78, type: 'medinan' },
+            { id: 23, name: 'المؤمنون', englishName: 'Al-Mu\'minun', ayahs: 118, type: 'meccan' },
+            { id: 24, name: 'النور', englishName: 'An-Nur', ayahs: 64, type: 'medinan' },
+            { id: 25, name: 'الفرقان', englishName: 'Al-Furqan', ayahs: 77, type: 'meccan' },
+            { id: 26, name: 'الشعراء', englishName: 'Ash-Shu\'ara', ayahs: 227, type: 'meccan' },
+            { id: 27, name: 'النمل', englishName: 'An-Naml', ayahs: 93, type: 'meccan' },
+            { id: 28, name: 'القصص', englishName: 'Al-Qasas', ayahs: 88, type: 'meccan' },
+            { id: 29, name: 'العنكبوت', englishName: 'Al-Ankabut', ayahs: 69, type: 'meccan' },
+            { id: 30, name: 'الروم', englishName: 'Ar-Rum', ayahs: 60, type: 'meccan' },
+            { id: 31, name: 'لقمان', englishName: 'Luqman', ayahs: 34, type: 'meccan' },
+            { id: 32, name: 'السجدة', englishName: 'As-Sajdah', ayahs: 30, type: 'meccan' },
+            { id: 33, name: 'الأحزاب', englishName: 'Al-Ahzab', ayahs: 73, type: 'medinan' },
+            { id: 34, name: 'سبأ', englishName: 'Saba', ayahs: 54, type: 'meccan' },
+            { id: 35, name: 'فاطر', englishName: 'Fatir', ayahs: 45, type: 'meccan' },
+            { id: 36, name: 'يس', englishName: 'Ya-Sin', ayahs: 83, type: 'meccan' },
+            { id: 37, name: 'الصافات', englishName: 'As-Saffat', ayahs: 182, type: 'meccan' },
+            { id: 38, name: 'ص', englishName: 'Sad', ayahs: 88, type: 'meccan' },
+            { id: 39, name: 'الزمر', englishName: 'Az-Zumar', ayahs: 75, type: 'meccan' },
+            { id: 40, name: 'غافر', englishName: 'Ghafir', ayahs: 85, type: 'meccan' },
+            { id: 41, name: 'فصلت', englishName: 'Fussilat', ayahs: 54, type: 'meccan' },
+            { id: 42, name: 'الشورى', englishName: 'Ash-Shura', ayahs: 53, type: 'meccan' },
+            { id: 43, name: 'الزخرف', englishName: 'Az-Zukhruf', ayahs: 89, type: 'meccan' },
+            { id: 44, name: 'الدخان', englishName: 'Ad-Dukhan', ayahs: 59, type: 'meccan' },
+            { id: 45, name: 'الجاثية', englishName: 'Al-Jathiyah', ayahs: 37, type: 'meccan' },
+            { id: 46, name: 'الأحقاف', englishName: 'Al-Ahqaf', ayahs: 35, type: 'meccan' },
+            { id: 47, name: 'محمد', englishName: 'Muhammad', ayahs: 38, type: 'medinan' },
+            { id: 48, name: 'الفتح', englishName: 'Al-Fath', ayahs: 29, type: 'medinan' },
+            { id: 49, name: 'الحجرات', englishName: 'Al-Hujurat', ayahs: 18, type: 'medinan' },
+            { id: 50, name: 'ق', englishName: 'Qaf', ayahs: 45, type: 'meccan' },
+            { id: 51, name: 'الذاريات', englishName: 'Adh-Dhariyat', ayahs: 60, type: 'meccan' },
+            { id: 52, name: 'الطور', englishName: 'At-Tur', ayahs: 49, type: 'meccan' },
+            { id: 53, name: 'النجم', englishName: 'An-Najm', ayahs: 62, type: 'meccan' },
+            { id: 54, name: 'القمر', englishName: 'Al-Qamar', ayahs: 55, type: 'meccan' },
+            { id: 55, name: 'الرحمن', englishName: 'Ar-Rahman', ayahs: 78, type: 'medinan' },
+            { id: 56, name: 'الواقعة', englishName: 'Al-Waqiah', ayahs: 96, type: 'meccan' },
+            { id: 57, name: 'الحديد', englishName: 'Al-Hadid', ayahs: 29, type: 'medinan' },
+            { id: 58, name: 'المجادلة', englishName: 'Al-Mujadilah', ayahs: 22, type: 'medinan' },
+            { id: 59, name: 'الحشر', englishName: 'Al-Hashr', ayahs: 24, type: 'medinan' },
+            { id: 60, name: 'الممتحنة', englishName: 'Al-Mumtahanah', ayahs: 13, type: 'medinan' },
+            { id: 61, name: 'الصف', englishName: 'As-Saff', ayahs: 14, type: 'medinan' },
+            { id: 62, name: 'الجمعة', englishName: 'Al-Jumua', ayahs: 11, type: 'medinan' },
+            { id: 63, name: 'المنافقون', englishName: 'Al-Munafiqun', ayahs: 11, type: 'medinan' },
+            { id: 64, name: 'التغابن', englishName: 'At-Taghabun', ayahs: 18, type: 'medinan' },
+            { id: 65, name: 'الطلاق', englishName: 'At-Talaq', ayahs: 12, type: 'medinan' },
+            { id: 66, name: 'التحريم', englishName: 'At-Tahrim', ayahs: 12, type: 'medinan' },
+            { id: 67, name: 'الملك', englishName: 'Al-Mulk', ayahs: 30, type: 'meccan' },
+            { id: 68, name: 'القلم', englishName: 'Al-Qalam', ayahs: 52, type: 'meccan' },
+            { id: 69, name: 'الحاقة', englishName: 'Al-Haqqah', ayahs: 52, type: 'meccan' },
+            { id: 70, name: 'المعارج', englishName: 'Al-Maarij', ayahs: 44, type: 'meccan' },
+            { id: 71, name: 'نوح', englishName: 'Nuh', ayahs: 28, type: 'meccan' },
+            { id: 72, name: 'الجن', englishName: 'Al-Jinn', ayahs: 28, type: 'meccan' },
+            { id: 73, name: 'المزمل', englishName: 'Al-Muzzammil', ayahs: 20, type: 'meccan' },
+            { id: 74, name: 'المدثر', englishName: 'Al-Muddaththir', ayahs: 56, type: 'meccan' },
+            { id: 75, name: 'القيامة', englishName: 'Al-Qiyamah', ayahs: 40, type: 'meccan' },
+            { id: 76, name: 'الإنسان', englishName: 'Al-Insan', ayahs: 31, type: 'medinan' },
+            { id: 77, name: 'المرسلات', englishName: 'Al-Mursalat', ayahs: 50, type: 'meccan' },
+            { id: 78, name: 'النبأ', englishName: 'An-Naba', ayahs: 40, type: 'meccan' },
+            { id: 79, name: 'النازعات', englishName: 'An-Nazi-at', ayahs: 46, type: 'meccan' },
+            { id: 80, name: 'عبس', englishName: 'Abasa', ayahs: 42, type: 'meccan' },
+            { id: 81, name: 'التكوير', englishName: 'At-Takwir', ayahs: 29, type: 'meccan' },
+            { id: 82, name: 'الانفطار', englishName: 'Al-Infitar', ayahs: 19, type: 'meccan' },
+            { id: 83, name: 'المطففين', englishName: 'Al-Mutaffifin', ayahs: 36, type: 'meccan' },
+            { id: 84, name: 'الانشقاق', englishName: 'Al-Inshiqaq', ayahs: 25, type: 'meccan' },
+            { id: 85, name: 'البروج', englishName: 'Al-Buruj', ayahs: 22, type: 'meccan' },
+            { id: 86, name: 'الطارق', englishName: 'At-Tariq', ayahs: 17, type: 'meccan' },
+            { id: 87, name: 'الأعلى', englishName: 'Al-A-la', ayahs: 19, type: 'meccan' },
+            { id: 88, name: 'الغاشية', englishName: 'Al-Ghashiyah', ayahs: 26, type: 'meccan' },
+            { id: 89, name: 'الفجر', englishName: 'Al-Fajr', ayahs: 30, type: 'meccan' },
+            { id: 90, name: 'البلد', englishName: 'Al-Balad', ayahs: 20, type: 'meccan' },
+            { id: 91, name: 'الشمس', englishName: 'Ash-Shams', ayahs: 15, type: 'meccan' },
+            { id: 92, name: 'الليل', englishName: 'Al-Lail', ayahs: 21, type: 'meccan' },
+            { id: 93, name: 'الضحى', englishName: 'Ad-Duha', ayahs: 11, type: 'meccan' },
+            { id: 94, name: 'الشرح', englishName: 'Ash-Sharh', ayahs: 8, type: 'meccan' },
+            { id: 95, name: 'التين', englishName: 'At-Tin', ayahs: 8, type: 'meccan' },
+            { id: 96, name: 'العلق', englishName: 'Al-Alaq', ayahs: 19, type: 'meccan' },
+            { id: 97, name: 'القدر', englishName: 'Al-Qadr', ayahs: 5, type: 'meccan' },
+            { id: 98, name: 'البينة', englishName: 'Al-Bayyinah', ayahs: 8, type: 'medinan' },
+            { id: 99, name: 'الزلزلة', englishName: 'Az-Zalzalah', ayahs: 8, type: 'medinan' },
+            { id: 100, name: 'العاديات', englishName: 'Al-Adiyat', ayahs: 11, type: 'meccan' },
+            { id: 101, name: 'القارعة', englishName: 'Al-Qari\'ah', ayahs: 11, type: 'meccan' },
+            { id: 102, name: 'التكاثر', englishName: 'At-Takathur', ayahs: 8, type: 'meccan' },
+            { id: 103, name: 'العصر', englishName: 'Al-Asr', ayahs: 3, type: 'meccan' },
+            { id: 104, name: 'الهمزة', englishName: 'Al-Humazah', ayahs: 9, type: 'meccan' },
+            { id: 105, name: 'الفيل', englishName: 'Al-Fil', ayahs: 5, type: 'meccan' },
+            { id: 106, name: 'قريش', englishName: 'Quraysh', ayahs: 4, type: 'meccan' },
+            { id: 107, name: 'الماعون', englishName: 'Al-Ma\'un', ayahs: 7, type: 'meccan' },
+            { id: 108, name: 'الكوثر', englishName: 'Al-Kawthar', ayahs: 3, type: 'meccan' },
+            { id: 109, name: 'الكافرون', englishName: 'Al-Kafirun', ayahs: 6, type: 'meccan' },
+            { id: 110, name: 'النصر', englishName: 'An-Nasr', ayahs: 3, type: 'medinan' },
+            { id: 111, name: 'المسد', englishName: 'Al-Masad', ayahs: 5, type: 'meccan' },
+            { id: 112, name: 'الإخلاص', englishName: 'Al-Ikhlas', ayahs: 4, type: 'meccan' },
+            { id: 113, name: 'الفلق', englishName: 'Al-Falaq', ayahs: 5, type: 'meccan' },
+            { id: 114, name: 'الناس', englishName: 'An-Nas', ayahs: 6, type: 'meccan' }
         ]
     },
     
@@ -64,6 +168,12 @@ const QuranReview = {
         
         // Setup forms
         this.setupForms();
+        
+        // Initialize audio player
+        this.initAudioPlayer();
+        
+        // Populate surah select
+        this.populateSurahSelect();
         
         // Render initial page
         this.navigateTo('home');
@@ -200,24 +310,38 @@ const QuranReview = {
     },
     
     navigateTo(pageName) {
+        console.log('🔄 Navigating to:', pageName);
+        
         // Update navigation
         document.querySelectorAll('.nav-link').forEach(link => {
             link.classList.remove('active');
         });
-        document.querySelector(`[data-page="${pageName}"]`).classList.add('active');
+        const activeLink = document.querySelector(`[data-page="${pageName}"]`);
+        if (activeLink) {
+            activeLink.classList.add('active');
+            console.log('✅ Navigation link updated');
+        } else {
+            console.error('❌ Navigation link not found:', pageName);
+        }
         
         // Update pages
         document.querySelectorAll('.page').forEach(page => {
             page.classList.remove('active');
         });
-        document.getElementById(`${pageName}-page`).classList.add('active');
+        const targetPage = document.getElementById(`${pageName}-page`);
+        if (targetPage) {
+            targetPage.classList.add('active');
+            console.log('✅ Page element updated');
+        } else {
+            console.error('❌ Page element not found:', `${pageName}-page`);
+        }
         
         this.state.currentPage = pageName;
         
         // Render page content
         this.renderPage(pageName);
         
-        console.log('📍 Navigated to:', pageName);
+        console.log('📍 Navigation completed to:', pageName);
     },
     
     // ===================================
@@ -250,8 +374,10 @@ const QuranReview = {
     },
     
     renderMemorizationPage() {
+        console.log('🔄 Rendering memorization page...');
         this.renderMemorizationTable();
         this.setupMemorizationActions();
+        console.log('✅ Memorization page rendered');
     },
     
     renderProgressPage() {
@@ -316,7 +442,7 @@ const QuranReview = {
         if (todayData.previouslyMemorized.length > 0) {
             html += `
                 <tr class="section-header">
-                    <td colspan="5" style="background: var(--accent-green); color: white; text-align: center; font-weight: bold;">
+                    <td colspan="7" style="background: var(--accent-green); color: white; text-align: center; font-weight: bold;">
                         📚 محفوظ سابقًا (للتثبيت)
                     </td>
                 </tr>
@@ -328,7 +454,7 @@ const QuranReview = {
         if (todayData.todayReview.length > 0) {
             html += `
                 <tr class="section-header">
-                    <td colspan="5" style="background: var(--accent-gold); color: white; text-align: center; font-weight: bold;">
+                    <td colspan="7" style="background: var(--accent-gold); color: white; text-align: center; font-weight: bold;">
                         📋 مراجعة اليوم
                     </td>
                 </tr>
@@ -340,7 +466,7 @@ const QuranReview = {
         if (todayData.newMemorization.length > 0) {
             html += `
                 <tr class="section-header">
-                    <td colspan="5" style="background: var(--accent-red); color: white; text-align: center; font-weight: bold;">
+                    <td colspan="7" style="background: var(--accent-red); color: white; text-align: center; font-weight: bold;">
                         ✨ حفظ جديد
                     </td>
                 </tr>
@@ -354,7 +480,7 @@ const QuranReview = {
             todayData.newMemorization.length === 0) {
             html += `
                 <tr>
-                    <td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                    <td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-secondary);">
                         لا توجد عناصر للحفظ اليوم. أضف حفظًا جديدًا للبدء!
                     </td>
                 </tr>
@@ -371,9 +497,14 @@ const QuranReview = {
                 <td>${item.fromAyah} - ${item.toAyah}</td>
                 <td>${this.getStatusBadge(item.status)}</td>
                 <td>${item.lastReviewed ? new Date(item.lastReviewed).toLocaleDateString('ar-SA') : 'لم يراجع بعد'}</td>
+                <td>${item.reviewCount || 0}</td>
+                <td>${this.getNextReviewDate(item)}</td>
                 <td>
                     <button class="btn btn-sm btn-primary" onclick="QuranReview.markAsReviewed(${item.id})" title="تسجيل المراجعة">
                         ✓ مراجعة
+                    </button>
+                    <button class="btn btn-sm btn-success" onclick="QuranReview.playSurahAudio(${item.surahId})" title="استماع للسورة">
+                        🎵 استماع
                     </button>
                     <button class="btn btn-sm btn-secondary" onclick="QuranReview.openTarteel(${item.surahId}, ${item.fromAyah}, ${item.toAyah})" title="فتح في تطبيق ترتيل">
                         🎧 ترتيل
@@ -395,6 +526,47 @@ const QuranReview = {
             new: '<span class="status-badge status-new">+ جديد</span>'
         };
         return badges[status] || status;
+    },
+    
+    getNextReviewDate(item) {
+        if (!item.lastReviewed) return 'اليوم';
+        
+        const lastReview = new Date(item.lastReviewed);
+        const today = new Date();
+        const daysSinceReview = Math.floor((today - lastReview) / (1000 * 60 * 60 * 24));
+        
+        const reviewCount = item.reviewCount || 0;
+        let requiredDays;
+        
+        if (reviewCount === 0) {
+            requiredDays = 1;
+        } else if (reviewCount === 1) {
+            requiredDays = 2;
+        } else if (reviewCount === 2) {
+            requiredDays = 4;
+        } else if (reviewCount === 3) {
+            requiredDays = 7;
+        } else if (reviewCount === 4) {
+            requiredDays = 14;
+        } else if (reviewCount >= 5 && reviewCount <= 7) {
+            requiredDays = 21;
+        } else if (reviewCount >= 8 && reviewCount <= 12) {
+            requiredDays = 30;
+        } else {
+            requiredDays = 45;
+        }
+        
+        if (item.status === 'weak') {
+            requiredDays = Math.max(1, Math.floor(requiredDays * 0.5));
+        }
+        
+        const daysUntilNext = requiredDays - daysSinceReview;
+        
+        if (daysUntilNext <= 0) return 'اليوم';
+        if (daysUntilNext === 1) return 'غداً';
+        if (daysUntilNext <= 7) return `بعد ${daysUntilNext} أيام`;
+        if (daysUntilNext <= 30) return `بعد ${Math.floor(daysUntilNext / 7)} أسابيع`;
+        return `بعد ${Math.floor(daysUntilNext / 30)} أشهر`;
     },
     
     setupMemorizationActions() {
@@ -730,6 +902,102 @@ const QuranReview = {
             console.error('❌ Error clearing data:', error);
             this.showNotification('خطأ في مسح البيانات', 'error');
         }
+    },
+    
+    // ===================================
+    // AUDIO PLAYER FUNCTIONS
+    // ===================================
+    
+    initAudioPlayer() {
+        const audioElement = document.getElementById('audio-element');
+        const reciterSelector = document.getElementById('reciter-selector');
+        
+        if (audioElement && reciterSelector) {
+            reciterSelector.addEventListener('change', () => {
+                this.updateReciter();
+            });
+            
+            audioElement.addEventListener('error', () => {
+                this.showNotification('خطأ في تحميل الملف الصوتي', 'error');
+            });
+            
+            console.log('🎵 Audio player initialized');
+        }
+    },
+    
+    playSurahAudio(surahNumber) {
+        try {
+            const audioElement = document.getElementById('audio-element');
+            const audioSource = document.getElementById('audio-source');
+            const surahNameElement = document.getElementById('audio-surah-name');
+            
+            if (!window.QuranAudio || !QuranAudio.hasAudio(surahNumber)) {
+                this.showNotification('الملف الصوتي غير متاح لهذه السورة', 'warning');
+                return;
+            }
+            
+            const audioUrl = QuranAudio.getAudioUrl(surahNumber);
+            const surahName = QuranAudio.getSurahName(surahNumber);
+            
+            // Debug: log the URL
+            console.log('🎵 Generated URL:', audioUrl);
+            console.log('🎵 Surah Number:', surahNumber);
+            console.log('🎵 QuranAudio available:', !!window.QuranAudio);
+            
+            // Direct fallback - open in new tab (bypass CORS)
+            window.open(audioUrl, '_blank', 'noopener,noreferrer');
+            this.showNotification(`تم فتح ${surahName} في نافذة جديدة`, 'info');
+            
+            if (surahNameElement) {
+                surahNameElement.textContent = surahName;
+            }
+            
+        } catch (error) {
+            console.error('❌ Error playing audio:', error);
+            this.showNotification('خطأ في تشغيل الصوت', 'error');
+        }
+    },
+    
+    updateReciter() {
+        const reciterSelector = document.getElementById('reciter-selector');
+        const reciterElement = document.getElementById('audio-reciter');
+        
+        if (reciterSelector && reciterElement) {
+            const reciterNames = {
+                'abdul_basit': 'عبد الباسط عبد الصمد',
+                'sudais': 'عبد الرحمن السديس',
+                'minshawi': 'محمد صديق المنشاوي',
+                'husary': 'محمود خليل الحصري'
+            };
+            
+            const selectedReciter = reciterSelector.value;
+            reciterElement.textContent = `القارئ: ${reciterNames[selectedReciter]}`;
+            
+            // Update QuranAudio current reciter
+            if (window.QuranAudio) {
+                QuranAudio.setReciter(selectedReciter);
+            }
+        }
+    },
+    
+    populateSurahSelect() {
+        const surahSelect = document.getElementById('surah-select');
+        if (!surahSelect) return;
+        
+        // Clear existing options except the first one
+        while (surahSelect.children.length > 1) {
+            surahSelect.removeChild(surahSelect.lastChild);
+        }
+        
+        // Add all 114 surahs
+        for (let i = 1; i <= 114; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = `${QuranAudio.getSurahName(i)} (${i})`;
+            surahSelect.appendChild(option);
+        }
+        
+        console.log('📋 Surah select populated with 114 surahs');
     },
     
     // ===================================
