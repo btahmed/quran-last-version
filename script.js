@@ -1383,6 +1383,9 @@ const QuranReview = {
             reciterElement.textContent = `القارئ: ${QuranAudio.getReciterName()}`;
         }
         
+        // Display synchronized ayah image
+        this.displayAyahImageForSequential(this.audioState.currentSurah, currentAyah);
+        
         // Setup ended event for next ayah
         audioElement.onended = () => {
             this.audioState.currentAudioIndex++;
@@ -1394,12 +1397,95 @@ const QuranReview = {
         audioElement.play()
             .then(() => {
                 console.log(`🎵 Playing ayah ${currentAyah} of ${surah.name}`);
+                console.log(`🖼️ Displaying image for ayah ${currentAyah}`);
             })
             .catch(error => {
                 console.error('❌ Error playing ayah:', error);
                 this.audioState.currentAudioIndex++;
                 this.playNextAyahInQueue();
             });
+    },
+    
+    displayAyahImageForSequential(surahId, ayahNumber) {
+        // Create or update image display area
+        let imageContainer = document.getElementById('sequential-ayah-image');
+        if (!imageContainer) {
+            imageContainer = document.createElement('div');
+            imageContainer.id = 'sequential-ayah-image';
+            imageContainer.style.cssText = `
+                text-align: center;
+                margin: 1rem 0;
+                padding: 1rem;
+                background: var(--primary-light);
+                border-radius: var(--radius-lg);
+                border: 1px solid var(--border-color);
+            `;
+            
+            // Insert after audio player
+            const audioPlayer = document.getElementById('audio-element');
+            if (audioPlayer && audioPlayer.parentNode) {
+                audioPlayer.parentNode.insertBefore(imageContainer, audioPlayer.nextSibling);
+            }
+        }
+        
+        const surah = this.config.surahs.find(s => s.id === surahId);
+        if (!surah) return;
+        
+        // Create image element
+        const img = document.createElement('img');
+        img.style.cssText = `
+            max-width: 100%;
+            height: auto;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-md);
+            margin-bottom: 0.5rem;
+        `;
+        
+        // Get image URL with quality setting
+        const highRes = this.state.imageQuality === 'high';
+        const imageUrl = window.QuranAudio ? 
+            QuranAudio.getAyahImageUrl(surahId, ayahNumber, highRes) : 
+            '';
+        
+        img.src = imageUrl;
+        img.alt = `${surah.name} - الآية ${ayahNumber}`;
+        
+        // Handle image load/error
+        img.onload = () => {
+            console.log(`🖼️ Image loaded for ayah ${ayahNumber}`);
+        };
+        
+        img.onerror = () => {
+            console.error(`❌ Failed to load image for ayah ${ayahNumber}`);
+            // Show text fallback
+            const textDiv = document.createElement('div');
+            textDiv.className = 'arabic-text';
+            textDiv.style.cssText = `
+                font-size: 1.5rem;
+                color: var(--text-primary);
+                padding: 1rem;
+                background: var(--bg-secondary);
+                border-radius: var(--radius-md);
+                border: 1px solid var(--border-color);
+            `;
+            textDiv.textContent = `${surah.name} - الآية ${ayahNumber}`;
+            imageContainer.innerHTML = '';
+            imageContainer.appendChild(textDiv);
+        };
+        
+        // Update container content
+        imageContainer.innerHTML = '';
+        imageContainer.appendChild(img);
+        
+        // Add ayah info
+        const infoDiv = document.createElement('div');
+        infoDiv.style.cssText = `
+            font-weight: bold;
+            color: var(--text-primary);
+            margin-top: 0.5rem;
+        `;
+        infoDiv.textContent = `${surah.name} - الآية ${ayahNumber}`;
+        imageContainer.appendChild(infoDiv);
     },
     
     stopSequentialAudio() {
@@ -1409,12 +1495,18 @@ const QuranReview = {
             audioElement.onended = null;
         }
         
+        // Remove sequential image container
+        const imageContainer = document.getElementById('sequential-ayah-image');
+        if (imageContainer) {
+            imageContainer.remove();
+        }
+        
         this.audioState.isPlaying = false;
         this.audioState.currentMode = 'single';
         this.audioState.audioQueue = [];
         this.audioState.currentAudioIndex = 0;
         
-        console.log('⏹️ Sequential audio stopped');
+        console.log('⏹️ Sequential audio stopped and images cleaned up');
     },
     
     updateReciter() {
