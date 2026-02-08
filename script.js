@@ -152,7 +152,7 @@ const AudioManager = {
 
                 // Get REAL-TIME delay from settings (not cached)
                 const rawAyahDelay = QuranReview.state.settings.ayahDelay;
-                const currentDelay = parseFloat(rawAyahDelay) || 2.0;
+                const currentDelay = rawAyahDelay !== undefined ? parseFloat(rawAyahDelay) : 2.0;
                 const delay = currentDelay * 1000; // Convert to milliseconds
                 console.log(`🔍 DEBUG: rawAyahDelay = ${rawAyahDelay} (type: ${typeof rawAyahDelay})`);
                 console.log(`🔍 DEBUG: parseFloat(rawAyahDelay) = ${parseFloat(rawAyahDelay)}`);
