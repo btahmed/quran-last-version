@@ -316,6 +316,7 @@ body {
     font-size: 1rem;
     background-color: white;
     color: var(--text-primary);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 [data-theme="dark"] .form-input,
@@ -330,6 +331,31 @@ body {
     outline: none;
     border-color: var(--accent-green);
     box-shadow: 0 0 0 2px rgba(45, 80, 22, 0.2);
+}
+
+/* Form Layout */
+.settings-form {
+    display: grid;
+    gap: var(--spacing-lg);
+}
+
+/* Audio Player Styles */
+.audio-player-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.audio-controls {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+@media (max-width: 768px) {
+    .audio-controls {
+        gap: var(--spacing-md);
+    }
 }
 
 /* Buttons */
@@ -499,31 +525,46 @@ body {
         font-size: 1.5rem;
     }
     
+    .header-content {
+        flex-direction: column;
+        text-align: center;
+        gap: var(--spacing-md);
+    }
+    
     .nav {
         width: 100%;
         justify-content: center;
         flex-wrap: wrap;
-        gap: var(--spacing-sm);
+        gap: var(--spacing-xs);
     }
     
     .nav-link {
-        padding: var(--spacing-sm) var(--spacing-md);
-        font-size: 0.9rem;
-        min-width: 80px;
+        padding: var(--spacing-xs) var(--spacing-sm);
+        font-size: 0.85rem;
+        min-width: 70px;
         text-align: center;
+        flex: 1;
     }
     
     .features-grid {
         grid-template-columns: 1fr;
+        gap: var(--spacing-md);
     }
     
     .stats-grid {
-        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        grid-template-columns: repeat(2, 1fr);
         gap: var(--spacing-sm);
     }
     
     .card {
         margin-bottom: var(--spacing-md);
+        padding: var(--spacing-md);
+    }
+    
+    .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-xs);
     }
     
     .form-input,
@@ -532,27 +573,131 @@ body {
         padding: var(--spacing-md);
     }
     
+    .btn {
+        padding: var(--spacing-md) var(--spacing-lg);
+        font-size: 0.9rem;
+    }
+    
+    /* Audio Player Mobile */
+    #audio-element {
+        width: 100%;
+        height: 40px;
+    }
+    
+    #audio-info {
+        font-size: 0.8rem;
+        margin-top: var(--spacing-sm);
+    }
+    
+    /* Table Mobile */
+    .memorization-table {
+        font-size: 0.85rem;
+    }
+    
+    .memorization-table th,
+    .memorization-table td {
+        padding: var(--spacing-sm);
+    }
+    
+    /* Reading Page Mobile */
     .reading-navigation {
         flex-direction: column;
+        gap: var(--spacing-sm);
     }
     
     .reading-navigation .btn {
         width: 100%;
-        max-width: 300px;
+        max-width: none;
+        min-width: auto;
     }
     
     .ayah-text {
-        font-size: 1.5rem;
-        padding: 1rem;
+        font-size: 1.25rem;
+        padding: var(--spacing-md);
+        line-height: 2;
     }
     
     .ayah-actions {
         flex-direction: column;
         align-items: center;
+        gap: var(--spacing-sm);
     }
     
     .ayah-actions .btn {
         width: 100%;
-        max-width: 250px;
+        max-width: none;
+    }
+    
+    .ayah-image-container {
+        min-height: 150px;
+    }
+    
+    /* Settings Mobile */
+    .settings-form {
+        gap: var(--spacing-md);
+    }
+    
+    .form-group {
+        margin-bottom: var(--spacing-md);
+    }
+}
+
+/* Extra Small Phones */
+@media (max-width: 480px) {
+    .container {
+        padding: 0 var(--spacing-xs);
+    }
+    
+    .header h1 {
+        font-size: 1.25rem;
+    }
+    
+    .nav-link {
+        font-size: 0.75rem;
+        padding: var(--spacing-xs) var(--spacing-sm);
+        min-width: 60px;
+    }
+    
+    .card {
+        padding: var(--spacing-sm);
+        margin-bottom: var(--spacing-sm);
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-xs);
+    }
+    
+    .stat-card {
+        padding: var(--spacing-md);
+    }
+    
+    .stat-number {
+        font-size: 1.5rem;
+    }
+    
+    .btn {
+        padding: var(--spacing-sm) var(--spacing-md);
+        font-size: 0.85rem;
+    }
+    
+    .ayah-text {
+        font-size: 1rem;
+        padding: var(--spacing-sm);
+    }
+    
+    .memorization-table {
+        font-size: 0.8rem;
+    }
+    
+    .memorization-table th,
+    .memorization-table td {
+        padding: var(--spacing-xs);
+    }
+    
+    /* Hide some columns on very small screens */
+    .memorization-table th:nth-child(3),
+    .memorization-table td:nth-child(3) {
+        display: none;
     }
 }
