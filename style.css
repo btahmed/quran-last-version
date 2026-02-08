@@ -476,60 +476,6 @@ body {
     }
 }
 
-/* Filter Options */
-.filter-options {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-    justify-content: center;
-    padding: 1rem;
-}
-
-.filter-btn {
-    padding: 0.5rem 1rem;
-    border: 2px solid var(--border-color);
-    background: white;
-    color: var(--text-primary);
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.9rem;
-    transition: all 0.3s ease;
-    min-width: 100px;
-    justify-content: center;
-}
-
-.filter-btn:hover {
-    border-color: var(--primary);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-sm);
-}
-
-.filter-btn.active {
-    background: var(--primary);
-    color: white;
-    border-color: var(--primary);
-}
-
-.filter-btn.active:hover {
-    background: var(--primary-dark);
-    border-color: var(--primary-dark);
-}
-
-@media (max-width: 768px) {
-    .filter-options {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    
-    .filter-btn {
-        min-width: auto;
-        width: 100%;
-    }
-}
-
 /* Ward Navigation Controls */
 .ward-navigation {
     display: flex;
