@@ -4,6 +4,196 @@
  */
 
 // ===================================
+// AUDIO MANAGER - PROFESSIONAL AUDIO CONTROL
+// ===================================
+
+const AudioManager = {
+    audio: null,
+    mode: null,          // "wird" | "full" | "surah-local" | null
+    timers: new Set(),
+    onEnded: null,
+    currentAudio: null,  // For individual ayah audio elements
+
+    init() {
+        this.audio = document.getElementById("audio-element");
+        if (!this.audio) {
+            console.warn(' Audio element not found, creating fallback');
+            this.audio = new Audio();
+        }
+        console.log(' AudioManager initialized');
+    },
+
+    stopAll() {
+        console.log(' Stopping ALL audio and clearing everything...');
+
+        // Stop main audio element
+        if (this.audio) {
+            this.audio.pause();
+            this.audio.currentTime = 0;
+
+            // Remove ended handler
+            if (this.onEnded) {
+                this.audio.removeEventListener("ended", this.onEnded);
+                this.onEnded = null;
+            }
+
+            // Detach src to prevent weird reloads
+            this.audio.removeAttribute("src");
+            this.audio.load();
+        }
+
+        // Stop individual ayah audio if playing
+        if (this.currentAudio) {
+            this.currentAudio.pause();
+            this.currentAudio.currentTime = 0;
+            this.currentAudio = null;
+        }
+
+        // Clear all timers
+        for (const t of this.timers) clearTimeout(t);
+        this.timers.clear();
+
+        // Reset mode
+        this.mode = null;
+
+        console.log(' All audio stopped and cleared');
+    },
+
+    playFullSurah(surahId) {
+        this.stopAll();
+        this.mode = "full";
+        const src = `audio/${String(surahId).padStart(3, "0")}.mp3`;
+
+        console.log(` Playing full surah ${surahId} from ${src}`);
+
+        this.audio.src = src;
+        this.audio.play().catch(error => {
+            console.error(' Error playing full surah:', error);
+            // Fallback to CDN
+            this.playFullSurahFromCDN(surahId);
+        });
+    },
+
+    playFullSurahFromCDN(surahId) {
+        if (!window.QuranAudio) return;
+
+        this.stopAll();
+        this.mode = "full";
+
+        const audioUrl = window.QuranAudio.getAudioUrl(surahId);
+        console.log(` Playing full surah ${surahId} from CDN: ${audioUrl}`);
+
+        this.audio.src = audioUrl;
+        this.audio.play().catch(error => {
+            console.error(' Error playing CDN surah:', error);
+        });
+    },
+
+    playWirdAyahSequence(surahId, fromAyah, toAyah) {
+        this.stopAll();
+        this.mode = "wird";
+
+        if (!window.QuranAudio) {
+            console.error(' QuranAudio not available for Wird');
+            return;
+        }
+
+        console.log(` Playing Wird ayah sequence ${surahId}:${fromAyah}-${toAyah}`);
+
+        let currentAyah = fromAyah;
+        const urls = [];
+
+        // Build URLs for ayah sequence
+        for (let ayah = fromAyah; ayah <= toAyah; ayah++) {
+            const globalAyahNumber = window.QuranAudio.surahAyahToGlobal(surahId, ayah);
+            const audioUrl = window.QuranAudio.getAyahAudioUrl(globalAyahNumber);
+            urls.push(audioUrl);
+        }
+
+        let i = 0;
+
+        const playNext = () => {
+            // Guard: only continue if still in wird mode
+            if (this.mode !== "wird") {
+                console.log(' Wird mode cancelled, stopping sequence');
+                return;
+            }
+
+            if (i >= urls.length) {
+                console.log(' Wird sequence completed');
+                this.stopAll();
+                return;
+            }
+
+            const url = urls[i++];
+            const ayahNumber = fromAyah + i - 1;
+
+            console.log(` Playing ayah ${ayahNumber} (${i}/${urls.length})`);
+
+            // Create new audio element for this ayah
+            this.currentAudio = new Audio(url);
+
+            this.currentAudio.onended = () => {
+                console.log(` Ayah ${ayahNumber} finished`);
+
+                // Add delay before next ayah if configured
+                const delay = (QuranReview.state.settings.ayahDelay || 2.0) * 1000;
+
+                if (QuranReview.state.settings.autoPlayNext && this.mode === "wird") {
+                    const timer = setTimeout(() => {
+                        playNext();
+                    }, delay);
+                    this.timers.add(timer);
+                } else {
+                    // Stop if auto-play is disabled
+                    this.stopAll();
+                }
+            };
+
+            this.currentAudio.onerror = () => {
+                console.error(` Error playing ayah ${ayahNumber}`);
+                // Continue to next ayah even if error
+                if (this.mode === "wird") {
+                    const timer = setTimeout(() => {
+                        playNext();
+                    }, 1000);
+                    this.timers.add(timer);
+                }
+            };
+
+            // Update display
+            QuranReview.updateWardAyahDisplay(surahId, ayahNumber);
+
+            // Play audio
+            this.currentAudio.play().catch(error => {
+                console.error(` Error playing ayah ${ayahNumber}:`, error);
+                // Continue to next ayah
+                if (this.mode === "wird") {
+                    const timer = setTimeout(() => {
+                        playNext();
+                    }, 1000);
+                    this.timers.add(timer);
+                }
+            });
+        };
+
+        // Start playing first ayah
+        playNext();
+    },
+
+    getCurrentMode() {
+        return this.mode;
+    },
+
+    isPlaying() {
+        return this.mode !== null && (
+            (this.audio && !this.audio.paused) || 
+            (this.currentAudio && !this.currentAudio.paused)
+        );
+    }
+};
+
+// ===================================
 // APP STATE & CONFIGURATION
 // ===================================
 
@@ -159,6 +349,9 @@ const QuranReview = {
     
     init() {
         console.log(' Initializing QuranReview App...');
+        
+        // Initialize AudioManager first
+        AudioManager.init();
         
         // Initialize state
         this.state = {
@@ -1502,10 +1695,7 @@ const QuranReview = {
     },
     
     playWard() {
-        console.log('🎵 Starting Ward playback - stopping any current playback first...');
-        
-        // Stop any current playback first
-        this.stopWardPlayback();
+        console.log('🎵 Starting Ward playback - using AudioManager...');
         
         const surahSelect = document.getElementById('ward-surah-select');
         const fromAyahInput = document.getElementById('ward-from-ayah');
@@ -1541,7 +1731,7 @@ const QuranReview = {
         
         console.log(`✅ Valid ayah range: ${fromAyah}-${toAyah} for surah ${surah.name}`);
         
-        // Setup ward player state
+        // Setup ward player state for display
         this.state.wardPlayer = {
             isPlaying: true,
             currentAyah: fromAyah,
@@ -1552,19 +1742,18 @@ const QuranReview = {
             toAyah: toAyah
         };
         
-        // Show and update ward player
+        // Update display
         this.updateWardDisplay();
-        this.playCurrentWardAyah();
+        
+        // Use AudioManager to play
+        AudioManager.playWirdAyahSequence(surahId, fromAyah, toAyah);
         
         this.showNotification(`🎧 جاري تشغيل ورد ${surah.name} (${fromAyah}-${toAyah})`, 'success');
-        console.log('✅ Ward playback started successfully');
+        console.log('✅ Ward playback started successfully via AudioManager');
     },
     
     playFullSurah() {
-        console.log('📖 Starting Full Surah playback - stopping any current playback first...');
-        
-        // Stop any current playback first
-        this.stopWardPlayback();
+        console.log('📖 Starting Full Surah playback - using AudioManager...');
         
         const surahSelect = document.getElementById('ward-surah-select');
         
@@ -1582,13 +1771,31 @@ const QuranReview = {
         // Check audio source
         const audioSource = this.state.settings.audioSource || 'cdn';
         
+        // Setup ward player state for display
+        this.state.wardPlayer = {
+            isPlaying: true,
+            currentAyah: 1,
+            totalAyahs: surah.ayahs,
+            mode: audioSource === 'local' ? 'surah-local' : 'surah',
+            surahId: surahId,
+            fromAyah: 1,
+            toAyah: surah.ayahs
+        };
+        
+        // Update display
+        this.updateWardDisplay();
+        this.updateWardAyahDisplay(surahId, 1);
+        
+        // Use AudioManager to play
         if (audioSource === 'local') {
-            // Play local MP3 file for full surah
-            this.playLocalSurah(surahId, surah);
+            AudioManager.playFullSurah(surahId);
+            this.showNotification(`📖 جاري تشغيل سورة ${surah.name} كاملة (ملف محلي)`, 'success');
         } else {
-            // Play ayah by ayah from CDN
-            this.playFullSurahAyahByAyah(surahId, surah);
+            AudioManager.playFullSurahFromCDN(surahId);
+            this.showNotification(`📖 جاري تشغيل سورة ${surah.name} كاملة (CDN)`, 'success');
         }
+        
+        console.log('✅ Full Surah playback started successfully via AudioManager');
     },
     
     playLocalSurah(surahId, surah) {
@@ -1727,45 +1934,19 @@ const QuranReview = {
     },
     
     stopWardPlayback() {
-        console.log('⏹️ STOPPING ALL PLAYBACK - Clearing everything...');
+        console.log('⏹️ Stopping Ward playback - using AudioManager...');
         
+        // Use AudioManager to stop everything
+        AudioManager.stopAll();
+        
+        // Reset ward player state
         this.state.wardPlayer.isPlaying = false;
-        
-        // Stop ALL audio elements - more aggressive cleanup
-        const allAudio = document.querySelectorAll('audio');
-        console.log(`🔍 Found ${allAudio.length} audio elements to stop`);
-        
-        allAudio.forEach((audio, index) => {
-            if (!audio.paused) {
-                console.log(`⏹️ Stopping audio element ${index + 1}`);
-                audio.pause();
-                audio.currentTime = 0;
-            }
-            // Clear all sources
-            audio.src = '';
-            audio.removeAttribute('src');
-        });
-        
-        // Clear any audio sources
-        const audioSource = document.getElementById('audio-source');
-        if (audioSource) {
-            audioSource.src = '';
-        }
-        
-        // Force garbage collection of audio elements
-        if (window.QuranReview && window.QuranReview.currentAudio) {
-            if (window.QuranReview.currentAudio) {
-                window.QuranReview.currentAudio.pause();
-                window.QuranReview.currentAudio.src = '';
-                window.QuranReview.currentAudio = null;
-            }
-        }
         
         // Reset display
         this.updateWardDisplay();
         
-        console.log('✅ ALL PLAYBACK STOPPED - All audio cleared');
         this.showNotification('⏹️ تم إيقاف التشغيل', 'info');
+        console.log('✅ Ward playback stopped via AudioManager');
     },
     
     updateWardDisplay() {
