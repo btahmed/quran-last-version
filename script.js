@@ -1221,26 +1221,46 @@ const QuranReview = {
     // ===================================
     
     initWardPlayer() {
+        console.log('🎧 Initializing Ward Player...');
+        
         const playWardBtn = document.getElementById('play-ward-btn');
         const playSurahBtn = document.getElementById('play-surah-btn');
         const stopWardBtn = document.getElementById('stop-ward-btn');
         
+        console.log('🔍 DEBUG: Elements found:', {
+            playWardBtn: !!playWardBtn,
+            playSurahBtn: !!playSurahBtn,
+            stopWardBtn: !!stopWardBtn
+        });
+        
         if (playWardBtn) {
             playWardBtn.addEventListener('click', () => {
+                console.log('🎵 DEBUG: Play Ward button clicked!');
                 this.playWard();
             });
+            console.log('✅ DEBUG: Play Ward button event attached');
+        } else {
+            console.error('❌ DEBUG: Play Ward button not found!');
         }
         
         if (playSurahBtn) {
             playSurahBtn.addEventListener('click', () => {
+                console.log('🎵 DEBUG: Play Surah button clicked!');
                 this.playFullSurah();
             });
+            console.log('✅ DEBUG: Play Surah button event attached');
+        } else {
+            console.error('❌ DEBUG: Play Surah button not found!');
         }
         
         if (stopWardBtn) {
             stopWardBtn.addEventListener('click', () => {
+                console.log('⏹️ DEBUG: Stop Ward button clicked!');
                 this.stopWardPlayback();
             });
+            console.log('✅ DEBUG: Stop Ward button event attached');
+        } else {
+            console.error('❌ DEBUG: Stop Ward button not found!');
         }
         
         // Initialize ward state
@@ -1254,7 +1274,7 @@ const QuranReview = {
             toAyah: null
         };
         
-        console.log('🎧 Ward player initialized');
+        console.log('✅ Ward player initialized successfully');
     },
     
     showWardPlayer() {
