@@ -463,7 +463,160 @@ const QuranReview = {
             toAyah: null
         };
         
+        // Setup event listeners for Ward Player buttons
+        this.setupWardControls();
+        
         console.log('✅ Ward player initialized successfully');
+    },
+    
+    setupWardControls() {
+        console.log('🔧 Setting up Ward controls...');
+        
+        // Play Ward button
+        const playWardBtn = document.getElementById('play-ward-btn');
+        if (playWardBtn) {
+            playWardBtn.addEventListener('click', () => {
+                console.log('🎵 Play Ward button clicked!');
+                this.playWard();
+            });
+            console.log('✅ Play Ward button event attached');
+        } else {
+            console.error('❌ Play Ward button not found!');
+        }
+        
+        // Play Surah button
+        const playSurahBtn = document.getElementById('play-surah-btn');
+        if (playSurahBtn) {
+            playSurahBtn.addEventListener('click', () => {
+                console.log('📖 Play Surah button clicked!');
+                this.playFullSurah();
+            });
+            console.log('✅ Play Surah button event attached');
+        } else {
+            console.error('❌ Play Surah button not found!');
+        }
+        
+        // Stop Ward button
+        const stopWardBtn = document.getElementById('stop-ward-btn');
+        if (stopWardBtn) {
+            stopWardBtn.addEventListener('click', () => {
+                console.log('⏹️ Stop Ward button clicked!');
+                this.stopWardPlayback();
+            });
+            console.log('✅ Stop Ward button event attached');
+        } else {
+            console.error('❌ Stop Ward button not found!');
+        }
+        
+        // Navigation buttons
+        const prevBtn = document.getElementById('prev-ayah-btn');
+        if (prevBtn) {
+            prevBtn.addEventListener('click', () => {
+                console.log('⏮️ Previous Ayah button clicked!');
+                this.playPreviousAyah();
+            });
+            console.log('✅ Previous Ayah button event attached');
+        } else {
+            console.error('❌ Previous Ayah button not found!');
+        }
+        
+        const nextBtn = document.getElementById('next-ayah-btn');
+        if (nextBtn) {
+            nextBtn.addEventListener('click', () => {
+                console.log('⏭️ Next Ayah button clicked!');
+                this.playNextAyahManually();
+            });
+            console.log('✅ Next Ayah button event attached');
+        } else {
+            console.error('❌ Next Ayah button not found!');
+        }
+        
+        // Ward controls (selectors)
+        const surahSelect = document.getElementById('ward-surah-select');
+        const fromAyahInput = document.getElementById('ward-from-ayah');
+        const toAyahInput = document.getElementById('ward-to-ayah');
+        
+        if (surahSelect) {
+            surahSelect.addEventListener('change', () => {
+                console.log('📋 Surah selection changed');
+                this.updateWardAyahLimits();
+            });
+            this.populateWardSurahSelect();
+        }
+        
+        if (fromAyahInput && toAyahInput) {
+            fromAyahInput.addEventListener('input', () => this.validateWardAyahRange());
+            toAyahInput.addEventListener('input', () => this.validateWardAyahRange());
+        }
+        
+        console.log('✅ Ward controls setup completed');
+    },
+    
+    populateWardSurahSelect() {
+        const surahSelect = document.getElementById('ward-surah-select');
+        if (!surahSelect) return;
+        
+        // Clear existing options except the first one
+        while (surahSelect.children.length > 1) {
+            surahSelect.removeChild(surahSelect.lastChild);
+        }
+        
+        // Add all 114 surahs with correct ayah counts
+        this.config.surahs.forEach(surah => {
+            const option = document.createElement('option');
+            option.value = surah.id;
+            option.textContent = `${surah.name} (${surah.ayahs} آيات)`;
+            surahSelect.appendChild(option);
+        });
+        
+        console.log('📋 Ward surah select populated with 114 surahs');
+    },
+    
+    updateWardAyahLimits() {
+        const surahSelect = document.getElementById('ward-surah-select');
+        const fromAyahInput = document.getElementById('ward-from-ayah');
+        const toAyahInput = document.getElementById('ward-to-ayah');
+        
+        if (!surahSelect || !fromAyahInput || !toAyahInput) return;
+        
+        const surahId = parseInt(surahSelect.value);
+        if (!surahId) return;
+        
+        const surah = this.config.surahs.find(s => s.id === surahId);
+        if (!surah) return;
+        
+        // Update max values
+        fromAyahInput.max = surah.ayahs;
+        toAyahInput.max = surah.ayahs;
+        
+        // Update placeholder
+        fromAyahInput.placeholder = `من 1 إلى ${surah.ayahs}`;
+        toAyahInput.placeholder = `من 1 إلى ${surah.ayahs}`;
+        
+        // Clear current values if they exceed the limit
+        if (parseInt(fromAyahInput.value) > surah.ayahs) {
+            fromAyahInput.value = '';
+        }
+        if (parseInt(toAyahInput.value) > surah.ayahs) {
+            toAyahInput.value = '';
+        }
+        
+        console.log(`📊 Updated ayah limits for Surah ${surahId}: 1-${surah.ayahs}`);
+    },
+    
+    validateWardAyahRange() {
+        const fromAyahInput = document.getElementById('ward-from-ayah');
+        const toAyahInput = document.getElementById('ward-to-ayah');
+        
+        if (!fromAyahInput || !toAyahInput) return;
+        
+        const fromAyah = parseInt(fromAyahInput.value);
+        const toAyah = parseInt(toAyahInput.value);
+        
+        if (fromAyah && toAyah && fromAyah > toAyah) {
+            toAyahInput.value = fromAyah;
+            console.log('🔧 Auto-corrected ayah range: from > to');
+        }
     },
     
     updateTodayDate() {
