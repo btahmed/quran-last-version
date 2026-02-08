@@ -737,16 +737,27 @@ const QuranReview = {
     // ===================================
     
     renderMemorizationTable() {
+        console.log('📋 Rendering memorization table...');
         const tableBody = document.getElementById('memorization-table-body');
-        if (!tableBody) return;
+        if (!tableBody) {
+            console.error('❌ Table body not found!');
+            return;
+        }
         
         const todayData = this.getTodayMemorizationData();
+        console.log('📊 Today data:', todayData);
+        console.log('📈 Data counts:', {
+            previouslyMemorized: todayData.previouslyMemorized.length,
+            todayReview: todayData.todayReview.length,
+            newMemorization: todayData.newMemorization.length
+        });
         
         // Render sections separately to avoid duplication
         let html = '';
         
         // Previously memorized section
         if (todayData.previouslyMemorized.length > 0) {
+            console.log('📚 Rendering previously memorized section...');
             html += `
                 <tr class="section-header">
                     <td colspan="3" style="background: #2d5016; color: white; text-align: center; font-weight: bold;">
@@ -759,6 +770,7 @@ const QuranReview = {
         
         // Today's review section
         if (todayData.todayReview.length > 0) {
+            console.log('📋 Rendering today review section...');
             html += `
                 <tr class="section-header">
                     <td colspan="3" style="background: #d4a574; color: white; text-align: center; font-weight: bold;">
@@ -771,6 +783,7 @@ const QuranReview = {
         
         // New memorization section
         if (todayData.newMemorization.length > 0) {
+            console.log('✨ Rendering new memorization section...');
             html += `
                 <tr class="section-header">
                     <td colspan="3" style="background: #8b2635; color: white; text-align: center; font-weight: bold;">
@@ -785,6 +798,7 @@ const QuranReview = {
         if (todayData.previouslyMemorized.length === 0 && 
             todayData.todayReview.length === 0 && 
             todayData.newMemorization.length === 0) {
+            console.log('📭 No data to display, showing empty message...');
             html += `
                 <tr>
                     <td colspan="3" style="text-align: center; padding: 2rem; color: #6c757d;">
@@ -795,50 +809,41 @@ const QuranReview = {
         }
         
         tableBody.innerHTML = html;
+        console.log('✅ Memorization table rendered successfully');
+        console.log('📊 Final HTML length:', html.length, 'characters');
     },
     
-    createTableRow(item, type) {
-        const row = document.createElement('tr');
-        
-        // Status badge
-        const statusBadge = document.createElement('td');
-        statusBadge.innerHTML = `<span class="status-badge status-${item.status}">${this.getStatusText(item.status)}</span>`;
-        row.appendChild(statusBadge);
-        
-        // Surah info
-        const surahCell = document.createElement('td');
-        surahCell.innerHTML = `
-            <div>
-                <strong>${item.surahName}</strong><br>
-                <small>من ${item.fromAyah} إلى ${item.toAyah}</small>
-            </div>
-        `;
-        row.appendChild(surahCell);
-        
-        // Actions
-        const actionsCell = document.createElement('td');
-        actionsCell.innerHTML = `
-            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                <button class="btn btn-sm btn-primary" onclick="QuranReview.playAyahRange(${item.surahId}, ${item.fromAyah}, ${item.toAyah})">
-                    استماع للآيات
-                </button>
-                <button class="btn btn-sm btn-secondary" onclick="QuranReview.playSurahAudio(${item.surahId})">
-                    استماع للسورة
-                </button>
-                ${type === 'today-review' ? `
-                    <button class="btn btn-sm btn-primary" onclick="QuranReview.markAsReviewed(${item.id})">
-                        تم المراجعة
+    createTableRow(item) {
+    return `
+        <tr>
+            <td>
+                <span class="status-badge status-${item.status}">${this.getStatusText(item.status)}</span>
+            </td>
+            <td>
+                <div>
+                    <strong>${item.surahName}</strong><br>
+                    <small>من ${item.fromAyah} إلى ${item.toAyah}</small>
+                </div>
+            </td>
+            <td>
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <button class="btn btn-sm btn-primary" onclick="QuranReview.playAyahRange(${item.surahId}, ${item.fromAyah}, ${item.toAyah})">
+                        🎵 استماع للآيات
                     </button>
-                ` : ''}
-                <button class="btn btn-sm btn-danger" onclick="QuranReview.deleteItem(${item.id})">
-                    حذف
-                </button>
-            </div>
-        `;
-        row.appendChild(actionsCell);
-        
-        return row;
-    },
+                    <button class="btn btn-sm btn-secondary" onclick="QuranReview.playSurahAudio(${item.surahId})">
+                        📖 استماع للسورة
+                    </button>
+                    <button class="btn btn-sm btn-primary" onclick="QuranReview.markAsReviewed(${item.id})">
+                        ✓ تم المراجعة
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="QuranReview.deleteItem(${item.id})">
+                        🗑️ حذف
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `;
+},
     
     getStatusBadge(status) {
         const badges = {
