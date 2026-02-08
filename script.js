@@ -829,6 +829,14 @@ const QuranReview = {
             });
         }
         
+        // Surah selector for memorization form
+        const surahSelect = document.getElementById('surah-select');
+        if (surahSelect) {
+            surahSelect.addEventListener('change', () => {
+                this.updateAyahLimits();
+            });
+        }
+        
         // Reciter selector
         const reciterSelector = document.getElementById('reciter-selector');
         if (reciterSelector) {
@@ -1278,6 +1286,38 @@ const QuranReview = {
         }
     },
     
+    updateAyahLimits() {
+        const surahSelect = document.getElementById('surah-select');
+        const fromAyahInput = document.getElementById('from-ayah');
+        const toAyahInput = document.getElementById('to-ayah');
+        
+        if (!surahSelect || !fromAyahInput || !toAyahInput) return;
+        
+        const surahId = parseInt(surahSelect.value);
+        if (!surahId) return;
+        
+        const surah = this.config.surahs.find(s => s.id === surahId);
+        if (!surah) return;
+        
+        // Update max values
+        fromAyahInput.max = surah.ayahs;
+        toAyahInput.max = surah.ayahs;
+        
+        // Update placeholder
+        fromAyahInput.placeholder = `من 1 إلى ${surah.ayahs}`;
+        toAyahInput.placeholder = `من 1 إلى ${surah.ayahs}`;
+        
+        // Clear current values if they exceed the limit
+        if (parseInt(fromAyahInput.value) > surah.ayahs) {
+            fromAyahInput.value = '';
+        }
+        if (parseInt(toAyahInput.value) > surah.ayahs) {
+            toAyahInput.value = '';
+        }
+        
+        console.log(`📊 Updated ayah limits for Surah ${surahId}: 1-${surah.ayahs}`);
+    },
+    
     populateSurahSelect() {
         const surahSelect = document.getElementById('surah-select');
         if (!surahSelect) return;
@@ -1287,13 +1327,13 @@ const QuranReview = {
             surahSelect.removeChild(surahSelect.lastChild);
         }
         
-        // Add all 114 surahs
-        for (let i = 1; i <= 114; i++) {
+        // Add all 114 surahs with correct ayah counts
+        this.config.surahs.forEach(surah => {
             const option = document.createElement('option');
-            option.value = i;
-            option.textContent = `${QuranAudio.getSurahName(i)} (${i})`;
+            option.value = surah.id;
+            option.textContent = `${surah.name} (${surah.ayahs} آيات)`;
             surahSelect.appendChild(option);
-        }
+        });
         
         console.log('📋 Surah select populated with 114 surahs');
     },
