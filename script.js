@@ -372,6 +372,69 @@ const QuranReview = {
         this.initAudioPlayer();
         
         // Initialize ward player
+        this.initWardPlayer = function() {
+            console.log('Initializing Ward Player...');
+            // Add Ward Player initialization code here
+            this.wardPlayer = {
+                currentAyah: 0,
+                currentSurah: 0,
+                playing: false,
+                ayahs: [],
+                surahs: this.config.surahs,
+                audio: new Audio(),
+                play: function() {
+                    this.playing = true;
+                    this.audio.play();
+                },
+                pause: function() {
+                    this.playing = false;
+                    this.audio.pause();
+                },
+                stop: function() {
+                    this.playing = false;
+                    this.audio.pause();
+                    this.audio.currentTime = 0;
+                },
+                loadAyah: function(ayah) {
+                    this.audio.src = `https://example.com/ayahs/${ayah}.mp3`;
+                },
+                loadSurah: function(surah) {
+                    this.ayahs = [];
+                    for (let i = 0; i < surah.ayahs; i++) {
+                        this.ayahs.push(i + 1);
+                    }
+                    this.currentSurah = surah.id;
+                    this.currentAyah = 0;
+                    this.loadAyah(this.ayahs[this.currentAyah]);
+                },
+                playAyah: function() {
+                    if (this.playing) {
+                        this.play();
+                    } else {
+                        this.loadAyah(this.ayahs[this.currentAyah]);
+                        this.play();
+                    }
+                },
+                playNextAyah: function() {
+                    if (this.currentAyah < this.ayahs.length - 1) {
+                        this.currentAyah++;
+                        this.loadAyah(this.ayahs[this.currentAyah]);
+                        this.play();
+                    } else {
+                        this.stop();
+                    }
+                },
+                playPreviousAyah: function() {
+                    if (this.currentAyah > 0) {
+                        this.currentAyah--;
+                        this.loadAyah(this.ayahs[this.currentAyah]);
+                        this.play();
+                    } else {
+                        this.stop();
+                    }
+                }
+            };
+        };
         this.initWardPlayer();
         
         // Initialize theme
@@ -384,6 +447,23 @@ const QuranReview = {
         this.updateTodayDate();
         
         console.log(' QuranReview App initialized successfully');
+    },
+    
+    initWardPlayer() {
+        console.log('🎧 Initializing Ward Player...');
+        
+        // Initialize ward player state
+        this.state.wardPlayer = {
+            isPlaying: false,
+            currentAyah: 1,
+            totalAyahs: 0,
+            mode: 'ward', // 'ward' or 'surah'
+            surahId: null,
+            fromAyah: null,
+            toAyah: null
+        };
+        
+        console.log('✅ Ward player initialized successfully');
     },
     
     updateTodayDate() {
