@@ -113,14 +113,14 @@ const AudioManager = {
         let i = 0;
 
         const playNext = () => {
-            // Guard: only continue if still in wird mode
-            if (this.mode !== "wird") {
-                console.log(' Wird mode cancelled, stopping sequence');
+            // Guard: only continue if still in wird or surah mode
+            if (this.mode !== "wird" && this.mode !== "surah") {
+                console.log(' Mode cancelled, stopping sequence');
                 return;
             }
 
             if (i >= urls.length) {
-                console.log(' Wird sequence completed');
+                console.log(' Sequence completed');
                 this.stopAll();
                 return;
             }
@@ -139,7 +139,7 @@ const AudioManager = {
                 // Add delay before next ayah if configured
                 const delay = (QuranReview.state.settings.ayahDelay || 2.0) * 1000;
 
-                if (QuranReview.state.settings.autoPlayNext && this.mode === "wird") {
+                if (QuranReview.state.settings.autoPlayNext && (this.mode === "wird" || this.mode === "surah")) {
                     const timer = setTimeout(() => {
                         playNext();
                     }, delay);
@@ -153,7 +153,7 @@ const AudioManager = {
             this.currentAudio.onerror = () => {
                 console.error(` Error playing ayah ${ayahNumber}`);
                 // Continue to next ayah even if error
-                if (this.mode === "wird") {
+                if (this.mode === "wird" || this.mode === "surah") {
                     const timer = setTimeout(() => {
                         playNext();
                     }, 1000);
@@ -168,7 +168,7 @@ const AudioManager = {
             this.currentAudio.play().catch(error => {
                 console.error(` Error playing ayah ${ayahNumber}:`, error);
                 // Continue to next ayah
-                if (this.mode === "wird") {
+                if (this.mode === "wird" || this.mode === "surah") {
                     const timer = setTimeout(() => {
                         playNext();
                     }, 1000);
