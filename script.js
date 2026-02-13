@@ -2310,7 +2310,7 @@ const QuranReview = {
         const tarteelSmartLink = 'https://tarteel.go.link/?adj_t=1d1pgcav&adj_engagement_type=fallback_click';
         
         // Open in new tab
-        window.open(tarteelSmartLink, '_blank');
+        window.open(tarteelSmartLink, '_blank', 'noopener,noreferrer');
         
         this.showNotification('🎧 جاري فتح تطبيق ترتيل', 'success');
     },
