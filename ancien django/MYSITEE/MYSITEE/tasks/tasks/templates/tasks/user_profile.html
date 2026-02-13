@@ -1,0 +1,43 @@
+{% extends 'tasks/base.html' %}
+{% load static %}
+{% block content %}
+
+<h1>Profil de {{ profile_user.username }}</h1>
+
+<h2>Équipes</h2>
+<ul>
+    {% for team in teams %}
+        <li>{{ team.name }}</li>
+    {% empty %}
+        <li>Aucune équipe</li>
+    {% endfor %}
+</ul>
+
+<h2>Tâches publiques</h2>
+<ul>
+    {% for task in public_tasks %}
+        {% if not task.parent %}
+        <li>
+            <strong>{{ task.title }}</strong> – 
+            <span class="status-circle {% if task.status == 'todo' %}todo{% else %}done{% endif %}"></span> 
+            {{ task.get_status_display }}
+
+            {% if task.subtasks.all %}
+            <ul>
+                {% for subtask in task.subtasks.all %}
+                    <li>
+                        <em>{{ subtask.title }}</em> – 
+                        <span class="status-circle {% if subtask.status == 'todo' %}todo{% else %}done{% endif %}"></span> 
+                        {{ subtask.get_status_display }}
+                    </li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </li>
+        {% endif %}
+    {% empty %}
+        <li>Aucune tâche publique</li>
+    {% endfor %}
+</ul>
+
+{% endblock %}

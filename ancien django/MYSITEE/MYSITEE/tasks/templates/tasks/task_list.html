@@ -1,0 +1,110 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Mes Tâches</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+</head>
+<body>
+
+<h1>Mes Tâches</h1>
+
+<a href="{% url 'task_create' %}">➕ Nouvelle tâche</a>
+
+<h2>📝 Tâches à faire</h2>
+<ul>
+  {% for task in todo_tasks %}
+    {% if not task.parent %}
+    <li>
+      <strong>{{ task.title }}</strong>
+      {% if task.is_private %}
+          Privée
+      {% else %}
+          Publique – par {{ task.author.username }}
+         {% if user in task.assigned_users.all and user != task.author %}
+         <form method="post" action="{% url 'quit_task' task.id %}" style="display:inline;">
+             {% csrf_token %}
+             <button type="submit">Quitter</button>
+         </form>
+         {% endif %}
+      {% endif %}
+      – {{ task.get_status_display }}
+
+      <a href="{% url 'task_edit' task.id %}">Modifier</a> |
+      <a href="{% url 'task_delete' task.id %}">Supprimer</a>
+
+      <ul>
+        {% for subtask in task.subtasks.all %}
+        <li>
+          <em>{{ subtask.title }}</em>
+          {% if subtask.is_private %}
+              Privée
+          {% else %}
+              Publique – par {{ subtask.author.username }}
+          {% endif %}
+          – {{ subtask.get_status_display }}
+          <a href="{% url 'task_edit' subtask.id %}">Modifier</a> |
+          <a href="{% url 'task_delete' subtask.id %}">Supprimer</a>
+        </li>
+        {% empty %}
+        <li>Aucune sous-tâche</li>
+        {% endfor %}
+      </ul>
+    </li>
+    {% endif %}
+  {% empty %}
+    <li>Aucune tâche à faire.</li>
+  {% endfor %}
+</ul>
+
+<h2>✅ Tâches accomplies</h2>
+<ul>
+  {% for task in done_tasks %}
+    {% if not task.parent %}
+    <li>
+      <strong>{{ task.title }}</strong>
+      {% if task.is_private %}
+          Privée
+      {% else %}
+          Publique – par {{ task.author.username }}
+         {% if user in task.assigned_users.all and user != task.author %}
+         <form method="post" action="{% url 'quit_task' task.id %}" style="display:inline;">
+             {% csrf_token %}
+             <button type="submit">Quitter</button>
+         </form>
+         {% endif %}
+      {% endif %}
+      – {{ task.get_status_display }}
+
+      <a href="{% url 'task_edit' task.id %}">Modifier</a> |
+      <a href="{% url 'task_delete' task.id %}">Supprimer</a>
+
+      <ul>
+        {% for subtask in task.subtasks.all %}
+        <li>
+          <em>{{ subtask.title }}</em>
+          {% if subtask.is_private %}
+              Privée
+          {% else %}
+              Publique – par {{ subtask.author.username }}
+          {% endif %}
+          – {{ subtask.get_status_display }}
+          <a href="{% url 'task_edit' subtask.id %}">Modifier</a> |
+          <a href="{% url 'task_delete' subtask.id %}">Supprimer</a>
+        </li>
+        {% empty %}
+        <li>Aucune sous-tâche</li>
+        {% endfor %}
+      </ul>
+    </li>
+    {% endif %}
+  {% empty %}
+    <li>Aucune tâche accomplie.</li>
+  {% endfor %}
+</ul>
+
+<a href="{% url 'dashboard' %}">↩️ Retour au tableau de bord</a>
+
+</body>
+</html>
