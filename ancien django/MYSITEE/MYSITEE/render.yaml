@@ -20,7 +20,9 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: DATABASE_URL
-        fromDatabase: quranreview-db
+        fromDatabase:
+          name: quranreview-db
+          property: connectionURI
 databases:
   - name: quranreview-db
     plan: free
