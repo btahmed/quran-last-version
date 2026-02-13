@@ -788,14 +788,20 @@ const QuranReview = {
             surahSelect.removeChild(surahSelect.lastChild);
         }
         
+        // Create a DocumentFragment to batch DOM updates
+        const fragment = document.createDocumentFragment();
+
         // Add all 114 surahs with correct ayah counts
         this.config.surahs.forEach(surah => {
             const option = document.createElement('option');
             option.value = surah.id;
             option.textContent = `${surah.name} (${surah.ayahs} آيات)`;
-            surahSelect.appendChild(option);
+            fragment.appendChild(option);
         });
         
+        // Append the fragment to the select element in a single operation
+        surahSelect.appendChild(fragment);
+
         console.log('📋 Ward surah select populated with 114 surahs');
     },
     
@@ -968,13 +974,19 @@ const QuranReview = {
             surahSelect.removeChild(surahSelect.lastChild);
         }
         
+        // Create a DocumentFragment to batch DOM updates
+        const fragment = document.createDocumentFragment();
+
         // Add all surahs
         this.config.surahs.forEach(surah => {
             const option = document.createElement('option');
             option.value = surah.id;
             option.textContent = `${surah.name} (${surah.ayahs} آيات)`;
-            surahSelect.appendChild(option);
+            fragment.appendChild(option);
         });
+
+        // Append the fragment to the select element in a single operation
+        surahSelect.appendChild(fragment);
     },
     
     populateAyahSelect() {
@@ -2288,14 +2300,20 @@ const QuranReview = {
             surahSelect.removeChild(surahSelect.lastChild);
         }
         
+        // Create a DocumentFragment to batch DOM updates
+        const fragment = document.createDocumentFragment();
+
         // Add all 114 surahs with correct ayah counts
         this.config.surahs.forEach(surah => {
             const option = document.createElement('option');
             option.value = surah.id;
             option.textContent = `${surah.name} (${surah.ayahs} آيات)`;
-            surahSelect.appendChild(option);
+            fragment.appendChild(option);
         });
         
+        // Append the fragment to the select element in a single operation
+        surahSelect.appendChild(fragment);
+
         console.log('📋 Surah select populated with 114 surahs');
     },
     
