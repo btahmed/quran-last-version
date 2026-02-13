@@ -9,5 +9,4 @@ tzdata==2025.3
 gunicorn==22.0.0
 whitenoise==6.6.0
 dj-database-url==2.2.0
--Valuepsycopg[binary]==3.2.3
 psycopg[binary]==3.2.3
