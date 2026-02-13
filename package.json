@@ -1,0 +1,21 @@
+{
+  "name": "app",
+  "version": "1.0.0",
+  "description": "A comprehensive Quran review and memorization application designed to help users effectively review, memorize, and understand the Holy Quran.",
+  "main": "audio-config.js",
+  "scripts": {
+    "test": "node tests/audio-config.test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/btahmed/QuranReview.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/btahmed/QuranReview/issues"
+  },
+  "homepage": "https://github.com/btahmed/QuranReview#readme"
+}

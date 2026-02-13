@@ -293,4 +293,9 @@ const QuranAudio = {
 })();
 
 // Make available globally
-window.QuranAudio = QuranAudio;
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = QuranAudio;
+}
+if (typeof window !== 'undefined') {
+    window.QuranAudio = QuranAudio;
+}
