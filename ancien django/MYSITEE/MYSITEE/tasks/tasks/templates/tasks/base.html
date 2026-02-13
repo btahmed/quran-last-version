@@ -1,0 +1,40 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Gestionnaire de Tâches{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+</head>
+<body>
+    <header>
+        <nav>
+            {% if user.is_authenticated %}
+                <a href="{% url 'dashboard' %}">Tableau de bord</a>
+                <a href="{% url 'task_create' %}">Nouvelle tâche</a>
+                <a href="{% url 'create_team' %}">Créer une équipe</a>
+                <a href="{% url 'task_list' %}">Toutes mes tâches</a>
+            {% else %}
+                <a href="{% url 'home' %}">Accueil</a>
+                <a href="{% url 'login' %}">Connexion</a>
+                <a href="{% url 'register' %}">Créer un compte</a>
+            {% endif %}
+        </nav>
+
+        {% if user.is_authenticated %}
+        <div class="profile-menu">
+            <div class="profile-avatar">{{ user.username|first|upper }}</div>
+            <div class="profile-dropdown">
+                <a href="{% url 'user_profile' user.username %}"> Mon profil</a>
+                <a href="{% url 'logout' %}"> Déconnexion</a>
+            </div>
+        </div>
+        {% endif %}
+    </header>
+
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
+</body>
+</html>

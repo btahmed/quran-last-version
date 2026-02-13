@@ -1,0 +1,66 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Mes Tâches</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+</head>
+
+<body>
+<h1>{% if form.instance.pk %}Modifier{% else %}Créer{% endif %} une tâche</h1>
+
+<form method="post">
+  {% csrf_token %}
+  <p>
+    {{ form.title.label_tag }}<br>
+    {{ form.title }}
+  </p>
+
+  <p>
+    {{ form.description.label_tag }}<br>
+    {{ form.description }}
+  </p>
+
+  <p>
+    {{ form.parent.label_tag }}
+    {{ form.parent }}
+  </p>
+
+  <p>
+    {{ form.status.label_tag }}<br>
+    <div class="status-wrapper">
+      {{ form.status }}
+    </div>
+  </p>
+
+  <p>
+    {{ form.is_private }} {{ form.is_private.label_tag }}
+  </p>
+
+  <p>
+    {{ form.assigned_users.label_tag }}<br>
+    {{ form.assigned_users }}
+  </p>
+
+  <p>
+    {{ form.assigned_teams.label_tag }}<br>
+    {{ form.assigned_teams }}
+  </p>
+
+  {# ✅ Affichage du message d’erreur global #}
+  {% if form.non_field_errors %}
+    <div style="color: red; margin-top: 10px;">
+      {% for error in form.non_field_errors %}
+        <p>{{ error }}</p>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <button type="submit">Valider</button>
+</form>
+
+<a href="{% url 'task_list' %}">Retour à la liste</a>
+<a href="{% url 'dashboard' %}">⬅️ Retour au tableau de bord</a>
+</body>
+</html>

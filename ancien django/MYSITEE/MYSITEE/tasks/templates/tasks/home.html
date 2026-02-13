@@ -1,0 +1,22 @@
+{% extends 'tasks/base.html' %}
+{% block content %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Accueil – Gestionnaire de Tâches</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+</head>
+<body>
+
+    <main>
+        <h1>Bienvenue sur le gestionnaire de tâches</h1>
+        <p>Gérez vos tâches de manière collaborative avec vos équipes.</p>
+        {% if user.is_authenticated %}
+            <p><a href="{% url 'dashboard' %}">Accéder au tableau de bord</a></p>
+        {% endif %}
+    </main>
+</body>
+</html>
+{% endblock %}
