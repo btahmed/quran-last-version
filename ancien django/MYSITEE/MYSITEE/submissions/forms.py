@@ -5,6 +5,15 @@ from .models import Submission, validate_audio_file, ALLOWED_AUDIO_EXTENSIONS, M
 class SubmissionForm(forms.ModelForm):
     """Form for audio file submission. Reuses model validators."""
 
+    # Privacy consent checkbox (required)
+    privacy_consent = forms.BooleanField(
+        required=True,
+        label="J'accepte l'enregistrement temporaire de cet audio.",
+        error_messages={
+            'required': "Vous devez accepter les conditions pour soumettre votre audio."
+        }
+    )
+
     class Meta:
         model = Submission
         fields = ['audio_file']
