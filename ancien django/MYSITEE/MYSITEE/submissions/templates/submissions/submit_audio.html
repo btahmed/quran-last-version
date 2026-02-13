@@ -1,0 +1,73 @@
+{% extends 'tasks/base.html' %}
+
+{% block title %}Soumettre audio - {{ task.title }}{% endblock %}
+
+{% block content %}
+<h1>Soumettre un audio</h1>
+
+<h2>Tâche: {{ task.title }}</h2>
+{% if task.description %}
+<p>{{ task.description }}</p>
+{% endif %}
+
+{% if task.points > 0 %}
+<p><strong>Points:</strong> {{ task.points }}</p>
+{% endif %}
+
+{% if task.due_date %}
+<p><strong>Date limite:</strong> {{ task.due_date|date:"d/m/Y" }}</p>
+{% endif %}
+
+{% if messages %}
+<div class="messages">
+    {% for message in messages %}
+    <p class="{{ message.tags }}">{{ message }}</p>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if existing_submission %}
+<div class="existing-submission">
+    <h3>Soumission existante</h3>
+    <p><strong>Statut:</strong>
+        {% if existing_submission.status == 'submitted' %}
+            En attente de validation
+        {% elif existing_submission.status == 'rejected' %}
+            Rejetée - vous pouvez resoumettre
+        {% endif %}
+    </p>
+    <p><strong>Audio actuel:</strong></p>
+    <audio controls>
+        <source src="{{ existing_submission.audio_file.url }}" type="audio/mpeg">
+    </audio>
+    {% if existing_submission.admin_feedback %}
+    <p><strong>Feedback:</strong> {{ existing_submission.admin_feedback }}</p>
+    {% endif %}
+</div>
+{% endif %}
+
+<form method="post" enctype="multipart/form-data" class="submission-form">
+    {% csrf_token %}
+
+    <div class="form-group">
+        <label for="id_audio_file">{{ form.audio_file.label }}</label>
+        {{ form.audio_file }}
+        {% if form.audio_file.help_text %}
+        <small>{{ form.audio_file.help_text }}</small>
+        {% endif %}
+        {% if form.audio_file.errors %}
+        <ul class="errors">
+            {% for error in form.audio_file.errors %}
+            <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+
+    <button type="submit" class="btn">
+        {% if existing_submission %}Remplacer l'audio{% else %}Soumettre{% endif %}
+    </button>
+</form>
+
+<p><a href="{% url 'dashboard' %}">Annuler</a></p>
+{% endblock %}

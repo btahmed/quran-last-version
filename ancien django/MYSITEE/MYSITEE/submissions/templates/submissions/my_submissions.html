@@ -1,0 +1,79 @@
+{% extends 'tasks/base.html' %}
+
+{% block title %}Mes soumissions{% endblock %}
+
+{% block content %}
+<h1>Mes soumissions</h1>
+
+{% if messages %}
+<div class="messages">
+    {% for message in messages %}
+    <p class="{{ message.tags }}">{{ message }}</p>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if submissions %}
+<table class="submissions-table">
+    <thead>
+        <tr>
+            <th>Tâche</th>
+            <th>Statut</th>
+            <th>Points</th>
+            <th>Soumis le</th>
+            <th>Audio</th>
+            <th>Feedback</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for submission in submissions %}
+        <tr>
+            <td>{{ submission.task.title }}</td>
+            <td>
+                {% if submission.status == 'submitted' %}
+                    <span class="badge badge-pending">En attente</span>
+                {% elif submission.status == 'approved' %}
+                    <span class="badge badge-approved">Approuvé</span>
+                {% elif submission.status == 'rejected' %}
+                    <span class="badge badge-rejected">Rejeté</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if submission.awarded_points %}
+                    +{{ submission.awarded_points }}
+                {% else %}
+                    -
+                {% endif %}
+            </td>
+            <td>{{ submission.submitted_at|date:"d/m/Y H:i" }}</td>
+            <td>
+                <audio controls preload="none">
+                    <source src="{{ submission.audio_file.url }}" type="audio/mpeg">
+                </audio>
+            </td>
+            <td>
+                {% if submission.admin_feedback %}
+                    {{ submission.admin_feedback }}
+                {% else %}
+                    -
+                {% endif %}
+            </td>
+        </tr>
+        {% if submission.status == 'rejected' %}
+        <tr>
+            <td colspan="6">
+                <a href="{% url 'submit_audio' submission.task.id %}" class="btn btn-small">
+                    Resoumettre
+                </a>
+            </td>
+        </tr>
+        {% endif %}
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>Vous n'avez pas encore soumis d'audio.</p>
+{% endif %}
+
+<p><a href="{% url 'dashboard' %}">Retour au tableau de bord</a></p>
+{% endblock %}
