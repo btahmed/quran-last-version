@@ -236,6 +236,8 @@ const QuranReview = {
         version: '1.0.0',
         storageKey: 'quranreview_data',
         settingsKey: 'quranreview_settings',  // Ajouté clé séparée pour settings
+        competitionKey: 'quranreview_competition',
+        hifzKey: 'quranreview_hifz',
         themeKey: 'quranreview_theme',
         
         // Default Settings
@@ -372,6 +374,8 @@ const QuranReview = {
     state: {
         currentPage: 'home',
         memorizationData: [],
+        competition: {},
+        hifz: {},
         settings: {},
         todayDate: new Date().toISOString().split('T')[0]
     },
@@ -390,6 +394,8 @@ const QuranReview = {
         this.state = {
             currentPage: 'home',
             memorizationData: [],
+            competition: {},
+            hifz: {},
             settings: { ...this.config.defaultSettings },
             todayDate: new Date().toISOString().split('T')[0],
             imageQuality: 'normal'
@@ -445,6 +451,29 @@ const QuranReview = {
                 JSON.parse(savedSettings) : 
                 { ...this.config.defaultSettings };
             
+            // Load competition data
+            const savedCompetition = localStorage.getItem(this.config.competitionKey);
+            this.state.competition = savedCompetition ?
+                JSON.parse(savedCompetition) :
+                {
+                    userStats: {
+                        totalScore: 0,
+                        winStreak: 0,
+                        challengesWon: 0,
+                        challengesPlayed: 0,
+                        rank: 'bronze',
+                        history: []
+                    },
+                    activeChallenge: null,
+                    leaderboard: []
+                };
+
+            // Load hifz data
+            const savedHifz = localStorage.getItem(this.config.hifzKey);
+            this.state.hifz = savedHifz ?
+                JSON.parse(savedHifz) :
+                { currentSession: null, level: 1 };
+
             console.log('🔍 DEBUG: Loaded settings:', this.state.settings);
             console.log(`🔍 DEBUG: autoPlayNext = ${this.state.settings.autoPlayNext}`);
             
@@ -470,6 +499,12 @@ const QuranReview = {
             // Save memorization data with storage key
             localStorage.setItem(this.config.storageKey, JSON.stringify(this.state.memorizationData));
             
+            // Save competition data
+            localStorage.setItem(this.config.competitionKey, JSON.stringify(this.state.competition));
+
+            // Save hifz data
+            localStorage.setItem(this.config.hifzKey, JSON.stringify(this.state.hifz));
+
             console.log('💾 Data saved successfully');
         } catch (error) {
             console.error('❌ Error saving data:', error);
@@ -624,6 +659,827 @@ const QuranReview = {
             case 'settings':
                 this.renderSettingsPage();
                 break;
+            case 'competition':
+                this.renderCompetitionPage();
+                break;
+            case 'hifz':
+                this.renderHifzPage();
+                break;
+        }
+    },
+
+    // ===================================
+    // COMPETITION & HIFZ PAGES STUBS
+    // ===================================
+
+    renderCompetitionPage() {
+        const stats = this.state.competition.userStats;
+        const dashboard = document.getElementById('competition-dashboard');
+        const active = document.getElementById('competition-active');
+
+        if (this.state.competition.activeChallenge) {
+            dashboard.classList.add('hidden');
+            active.classList.remove('hidden');
+            // Ensure UI is rendered (handled by startChallenge usually)
+        } else {
+            dashboard.classList.remove('hidden');
+            active.classList.add('hidden');
+
+            // Update Stats
+            document.getElementById('comp-score').textContent = stats.totalScore;
+            document.getElementById('comp-wins').textContent = stats.challengesWon;
+            document.getElementById('comp-streak').textContent = `🔥 ${stats.winStreak}`;
+
+            const rank = this.competitionManager.calculateRank(stats.totalScore);
+            document.getElementById('user-rank').textContent = rank.icon;
+
+            // Render Leaderboard
+            this.competitionManager.renderLeaderboard();
+        }
+    },
+
+    startChallenge(type) { this.competitionManager.startChallenge(type); },
+
+    renderHifzPage() {
+        const session = this.state.hifz.currentSession;
+        const selectionDiv = document.getElementById('hifz-selection');
+        const containerDiv = document.getElementById('hifz-active-container');
+
+        if (session && session.isActive) {
+            selectionDiv.classList.add('hidden');
+            containerDiv.classList.remove('hidden');
+            // Restore display if needed, but usually it's handled by state
+            if (!containerDiv.querySelector('.ayah-line')) {
+                this.hifzManager.loadAyahForHifz(session.surahId, session.currentAyah);
+            }
+        } else {
+            selectionDiv.classList.remove('hidden');
+            containerDiv.classList.add('hidden');
+            this.populateHifzSurahSelect();
+            this.setupHifzActions();
+        }
+    },
+
+    populateHifzSurahSelect() {
+        const surahSelect = document.getElementById('hifz-surah-select');
+        if (!surahSelect || surahSelect.options.length > 1) return; // Already populated
+
+        this.config.surahs.forEach(surah => {
+            const option = document.createElement('option');
+            option.value = surah.id;
+            option.textContent = `${surah.name} (${surah.ayahs} آيات)`;
+            surahSelect.appendChild(option);
+        });
+
+        // Add change listener to update ayah limits
+        surahSelect.addEventListener('change', () => {
+            const id = parseInt(surahSelect.value);
+            const surah = this.config.surahs.find(s => s.id === id);
+            const from = document.getElementById('hifz-from-ayah');
+            const to = document.getElementById('hifz-to-ayah');
+            if (surah && from && to) {
+                from.max = surah.ayahs;
+                to.max = surah.ayahs;
+                from.placeholder = `1-${surah.ayahs}`;
+                to.placeholder = `1-${surah.ayahs}`;
+            }
+        });
+    },
+
+    setupHifzActions() {
+        const form = document.getElementById('hifz-start-form');
+        // Remove old listener to avoid duplicates if possible, or just check
+        if (form && !form.dataset.listening) {
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const surahId = parseInt(document.getElementById('hifz-surah-select').value);
+                const fromAyah = parseInt(document.getElementById('hifz-from-ayah').value);
+                const toAyah = parseInt(document.getElementById('hifz-to-ayah').value);
+
+                if (surahId && fromAyah && toAyah && fromAyah <= toAyah) {
+                    this.hifzManager.startHifzSession(surahId, fromAyah, toAyah);
+                } else {
+                    this.showNotification('بيانات غير صحيحة', 'error');
+                }
+            });
+            form.dataset.listening = "true";
+        }
+    },
+
+    // Bridge methods for HTML onclick
+    showHint() { this.hifzManager.showHint(); },
+    checkMemorization() { this.hifzManager.checkLevelComplete() ? this.hifzManager.levelUp() : this.showNotification('لم تكتمل جميع الكلمات بعد', 'warning'); },
+    stopHifzSession() { this.hifzManager.stopSession(); },
+    nextLevel() { this.hifzManager.levelUp(); },
+
+    // ===================================
+    // HIFZ MODULE
+    // ===================================
+
+    hifzEngine: {
+        // Analyser la difficulté des mots
+        analyzeWordDifficulty(text) {
+            const words = text.split(' ');
+            return words.map((word, index) => ({
+                word,
+                index,
+                difficulty: this.calculateDifficulty(word, index, words.length),
+                isHidden: false
+            }));
+        },
+
+        calculateDifficulty(word, position, total) {
+            let score = 0;
+            score += word.length * 2; // Mots longs = difficiles
+            const middle = total / 2;
+            score += Math.abs(position - middle); // Milieu = difficile (wait, middle is usually harder? prompt said so)
+            // Correction: usually start/end are easier, middle is harder.
+            // If prompt says "Milieu = difficile", then score should be higher for middle.
+            // Math.abs(position - middle) is 0 at middle. So this logic makes edges higher score.
+            // I will invert it:
+            score += (total / 2) - Math.abs(position - middle);
+
+            const complex = word.match(/[َُِّْٓۖۗ]/g);
+            score += (complex ? complex.length : 0) * 3; // Tashkeel complexe
+            return score;
+        },
+
+        // Générer le masquage selon le niveau
+        generateMaskLevel(text, level) {
+            // Level 1: Hide 20% (hardest)
+            // Level 5: Hide 100%
+            const analysis = this.analyzeWordDifficulty(text);
+            const totalWords = analysis.length;
+
+            // Percentage to SHOW
+            // Level 1: Show 80% (Hide 20%)
+            // Level 2: Show 60%
+            // Level 3: Show 40%
+            // Level 4: Show 20%
+            // Level 5: Show 0% (Hide all)
+            const fractionToShow = Math.max(0, 1 - (level * 0.2));
+            const wordsToShow = Math.ceil(totalWords * fractionToShow);
+
+            // Sort by difficulty descending (Hardest first)
+            // We want to HIDE the hardest ones first.
+            // So we take the top (Total - Show) hardest words and hide them.
+            const sorted = [...analysis].sort((a, b) => b.difficulty - a.difficulty);
+
+            const wordsToHide = totalWords - wordsToShow;
+
+            for(let i = 0; i < wordsToHide; i++) {
+                if (sorted[i]) sorted[i].isHidden = true;
+            }
+
+            // Remettre dans l'ordre
+            return analysis.sort((a, b) => a.index - b.index);
+        }
+    },
+
+    competitionManager: {
+        // Générer un défi
+        generateChallenge(type, difficulty = 'medium') {
+            // Simple pool generation
+            const totalSurahs = 114;
+            const randomSurah = Math.floor(Math.random() * totalSurahs) + 1;
+
+            return {
+                type,
+                difficulty,
+                surahId: randomSurah,
+                startTime: Date.now()
+            };
+        },
+
+        // Démarrer un défi
+        startChallenge(type) {
+            const challenge = this.generateChallenge(type);
+            QuranReview.state.competition.activeChallenge = challenge;
+            QuranReview.renderCompetitionPage(); // Switch view
+
+            const container = document.getElementById('competition-active');
+            container.innerHTML = '<div style="text-align:center; padding: 2rem;">⏳ جاري إعداد التحدي...</div>';
+
+            // Route to specific game logic
+            switch(type) {
+                case 'speed_run':
+                    this.startSpeedRun(container);
+                    break;
+                case 'ayah_hunt':
+                    this.startAyahHunt(container);
+                    break;
+                case 'precision':
+                    this.startPrecision(container);
+                    break;
+            }
+        },
+
+        // ========================
+        // GAME: AYAH HUNT
+        // ========================
+        async startAyahHunt(container) {
+            let score = 0;
+            let questionCount = 0;
+            const maxQuestions = 10;
+            const questions = [];
+
+            // Pre-fetch questions
+            for(let i=0; i<maxQuestions; i++) {
+                // Weighted random for better UX (focus on common surahs first?)
+                // For now completely random
+                const surahId = Math.floor(Math.random() * 114) + 1;
+                const surah = QuranReview.config.surahs.find(s => s.id === surahId);
+                const ayahNum = Math.floor(Math.random() * surah.ayahs) + 1;
+                questions.push({ surah, ayahNum });
+            }
+
+            const renderQuestion = async (index) => {
+                if (index >= maxQuestions) {
+                    this.endChallenge(score, 'ayah_hunt');
+                    return;
+                }
+
+                const q = questions[index];
+                const text = await QuranReview.fetchAyahText(q.surah.id, q.ayahNum);
+
+                // Generate options (1 correct + 3 wrong)
+                const options = [q.surah];
+                while(options.length < 4) {
+                    const randomS = QuranReview.config.surahs[Math.floor(Math.random() * 114)];
+                    if (!options.find(o => o.id === randomS.id)) options.push(randomS);
+                }
+                // Shuffle options
+                options.sort(() => Math.random() - 0.5);
+
+                container.innerHTML = `
+                    <div class="card" style="text-align: center;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:1rem;">
+                            <span>السؤال ${index + 1}/${maxQuestions}</span>
+                            <span>النقاط: ${score}</span>
+                        </div>
+                        <div class="arabic-large" style="background:#f8f9fa; padding:2rem; border-radius:12px; margin-bottom:2rem;">
+                            ${text || 'جاري التحميل...'}
+                        </div>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+                            ${options.map(opt => `
+                                <button class="btn btn-outline" style="width:100%; padding:1rem;"
+                                    onclick="QuranReview.competitionManager.handleHuntAnswer(${opt.id === q.surah.id}, ${index}, ${score})">
+                                    سورة ${opt.name}
+                                </button>
+                            `).join('')}
+                        </div>
+                        <button class="btn btn-danger" style="margin-top:2rem;" onclick="QuranReview.competitionManager.abortChallenge()">انسحاب</button>
+                    </div>
+                `;
+            };
+
+            // Global handler hack for the generated HTML
+            this.handleHuntAnswer = (isCorrect, currentIndex, currentScore) => {
+                if (isCorrect) {
+                    score += 100; // + Time bonus logic could be added
+                    QuranReview.showNotification('إجابة صحيحة! +100', 'success');
+                } else {
+                    QuranReview.showNotification('إجابة خاطئة', 'error');
+                }
+                renderQuestion(currentIndex + 1);
+            };
+
+            renderQuestion(0);
+        },
+
+        // ========================
+        // GAME: SPEED RUN
+        // ========================
+        async startSpeedRun(container) {
+            // Pick 5 ayahs sequence from valid surahs
+            let surahId, surah;
+            do {
+                surahId = Math.floor(Math.random() * 114) + 1;
+                surah = QuranReview.config.surahs.find(s => s.id === surahId);
+            } while (surah.ayahs < 5);
+
+            const startAyah = Math.floor(Math.random() * (surah.ayahs - 4)) + 1;
+            const endAyah = startAyah + 4;
+
+            container.innerHTML = `<div style="text-align:center;">⏳ جاري تحميل الآيات...</div>`;
+
+            // Fetch all texts
+            const texts = [];
+            for (let i = startAyah; i <= endAyah; i++) {
+                texts.push(await QuranReview.fetchAyahText(surahId, i));
+            }
+
+            let timeLeft = 300; // 5 minutes
+            let timerInterval;
+
+            const startMemorization = () => {
+                container.innerHTML = `
+                    <div class="card">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                            <h3>سورة ${surah.name} (${startAyah}-${endAyah})</h3>
+                            <div style="font-size:1.5rem; font-weight:bold; color:var(--accent-red);" id="sr-timer">05:00</div>
+                        </div>
+                        <div class="arabic-text" style="line-height:2.5; margin-bottom:2rem;">
+                            ${texts.map((t, i) => `<span style="display:block; margin-bottom:1rem;">(${startAyah+i}) ${t}</span>`).join('')}
+                        </div>
+                        <button class="btn btn-primary" style="width:100%;" onclick="QuranReview.competitionManager.startSpeedTest(${surahId}, ${startAyah}, ${endAyah})">
+                            انتهيت من الحفظ - ابدأ الاختبار
+                        </button>
+                    </div>
+                `;
+
+                timerInterval = setInterval(() => {
+                    timeLeft--;
+                    const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+                    const s = (timeLeft % 60).toString().padStart(2, '0');
+                    const timerEl = document.getElementById('sr-timer');
+                    if(timerEl) timerEl.textContent = `${m}:${s}`;
+
+                    if (timeLeft <= 0) {
+                        clearInterval(timerInterval);
+                        this.startSpeedTest(surahId, startAyah, endAyah);
+                    }
+                }, 1000);
+
+                // Save interval to clear it later
+                this.activeTimer = timerInterval;
+            };
+
+            this.startSpeedTest = async (sid, start, end) => {
+                clearInterval(this.activeTimer);
+
+                // Test: Fill in the blanks (Mask 50% words)
+                // Reuse Hifz engine partially? Or simple check.
+                // Let's do a simple self-verification for Speed Run as implemented in many apps
+                // Or "Select correct word"
+
+                container.innerHTML = `
+                    <div class="card">
+                        <h3>اختبار الحفظ</h3>
+                        <p>أكمل الفراغات (اكتب الكلمة الناقصة)</p>
+                        <div id="sr-test-area"></div>
+                        <button class="btn btn-success" style="width:100%; margin-top:1rem;" onclick="QuranReview.competitionManager.finishSpeedRun()">تسليم الإجابة</button>
+                    </div>
+                `;
+
+                const testArea = document.getElementById('sr-test-area');
+                let totalBlanks = 0;
+
+                texts.forEach((text, idx) => {
+                    const words = text.split(' ');
+                    const div = document.createElement('div');
+                    div.className = 'arabic-text';
+                    div.style.marginBottom = '1rem';
+
+                    words.forEach((word, wIdx) => {
+                        // Mask random words (every ~3rd word)
+                        if (Math.random() < 0.4) {
+                            totalBlanks++;
+                            const input = document.createElement('input');
+                            input.type = 'text';
+                            input.className = 'form-input';
+                            input.style.width = '80px';
+                            input.style.display = 'inline-block';
+                            input.style.margin = '0 5px';
+                            input.dataset.correct = QuranReview.hifzManager.normalizeArabic(word);
+                            div.appendChild(input);
+                        } else {
+                            const span = document.createElement('span');
+                            span.textContent = word + ' ';
+                            div.appendChild(span);
+                        }
+                    });
+                    testArea.appendChild(div);
+                });
+
+                this.currentSpeedTotalBlanks = totalBlanks;
+            };
+
+            this.finishSpeedRun = () => {
+                const inputs = document.querySelectorAll('#sr-test-area input');
+                let correct = 0;
+                inputs.forEach(input => {
+                    if (QuranReview.hifzManager.normalizeArabic(input.value) === input.dataset.correct) {
+                        correct++;
+                        input.style.borderColor = 'green';
+                        input.style.backgroundColor = '#d4edda';
+                    } else {
+                        input.style.borderColor = 'red';
+                        input.style.backgroundColor = '#f8d7da';
+                    }
+                });
+
+                const accuracy = (correct / this.currentSpeedTotalBlanks) * 100;
+                const score = Math.floor(accuracy * 10); // Simple scoring
+
+                setTimeout(() => {
+                    this.endChallenge(score, 'speed_run');
+                }, 2000);
+            };
+
+            startMemorization();
+        },
+
+        // ========================
+        // GAME: PRECISION MASTER
+        // ========================
+        async startPrecision(container) {
+            // Level 5 Hifz logic (100% hidden)
+            const surahId = Math.floor(Math.random() * 114) + 1;
+            const surah = QuranReview.config.surahs.find(s => s.id === surahId);
+            const ayahNum = Math.floor(Math.random() * surah.ayahs) + 1;
+            const text = await QuranReview.fetchAyahText(surahId, ayahNum);
+
+            // Using Hifz Engine to generate 100% mask (Level 5)
+            const analysis = QuranReview.hifzEngine.generateMaskLevel(text, 5);
+
+            container.innerHTML = `
+                <div class="card text-center">
+                    <h3>اختبار الدقة: سورة ${surah.name} الآية ${ayahNum}</h3>
+                    <p>اكتب الآية كلمة بكلمة</p>
+                    <div id="precision-display" class="hifz-display" style="margin: 1rem 0;"></div>
+                    <div style="margin-top: 1rem;">
+                        <input type="text" id="precision-input" class="form-input" placeholder="اكتب الكلمة التالية..." style="text-align:center;">
+                        <button class="btn btn-primary" style="margin-top:0.5rem;" onclick="QuranReview.competitionManager.checkPrecisionWord()">تحقق</button>
+                    </div>
+                    <div style="margin-top: 1rem;">
+                        الأخطاء: <span id="precision-errors" style="color:red;">0</span>/3
+                    </div>
+                    <button class="btn btn-danger" style="margin-top:2rem;" onclick="QuranReview.competitionManager.abortChallenge()">انسحاب</button>
+                </div>
+            `;
+
+            this.precisionData = {
+                words: analysis,
+                currentIndex: 0,
+                errors: 0,
+                score: 0
+            };
+
+            this.renderPrecisionDisplay();
+        },
+
+        renderPrecisionDisplay() {
+            const container = document.getElementById('precision-display');
+            container.innerHTML = '';
+            const line = document.createElement('div');
+            line.className = 'ayah-line';
+
+            this.precisionData.words.forEach((item, idx) => {
+                const span = document.createElement('span');
+                if (idx < this.precisionData.currentIndex) {
+                    span.className = 'word revealed';
+                    span.textContent = item.word;
+                } else {
+                    span.className = 'word hidden';
+                    span.textContent = '____';
+                }
+                line.appendChild(span);
+            });
+            container.appendChild(line);
+        },
+
+        checkPrecisionWord() {
+            const input = document.getElementById('precision-input');
+            const userWord = input.value;
+            const currentItem = this.precisionData.words[this.precisionData.currentIndex];
+
+            if (QuranReview.hifzManager.normalizeArabic(userWord) === QuranReview.hifzManager.normalizeArabic(currentItem.word)) {
+                // Correct
+                this.precisionData.currentIndex++;
+                this.precisionData.score += 20;
+                input.value = '';
+                this.renderPrecisionDisplay();
+
+                if (this.precisionData.currentIndex >= this.precisionData.words.length) {
+                    this.endChallenge(this.precisionData.score, 'precision');
+                }
+            } else {
+                // Wrong
+                this.precisionData.errors++;
+                document.getElementById('precision-errors').textContent = this.precisionData.errors;
+                input.classList.add('error-shake'); // Assuming css or just visual feedback
+                setTimeout(() => input.classList.remove('error-shake'), 500);
+
+                if (this.precisionData.errors >= 3) {
+                    alert('انتهت المحاولات!');
+                    this.endChallenge(this.precisionData.score, 'precision');
+                }
+            }
+        },
+
+        // ========================
+        // COMMON LOGIC
+        // ========================
+        endChallenge(score, type) {
+            clearInterval(this.activeTimer);
+
+            // Update stats
+            const stats = QuranReview.state.competition.userStats;
+            stats.totalScore += score;
+            stats.challengesPlayed++;
+            if (score > 0) stats.challengesWon++; // Assume positive score is a win
+            stats.winStreak = score > 0 ? stats.winStreak + 1 : 0;
+
+            stats.history.push({
+                type,
+                score,
+                date: new Date().toISOString()
+            });
+
+            // Update Rank
+            stats.rank = this.calculateRank(stats.totalScore).level;
+
+            // Update Leaderboard (Simulated local for now)
+            this.updateLeaderboard(score);
+
+            QuranReview.saveData();
+
+            // Reset
+            QuranReview.state.competition.activeChallenge = null;
+
+            // Show result
+            const container = document.getElementById('competition-active');
+            container.innerHTML = `
+                <div class="card" style="text-align: center; animation: fadeIn 0.5s;">
+                    <div style="font-size: 4rem;">🎉</div>
+                    <h2>اكتمل التحدي!</h2>
+                    <div style="font-size: 2rem; color: var(--accent-green); margin: 1rem 0;">+${score} نقطة</div>
+                    <button class="btn btn-primary" onclick="QuranReview.renderCompetitionPage()">عودة للقائمة</button>
+                </div>
+            `;
+        },
+
+        abortChallenge() {
+            if(confirm('هل أنت متأكد من الانسحاب؟')) {
+                clearInterval(this.activeTimer);
+                QuranReview.state.competition.activeChallenge = null;
+                QuranReview.renderCompetitionPage();
+            }
+        },
+
+        // Système de rangs
+        calculateRank(totalScore) {
+            if(totalScore >= 50000) return { name: 'شيخ', icon: '👑', level: 'diamond' };
+            if(totalScore >= 15000) return { name: 'أستاذ', icon: '💎', level: 'platinum' };
+            if(totalScore >= 5000) return { name: 'حافظ', icon: '🥇', level: 'gold' };
+            if(totalScore >= 1000) return { name: 'طالب', icon: '🥈', level: 'silver' };
+            return { name: 'مبتدئ', icon: '🥉', level: 'bronze' };
+        },
+
+        updateLeaderboard(score) {
+            const entry = {
+                name: QuranReview.state.settings.userName || 'أنت',
+                score: score,
+                date: new Date().toISOString(),
+                rank: this.calculateRank(QuranReview.state.competition.userStats.totalScore).name
+            };
+
+            // Add to local leaderboard for demo
+            let board = QuranReview.state.competition.leaderboard || [];
+            board.push(entry);
+            board.sort((a, b) => b.score - a.score);
+            board = board.slice(0, 10); // Keep top 10
+            QuranReview.state.competition.leaderboard = board;
+        },
+
+        escapeHtml(text) {
+            if (!text) return '';
+            return String(text)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        },
+
+        renderLeaderboard() {
+            const list = document.getElementById('leaderboard-list');
+            const board = QuranReview.state.competition.leaderboard || [];
+
+            if (board.length === 0) {
+                list.innerHTML = '<div style="text-align:center; color:gray;">لا توجد سجلات بعد</div>';
+                return;
+            }
+
+            list.innerHTML = board.map((entry, idx) => `
+                <div style="display:flex; justify-content:space-between; padding:0.5rem; border-bottom:1px solid #eee;">
+                    <span>#${idx+1} ${this.escapeHtml(entry.name)}</span>
+                    <span>${entry.score} pts</span>
+                </div>
+            `).join('');
+        }
+    },
+
+    hifzManager: {
+        hintsRemaining: 3,
+
+        startHifzSession(surahId, fromAyah, toAyah) {
+            console.log(`Starting Hifz: ${surahId}:${fromAyah}-${toAyah}`);
+
+            // Update state
+            QuranReview.state.hifz.currentSession = {
+                isActive: true,
+                surahId,
+                fromAyah,
+                toAyah,
+                currentAyah: fromAyah,
+                level: 1,
+                score: 0,
+                startTime: Date.now()
+            };
+            QuranReview.saveData();
+
+            // Reset UI
+            this.hintsRemaining = 3;
+            document.getElementById('hints-count').textContent = this.hintsRemaining;
+
+            // Render
+            QuranReview.renderHifzPage();
+
+            // Load content
+            this.loadAyahForHifz(surahId, fromAyah);
+        },
+
+        async loadAyahForHifz(surahId, ayahNumber) {
+            const container = document.getElementById('hifz-display');
+            container.innerHTML = '<div style="text-align:center;">⏳ جاري التحميل...</div>';
+
+            const ayahText = await QuranReview.fetchAyahText(surahId, ayahNumber);
+
+            if (!ayahText) {
+                container.innerHTML = '<div style="text-align:center; color:red;">❌ خطأ في تحميل الآية</div>';
+                return;
+            }
+
+            const analysis = QuranReview.hifzEngine.generateMaskLevel(ayahText, QuranReview.state.hifz.currentSession.level);
+            this.renderHifzDisplay(analysis);
+            this.updateLevelDisplay();
+        },
+
+        renderHifzDisplay(wordAnalysis) {
+            const container = document.getElementById('hifz-display');
+            container.innerHTML = '';
+
+            const line = document.createElement('div');
+            line.className = 'ayah-line';
+
+            wordAnalysis.forEach((item, idx) => {
+                const span = document.createElement('span');
+                span.className = `word ${item.isHidden ? 'hidden' : 'revealed'}`;
+                span.textContent = item.isHidden ? '____' : item.word;
+                span.dataset.word = item.word;
+                span.dataset.index = idx; // Important for finding it later
+
+                if(item.isHidden) {
+                    span.onclick = () => this.attemptReveal(span, item.word);
+                }
+
+                line.appendChild(span);
+            });
+
+            container.appendChild(line);
+        },
+
+        attemptReveal(spanElement, correctWord) {
+            // Prevent clicking already revealed words (if class not updated yet)
+            if (!spanElement.classList.contains('hidden')) return;
+
+            const input = prompt('ما هذه الكلمة؟');
+            if (input === null) return; // Cancelled
+
+            if(this.normalizeArabic(input) === this.normalizeArabic(correctWord)) {
+                // Correct
+                spanElement.classList.remove('hidden');
+                spanElement.classList.add('revealed');
+                spanElement.textContent = correctWord;
+                spanElement.onclick = null; // Remove handler
+
+                QuranReview.state.hifz.currentSession.score += 10;
+                QuranReview.saveData();
+
+                // Check if level complete
+                if(this.checkLevelComplete()) {
+                    setTimeout(() => {
+                        const feedback = document.getElementById('hifz-feedback');
+                        feedback.classList.remove('hidden');
+                        feedback.classList.add('show');
+                    }, 500);
+                }
+            } else {
+                // Error animation
+                spanElement.style.backgroundColor = '#f8d7da'; // Light red
+                setTimeout(() => spanElement.style.backgroundColor = '', 500);
+            }
+        },
+
+        normalizeArabic(text) {
+            if (!text) return '';
+            return text
+                .replace(/[\u064B-\u065F\u0670\u0640]/g, '') // Remove tashkeel
+                .replace(/[إأآا]/g, 'ا')
+                .replace(/ى/g, 'ي')
+                .replace(/ة/g, 'ه')
+                .trim();
+        },
+
+        showHint() {
+            if(this.hintsRemaining <= 0) {
+                QuranReview.showNotification('نفذت التلميحات', 'warning');
+                return;
+            }
+
+            const hiddenWords = document.querySelectorAll('.word.hidden');
+            if(hiddenWords.length === 0) return;
+
+            const randomWord = hiddenWords[Math.floor(Math.random() * hiddenWords.length)];
+
+            // Reveal it visually as a hint
+            randomWord.classList.remove('hidden');
+            randomWord.classList.add('revealed-hint');
+            randomWord.textContent = randomWord.dataset.word;
+            randomWord.onclick = null; // No need to guess anymore
+
+            this.hintsRemaining--;
+            document.getElementById('hints-count').textContent = this.hintsRemaining;
+
+            // Penalty
+            QuranReview.state.hifz.currentSession.score = Math.max(0, QuranReview.state.hifz.currentSession.score - 5);
+            QuranReview.saveData();
+        },
+
+        checkLevelComplete() {
+            return document.querySelectorAll('.word.hidden').length === 0;
+        },
+
+        levelUp() {
+            // Hide feedback
+            const feedback = document.getElementById('hifz-feedback');
+            feedback.classList.remove('show');
+            setTimeout(() => feedback.classList.add('hidden'), 300);
+
+            const session = QuranReview.state.hifz.currentSession;
+            if(session.level < 5) {
+                session.level++;
+                QuranReview.showNotification(`المستوى ${session.level}`, 'success');
+                this.loadAyahForHifz(session.surahId, session.currentAyah);
+            } else {
+                // Next Ayah or Finish
+                if (session.currentAyah < session.toAyah) {
+                    session.currentAyah++;
+                    session.level = 1;
+                    QuranReview.showNotification(`الآية التالية: ${session.currentAyah}`, 'success');
+                    this.loadAyahForHifz(session.surahId, session.currentAyah);
+                } else {
+                    this.completeSession();
+                }
+            }
+            QuranReview.saveData();
+        },
+
+        updateLevelDisplay() {
+            const dots = document.querySelectorAll('.level-dots .dot');
+            const level = QuranReview.state.hifz.currentSession.level;
+            dots.forEach((dot, idx) => {
+                if (idx < level) dot.classList.add('active');
+                else dot.classList.remove('active');
+            });
+        },
+
+        completeSession() {
+            const session = QuranReview.state.hifz.currentSession;
+            const timeTaken = (Date.now() - session.startTime) / 1000;
+
+            // Save completion
+            // Ensure history exists
+            if (!QuranReview.state.hifz.history) QuranReview.state.hifz.history = [];
+
+            QuranReview.state.hifz.history.push({
+                surahId: session.surahId,
+                fromAyah: session.fromAyah,
+                toAyah: session.toAyah,
+                score: session.score,
+                date: new Date().toISOString(),
+                timeTaken
+            });
+
+            // Reset session
+            QuranReview.state.hifz.currentSession = { isActive: false };
+            QuranReview.saveData();
+
+            // Show Feedback
+            alert(`🎉 أحسنت! أكملت الجلسة بنجاح.\nالنقاط: ${session.score}`);
+
+            // Return to selection
+            QuranReview.renderHifzPage();
+        },
+
+        stopSession() {
+            if (confirm('هل أنت متأكد من إنهاء الجلسة؟ سيتم فقدان التقدم الحالي.')) {
+                QuranReview.state.hifz.currentSession = { isActive: false };
+                QuranReview.saveData();
+                QuranReview.renderHifzPage();
+            }
         }
     },
     
@@ -1525,6 +2381,20 @@ const QuranReview = {
     // ===================================
     // UTILITY FUNCTIONS
     // ===================================
+
+    async fetchAyahText(surahId, ayahNumber) {
+        try {
+            const response = await fetch(`https://api.quran.com/api/v4/verses/by_key/${surahId}:${ayahNumber}?fields=text_uthmani`);
+            const data = await response.json();
+            if (data.verse && data.verse.text_uthmani) {
+                return data.verse.text_uthmani;
+            }
+            throw new Error('Verse text not found');
+        } catch (error) {
+            console.error('Error fetching ayah text:', error);
+            return null;
+        }
+    },
     
     calculateStats() {
         const total = this.state.memorizationData.length;
