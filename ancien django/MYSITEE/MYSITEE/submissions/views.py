@@ -1,25 +1,19 @@
-import os
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
-from django.utils import timezone
-from django.db.models import Q
+from django.core.exceptions import ValidationError
 
 from .models import Submission
 from .forms import SubmissionForm
 from tasks.models import Task
-from points.models import PointsLog
-
-
-def is_user_assigned_to_task(user, task):
-    """Check if user is assigned to task directly or via team."""
-    if user in task.assigned_users.all():
-        return True
-    user_teams = user.teams.all()
-    if task.assigned_teams.filter(id__in=user_teams).exists():
-        return True
-    return False
+from .services import (
+    is_user_assigned_to_task,
+    get_submission_for_task,
+    submit_audio_for_task,
+    approve_submission as approve_submission_service,
+    reject_submission as reject_submission_service,
+)
 
 
 # -----------------------------------------------------------------------------
@@ -48,45 +42,28 @@ def submit_audio(request, task_id):
         return redirect('dashboard')
 
     # Check for existing submission
-    existing_submission = Submission.objects.filter(
-        task=task,
-        student=request.user
-    ).first()
-
-    # Block resubmission if already approved
-    if existing_submission and existing_submission.status == 'approved':
-        messages.error(request, "Votre soumission a déjà été approuvée. Vous ne pouvez pas la remplacer.")
-        return redirect('my_submissions')
+    existing_submission = get_submission_for_task(request.user, task)
 
     if request.method == 'POST':
         form = SubmissionForm(request.POST, request.FILES)
         if form.is_valid():
             audio_file = form.cleaned_data['audio_file']
 
-            if existing_submission:
-                # Replace existing submission (status must be 'submitted' or 'rejected')
-                # Delete old file to save storage
-                if existing_submission.audio_file:
-                    old_path = existing_submission.audio_file.path
-                    if os.path.exists(old_path):
-                        os.remove(old_path)
-
-                existing_submission.audio_file = audio_file
-                existing_submission.status = 'submitted'
-                existing_submission.validated_at = None
-                existing_submission.validated_by = None
-                existing_submission.admin_feedback = ''
-                existing_submission.save()
-                messages.success(request, "Votre soumission a été mise à jour.")
-            else:
-                # Create new submission
-                submission = Submission(
-                    task=task,
-                    student=request.user,
-                    audio_file=audio_file
+            try:
+                _, created = submit_audio_for_task(
+                    request.user,
+                    task,
+                    audio_file,
+                    existing_submission=existing_submission
                 )
-                submission.save()
+            except ValidationError as exc:
+                messages.error(request, exc.messages[0])
+                return redirect('my_submissions')
+
+            if created:
                 messages.success(request, "Votre audio a été soumis avec succès.")
+            else:
+                messages.success(request, "Votre soumission a été mise à jour.")
 
             return redirect('my_submissions')
     else:
@@ -130,26 +107,7 @@ def approve_submission(request, submission_id):
         return HttpResponseForbidden("Méthode non autorisée.")
 
     submission = get_object_or_404(Submission, id=submission_id)
-
-    # Update submission status
-    submission.status = 'approved'
-    submission.validated_by = request.user
-    submission.validated_at = timezone.now()
-
-    # Anti-double-award: only create PointsLog if not already awarded
-    if submission.awarded_points is None and submission.task.points > 0:
-        # Create points log entry (source of truth)
-        PointsLog.objects.create(
-            student=submission.student,
-            delta=submission.task.points,
-            reason=f"Tâche approuvée: {submission.task.title}",
-            submission=submission
-        )
-        # Mark as awarded on submission to prevent double-awarding
-        submission.awarded_points = submission.task.points
-        submission.points_awarded_at = timezone.now()
-
-    submission.save()
+    approve_submission_service(submission, request.user)
     messages.success(request, f"Soumission de {submission.student.username} approuvée.")
     return redirect('pending_submissions')
 
@@ -167,12 +125,11 @@ def reject_submission(request, submission_id):
         return HttpResponseForbidden("Méthode non autorisée.")
 
     submission = get_object_or_404(Submission, id=submission_id)
-
-    submission.status = 'rejected'
-    submission.validated_by = request.user
-    submission.validated_at = timezone.now()
-    submission.admin_feedback = request.POST.get('admin_feedback', '')
-    submission.save()
+    reject_submission_service(
+        submission,
+        request.user,
+        feedback=request.POST.get('admin_feedback', '')
+    )
 
     messages.success(request, f"Soumission de {submission.student.username} rejetée.")
     return redirect('pending_submissions')
