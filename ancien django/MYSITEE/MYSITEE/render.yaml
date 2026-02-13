@@ -22,7 +22,7 @@ services:
       - key: DATABASE_URL
         fromDatabase:
           name: quranreview-db
-          property: connectionURI
+          property: connectionString
 databases:
   - name: quranreview-db
     plan: free
