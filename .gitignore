@@ -47,3 +47,23 @@ Thumbs.db
 .env.development.local
 .env.test.local
 .env.production.local
+
+# Python / Django
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+ENV/
+env/
+*.sqlite3
+db.sqlite3
+
+# Django media uploads (user-generated content)
+media/
+ancien django/MYSITEE/MYSITEE/media/
+
+# Django static collected
+staticfiles/
