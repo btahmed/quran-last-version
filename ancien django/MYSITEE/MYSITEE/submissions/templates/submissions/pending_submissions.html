@@ -1,0 +1,61 @@
+{% extends 'tasks/base.html' %}
+
+{% block title %}Soumissions en attente{% endblock %}
+
+{% block content %}
+<h1>Soumissions en attente de validation</h1>
+
+{% if messages %}
+<div class="messages">
+    {% for message in messages %}
+    <p class="{{ message.tags }}">{{ message }}</p>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if submissions %}
+<table class="submissions-table">
+    <thead>
+        <tr>
+            <th>Étudiant</th>
+            <th>Tâche</th>
+            <th>Points</th>
+            <th>Soumis le</th>
+            <th>Audio</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for submission in submissions %}
+        <tr>
+            <td>{{ submission.student.username }}</td>
+            <td>{{ submission.task.title }}</td>
+            <td>{{ submission.task.points }}</td>
+            <td>{{ submission.submitted_at|date:"d/m/Y H:i" }}</td>
+            <td>
+                <audio controls preload="none">
+                    <source src="{{ submission.audio_file.url }}" type="audio/mpeg">
+                </audio>
+            </td>
+            <td class="actions">
+                <form method="post" action="{% url 'approve_submission' submission.id %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-approve">Approuver</button>
+                </form>
+
+                <form method="post" action="{% url 'reject_submission' submission.id %}" style="display:inline;" class="reject-form">
+                    {% csrf_token %}
+                    <input type="text" name="admin_feedback" placeholder="Feedback (optionnel)" class="feedback-input">
+                    <button type="submit" class="btn btn-reject">Rejeter</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>Aucune soumission en attente.</p>
+{% endif %}
+
+<p><a href="{% url 'dashboard' %}">Retour au tableau de bord</a></p>
+{% endblock %}
