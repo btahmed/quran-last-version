@@ -1,0 +1,134 @@
+{% extends 'tasks/base.html' %}
+{% load static %}
+{% block content %}
+
+<h1>Bonjour {{ user.username }} </h1>
+
+<div class="section-block">
+  <h2>Mes équipes</h2>
+  <ul>
+    {% for team in my_teams %}
+      <li>
+        <strong>{{ team.name }}</strong><br>
+        Membres :
+        <ul>
+          {% for member in team.members.all %}
+            <li><a href="{% url 'user_profile' member.username %}">{{ member.username }}</a></li>
+          {% endfor %}
+        </ul>
+        <form method="post" action="{% url 'quit_team' team.id %}" style="display:inline">
+          {% csrf_token %}<button type="submit">Quitter</button>
+        </form>
+        {% if team.creator == user or user.is_staff %}
+          <form method="post" action="{% url 'delete_team' team.id %}" style="display:inline">
+            {% csrf_token %}<button type="submit">Supprimer</button>
+          </form>
+        {% endif %}
+      </li>
+    {% empty %}<li>Tu ne fais partie d’aucune équipe.</li>{% endfor %}
+  </ul>
+</div>
+
+<div class="section-block">
+  <h2>Autres équipes à rejoindre</h2>
+  <ul>
+    {% for team in other_teams %}
+      <li>{{ team.name }}
+        <form method="post" action="{% url 'join_team' team.id %}" style="display:inline">
+          {% csrf_token %}<button type="submit">Rejoindre</button>
+        </form>
+      </li>
+    {% empty %}<li>Aucune équipe dispo</li>{% endfor %}
+  </ul>
+</div>
+
+<div class="section-block">
+  <h2>Mes tâches privées</h2>
+  <ul>
+    {% for task in private_tasks %}
+      {% if not task.parent %}
+      <li>
+        <span class="task-title">{{ task.title }}</span>
+        <span class="status-circle {% if task.status == 'todo' %}todo{% else %}done{% endif %}"></span>
+        <a href="{% url 'task_edit' task.pk %}">Modifier</a>
+        <ul>
+          {% for subtask in task.subtasks.all %}
+            <li class="subtask">
+              {{ subtask.title }}
+              <span class="status-circle {% if subtask.status == 'todo' %}todo{% else %}done{% endif %}"></span>
+              <a href="{% url 'task_edit' subtask.pk %}">Modifier</a>
+            </li>
+          {% endfor %}
+        </ul>
+      </li>
+      {% endif %}
+    {% empty %}<li>Aucune tâche privée</li>{% endfor %}
+  </ul>
+</div>
+
+<div class="section-block">
+  <h2>Tâches publiques assignées</h2>
+  <ul>
+    {% for task in assigned_public_tasks %}
+      {% if not task.parent %}
+      <li>
+        <span class="task-title">{{ task.title }}</span>
+        <span class="status-circle {% if task.status == 'todo' %}todo{% else %}done{% endif %}"></span>
+        – {{ task.get_status_display }} – par <a href="{% url 'user_profile' task.author.username %}">{{ task.author.username }}</a>
+
+        {% if user in task.assigned_users.all and user != task.author %}
+          <form method="post" action="{% url 'quit_task' task.id %}" style="display:inline;">
+            {% csrf_token %}<button type="submit">Quitter</button>
+          </form>
+        {% endif %}
+
+        <ul>
+          {% for subtask in task.subtasks.all %}
+            <li class="subtask">
+              {{ subtask.title }}
+              <span class="status-circle {% if subtask.status == 'todo' %}todo{% else %}done{% endif %}"></span>
+              {{ subtask.get_status_display }}
+            </li>
+          {% endfor %}
+        </ul>
+      </li>
+      {% endif %}
+    {% empty %}<li>Aucune tâche publique assignée</li>{% endfor %}
+  </ul>
+</div>
+
+<div class="section-block">
+  <h2>Tâches publiques à rejoindre</h2>
+  <ul>
+    {% for task in available_public_tasks %}
+      {% if not task.parent %}
+      <li>
+        <span class="task-title">{{ task.title }}</span>
+        <span class="status-circle {% if task.status == 'todo' %}todo{% else %}done{% endif %}"></span>
+        – {{ task.get_status_display }} – par <a href="{% url 'user_profile' task.author.username %}">{{ task.author.username }}</a>
+
+        <form method="post" action="{% url 'join_task' task.id %}" style="display:inline;">
+          {% csrf_token %}<button type="submit">Rejoindre</button>
+        </form>
+
+        <ul>
+          {% for subtask in task.subtasks.all %}
+            <li class="subtask">
+              {{ subtask.title }}
+              <span class="status-circle {% if subtask.status == 'todo' %}todo{% else %}done{% endif %}"></span>
+              {{ subtask.get_status_display }}
+            </li>
+          {% endfor %}
+        </ul>
+      </li>
+      {% endif %}
+    {% empty %}<li>Aucune tâche publique disponible</li>{% endfor %}
+  </ul>
+</div>
+
+<div style="margin-top: 30px;">
+  <a href="{% url 'create_team' %}">➕ Créer une équipe</a> |
+  <a href="{% url 'task_create' %}">➕ Nouvelle tâche</a>
+</div>
+
+{% endblock %}

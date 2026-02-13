@@ -1,0 +1,24 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Mes Tâches</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+</head>
+<body>
+<h1>Confirmer la suppression</h1>
+
+<p>Es-tu sûr de vouloir supprimer la tâche <strong>{{ task.title }}</strong> ?</p>
+
+<form method="post">
+  {% csrf_token %}
+  <button type="submit">Oui, supprimer</button>
+</form>
+
+<a href="{% url 'task_list' %}">Annuler</a>
+<a href="{% url 'dashboard' %}">⬅️ Retour au tableau de bord</a>
+
+
+</body>
+</html>
