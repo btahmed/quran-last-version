@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: quranreview-api
+    env: python
+    plan: free
+    rootDir: "ancien django/MYSITEE/MYSITEE"
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
+    startCommand: gunicorn mysite.wsgi:application --log-file -
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: mysite.settings
+      - key: DEBUG
+        value: '0'
+      - key: ALLOWED_HOSTS
+        value: quranreview-api.onrender.com
+      - key: CSRF_TRUSTED_ORIGINS
+        value: https://quranreview-api.onrender.com,https://btahmed.github.io
+      - key: SECURE_SSL_REDIRECT
+        value: 'True'
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase: quranreview-db
+databases:
+  - name: quranreview-db
+    plan: free
+    databaseName: quranreview
+    user: quranreview
