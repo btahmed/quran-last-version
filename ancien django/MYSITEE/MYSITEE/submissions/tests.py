@@ -26,6 +26,7 @@ from django.db import IntegrityError
 from submissions.models import Submission, validate_audio_file, ALLOWED_AUDIO_EXTENSIONS, MAX_AUDIO_SIZE_BYTES
 from tasks.models import Task, Team, User
 from points.models import PointsLog
+from rest_framework.test import APIClient
 
 
 class SubmissionTestCase(TestCase):
@@ -426,3 +427,32 @@ class CleanupCommandTests(SubmissionTestCase):
         # Should complete without raising
         call_command('cleanup_submissions', stdout=out)
         self.assertIn('SUMMARY', out.getvalue())
+
+
+class ApiEndpointsTests(SubmissionTestCase):
+    """Minimal API tests for JWT-protected endpoints."""
+
+    def setUp(self):
+        super().setUp()
+        self.api_client = APIClient()
+
+    def test_api_tasks_requires_auth(self):
+        response = self.api_client.get('/api/tasks/')
+        self.assertEqual(response.status_code, 401)
+
+    def test_api_tasks_returns_assigned(self):
+        self.api_client.force_authenticate(user=self.student)
+        response = self.api_client.get('/api/tasks/')
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(any(item['id'] == self.task.id for item in response.json()))
+
+    def test_api_approve_requires_staff(self):
+        submission = Submission.objects.create(
+            task=self.task,
+            student=self.student,
+            audio_file=self.create_audio_file(),
+            status='submitted'
+        )
+        self.api_client.force_authenticate(user=self.student)
+        response = self.api_client.post(f'/api/submissions/{submission.id}/approve/')
+        self.assertEqual(response.status_code, 403)
