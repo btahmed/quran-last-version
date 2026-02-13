@@ -64,6 +64,8 @@
                     <a href="#" class="nav-link" data-page="ward">الورد</a>
                     <a href="#" class="nav-link" data-page="reading">القراءة</a>
                     <a href="#" class="nav-link" data-page="progress">التقدم</a>
+                    <a href="#" class="nav-link" data-page="competition">🏆 التحديات</a>
+                    <a href="#" class="nav-link" data-page="hifz">🎭 وضع الحفظ</a>
                     <a href="#" class="nav-link" data-page="settings">الإعدادات</a>
                     <button id="theme-toggle" class="theme-toggle">🌙</button>
                 </nav>
@@ -511,6 +513,138 @@
                     <div style="text-align: center; padding: 2rem;">
                         <div style="font-size: 3rem; font-weight: bold; color: var(--accent-green);" id="progress-average">0</div>
                         <div style="color: var(--text-secondary);">متوسط عدد المراجعات لكل سورة</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Competition Page -->
+            <div id="competition-page" class="page">
+                <!-- Dashboard -->
+                <div id="competition-dashboard">
+                    <div class="card stats-dashboard">
+                        <div class="rank-badge" id="user-rank">🥉</div>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <span class="stat-value" id="comp-score">0</span>
+                                <span class="stat-label">نقاط</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-value" id="comp-wins">0</span>
+                                <span class="stat-label">انتصارات</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-value" id="comp-streak">🔥 0</span>
+                                <span class="stat-label">أيام متتالية</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Challenge Selection -->
+                    <div class="challenge-cards">
+                        <div class="challenge-card" onclick="QuranReview.startChallenge('speed_run')">
+                            <div class="challenge-icon">⚡</div>
+                            <h4>سباق الحفظ</h4>
+                            <p>حفظ أكبر عدد من الآيات في 5 دقائق</p>
+                            <div class="difficulty-selector">
+                                <button class="diff-btn" data-diff="easy">سهل</button>
+                                <button class="diff-btn active" data-diff="medium">متوسط</button>
+                                <button class="diff-btn" data-diff="hard">صعب</button>
+                            </div>
+                        </div>
+
+                        <div class="challenge-card" onclick="QuranReview.startChallenge('ayah_hunt')">
+                            <div class="challenge-icon">🎯</div>
+                            <h4>صياد الآيات</h4>
+                            <p>حدد السورة من الآية المعروضة</p>
+                        </div>
+
+                        <div class="challenge-card" onclick="QuranReview.startChallenge('precision')">
+                            <div class="challenge-icon">🎓</div>
+                            <h4>اختبار الدقة</h4>
+                            <p>حفظ كامل بدون أخطاء</p>
+                        </div>
+                    </div>
+
+                    <!-- Leaderboard -->
+                    <div class="card leaderboard" style="margin-top: 2rem;">
+                        <h3>🏆 لوحة المتصدرين</h3>
+                        <div id="leaderboard-list"></div>
+                    </div>
+                </div>
+
+                <!-- Active Challenge Interface (Hidden by default) -->
+                <div id="competition-active" class="hidden">
+                    <!-- Dynamic Content -->
+                </div>
+            </div>
+
+            <!-- Hifz Page -->
+            <div id="hifz-page" class="page">
+                <!-- Selection Form -->
+                <div id="hifz-selection" class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">🎭 إعداد جلسة الحفظ</h2>
+                    </div>
+                    <form id="hifz-start-form" class="settings-form">
+                        <div class="form-group">
+                            <label class="form-label">اختر السورة</label>
+                            <select id="hifz-surah-select" class="form-select" required>
+                                <option value="">-- اختر السورة --</option>
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">من الآية</label>
+                                <input type="number" id="hifz-from-ayah" class="form-input" min="1" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">إلى الآية</label>
+                                <input type="number" id="hifz-to-ayah" class="form-input" min="1" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">ابدأ الحفظ</button>
+                    </form>
+                </div>
+
+                <!-- Active Session -->
+                <div id="hifz-active-container" class="hifz-container hidden">
+                    <!-- Header -->
+                    <div class="hifz-header">
+                        <div class="hifz-level-indicator">
+                            <span>المستوى:</span>
+                            <div class="level-dots">
+                                <span class="dot active"></span>
+                                <span class="dot"></span>
+                                <span class="dot"></span>
+                                <span class="dot"></span>
+                                <span class="dot"></span>
+                            </div>
+                        </div>
+                        <div class="hifz-controls">
+                            <button class="btn btn-secondary" onclick="QuranReview.showHint()">
+                                💡 تلميح (<span id="hints-count">3</span>)
+                            </button>
+                            <button class="btn btn-primary" onclick="QuranReview.checkMemorization()">
+                                ✅ تحقق
+                            </button>
+                            <button class="btn btn-danger" onclick="QuranReview.stopHifzSession()">
+                                ⏹️ إنهاء
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Display Zone -->
+                    <div id="hifz-display" class="hifz-display">
+                        <!-- Dynamic Content -->
+                    </div>
+
+                    <!-- Feedback -->
+                    <div id="hifz-feedback" class="hifz-feedback hidden">
+                        <div class="feedback-content">
+                            <span class="feedback-icon" style="font-size: 3rem;">🎉</span>
+                            <h3>أحسنت!</h3>
+                            <button class="btn btn-primary" onclick="QuranReview.nextLevel()">المستوى التالي</button>
+                        </div>
                     </div>
                 </div>
             </div>
