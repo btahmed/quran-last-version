@@ -46,6 +46,11 @@
 </div>
 {% endif %}
 
+<div class="privacy-notice">
+    <p><strong>Information sur la conservation des données :</strong></p>
+    <p>L'audio est conservé temporairement et supprimé automatiquement après 14 jours.</p>
+</div>
+
 <form method="post" enctype="multipart/form-data" class="submission-form">
     {% csrf_token %}
 
@@ -58,6 +63,20 @@
         {% if form.audio_file.errors %}
         <ul class="errors">
             {% for error in form.audio_file.errors %}
+            <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+
+    <div class="form-group privacy-consent">
+        <label>
+            {{ form.privacy_consent }}
+            {{ form.privacy_consent.label }}
+        </label>
+        {% if form.privacy_consent.errors %}
+        <ul class="errors">
+            {% for error in form.privacy_consent.errors %}
             <li>{{ error }}</li>
             {% endfor %}
         </ul>
