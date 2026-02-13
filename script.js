@@ -229,12 +229,17 @@ const AudioManager = {
 // APP STATE & CONFIGURATION
 // ===================================
 
+const API_BASE_URL = window.API_BASE_URL || "http://127.0.0.1:8000";
+
 const QuranReview = {
     // App Configuration
     config: {
         appName: 'QuranReview',
         version: '1.0.0',
+        apiBaseUrl: API_BASE_URL,
         storageKey: 'quranreview_data',
+        tasksKey: 'quranreview_tasks',
+        apiTokenKey: 'quranreview_api_token',
         settingsKey: 'quranreview_settings',  // Ajouté clé séparée pour settings
         competitionKey: 'quranreview_competition',
         hifzKey: 'quranreview_hifz',
@@ -374,6 +379,7 @@ const QuranReview = {
     state: {
         currentPage: 'home',
         memorizationData: [],
+        tasks: [],
         competition: {},
         hifz: {},
         settings: {},
@@ -394,6 +400,7 @@ const QuranReview = {
         this.state = {
             currentPage: 'home',
             memorizationData: [],
+            tasks: [],
             competition: {},
             hifz: {},
             settings: { ...this.config.defaultSettings },
@@ -482,12 +489,39 @@ const QuranReview = {
             this.state.memorizationData = savedData ? 
                 JSON.parse(savedData) : 
                 this.getDefaultMemorizationData();
+
+            const savedTasks = localStorage.getItem(this.config.tasksKey);
+            this.state.tasks = savedTasks ? JSON.parse(savedTasks) : [];
+            this.loadTasksFromApi();
             
             console.log('📁 Data loaded successfully');
         } catch (error) {
             console.error('❌ Error loading data:', error);
             this.state.settings = { ...this.config.defaultSettings };
             this.state.memorizationData = this.getDefaultMemorizationData();
+            this.state.tasks = [];
+        }
+    },
+
+    async loadTasksFromApi() {
+        if (!this.config.apiBaseUrl) return;
+
+        try {
+            const token = localStorage.getItem(this.config.apiTokenKey);
+            const headers = token ? { Authorization: `Bearer ${token}` } : {};
+            const response = await fetch(`${this.config.apiBaseUrl}/api/tasks/`, { headers });
+
+            if (!response.ok) {
+                throw new Error(`API error: ${response.status}`);
+            }
+
+            const data = await response.json();
+            if (Array.isArray(data)) {
+                this.state.tasks = data;
+                localStorage.setItem(this.config.tasksKey, JSON.stringify(data));
+            }
+        } catch (error) {
+            console.warn('⚠️ API tasks fetch failed, using localStorage fallback', error);
         }
     },
     
