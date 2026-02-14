@@ -150,15 +150,18 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # CORS (Frontend origins)
-CORS_ALLOWED_ORIGINS = [
-    origin.strip()
-    for origin in os.environ.get(
-        "CORS_ALLOWED_ORIGINS",
-        "https://btahmed.github.io,https://quranreview.live"
-    ).split(",")
-    if origin.strip()
-]
-CORS_ALLOW_CREDENTIALS = False
+if DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = True
+else:
+    CORS_ALLOWED_ORIGINS = [
+        origin.strip()
+        for origin in os.environ.get(
+            "CORS_ALLOWED_ORIGINS",
+            "https://btahmed.github.io,https://quranreview.live"
+        ).split(",")
+        if origin.strip()
+    ]
+CORS_ALLOW_CREDENTIALS = True
 
 # DRF + JWT
 REST_FRAMEWORK = {
