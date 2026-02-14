@@ -4721,27 +4721,45 @@ const QuranReview = {
     },
 
     async submitRecording() {
-        if (!this._recordBlob || !this._recordTaskId) return;
+        if (!this._recordBlob || !this._recordTaskId) {
+            Logger.error('RECORDING', 'Missing blob or task ID', { blob: !!this._recordBlob, taskId: this._recordTaskId });
+            return;
+        }
 
         const token = localStorage.getItem(this.config.apiTokenKey);
-        if (!token) return;
+        if (!token) {
+            Logger.error('RECORDING', 'No auth token found');
+            return;
+        }
+
+        // Debug: Log blob details
+        Logger.log('RECORDING', `Blob size: ${this._recordBlob.size} bytes, type: ${this._recordBlob.type}`);
+        Logger.log('RECORDING', `Task ID: ${this._recordTaskId}`);
 
         const formData = new FormData();
         formData.append('task_id', this._recordTaskId);
-        formData.append('audio_file', this._recordBlob, 'recording.webm');
+        formData.append('audio_file', this._recordBlob, `recording_${Date.now()}.webm`);
 
         try {
             document.getElementById('recording-submit-btn').disabled = true;
+            
+            Logger.log('RECORDING', 'Sending submission to API...');
             const response = await fetch(`${this.config.apiBaseUrl}/api/submissions/`, {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${token}` },
                 body: formData,
             });
 
+            Logger.log('RECORDING', `API Response status: ${response.status}`);
+
             if (!response.ok) {
                 const data = await response.json();
+                Logger.error('RECORDING', 'Submission failed', data);
                 throw new Error(data.detail || data.non_field_errors?.[0] || 'خطأ في الإرسال');
             }
+
+            const result = await response.json();
+            Logger.log('RECORDING', 'Submission successful', result);
 
             this.showNotification('تم إرسال التسجيل بنجاح!', 'success');
             document.getElementById('audio-record-modal').classList.add('hidden');
