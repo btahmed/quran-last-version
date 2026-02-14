@@ -4,10 +4,20 @@ from django.contrib.auth.models import AbstractUser
 
 
 class User(AbstractUser):
+    ROLE_CHOICES = [
+        ('student', 'Élève'),
+        ('teacher', 'Professeur'),
+    ]
+
     description = models.TextField(blank=True)
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='student')
 
     def __str__(self):
-        return self.username  # ← éviter self.name (tu n'as pas de champ 'name')
+        return self.username
+
+    @property
+    def is_teacher(self):
+        return self.role == 'teacher'
 
 
 class Team(models.Model):
