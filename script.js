@@ -229,7 +229,8 @@ const AudioManager = {
 // APP STATE & CONFIGURATION
 // ===================================
 
-const API_BASE_URL = window.API_BASE_URL || "http://127.0.0.1:8000";
+const API_BASE_URL = window.API_BASE_URL || "https://quranreview-
+  api.onrender.com";
 
 const QuranReview = {
     // App Configuration
@@ -3343,3 +3344,5 @@ window.addEventListener('unhandledrejection', (e) => {
 
 // Make QuranReview available globally
 window.QuranReview = QuranReview;
+
+
