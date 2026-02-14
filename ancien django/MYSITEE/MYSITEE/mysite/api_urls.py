@@ -2,8 +2,10 @@ from django.urls import path
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from .api_views import (
+    MeView,
     MySubmissionsView,
     PointsView,
+    RegisterView,
     SubmissionApproveView,
     SubmissionCreateView,
     SubmissionRejectView,
@@ -11,8 +13,10 @@ from .api_views import (
 )
 
 urlpatterns = [
+    path('register/', RegisterView.as_view(), name='api_register'),
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('me/', MeView.as_view(), name='api_me'),
     path('tasks/', TaskListView.as_view(), name='api_tasks'),
     path('submissions/', SubmissionCreateView.as_view(), name='api_submissions_create'),
     path('my-submissions/', MySubmissionsView.as_view(), name='api_my_submissions'),
