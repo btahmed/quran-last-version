@@ -262,13 +262,19 @@ const AudioManager = {
 // APP STATE & CONFIGURATION
 // ===================================
 
-const API_BASE_URL = window.API_BASE_URL || "http://127.0.0.1:8000";
+const API_BASE_URL = window.API_BASE_URL || (
+    window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://127.0.0.1:8000'
+    : 'https://api.quranreview.live'
+);
+
+console.log(`🔌 API Configuration: ${API_BASE_URL} (Hostname: ${window.location.hostname})`);
 
 const QuranReview = {
     // App Configuration
     config: {
         appName: 'QuranReview',
-        version: '1.0.0',
+        version: '1.0.2',
         apiBaseUrl: API_BASE_URL,
         storageKey: 'quranreview_data',
         tasksKey: 'quranreview_tasks',
