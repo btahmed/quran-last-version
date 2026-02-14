@@ -256,123 +256,8 @@ const QuranReview = {
             autoPlayNext: true
         },
         
-        // Quran Data - Complete 114 Surahs
-        surahs: [
-            { id: 1, name: 'الفاتحة', englishName: 'Al-Fatihah', ayahs: 7, type: 'meccan' },
-            { id: 2, name: 'البقرة', englishName: 'Al-Baqarah', ayahs: 286, type: 'medinan' },
-            { id: 3, name: 'آل عمران', englishName: 'Aal-E-Imran', ayahs: 200, type: 'medinan' },
-            { id: 4, name: 'النساء', englishName: 'An-Nisa', ayahs: 176, type: 'medinan' },
-            { id: 5, name: 'المائدة', englishName: 'Al-Ma\'idah', ayahs: 120, type: 'medinan' },
-            { id: 6, name: 'الأنعام', englishName: 'Al-An\'am', ayahs: 165, type: 'meccan' },
-            { id: 7, name: 'الأعراف', englishName: 'Al-A\'raf', ayahs: 206, type: 'meccan' },
-            { id: 8, name: 'الأنفال', englishName: 'Al-Anfal', ayahs: 75, type: 'medinan' },
-            { id: 9, name: 'التوبة', englishName: 'At-Tawbah', ayahs: 129, type: 'medinan' },
-            { id: 10, name: 'يونس', englishName: 'Yunus', ayahs: 109, type: 'meccan' },
-            { id: 11, name: 'هود', englishName: 'Hud', ayahs: 123, type: 'meccan' },
-            { id: 12, name: 'يوسف', englishName: 'Yusuf', ayahs: 111, type: 'meccan' },
-            { id: 13, name: 'الرعد', englishName: 'Ar-Ra\'d', ayahs: 43, type: 'medinan' },
-            { id: 14, name: 'إبراهيم', englishName: 'Ibrahim', ayahs: 52, type: 'meccan' },
-            { id: 15, name: 'الحجر', englishName: 'Al-Hijr', ayahs: 99, type: 'meccan' },
-            { id: 16, name: 'النحل', englishName: 'An-Nahl', ayahs: 128, type: 'meccan' },
-            { id: 17, name: 'الإسراء', englishName: 'Al-Isra', ayahs: 111, type: 'meccan' },
-            { id: 18, name: 'الكهف', englishName: 'Al-Kahf', ayahs: 110, type: 'meccan' },
-            { id: 19, name: 'مريم', englishName: 'Maryam', ayahs: 98, type: 'meccan' },
-            { id: 20, name: 'طه', englishName: 'Ta-Ha', ayahs: 135, type: 'meccan' },
-            { id: 21, name: 'الأنبياء', englishName: 'Al-Anbiya', ayahs: 112, type: 'meccan' },
-            { id: 22, name: 'الحج', englishName: 'Al-Hajj', ayahs: 78, type: 'medinan' },
-            { id: 23, name: 'المؤمنون', englishName: 'Al-Mu\'minun', ayahs: 118, type: 'meccan' },
-            { id: 24, name: 'النور', englishName: 'An-Nur', ayahs: 64, type: 'medinan' },
-            { id: 25, name: 'الفرقان', englishName: 'Al-Furqan', ayahs: 77, type: 'meccan' },
-            { id: 26, name: 'الشعراء', englishName: 'Ash-Shu\'ara', ayahs: 227, type: 'meccan' },
-            { id: 27, name: 'النمل', englishName: 'An-Naml', ayahs: 93, type: 'meccan' },
-            { id: 28, name: 'القصص', englishName: 'Al-Qasas', ayahs: 88, type: 'meccan' },
-            { id: 29, name: 'العنكبوت', englishName: 'Al-Ankabut', ayahs: 69, type: 'meccan' },
-            { id: 30, name: 'الروم', englishName: 'Ar-Rum', ayahs: 60, type: 'meccan' },
-            { id: 31, name: 'لقمان', englishName: 'Luqman', ayahs: 34, type: 'meccan' },
-            { id: 32, name: 'السجدة', englishName: 'As-Sajdah', ayahs: 30, type: 'meccan' },
-            { id: 33, name: 'الأحزاب', englishName: 'Al-Ahzab', ayahs: 73, type: 'medinan' },
-            { id: 34, name: 'سبأ', englishName: 'Saba', ayahs: 54, type: 'meccan' },
-            { id: 35, name: 'فاطر', englishName: 'Fatir', ayahs: 45, type: 'meccan' },
-            { id: 36, name: 'يس', englishName: 'Ya-Sin', ayahs: 83, type: 'meccan' },
-            { id: 37, name: 'الصافات', englishName: 'As-Saffat', ayahs: 182, type: 'meccan' },
-            { id: 38, name: 'ص', englishName: 'Sad', ayahs: 88, type: 'meccan' },
-            { id: 39, name: 'الزمر', englishName: 'Az-Zumar', ayahs: 75, type: 'meccan' },
-            { id: 40, name: 'غافر', englishName: 'Ghafir', ayahs: 85, type: 'meccan' },
-            { id: 41, name: 'فصلت', englishName: 'Fussilat', ayahs: 54, type: 'meccan' },
-            { id: 42, name: 'الشورى', englishName: 'Ash-Shura', ayahs: 53, type: 'meccan' },
-            { id: 43, name: 'الزخرف', englishName: 'Az-Zukhruf', ayahs: 89, type: 'meccan' },
-            { id: 44, name: 'الدخان', englishName: 'Ad-Dukhan', ayahs: 59, type: 'meccan' },
-            { id: 45, name: 'الجاثية', englishName: 'Al-Jathiyah', ayahs: 37, type: 'meccan' },
-            { id: 46, name: 'الأحقاف', englishName: 'Al-Ahqaf', ayahs: 35, type: 'meccan' },
-            { id: 47, name: 'محمد', englishName: 'Muhammad', ayahs: 38, type: 'medinan' },
-            { id: 48, name: 'الفتح', englishName: 'Al-Fath', ayahs: 29, type: 'medinan' },
-            { id: 49, name: 'الحجرات', englishName: 'Al-Hujurat', ayahs: 18, type: 'medinan' },
-            { id: 50, name: 'ق', englishName: 'Qaf', ayahs: 45, type: 'meccan' },
-            { id: 51, name: 'الذاريات', englishName: 'Adh-Dhariyat', ayahs: 60, type: 'meccan' },
-            { id: 52, name: 'الطور', englishName: 'At-Tur', ayahs: 49, type: 'meccan' },
-            { id: 53, name: 'النجم', englishName: 'An-Najm', ayahs: 62, type: 'meccan' },
-            { id: 54, name: 'القمر', englishName: 'Al-Qamar', ayahs: 55, type: 'meccan' },
-            { id: 55, name: 'الرحمن', englishName: 'Ar-Rahman', ayahs: 78, type: 'medinan' },
-            { id: 56, name: 'الواقعة', englishName: 'Al-Waqiah', ayahs: 96, type: 'meccan' },
-            { id: 57, name: 'الحديد', englishName: 'Al-Hadid', ayahs: 29, type: 'medinan' },
-            { id: 58, name: 'المجادلة', englishName: 'Al-Mujadilah', ayahs: 22, type: 'medinan' },
-            { id: 59, name: 'الحشر', englishName: 'Al-Hashr', ayahs: 24, type: 'medinan' },
-            { id: 60, name: 'الممتحنة', englishName: 'Al-Mumtahanah', ayahs: 13, type: 'medinan' },
-            { id: 61, name: 'الصف', englishName: 'As-Saff', ayahs: 14, type: 'medinan' },
-            { id: 62, name: 'الجمعة', englishName: 'Al-Jumua', ayahs: 11, type: 'medinan' },
-            { id: 63, name: 'المنافقون', englishName: 'Al-Munafiqun', ayahs: 11, type: 'medinan' },
-            { id: 64, name: 'التغابن', englishName: 'At-Taghabun', ayahs: 18, type: 'medinan' },
-            { id: 65, name: 'الطلاق', englishName: 'At-Talaq', ayahs: 12, type: 'medinan' },
-            { id: 66, name: 'التحريم', englishName: 'At-Tahrim', ayahs: 12, type: 'medinan' },
-            { id: 67, name: 'الملك', englishName: 'Al-Mulk', ayahs: 30, type: 'meccan' },
-            { id: 68, name: 'القلم', englishName: 'Al-Qalam', ayahs: 52, type: 'meccan' },
-            { id: 69, name: 'الحاقة', englishName: 'Al-Haqqah', ayahs: 52, type: 'meccan' },
-            { id: 70, name: 'المعارج', englishName: 'Al-Maarij', ayahs: 44, type: 'meccan' },
-            { id: 71, name: 'نوح', englishName: 'Nuh', ayahs: 28, type: 'meccan' },
-            { id: 72, name: 'الجن', englishName: 'Al-Jinn', ayahs: 28, type: 'meccan' },
-            { id: 73, name: 'المزمل', englishName: 'Al-Muzzammil', ayahs: 20, type: 'meccan' },
-            { id: 74, name: 'المدثر', englishName: 'Al-Muddaththir', ayahs: 56, type: 'meccan' },
-            { id: 75, name: 'القيامة', englishName: 'Al-Qiyamah', ayahs: 40, type: 'meccan' },
-            { id: 76, name: 'الإنسان', englishName: 'Al-Insan', ayahs: 31, type: 'medinan' },
-            { id: 77, name: 'المرسلات', englishName: 'Al-Mursalat', ayahs: 50, type: 'meccan' },
-            { id: 78, name: 'النبأ', englishName: 'An-Naba', ayahs: 40, type: 'meccan' },
-            { id: 79, name: 'النازعات', englishName: 'An-Nazi-at', ayahs: 46, type: 'meccan' },
-            { id: 80, name: 'عبس', englishName: 'Abasa', ayahs: 42, type: 'meccan' },
-            { id: 81, name: 'التكوير', englishName: 'At-Takwir', ayahs: 29, type: 'meccan' },
-            { id: 82, name: 'الانفطار', englishName: 'Al-Infitar', ayahs: 19, type: 'meccan' },
-            { id: 83, name: 'المطففين', englishName: 'Al-Mutaffifin', ayahs: 36, type: 'meccan' },
-            { id: 84, name: 'الانشقاق', englishName: 'Al-Inshiqaq', ayahs: 25, type: 'meccan' },
-            { id: 85, name: 'البروج', englishName: 'Al-Buruj', ayahs: 22, type: 'meccan' },
-            { id: 86, name: 'الطارق', englishName: 'At-Tariq', ayahs: 17, type: 'meccan' },
-            { id: 87, name: 'الأعلى', englishName: 'Al-A-la', ayahs: 19, type: 'meccan' },
-            { id: 88, name: 'الغاشية', englishName: 'Al-Ghashiyah', ayahs: 26, type: 'meccan' },
-            { id: 89, name: 'الفجر', englishName: 'Al-Fajr', ayahs: 30, type: 'meccan' },
-            { id: 90, name: 'البلد', englishName: 'Al-Balad', ayahs: 20, type: 'meccan' },
-            { id: 91, name: 'الشمس', englishName: 'Ash-Shams', ayahs: 15, type: 'meccan' },
-            { id: 92, name: 'الليل', englishName: 'Al-Lail', ayahs: 21, type: 'meccan' },
-            { id: 93, name: 'الضحى', englishName: 'Ad-Duha', ayahs: 11, type: 'meccan' },
-            { id: 94, name: 'الشرح', englishName: 'Ash-Sharh', ayahs: 8, type: 'meccan' },
-            { id: 95, name: 'التين', englishName: 'At-Tin', ayahs: 8, type: 'meccan' },
-            { id: 96, name: 'العلق', englishName: 'Al-Alaq', ayahs: 19, type: 'meccan' },
-            { id: 97, name: 'القدر', englishName: 'Al-Qadr', ayahs: 5, type: 'meccan' },
-            { id: 98, name: 'البينة', englishName: 'Al-Bayyinah', ayahs: 8, type: 'medinan' },
-            { id: 99, name: 'الزلزلة', englishName: 'Az-Zalzalah', ayahs: 8, type: 'medinan' },
-            { id: 100, name: 'العاديات', englishName: 'Al-Adiyat', ayahs: 11, type: 'meccan' },
-            { id: 101, name: 'القارعة', englishName: 'Al-Qari\'ah', ayahs: 11, type: 'meccan' },
-            { id: 102, name: 'التكاثر', englishName: 'At-Takathur', ayahs: 8, type: 'meccan' },
-            { id: 103, name: 'العصر', englishName: 'Al-Asr', ayahs: 3, type: 'meccan' },
-            { id: 104, name: 'الهمزة', englishName: 'Al-Humazah', ayahs: 9, type: 'meccan' },
-            { id: 105, name: 'الفيل', englishName: 'Al-Fil', ayahs: 5, type: 'meccan' },
-            { id: 106, name: 'قريش', englishName: 'Quraysh', ayahs: 4, type: 'meccan' },
-            { id: 107, name: 'الماعون', englishName: 'Al-Ma\'un', ayahs: 7, type: 'meccan' },
-            { id: 108, name: 'الكوثر', englishName: 'Al-Kawthar', ayahs: 3, type: 'meccan' },
-            { id: 109, name: 'الكافرون', englishName: 'Al-Kafirun', ayahs: 6, type: 'meccan' },
-            { id: 110, name: 'النصر', englishName: 'An-Nasr', ayahs: 3, type: 'medinan' },
-            { id: 111, name: 'المسد', englishName: 'Al-Masad', ayahs: 5, type: 'meccan' },
-            { id: 112, name: 'الإخلاص', englishName: 'Al-Ikhlas', ayahs: 4, type: 'meccan' },
-            { id: 113, name: 'الفلق', englishName: 'Al-Falaq', ayahs: 5, type: 'meccan' },
-            { id: 114, name: 'الناس', englishName: 'An-Nas', ayahs: 6, type: 'meccan' }
-        ]
+        // Quran Data
+        surahs: typeof QURAN_SURAHS !== 'undefined' ? QURAN_SURAHS : []
     },
     
     // App State
@@ -455,6 +340,20 @@ const QuranReview = {
         }
     },
     
+    // ===================================
+    // SECURITY UTILITIES
+    // ===================================
+
+    escapeHtml(text) {
+        if (!text) return '';
+        return String(text)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    },
+
     // ===================================
     // DATA MANAGEMENT
     // ===================================
@@ -568,6 +467,21 @@ const QuranReview = {
         document.getElementById('auth-modal')?.classList.add('hidden');
     },
 
+    showLoading() {
+        if (!document.getElementById('app-loading')) {
+            const loader = document.createElement('div');
+            loader.id = 'app-loading';
+            loader.className = 'loading-overlay';
+            loader.innerHTML = '<div class="spinner"></div>';
+            document.body.appendChild(loader);
+        }
+        document.getElementById('app-loading').classList.remove('hidden');
+    },
+
+    hideLoading() {
+        document.getElementById('app-loading')?.classList.add('hidden');
+    },
+
     async handleLogin(event) {
         event.preventDefault();
         const username = document.getElementById('login-username').value.trim();
@@ -577,6 +491,7 @@ const QuranReview = {
 
         errorEl?.classList.add('hidden');
         if (submitBtn) submitBtn.disabled = true;
+        this.showLoading();
 
         try {
             const response = await fetch(`${this.config.apiBaseUrl}/api/token/`, {
@@ -611,6 +526,7 @@ const QuranReview = {
             }
         } finally {
             if (submitBtn) submitBtn.disabled = false;
+            this.hideLoading();
         }
     },
 
@@ -3608,7 +3524,11 @@ const QuranReview = {
                 tasksList.innerHTML = tasks.map(task => {
                     const sub = subByTask[task.id];
                     let statusBadge = '<span class="status-badge status-new">لم يُسلَّم</span>';
-                    let actionBtn = `<button class="btn btn-primary btn-sm" onclick="QuranReview.openRecordModal(${task.id}, '${task.title.replace(/'/g, "\\'")}')">🎤 تسجيل</button>`;
+                    const escapedTitle = this.escapeHtml(task.title);
+                    const escapedDesc = this.escapeHtml(task.description);
+                    const safeTitleForJs = task.title.replace(/'/g, "\\'"); // Still needed for JS string arg
+
+                    let actionBtn = `<button class="btn btn-primary btn-sm" onclick="QuranReview.openRecordModal(${task.id}, '${safeTitleForJs}')">🎤 تسجيل</button>`;
 
                     if (sub) {
                         if (sub.status === 'approved') {
@@ -3616,7 +3536,7 @@ const QuranReview = {
                             actionBtn = '';
                         } else if (sub.status === 'rejected') {
                             statusBadge = '<span class="status-badge status-rejected">مرفوض ✗</span>';
-                            actionBtn = `<button class="btn btn-primary btn-sm" onclick="QuranReview.openRecordModal(${task.id}, '${task.title.replace(/'/g, "\\'")}')">🎤 إعادة التسجيل</button>`;
+                            actionBtn = `<button class="btn btn-primary btn-sm" onclick="QuranReview.openRecordModal(${task.id}, '${safeTitleForJs}')">🎤 إعادة التسجيل</button>`;
                         } else {
                             statusBadge = '<span class="status-badge status-pending">بانتظار التصحيح</span>';
                             actionBtn = '';
@@ -3628,16 +3548,16 @@ const QuranReview = {
 
                     return `<div class="task-card">
                         <div class="task-card-header">
-                            <h3 class="task-card-title">${task.title}</h3>
+                            <h3 class="task-card-title">${escapedTitle}</h3>
                             ${statusBadge}
                         </div>
-                        ${task.description ? `<p class="task-card-desc">${task.description}</p>` : ''}
+                        ${task.description ? `<p class="task-card-desc">${escapedDesc}</p>` : ''}
                         <div class="task-card-meta">
                             <span class="task-type-badge">${typeLabel}</span>
                             <span class="task-points-badge">🏆 ${task.points} نقطة</span>
                             ${dueDate ? `<span class="task-due-date">📅 ${dueDate}</span>` : ''}
                         </div>
-                        ${sub && sub.status === 'rejected' && sub.admin_feedback ? `<div class="task-feedback">💬 ${sub.admin_feedback}</div>` : ''}
+                        ${sub && sub.status === 'rejected' && sub.admin_feedback ? `<div class="task-feedback">💬 ${this.escapeHtml(sub.admin_feedback)}</div>` : ''}
                         <div class="task-card-actions">${actionBtn}</div>
                     </div>`;
                 }).join('');
@@ -3652,14 +3572,16 @@ const QuranReview = {
                     const statusClass = s.status === 'approved' ? 'status-approved' : s.status === 'rejected' ? 'status-rejected' : 'status-pending';
                     const statusText = s.status === 'approved' ? 'مقبول ✓' : s.status === 'rejected' ? 'مرفوض ✗' : 'بانتظار التصحيح';
                     const date = new Date(s.submitted_at).toLocaleDateString('ar-SA');
+                    const escapedTaskTitle = this.escapeHtml(s.task.title);
+
                     return `<div class="submission-card">
                         <div class="submission-card-header">
-                            <span>${s.task.title}</span>
+                            <span>${escapedTaskTitle}</span>
                             <span class="status-badge ${statusClass}">${statusText}</span>
                         </div>
                         <div class="submission-card-meta">📅 ${date}</div>
-                        ${s.admin_feedback ? `<div class="task-feedback">💬 ${s.admin_feedback}</div>` : ''}
-                        ${s.audio_url ? `<audio controls src="${s.audio_url}" style="width:100%;margin-top:0.5rem;"></audio>` : ''}
+                        ${s.admin_feedback ? `<div class="task-feedback">💬 ${this.escapeHtml(s.admin_feedback)}</div>` : ''}
+                        ${s.audio_url ? `<audio controls src="${this.escapeHtml(s.audio_url)}" style="width:100%;margin-top:0.5rem;"></audio>` : ''}
                     </div>`;
                 }).join('');
             }
@@ -3723,16 +3645,19 @@ const QuranReview = {
             } else {
                 pendingList.innerHTML = pending.map(s => {
                     const date = new Date(s.submitted_at).toLocaleDateString('ar-SA');
+                    const escapedStudentName = this.escapeHtml(s.student_name);
+                    const escapedTaskTitle = this.escapeHtml(s.task.title);
+
                     return `<div class="pending-card">
                         <div class="pending-card-header">
-                            <strong>🎓 ${s.student_name}</strong>
-                            <span class="task-type-badge">${s.task.title}</span>
+                            <strong>🎓 ${escapedStudentName}</strong>
+                            <span class="task-type-badge">${escapedTaskTitle}</span>
                         </div>
                         <div class="pending-card-meta">
                             <span>🏆 ${s.task.points} نقطة</span>
                             <span>📅 ${date}</span>
                         </div>
-                        ${s.audio_url ? `<audio controls src="${s.audio_url}" style="width:100%;margin:0.5rem 0;"></audio>` : '<p class="empty-state">لا يوجد ملف صوتي</p>'}
+                        ${s.audio_url ? `<audio controls src="${this.escapeHtml(s.audio_url)}" style="width:100%;margin:0.5rem 0;"></audio>` : '<p class="empty-state">لا يوجد ملف صوتي</p>'}
                         <div class="pending-card-actions">
                             <button class="btn btn-success btn-sm" onclick="QuranReview.approveSubmission(${s.id})">✓ قبول</button>
                             <button class="btn btn-danger btn-sm" onclick="QuranReview.rejectSubmissionPrompt(${s.id})">✗ رفض</button>
@@ -3747,8 +3672,12 @@ const QuranReview = {
                 studentsList.innerHTML = '<p class="empty-state">لا يوجد طلاب بعد</p>';
             } else {
                 studentsList.innerHTML = students.map(s => {
-                    return `<div class="student-card clickable" onclick="QuranReview.viewStudentProgress(${s.id}, '${(s.first_name || s.username).replace(/'/g, "\\'")}')">
-                        <div class="student-card-name">🎓 ${s.first_name || s.username}</div>
+                    const displayName = s.first_name || s.username;
+                    const escapedName = this.escapeHtml(displayName);
+                    const safeNameForJs = displayName.replace(/'/g, "\\'");
+
+                    return `<div class="student-card clickable" onclick="QuranReview.viewStudentProgress(${s.id}, '${safeNameForJs}')">
+                        <div class="student-card-name">🎓 ${escapedName}</div>
                         <div class="student-card-stats">
                             <span>🏆 ${s.total_points} نقطة</span>
                             <span>📝 ${s.submissions_count} تسليم</span>
@@ -3767,12 +3696,15 @@ const QuranReview = {
                     const typeLabel = task.task_type === 'memorization' ? 'حفظ' : task.task_type === 'recitation' ? 'تلاوة' : 'أخرى';
                     const dueDate = task.due_date ? new Date(task.due_date).toLocaleDateString('ar-SA') : '';
                     const date = new Date(task.created_at).toLocaleDateString('ar-SA');
+                    const escapedTitle = this.escapeHtml(task.title);
+                    const escapedDesc = this.escapeHtml(task.description);
+
                     return `<div class="task-card">
                         <div class="task-card-header">
-                            <h3 class="task-card-title">${task.title}</h3>
+                            <h3 class="task-card-title">${escapedTitle}</h3>
                             <span class="task-type-badge">${typeLabel}</span>
                         </div>
-                        ${task.description ? `<p class="task-card-desc">${task.description}</p>` : ''}
+                        ${task.description ? `<p class="task-card-desc">${escapedDesc}</p>` : ''}
                         <div class="task-card-meta">
                             <span>🏆 ${task.points} نقطة</span>
                             <span>📅 أُنشئت: ${date}</span>
@@ -4044,6 +3976,7 @@ const QuranReview = {
 
         try {
             document.getElementById('recording-submit-btn').disabled = true;
+            this.showLoading();
             const response = await fetch(`${this.config.apiBaseUrl}/api/submissions/`, {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${token}` },
@@ -4063,6 +3996,7 @@ const QuranReview = {
             this.showNotification(error.message, 'error');
         } finally {
             document.getElementById('recording-submit-btn').disabled = false;
+            this.hideLoading();
         }
     }
 };
