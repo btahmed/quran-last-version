@@ -4273,11 +4273,131 @@ const QuranReview = {
                             ${new Date(user.date_joined).toLocaleDateString('ar-SA')}
                         </div>
                     </div>
+                    <div class="item-actions">
+                        <button class="btn btn-sm btn-secondary" onclick="QuranReview.openUserEditModal(${user.id}, '${user.username}', '${user.first_name}', '${user.last_name}', '${user.role}', ${user.is_superuser})">✏️ تعديل</button>
+                        ${user.id !== this.state.user?.id ? `<button class="btn btn-sm btn-danger" onclick="QuranReview.deleteUser(${user.id}, '${user.username}')">🗑️ حذف</button>` : ''}
+                    </div>
                 </div>
             `;
         });
 
         usersListEl.innerHTML = html;
+    },
+
+    // ===================================
+    // ADMIN - USER MANAGEMENT
+    // ===================================
+
+    openUserEditModal(userId, username, firstName, lastName, role, isSuperuser) {
+        const modal = document.getElementById('user-edit-modal');
+        document.getElementById('edit-user-id').value = userId;
+        document.getElementById('edit-username').value = username;
+        document.getElementById('edit-first-name').value = firstName;
+        document.getElementById('edit-last-name').value = lastName;
+        document.getElementById('edit-role').value = role;
+        document.getElementById('edit-is-superuser').checked = isSuperuser;
+        
+        modal.classList.remove('hidden');
+    },
+
+    closeUserEditModal() {
+        const modal = document.getElementById('user-edit-modal');
+        modal.classList.add('hidden');
+        
+        // Clear error/success messages
+        const errorEl = document.getElementById('user-edit-error');
+        const successEl = document.getElementById('user-edit-success');
+        if (errorEl) errorEl.classList.add('hidden');
+        if (successEl) successEl.classList.add('hidden');
+    },
+
+    async handleUpdateUser(event) {
+        event.preventDefault();
+        
+        const userId = document.getElementById('edit-user-id').value;
+        const firstName = document.getElementById('edit-first-name').value.trim();
+        const lastName = document.getElementById('edit-last-name').value.trim();
+        const role = document.getElementById('edit-role').value;
+        const isSuperuser = document.getElementById('edit-is-superuser').checked;
+        
+        const errorEl = document.getElementById('user-edit-error');
+        const successEl = document.getElementById('user-edit-success');
+        const token = localStorage.getItem(this.config.apiTokenKey);
+
+        errorEl?.classList.add('hidden');
+        successEl?.classList.add('hidden');
+
+        try {
+            const response = await fetch(`${this.config.apiBaseUrl}/api/admin/users/${userId}/update/`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    first_name: firstName,
+                    last_name: lastName,
+                    role: role,
+                    is_superuser: isSuperuser,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.detail || 'خطأ في تحديث المستخدم');
+            }
+
+            Logger.log('ADMIN', `User updated: ${data.username}`);
+            if (successEl) {
+                successEl.textContent = `✅ تم تحديث بيانات "${data.username}" بنجاح`;
+                successEl.classList.remove('hidden');
+            }
+            
+            // Close modal after 2 seconds
+            setTimeout(() => {
+                this.closeUserEditModal();
+                this.loadAdminUsersList(); // Refresh users list
+            }, 2000);
+            
+            this.showNotification('تم تحديث بيانات المستخدم بنجاح', 'success');
+        } catch (error) {
+            Logger.error('ADMIN', 'Update user failed', error);
+            if (errorEl) {
+                errorEl.textContent = error.message;
+                errorEl.classList.remove('hidden');
+            }
+        }
+    },
+
+    async deleteUser(userId, username) {
+        if (!confirm(`هل أنت متأكد من حذف المستخدم "${username}"؟\nهذا الإجراء لا يمكن التراجع عنه.`)) {
+            return;
+        }
+
+        const token = localStorage.getItem(this.config.apiTokenKey);
+
+        try {
+            const response = await fetch(`${this.config.apiBaseUrl}/api/admin/users/${userId}/delete/`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.detail || 'خطأ في حذف المستخدم');
+            }
+
+            Logger.log('ADMIN', `User deleted: ${username}`);
+            this.showNotification(`تم حذف "${username}" بنجاح`, 'success');
+            this.loadAdminUsersList(); // Refresh users list
+        } catch (error) {
+            Logger.error('ADMIN', 'Delete user failed', error);
+            this.showNotification(error.message, 'error');
+        }
     },
 
     // ===================================

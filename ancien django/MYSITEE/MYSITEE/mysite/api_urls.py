@@ -3,6 +3,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from .api_views import (
     CreateTeacherView,
+    DeleteUserView,
     ListUsersView,
     MeView,
     MyStudentsView,
@@ -16,6 +17,7 @@ from .api_views import (
     SubmissionRejectView,
     TaskCreateView,
     TaskListView,
+    UpdateUserView,
 )
 
 urlpatterns = [
@@ -46,4 +48,6 @@ urlpatterns = [
     # Admin-only
     path('admin/create-teacher/', CreateTeacherView.as_view(), name='api_create_teacher'),
     path('admin/users/', ListUsersView.as_view(), name='api_list_users'),
+    path('admin/users/<int:user_id>/update/', UpdateUserView.as_view(), name='api_update_user'),
+    path('admin/users/<int:user_id>/delete/', DeleteUserView.as_view(), name='api_delete_user'),
 ]

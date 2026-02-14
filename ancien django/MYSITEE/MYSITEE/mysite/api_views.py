@@ -193,6 +193,87 @@ class CreateTeacherView(APIView):
 
 
 # ===================================
+# ADMIN - UPDATE USER
+# ===================================
+
+class UpdateUserView(APIView):
+    """Superuser: update user information."""
+    permission_classes = [IsSuperUser]
+
+    def put(self, request, user_id):
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response(
+                {'detail': 'المستخدم غير موجود.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        # Update fields
+        first_name = request.data.get('first_name', '').strip()
+        last_name = request.data.get('last_name', '').strip()
+        role = request.data.get('role', '').strip()
+        is_superuser = request.data.get('is_superuser', False)
+
+        if first_name:
+            user.first_name = first_name
+        if last_name:
+            user.last_name = last_name
+        if role in ['student', 'teacher']:
+            user.role = role
+        if isinstance(is_superuser, bool):
+            user.is_superuser = is_superuser
+            user.is_staff = is_superuser
+
+        user.save()
+
+        return Response({
+            'id': user.id,
+            'username': user.username,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'role': user.role,
+            'is_superuser': user.is_superuser,
+            'is_staff': user.is_staff,
+            'action': 'updated',
+        })
+
+
+# ===================================
+# ADMIN - DELETE USER
+# ===================================
+
+class DeleteUserView(APIView):
+    """Superuser: delete a user."""
+    permission_classes = [IsSuperUser]
+
+    def delete(self, request, user_id):
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response(
+                {'detail': 'المستخدم غير موجود.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        # Prevent self-deletion
+        if user.id == request.user.id:
+            return Response(
+                {'detail': 'لا يمكنك حذف حسابك الخاص.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        username = user.username
+        user.delete()
+
+        return Response({
+            'username': username,
+            'action': 'deleted',
+            'message': f'تم حذف المستخدم "{username}" بنجاح'
+        })
+
+
+# ===================================
 # USER PROFILE
 # ===================================
 

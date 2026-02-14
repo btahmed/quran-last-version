@@ -997,6 +997,45 @@
                             <p class="empty-state">جاري التحميل...</p>
                         </div>
 
+                        <!-- User Edit Modal -->
+                        <div id="user-edit-modal" class="modal-overlay hidden">
+                            <div class="modal-content">
+                                <button class="modal-close" onclick="QuranReview.closeUserEditModal()">&times;</button>
+                                <h2 class="modal-title">✏️ تعديل بيانات المستخدم</h2>
+                                <form id="user-edit-form" class="settings-form" onsubmit="QuranReview.handleUpdateUser(event)">
+                                    <input type="hidden" id="edit-user-id">
+                                    <div class="form-group">
+                                        <label class="form-label" for="edit-username">اسم المستخدم</label>
+                                        <input type="text" id="edit-username" class="form-input" readonly>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label" for="edit-first-name">الاسم الأول</label>
+                                        <input type="text" id="edit-first-name" class="form-input" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label" for="edit-last-name">اسم العائلة</label>
+                                        <input type="text" id="edit-last-name" class="form-input">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label" for="edit-role">الدور</label>
+                                        <select id="edit-role" class="form-input">
+                                            <option value="student">طالب</option>
+                                            <option value="teacher">أستاذ</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">
+                                            <input type="checkbox" id="edit-is-superuser" style="margin-left:0.5rem;">
+                                            مدير (Superuser)
+                                        </label>
+                                    </div>
+                                    <div id="user-edit-error" class="auth-error hidden"></div>
+                                    <div id="user-edit-success" class="auth-success hidden"></div>
+                                    <button type="submit" class="btn btn-primary btn-full">حفظ التغييرات</button>
+                                </form>
+                            </div>
+                        </div>
+
                         <hr style="margin:1.5rem 0;">
 
                         <!-- Create Teacher -->
