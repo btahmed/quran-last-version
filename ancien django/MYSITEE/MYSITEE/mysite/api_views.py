@@ -650,7 +650,7 @@ class StudentProgressView(APIView):
 
 class MediaFileView(APIView):
     """Serve media files directly through API."""
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
     
     def get(self, request, file_path):
         # Remove leading slash if present
