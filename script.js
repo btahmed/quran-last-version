@@ -3965,6 +3965,11 @@ const QuranReview = {
             adminTab.style.display = isAdmin ? 'inline-block' : 'none';
         }
 
+        // Load admin users list if admin tab is visible
+        if (this.state.user && this.state.user.is_superuser) {
+            this.loadAdminUsersList();
+        }
+
         try {
             const [studentsRes, pendingRes, tasksRes] = await Promise.all([
                 fetch(`${this.config.apiBaseUrl}/api/my-students/`, { headers }),
@@ -4217,6 +4222,65 @@ const QuranReview = {
     },
 
     // ===================================
+    // ADMIN - LOAD USERS LIST
+    // ===================================
+
+    async loadAdminUsersList() {
+        const token = localStorage.getItem(this.config.apiTokenKey);
+        if (!token) return;
+
+        try {
+            const response = await fetch(`${this.config.apiBaseUrl}/api/admin/users/`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            if (!response.ok) throw new Error('فشل تحميل قائمة المستخدمين');
+
+            const data = await response.json();
+            this.renderAdminUsersList(data.users);
+        } catch (error) {
+            Logger.error('ADMIN', 'Failed to load users list', error);
+            const usersListEl = document.getElementById('admin-users-list');
+            if (usersListEl) {
+                usersListEl.innerHTML = '<p class="empty-state">فشل تحميل القائمة</p>';
+            }
+        }
+    },
+
+    renderAdminUsersList(users) {
+        const usersListEl = document.getElementById('admin-users-list');
+        if (!usersListEl) return;
+
+        if (users.length === 0) {
+            usersListEl.innerHTML = '<p class="empty-state">لا يوجد مستخدمون</p>';
+            return;
+        }
+
+        let html = '';
+        users.forEach(user => {
+            const roleClass = user.is_superuser ? 'admin' : user.role;
+            const roleText = user.is_superuser ? 'مدير' : (user.role === 'teacher' ? 'أستاذ' : 'طالب');
+            const roleBadge = `<span class="user-badge ${roleClass}">${roleText}</span>`;
+            
+            html += `
+                <div class="dashboard-item">
+                    <div class="item-info">
+                        <div class="item-title">${user.username}${roleBadge}</div>
+                        <div class="item-subtitle">
+                            ${user.first_name} ${user.last_name} • 
+                            ${new Date(user.date_joined).toLocaleDateString('ar-SA')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        usersListEl.innerHTML = html;
+    },
+
+    // ===================================
     // ADMIN - CREATE/PROMOTE TEACHER
     // ===================================
 
@@ -4258,6 +4322,7 @@ const QuranReview = {
             }
             document.getElementById('admin-create-teacher-form').reset();
             this.showNotification('تم إنشاء حساب الأستاذ بنجاح', 'success');
+            this.loadAdminUsersList(); // Refresh users list
         } catch (error) {
             Logger.error('AUTH', 'Create teacher failed', error);
             if (errorEl) {
@@ -4302,6 +4367,7 @@ const QuranReview = {
             }
             document.getElementById('admin-promote-form').reset();
             this.showNotification(`تم ترقية ${data.username} إلى أستاذ`, 'success');
+            this.loadAdminUsersList(); // Refresh users list
         } catch (error) {
             Logger.error('AUTH', 'Promote teacher failed', error);
             if (errorEl) {

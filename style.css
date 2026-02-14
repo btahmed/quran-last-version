@@ -1196,6 +1196,41 @@ body {
     text-align: center;
 }
 
+.auth-success {
+    background: #d4edda;
+    color: #155724;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-sm);
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+/* User role badges */
+.user-badge {
+    display: inline-block;
+    padding: 0.2rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-left: 0.5rem;
+}
+
+.user-badge.student {
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
+.user-badge.teacher {
+    background: #e8f5e8;
+    color: #2e7d32;
+}
+
+.user-badge.admin {
+    background: #fff3e0;
+    color: #f57c00;
+}
+
 [data-theme="dark"] .auth-error {
     background: #4a1c24;
     color: #f8d7da;
