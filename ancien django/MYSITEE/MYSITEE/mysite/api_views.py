@@ -4,6 +4,7 @@ from django.shortcuts import get_object_or_404
 from django.http import JsonResponse, FileResponse, Http404
 from django.conf import settings
 import os
+from django.core.files.storage import FileSystemStorage
 
 from rest_framework import permissions, serializers, status
 from rest_framework.parsers import FormParser, MultiPartParser
@@ -404,6 +405,17 @@ class SubmissionSerializer(serializers.ModelSerializer):
     def get_audio_url(self, obj):
         if not obj.audio_file:
             return None
+
+        # Check if file exists when using local filesystem (ephemeral storage fix)
+        try:
+            # If using FileSystemStorage, verify file existence to avoid 404s
+            if isinstance(obj.audio_file.storage, FileSystemStorage):
+                if not obj.audio_file.storage.exists(obj.audio_file.name):
+                    return None
+        except Exception:
+            # If storage check fails, fall back to returning URL (or None if critical)
+            pass
+
         return obj.audio_file.url
 
     def get_student_name(self, obj):
