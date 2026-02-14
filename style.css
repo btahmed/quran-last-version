@@ -1201,6 +1201,21 @@ body {
     color: #f8d7da;
 }
 
+.auth-success {
+    background: #d4edda;
+    color: #155724;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-sm);
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+[data-theme="dark"] .auth-success {
+    background: #1c4a2a;
+    color: #d4edda;
+}
+
 /* ===================================
    ROLE SELECTOR
    =================================== */

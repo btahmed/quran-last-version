@@ -2,6 +2,7 @@ from django.urls import path
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from .api_views import (
+    CreateTeacherView,
     MeView,
     MyStudentsView,
     MySubmissionsView,
@@ -40,4 +41,7 @@ urlpatterns = [
     path('pending-submissions/', PendingSubmissionsView.as_view(), name='api_pending_submissions'),
     path('my-students/', MyStudentsView.as_view(), name='api_my_students'),
     path('students/<int:student_id>/progress/', StudentProgressView.as_view(), name='api_student_progress'),
+
+    # Admin-only
+    path('admin/create-teacher/', CreateTeacherView.as_view(), name='api_create_teacher'),
 ]

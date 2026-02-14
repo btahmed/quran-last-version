@@ -26,6 +26,12 @@ User = get_user_model()
 # PERMISSIONS
 # ===================================
 
+class IsSuperUser(permissions.BasePermission):
+    """Only allow superusers."""
+    def has_permission(self, request, view):
+        return request.user and request.user.is_authenticated and request.user.is_superuser
+
+
 class IsTeacher(permissions.BasePermission):
     """Only allow users with role='teacher' or staff."""
     def has_permission(self, request, view):
@@ -81,6 +87,75 @@ class RegisterView(APIView):
 
 
 # ===================================
+# ADMIN - CREATE TEACHER
+# ===================================
+
+class CreateTeacherView(APIView):
+    """Superuser-only: create a teacher account or promote an existing student."""
+    permission_classes = [IsSuperUser]
+
+    def post(self, request):
+        username = request.data.get('username', '').strip()
+        password = request.data.get('password', '')
+        first_name = request.data.get('first_name', '').strip()
+        last_name = request.data.get('last_name', '').strip()
+        promote = request.data.get('promote', False)
+
+        if not username:
+            return Response(
+                {'detail': 'اسم المستخدم مطلوب.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Promote existing user to teacher
+        if promote:
+            try:
+                user = User.objects.get(username=username)
+                user.role = 'teacher'
+                user.save()
+                return Response({
+                    'id': user.id,
+                    'username': user.username,
+                    'first_name': user.first_name,
+                    'role': user.role,
+                    'action': 'promoted',
+                })
+            except User.DoesNotExist:
+                return Response(
+                    {'detail': 'المستخدم غير موجود.'},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+
+        # Create new teacher account
+        if not password or len(password) < 6:
+            return Response(
+                {'detail': 'كلمة المرور مطلوبة (6 أحرف على الأقل).'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if User.objects.filter(username=username).exists():
+            return Response(
+                {'detail': 'اسم المستخدم مستخدم بالفعل.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user = User.objects.create_user(
+            username=username,
+            password=password,
+            first_name=first_name,
+            last_name=last_name,
+            role='teacher',
+        )
+        return Response({
+            'id': user.id,
+            'username': user.username,
+            'first_name': user.first_name,
+            'role': user.role,
+            'action': 'created',
+        }, status=status.HTTP_201_CREATED)
+
+
+# ===================================
 # USER PROFILE
 # ===================================
 
@@ -96,6 +171,7 @@ class MeView(APIView):
             'first_name': user.first_name,
             'last_name': user.last_name,
             'role': user.role,
+            'is_superuser': user.is_superuser,
             'total_points': total_points,
         })
 

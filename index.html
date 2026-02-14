@@ -888,6 +888,7 @@
                     <button class="teacher-tab" data-tab="create" onclick="QuranReview.switchTeacherTab('create')">➕ مهمة جديدة</button>
                     <button class="teacher-tab" data-tab="students" onclick="QuranReview.switchTeacherTab('students')">👥 الطلاب</button>
                     <button class="teacher-tab" data-tab="tasks-list" onclick="QuranReview.switchTeacherTab('tasks-list')">📋 المهام</button>
+                    <button class="teacher-tab admin-only-tab" data-tab="admin" onclick="QuranReview.switchTeacherTab('admin')" style="display:none;">⚙️ إدارة</button>
                 </div>
 
                 <!-- Tab: Pending Submissions -->
@@ -982,6 +983,51 @@
                         <div id="teacher-tasks-list" class="dashboard-list">
                             <p class="empty-state">جاري التحميل...</p>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Admin (superuser only) -->
+                <div id="teacher-tab-admin" class="teacher-tab-content">
+                    <div class="card">
+                        <div class="card-header"><h2 class="card-title">⚙️ إدارة الحسابات</h2></div>
+
+                        <!-- Create Teacher -->
+                        <h3 style="margin:1rem 0 0.5rem;">👨‍🏫 إنشاء حساب أستاذ جديد</h3>
+                        <form id="admin-create-teacher-form" class="settings-form" onsubmit="QuranReview.handleCreateTeacher(event)">
+                            <div class="form-group">
+                                <label class="form-label" for="teacher-new-username">اسم المستخدم</label>
+                                <input type="text" id="teacher-new-username" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="teacher-new-firstname">الاسم الأول</label>
+                                <input type="text" id="teacher-new-firstname" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="teacher-new-lastname">اسم العائلة</label>
+                                <input type="text" id="teacher-new-lastname" class="form-input">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="teacher-new-password">كلمة المرور</label>
+                                <input type="password" id="teacher-new-password" class="form-input" required minlength="6">
+                            </div>
+                            <div id="admin-create-error" class="auth-error hidden"></div>
+                            <div id="admin-create-success" class="auth-success hidden"></div>
+                            <button type="submit" class="btn btn-primary btn-full">إنشاء حساب أستاذ</button>
+                        </form>
+
+                        <hr style="margin:1.5rem 0;">
+
+                        <!-- Promote Student to Teacher -->
+                        <h3 style="margin:0 0 0.5rem;">⬆️ ترقية طالب إلى أستاذ</h3>
+                        <form id="admin-promote-form" class="settings-form" onsubmit="QuranReview.handlePromoteTeacher(event)">
+                            <div class="form-group">
+                                <label class="form-label" for="promote-username">اسم المستخدم للطالب</label>
+                                <input type="text" id="promote-username" class="form-input" required>
+                            </div>
+                            <div id="admin-promote-error" class="auth-error hidden"></div>
+                            <div id="admin-promote-success" class="auth-success hidden"></div>
+                            <button type="submit" class="btn btn-primary btn-full">ترقية إلى أستاذ</button>
+                        </form>
                     </div>
                 </div>
             </div>

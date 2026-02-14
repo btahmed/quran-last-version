@@ -3958,6 +3958,12 @@ const QuranReview = {
             if (el) el.textContent = `مرحباً أستاذ ${this.state.user.first_name || this.state.user.username}`;
         }
 
+        // Show admin tab only for superusers
+        const adminTab = document.querySelector('.admin-only-tab');
+        if (adminTab) {
+            adminTab.style.display = (this.state.user && this.state.user.is_superuser) ? 'inline-block' : 'none';
+        }
+
         try {
             const [studentsRes, pendingRes, tasksRes] = await Promise.all([
                 fetch(`${this.config.apiBaseUrl}/api/my-students/`, { headers }),
@@ -4206,6 +4212,101 @@ const QuranReview = {
             this.loadTeacherDashboard();
         } catch (error) {
             this.showNotification(error.message, 'error');
+        }
+    },
+
+    // ===================================
+    // ADMIN - CREATE/PROMOTE TEACHER
+    // ===================================
+
+    async handleCreateTeacher(event) {
+        event.preventDefault();
+        const username = document.getElementById('teacher-new-username').value.trim();
+        const firstName = document.getElementById('teacher-new-firstname').value.trim();
+        const lastName = document.getElementById('teacher-new-lastname').value.trim();
+        const password = document.getElementById('teacher-new-password').value;
+        const errorEl = document.getElementById('admin-create-error');
+        const successEl = document.getElementById('admin-create-success');
+        const token = localStorage.getItem(this.config.apiTokenKey);
+
+        errorEl?.classList.add('hidden');
+        successEl?.classList.add('hidden');
+
+        Logger.log('AUTH', `Admin creating teacher: ${username}`);
+
+        try {
+            const response = await fetch(`${this.config.apiBaseUrl}/api/admin/create-teacher/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ username, password, first_name: firstName, last_name: lastName }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.detail || 'خطأ في إنشاء الحساب');
+            }
+
+            Logger.log('AUTH', `Teacher created: ${data.username} (${data.action})`);
+            if (successEl) {
+                successEl.textContent = `✅ تم إنشاء حساب الأستاذ "${data.username}" بنجاح`;
+                successEl.classList.remove('hidden');
+            }
+            document.getElementById('admin-create-teacher-form').reset();
+            this.showNotification('تم إنشاء حساب الأستاذ بنجاح', 'success');
+        } catch (error) {
+            Logger.error('AUTH', 'Create teacher failed', error);
+            if (errorEl) {
+                errorEl.textContent = error.message;
+                errorEl.classList.remove('hidden');
+            }
+        }
+    },
+
+    async handlePromoteTeacher(event) {
+        event.preventDefault();
+        const username = document.getElementById('promote-username').value.trim();
+        const errorEl = document.getElementById('admin-promote-error');
+        const successEl = document.getElementById('admin-promote-success');
+        const token = localStorage.getItem(this.config.apiTokenKey);
+
+        errorEl?.classList.add('hidden');
+        successEl?.classList.add('hidden');
+
+        Logger.log('AUTH', `Admin promoting user to teacher: ${username}`);
+
+        try {
+            const response = await fetch(`${this.config.apiBaseUrl}/api/admin/create-teacher/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ username, promote: true }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.detail || 'خطأ في الترقية');
+            }
+
+            Logger.log('AUTH', `User promoted: ${data.username} → ${data.role}`);
+            if (successEl) {
+                successEl.textContent = `✅ تم ترقية "${data.username}" إلى أستاذ بنجاح`;
+                successEl.classList.remove('hidden');
+            }
+            document.getElementById('admin-promote-form').reset();
+            this.showNotification(`تم ترقية ${data.username} إلى أستاذ`, 'success');
+        } catch (error) {
+            Logger.error('AUTH', 'Promote teacher failed', error);
+            if (errorEl) {
+                errorEl.textContent = error.message;
+                errorEl.classList.remove('hidden');
+            }
         }
     },
 
