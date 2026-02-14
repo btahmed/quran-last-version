@@ -87,12 +87,40 @@ class RegisterView(APIView):
 
 
 # ===================================
+# ADMIN - LIST ALL USERS
+# ===================================
+
+class ListUsersView(APIView):
+    """Superuser: list all users with their roles."""
+    permission_classes = [IsSuperUser]
+
+    def get(self, request):
+        users = User.objects.all().order_by('username')
+        user_list = []
+        for user in users:
+            user_list.append({
+                'id': user.id,
+                'username': user.username,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'role': user.role,
+                'is_superuser': user.is_superuser,
+                'is_staff': user.is_staff,
+                'date_joined': user.date_joined,
+            })
+        return Response({
+            'count': len(user_list),
+            'users': user_list
+        })
+
+
+# ===================================
 # ADMIN - CREATE TEACHER
 # ===================================
 
 class CreateTeacherView(APIView):
-    """Superuser or ahmad: create a teacher account or promote an existing student (temporary)."""
-    permission_classes = [permissions.IsAuthenticated]
+    """Superuser: create a teacher account or promote an existing student."""
+    permission_classes = [IsSuperUser]
 
     def post(self, request):
         username = request.data.get('username', '').strip()
