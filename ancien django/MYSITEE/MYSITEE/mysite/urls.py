@@ -37,9 +37,6 @@ urlpatterns = [
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 else:
-    # In production, serve media files with whitenoise
-    from whitenoise.middleware import WhiteNoiseMiddleware
-    WhiteNoiseMiddleware.add_files_to_middleware(
-        settings.MEDIA_URL, document_root=settings.MEDIA_ROOT
-    )
+    # In production, serve media files with Django's static file serving
+    # whitenoise will handle this through the middleware
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

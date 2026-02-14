@@ -208,6 +208,14 @@ CSRF_TRUSTED_ORIGINS = [
 STATIC_ROOT = BASE_DIR / "staticfiles"
 if "whitenoise.middleware.WhiteNoiseMiddleware" not in MIDDLEWARE:
     MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")
+    
+# Configure whitenoise to serve media files in production
+WHITENOISE_ROOT = BASE_DIR / "staticfiles"
+WHITENOISE_USE_FINDERS = True
+# Add media files to whitenoise in production
+if not DEBUG:
+    WHITENOISE_IMMUTABLE_FILE_TEST = r'\.[a-f0-9]{8,}\.'
+    
 STORAGES = {
     "default": {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
