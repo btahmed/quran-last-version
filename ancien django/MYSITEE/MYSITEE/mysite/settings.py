@@ -152,6 +152,18 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # CORS (Frontend origins)
 if DEBUG:
     CORS_ALLOW_ALL_ORIGINS = True
+    # Explicitly allow headers just in case
+    CORS_ALLOW_HEADERS = [
+        "accept",
+        "accept-encoding",
+        "authorization",
+        "content-type",
+        "dnt",
+        "origin",
+        "user-agent",
+        "x-csrftoken",
+        "x-requested-with",
+    ]
 else:
     CORS_ALLOWED_ORIGINS = [
         origin.strip()

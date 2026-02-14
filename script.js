@@ -655,8 +655,13 @@ const QuranReview = {
             await this.performLogin(username, password);
 
         } catch (error) {
+            console.error('Login error:', error);
             if (errorEl) {
-                errorEl.textContent = error.message;
+                if (error.message === 'Failed to fetch') {
+                    errorEl.textContent = 'تعذر الاتصال بالخادم. تأكد من تشغيل الخادم المحلي.';
+                } else {
+                    errorEl.textContent = error.message;
+                }
                 errorEl.classList.remove('hidden');
             }
         } finally {
