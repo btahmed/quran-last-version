@@ -103,7 +103,33 @@
                     <div id="login-error" class="auth-error hidden"></div>
                     <button type="submit" class="btn btn-primary btn-full" id="login-submit-btn">دخول</button>
                 </form>
-                <p class="auth-hint">يتم إنشاء الحسابات من طرف الإدارة فقط</p>
+                <p class="auth-hint">ليس لديك حساب؟ <a href="#" onclick="QuranReview.showRegisterForm(event)">إنشاء حساب جديد</a></p>
+            </div>
+
+            <!-- Register Form -->
+            <div id="auth-register-form" class="hidden">
+                <h2 class="modal-title">إنشاء حساب جديد</h2>
+                <form onsubmit="QuranReview.handleRegister(event)">
+                    <div class="form-group">
+                        <label class="form-label" for="reg-username">اسم المستخدم</label>
+                        <input type="text" id="reg-username" class="form-input" required autocomplete="username">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="reg-first-name">الاسم الأول</label>
+                        <input type="text" id="reg-first-name" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="reg-last-name">اسم العائلة</label>
+                        <input type="text" id="reg-last-name" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="reg-password">كلمة المرور</label>
+                        <input type="password" id="reg-password" class="form-input" required autocomplete="new-password">
+                    </div>
+                    <div id="reg-error" class="auth-error hidden"></div>
+                    <button type="submit" class="btn btn-primary btn-full" id="reg-submit-btn">تسجيل</button>
+                </form>
+                <p class="auth-hint">لديك حساب بالفعل؟ <a href="#" onclick="QuranReview.showLoginForm(event)">تسجيل الدخول</a></p>
             </div>
         </div>
     </div>

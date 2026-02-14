@@ -229,7 +229,7 @@ const AudioManager = {
 // APP STATE & CONFIGURATION
 // ===================================
 
-const API_BASE_URL = window.API_BASE_URL || "https://api.quranreview.live";
+const API_BASE_URL = window.API_BASE_URL || "http://127.0.0.1:8000";
 
 const QuranReview = {
     // App Configuration
@@ -568,16 +568,21 @@ const QuranReview = {
         document.getElementById('auth-modal')?.classList.add('hidden');
     },
 
-    async handleLogin(event) {
-        event.preventDefault();
-        const username = document.getElementById('login-username').value.trim();
-        const password = document.getElementById('login-password').value;
-        const errorEl = document.getElementById('login-error');
-        const submitBtn = document.getElementById('login-submit-btn');
+    showRegisterForm(event) {
+        if (event) event.preventDefault();
+        document.getElementById('auth-login-form')?.classList.add('hidden');
+        document.getElementById('auth-register-form')?.classList.remove('hidden');
+        document.getElementById('reg-error')?.classList.add('hidden');
+    },
 
-        errorEl?.classList.add('hidden');
-        if (submitBtn) submitBtn.disabled = true;
+    showLoginForm(event) {
+        if (event) event.preventDefault();
+        document.getElementById('auth-register-form')?.classList.add('hidden');
+        document.getElementById('auth-login-form')?.classList.remove('hidden');
+        document.getElementById('login-error')?.classList.add('hidden');
+    },
 
+    async performLogin(username, password) {
         try {
             const response = await fetch(`${this.config.apiBaseUrl}/api/token/`, {
                 method: 'POST',
@@ -596,6 +601,7 @@ const QuranReview = {
             this.hideAuthModal();
             await this.fetchMe();
             this.loadTasksFromApi();
+
             // Auto-redirect based on role
             if (this.state.user) {
                 if (this.state.user.role === 'teacher') {
@@ -604,6 +610,72 @@ const QuranReview = {
                     this.navigateTo('mytasks');
                 }
             }
+            this.showNotification('تم تسجيل الدخول بنجاح', 'success');
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    async handleRegister(event) {
+        event.preventDefault();
+        const username = document.getElementById('reg-username').value.trim();
+        const password = document.getElementById('reg-password').value;
+        const firstName = document.getElementById('reg-first-name').value.trim();
+        const lastName = document.getElementById('reg-last-name').value.trim();
+        const errorEl = document.getElementById('reg-error');
+        const submitBtn = document.getElementById('reg-submit-btn');
+
+        errorEl?.classList.add('hidden');
+        if (submitBtn) submitBtn.disabled = true;
+
+        try {
+            const response = await fetch(`${this.config.apiBaseUrl}/api/register/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username,
+                    password,
+                    first_name: firstName,
+                    last_name: lastName
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                let msg = data.detail || 'خطأ في التسجيل';
+                // Handle DRF errors
+                if (typeof data === 'object') {
+                    if (data.username) msg = `اسم المستخدم: ${data.username[0]}`;
+                    else if (data.password) msg = `كلمة المرور: ${data.password[0]}`;
+                }
+                throw new Error(msg);
+            }
+
+            await this.performLogin(username, password);
+
+        } catch (error) {
+            if (errorEl) {
+                errorEl.textContent = error.message;
+                errorEl.classList.remove('hidden');
+            }
+        } finally {
+            if (submitBtn) submitBtn.disabled = false;
+        }
+    },
+
+    async handleLogin(event) {
+        event.preventDefault();
+        const username = document.getElementById('login-username').value.trim();
+        const password = document.getElementById('login-password').value;
+        const errorEl = document.getElementById('login-error');
+        const submitBtn = document.getElementById('login-submit-btn');
+
+        errorEl?.classList.add('hidden');
+        if (submitBtn) submitBtn.disabled = true;
+
+        try {
+            await this.performLogin(username, password);
         } catch (error) {
             if (errorEl) {
                 errorEl.textContent = error.message;
