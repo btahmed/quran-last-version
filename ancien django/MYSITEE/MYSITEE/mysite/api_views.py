@@ -401,16 +401,8 @@ class SubmissionSerializer(serializers.ModelSerializer):
     def get_audio_url(self, obj):
         if not obj.audio_file:
             return None
-        # Build URL with main domain instead of API domain
-        audio_path = obj.audio_file.url
-        # In production, use the main domain
-        if not DEBUG:
-            return f"https://quranreview.live{audio_path}"
-        # In development, use the request domain
-        request = self.context.get('request')
-        if request is None:
-            return audio_path
-        return request.build_absolute_uri(audio_path)
+        # Return relative URL - frontend will build full URL
+        return obj.audio_file.url
 
     def get_student_name(self, obj):
         return obj.student.first_name or obj.student.username
