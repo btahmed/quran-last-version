@@ -3,7 +3,7 @@
  * Professional PWA Implementation
  */
 
-const CACHE_NAME = 'quranreview-v1.0.1';
+const CACHE_NAME = 'quranreview-v1.0.2';
 const APP_SHELL = [
     './',
     './index.html',

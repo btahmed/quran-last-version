@@ -4,6 +4,39 @@
  */
 
 // ===================================
+// UTILS - LOGGER
+// ===================================
+
+const Logger = {
+    debugMode: true, // Default to true for development
+
+    log(category, message, data = null) {
+        if (!this.debugMode) return;
+        const timestamp = new Date().toLocaleTimeString();
+        const style = 'color: #2d5016; font-weight: bold;';
+        console.log(`%c[${timestamp}] [${category}] ${message}`, style);
+        if (data) console.log('📝 Data:', data);
+    },
+
+    error(category, message, error = null) {
+        const timestamp = new Date().toLocaleTimeString();
+        const style = 'color: #dc3545; font-weight: bold;';
+        console.error(`%c[${timestamp}] [${category}] ❌ ${message}`, style);
+        if (error) {
+            console.error('🔍 Error Details:', error);
+            if (error.stack) console.error('Stack:', error.stack);
+        }
+    },
+
+    warn(category, message, data = null) {
+        const timestamp = new Date().toLocaleTimeString();
+        const style = 'color: #ffc107; font-weight: bold;';
+        console.warn(`%c[${timestamp}] [${category}] ⚠️ ${message}`, style);
+        if (data) console.warn('Data:', data);
+    }
+};
+
+// ===================================
 // AUDIO MANAGER - PROFESSIONAL AUDIO CONTROL
 // ===================================
 
@@ -94,11 +127,11 @@ const AudioManager = {
         this.mode = "wird";
 
         if (!window.QuranAudio) {
-            console.error(' QuranAudio not available for Wird');
+            Logger.error('AUDIO', 'QuranAudio not available for Wird');
             return;
         }
 
-        console.log(` Playing Wird ayah sequence ${surahId}:${fromAyah}-${toAyah}`);
+        Logger.log('AUDIO', `Playing Wird ayah sequence ${surahId}:${fromAyah}-${toAyah}`);
 
         let currentAyah = fromAyah;
         const urls = [];
@@ -229,13 +262,19 @@ const AudioManager = {
 // APP STATE & CONFIGURATION
 // ===================================
 
-const API_BASE_URL = window.API_BASE_URL || "http://127.0.0.1:8000";
+const API_BASE_URL = window.API_BASE_URL || (
+    window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://127.0.0.1:8000'
+    : 'https://api.quranreview.live'
+);
+
+console.log(`🔌 API Configuration: ${API_BASE_URL} (Hostname: ${window.location.hostname})`);
 
 const QuranReview = {
     // App Configuration
     config: {
         appName: 'QuranReview',
-        version: '1.0.0',
+        version: '1.0.2',
         apiBaseUrl: API_BASE_URL,
         storageKey: 'quranreview_data',
         tasksKey: 'quranreview_tasks',
@@ -467,6 +506,11 @@ const QuranReview = {
                 JSON.parse(savedSettings) : 
                 { ...this.config.defaultSettings };
             
+            // Apply debug mode from settings
+            if (this.state.settings.debugMode !== undefined) {
+                Logger.debugMode = this.state.settings.debugMode;
+            }
+
             // Load competition data
             const savedCompetition = localStorage.getItem(this.config.competitionKey);
             this.state.competition = savedCompetition ?
@@ -583,6 +627,7 @@ const QuranReview = {
     },
 
     async performLogin(username, password) {
+        Logger.log('AUTH', `Attempting login for user: ${username}`);
         try {
             const response = await fetch(`${this.config.apiBaseUrl}/api/token/`, {
                 method: 'POST',
@@ -590,12 +635,16 @@ const QuranReview = {
                 body: JSON.stringify({ username, password }),
             });
 
+            Logger.log('AUTH', `Login Response Status: ${response.status}`);
+
             const data = await response.json();
 
             if (!response.ok) {
+                Logger.warn('AUTH', 'Login failed', data);
                 throw new Error(data.detail || 'اسم المستخدم أو كلمة المرور غير صحيحة');
             }
 
+            Logger.log('AUTH', 'Login successful, tokens received');
             localStorage.setItem(this.config.apiTokenKey, data.access);
             localStorage.setItem('quranreview_refresh_token', data.refresh);
             this.hideAuthModal();
@@ -604,6 +653,7 @@ const QuranReview = {
 
             // Auto-redirect based on role
             if (this.state.user) {
+                Logger.log('AUTH', `Redirecting user role: ${this.state.user.role}`);
                 if (this.state.user.role === 'teacher') {
                     this.navigateTo('teacher');
                 } else {
@@ -612,6 +662,7 @@ const QuranReview = {
             }
             this.showNotification('تم تسجيل الدخول بنجاح', 'success');
         } catch (error) {
+            Logger.error('AUTH', 'Login process error', error);
             throw error;
         }
     },
@@ -655,8 +706,13 @@ const QuranReview = {
             await this.performLogin(username, password);
 
         } catch (error) {
+            console.error('Login error:', error);
             if (errorEl) {
-                errorEl.textContent = error.message;
+                if (error.message === 'Failed to fetch') {
+                    errorEl.textContent = 'تعذر الاتصال بالخادم. تأكد من تشغيل الخادم المحلي.';
+                } else {
+                    errorEl.textContent = error.message;
+                }
                 errorEl.classList.remove('hidden');
             }
         } finally {
@@ -790,29 +846,39 @@ const QuranReview = {
     async loadTasksFromApi() {
         if (!this.config.apiBaseUrl) return;
 
+        Logger.log('API', 'Loading tasks from API...');
+
         try {
             const token = localStorage.getItem(this.config.apiTokenKey);
-            if (!token) return;
+            if (!token) {
+                Logger.warn('API', 'No token found, skipping task load');
+                return;
+            }
             const headers = { Authorization: `Bearer ${token}` };
             const response = await fetch(`${this.config.apiBaseUrl}/api/tasks/`, { headers });
 
+            Logger.log('API', `Fetch Tasks Response: ${response.status}`);
+
             if (response.status === 401) {
+                Logger.warn('API', 'Token expired (401), attempting refresh');
                 const refreshed = await this.refreshToken();
                 if (refreshed) return this.loadTasksFromApi();
                 return;
             }
 
             if (!response.ok) {
-                throw new Error(`API error: ${response.status}`);
+                throw new Error(`API error: ${response.status} ${response.statusText}`);
             }
 
             const data = await response.json();
+            Logger.log('API', `Loaded ${Array.isArray(data) ? data.length : 0} tasks`, data);
+
             if (Array.isArray(data)) {
                 this.state.tasks = data;
                 localStorage.setItem(this.config.tasksKey, JSON.stringify(data));
             }
         } catch (error) {
-            console.warn('⚠️ API tasks fetch failed, using localStorage fallback', error);
+            Logger.error('API', 'Failed to load tasks', error);
         }
     },
     
@@ -2674,6 +2740,11 @@ const QuranReview = {
         document.getElementById('user-name').value = this.state.settings.userName || '';
         document.getElementById('daily-goal').value = this.state.settings.dailyGoal || 5;
         document.getElementById('notifications').checked = this.state.settings.notifications || false;
+
+        const debugToggle = document.getElementById('debug-mode');
+        if (debugToggle) {
+            debugToggle.checked = this.state.settings.debugMode || false;
+        }
     },
     
     setupForms() {
@@ -2692,9 +2763,13 @@ const QuranReview = {
             userName: document.getElementById('user-name').value,
             dailyGoal: parseInt(document.getElementById('daily-goal').value),
             theme: this.state.settings.theme,
-            notifications: document.getElementById('notifications').checked
+            notifications: document.getElementById('notifications').checked,
+            debugMode: document.getElementById('debug-mode')?.checked || false
         };
         
+        // Apply debug mode
+        Logger.debugMode = this.state.settings.debugMode;
+
         this.saveData();
         this.showNotification('تم حفظ الإعدادات', 'success');
     },
