@@ -5,6 +5,7 @@ from .api_views import (
     CreateTeacherView,
     DeleteUserView,
     ListUsersView,
+    MediaFileView,
     MeView,
     MyStudentsView,
     MySubmissionsView,
@@ -39,6 +40,9 @@ urlpatterns = [
     path('my-submissions/', MySubmissionsView.as_view(), name='api_my_submissions'),
     path('submissions/<int:submission_id>/approve/', SubmissionApproveView.as_view(), name='api_submissions_approve'),
     path('submissions/<int:submission_id>/reject/', SubmissionRejectView.as_view(), name='api_submissions_reject'),
+
+    # Media files
+    path('media/<path:file_path>', MediaFileView.as_view(), name='api_media_file'),
 
     # Teacher-only
     path('pending-submissions/', PendingSubmissionsView.as_view(), name='api_pending_submissions'),

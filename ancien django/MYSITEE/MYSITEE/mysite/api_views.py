@@ -1,6 +1,9 @@
 from django.contrib.auth import get_user_model
 from django.db.models import Q, Count, Sum
 from django.shortcuts import get_object_or_404
+from django.http import JsonResponse, FileResponse, Http404
+from django.conf import settings
+import os
 
 from rest_framework import permissions, serializers, status
 from rest_framework.parsers import FormParser, MultiPartParser
@@ -612,3 +615,37 @@ class StudentProgressView(APIView):
             },
             'tasks': task_data,
         })
+
+
+# ===================================
+# MEDIA FILE SERVING
+# ===================================
+
+class MediaFileView(APIView):
+    """Serve media files directly through API."""
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get(self, request, file_path):
+        # Remove leading slash if present
+        file_path = file_path.lstrip('/')
+        full_path = os.path.join(settings.MEDIA_ROOT, file_path)
+        
+        # Security check: ensure file is within MEDIA_ROOT
+        if not os.path.abspath(full_path).startswith(os.path.abspath(settings.MEDIA_ROOT)):
+            raise Http404("File not found")
+        
+        if not os.path.exists(full_path):
+            raise Http404("File not found")
+        
+        # Determine content type
+        content_type = 'application/octet-stream'
+        if file_path.endswith('.webm'):
+            content_type = 'audio/webm'
+        elif file_path.endswith('.mp3'):
+            content_type = 'audio/mpeg'
+        elif file_path.endswith('.wav'):
+            content_type = 'audio/wav'
+        elif file_path.endswith('.mp4'):
+            content_type = 'audio/mp4'
+        
+        return FileResponse(open(full_path, 'rb'), content_type=content_type)
