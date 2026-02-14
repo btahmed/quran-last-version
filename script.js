@@ -548,8 +548,8 @@ const QuranReview = {
             }
             // Show/hide role-specific nav links
             const isTeacher = this.state.user.role === 'teacher';
-            teacherLinks.forEach(el => el.style.display = isTeacher ? '' : 'none');
-            studentLinks.forEach(el => el.style.display = isTeacher ? 'none' : '');
+            teacherLinks.forEach(el => el.style.display = isTeacher ? 'inline-block' : 'none');
+            studentLinks.forEach(el => el.style.display = isTeacher ? 'none' : 'inline-block');
         } else {
             loginBtn?.classList.remove('hidden');
             userInfo?.classList.add('hidden');
@@ -711,6 +711,8 @@ const QuranReview = {
         localStorage.removeItem('quranreview_user');
         this.state.user = null;
         this.updateAuthUI(false);
+        this.navigateTo('home');
+        this.showNotification('تم تسجيل الخروج بنجاح', 'info');
     },
 
     async loadTasksFromApi() {

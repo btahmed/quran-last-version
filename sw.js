@@ -3,7 +3,7 @@
  * Professional PWA Implementation
  */
 
-const CACHE_NAME = 'quranreview-v1.0.0';
+const CACHE_NAME = 'quranreview-v1.0.1';
 const APP_SHELL = [
     './',
     './index.html',
@@ -62,31 +62,30 @@ self.addEventListener('fetch', (event) => {
     
     // Handle different request types
     if (url.origin === self.location.origin) {
-        // Same origin - cache first for app shell, network first for data
+        // Same origin - network first for app shell to ensure updates
         if (APP_SHELL.includes(url.pathname) || url.pathname === '/') {
-            // App shell - cache first
+            // App shell - network first
             event.respondWith(
-                caches.match(request)
+                fetch(request)
                     .then((response) => {
-                        if (response) {
-                            return response;
+                        // Cache successful responses
+                        if (response.status === 200) {
+                            const responseClone = response.clone();
+                            caches.open(CACHE_NAME)
+                                .then((cache) => {
+                                    cache.put(request, responseClone);
+                                });
                         }
-                        
-                        // Not in cache, fetch from network
-                        return fetch(request)
+                        return response;
+                    })
+                    .catch(() => {
+                        // Network failed, try cache
+                        return caches.match(request)
                             .then((response) => {
-                                // Cache successful responses
-                                if (response.status === 200) {
-                                    const responseClone = response.clone();
-                                    caches.open(CACHE_NAME)
-                                        .then((cache) => {
-                                            cache.put(request, responseClone);
-                                        });
+                                if (response) {
+                                    return response;
                                 }
-                                return response;
-                            })
-                            .catch(() => {
-                                // Network failed, try to serve offline page
+                                // If not in cache either, try fallback
                                 return caches.match('./index.html');
                             });
                     })
