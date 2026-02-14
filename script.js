@@ -517,7 +517,6 @@ const QuranReview = {
 
     initAuth() {
         const token = localStorage.getItem(this.config.apiTokenKey);
-        const refreshToken = localStorage.getItem('quranreview_refresh_token');
         const userData = localStorage.getItem('quranreview_user');
 
         if (token && userData) {
@@ -559,22 +558,10 @@ const QuranReview = {
         }
     },
 
-    showAuthModal(mode) {
+    showAuthModal() {
         const modal = document.getElementById('auth-modal');
-        const loginForm = document.getElementById('auth-login-form');
-        const registerForm = document.getElementById('auth-register-form');
-
         modal?.classList.remove('hidden');
         document.getElementById('login-error')?.classList.add('hidden');
-        document.getElementById('register-error')?.classList.add('hidden');
-
-        if (mode === 'register') {
-            loginForm?.classList.add('hidden');
-            registerForm?.classList.remove('hidden');
-        } else {
-            loginForm?.classList.remove('hidden');
-            registerForm?.classList.add('hidden');
-        }
     },
 
     hideAuthModal() {
@@ -609,6 +596,14 @@ const QuranReview = {
             this.hideAuthModal();
             await this.fetchMe();
             this.loadTasksFromApi();
+            // Auto-redirect based on role
+            if (this.state.user) {
+                if (this.state.user.role === 'teacher') {
+                    this.navigateTo('teacher');
+                } else {
+                    this.navigateTo('mytasks');
+                }
+            }
         } catch (error) {
             if (errorEl) {
                 errorEl.textContent = error.message;
@@ -619,55 +614,47 @@ const QuranReview = {
         }
     },
 
-    async handleRegister(event) {
-        event.preventDefault();
-        const username = document.getElementById('register-username').value.trim();
-        const firstName = document.getElementById('register-firstname').value.trim();
-        const password = document.getElementById('register-password').value;
-        const password2 = document.getElementById('register-password2').value;
-        const errorEl = document.getElementById('register-error');
-        const submitBtn = document.getElementById('register-submit-btn');
+    // Teacher tab switching
+    switchTeacherTab(tabName) {
+        document.querySelectorAll('.teacher-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.teacher-tab-content').forEach(c => c.classList.remove('active'));
+        document.querySelector(`.teacher-tab[data-tab="${tabName}"]`)?.classList.add('active');
+        document.getElementById(`teacher-tab-${tabName}`)?.classList.add('active');
+    },
 
-        errorEl?.classList.add('hidden');
-
-        if (password !== password2) {
-            if (errorEl) {
-                errorEl.textContent = 'كلمتا المرور غير متطابقتين';
-                errorEl.classList.remove('hidden');
-            }
-            return;
+    toggleAssignMode(mode) {
+        const container = document.getElementById('student-select-container');
+        if (mode === 'select') {
+            container?.classList.remove('hidden');
+            this.loadStudentCheckboxes();
+        } else {
+            container?.classList.add('hidden');
         }
+    },
 
-        if (submitBtn) submitBtn.disabled = true;
+    async loadStudentCheckboxes() {
+        const token = localStorage.getItem(this.config.apiTokenKey);
+        if (!token) return;
 
         try {
-            const response = await fetch(`${this.config.apiBaseUrl}/api/register/`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password, first_name: firstName, role: document.querySelector('.role-btn.active')?.dataset.role || 'student' }),
+            const response = await fetch(`${this.config.apiBaseUrl}/api/my-students/`, {
+                headers: { Authorization: `Bearer ${token}` },
             });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                const msg = data.username?.[0] || data.password?.[0] || data.detail || 'خطأ في إنشاء الحساب';
-                throw new Error(msg);
+            const students = response.ok ? await response.json() : [];
+            const container = document.getElementById('student-checkboxes');
+            if (!students.length) {
+                container.innerHTML = '<p class="empty-state">لا يوجد طلاب</p>';
+                return;
             }
-
-            localStorage.setItem(this.config.apiTokenKey, data.access);
-            localStorage.setItem('quranreview_refresh_token', data.refresh);
-            this.state.user = { id: data.id, username: data.username, first_name: data.first_name, role: data.role };
-            localStorage.setItem('quranreview_user', JSON.stringify(this.state.user));
-            this.updateAuthUI(true);
-            this.hideAuthModal();
-            this.showNotification('تم إنشاء الحساب بنجاح!', 'success');
+            container.innerHTML = students.map(s => `
+                <label class="student-checkbox-item">
+                    <input type="checkbox" name="student-ids" value="${s.id}">
+                    <span>🎓 ${s.first_name || s.username}</span>
+                    <span class="student-checkbox-points">🏆 ${s.total_points} نقطة</span>
+                </label>
+            `).join('');
         } catch (error) {
-            if (errorEl) {
-                errorEl.textContent = error.message;
-                errorEl.classList.remove('hidden');
-            }
-        } finally {
-            if (submitBtn) submitBtn.disabled = false;
+            console.warn('Failed to load students for checkboxes', error);
         }
     },
 
@@ -3550,10 +3537,23 @@ const QuranReview = {
     async loadStudentDashboard() {
         const token = localStorage.getItem(this.config.apiTokenKey);
         if (!token) {
-            this.showAuthModal('login');
+            this.showAuthModal();
             return;
         }
+
+        // Block teachers from accessing student page
+        if (this.state.user && this.state.user.role === 'teacher') {
+            this.navigateTo('teacher');
+            return;
+        }
+
         const headers = { Authorization: `Bearer ${token}` };
+
+        // Update welcome message
+        if (this.state.user) {
+            const el = document.getElementById('student-welcome');
+            if (el) el.textContent = `مرحباً ${this.state.user.first_name || this.state.user.username}`;
+        }
 
         try {
             const [tasksRes, subsRes, pointsRes] = await Promise.all([
@@ -3564,19 +3564,39 @@ const QuranReview = {
 
             const tasks = tasksRes.ok ? await tasksRes.json() : [];
             const submissions = subsRes.ok ? await subsRes.json() : [];
-            const pointsData = pointsRes.ok ? await pointsRes.json() : { total_points: 0 };
+            const pointsData = pointsRes.ok ? await pointsRes.json() : { total_points: 0, logs: [] };
 
             // Build submission lookup by task id
             const subByTask = {};
             submissions.forEach(s => { subByTask[s.task.id] = s; });
 
             const done = submissions.filter(s => s.status === 'approved').length;
+            const rejected = submissions.filter(s => s.status === 'rejected').length;
             const pending = tasks.length - done;
 
             // Stats
             document.getElementById('student-points').textContent = pointsData.total_points || 0;
             document.getElementById('student-tasks-done').textContent = done;
             document.getElementById('student-tasks-pending').textContent = pending > 0 ? pending : 0;
+            document.getElementById('student-tasks-rejected').textContent = rejected;
+
+            // Points log
+            const pointsLogEl = document.getElementById('student-points-log');
+            const logs = pointsData.logs || [];
+            if (!logs.length) {
+                pointsLogEl.innerHTML = '<p class="empty-state">لا توجد نقاط بعد</p>';
+            } else {
+                pointsLogEl.innerHTML = logs.slice(0, 10).map(log => {
+                    const date = new Date(log.created_at).toLocaleDateString('ar-SA');
+                    const sign = log.delta > 0 ? '+' : '';
+                    const cls = log.delta > 0 ? 'points-positive' : 'points-negative';
+                    return `<div class="points-log-item">
+                        <span class="points-log-reason">${log.reason}</span>
+                        <span class="points-log-delta ${cls}">${sign}${log.delta}</span>
+                        <span class="points-log-date">${date}</span>
+                    </div>`;
+                }).join('');
+            }
 
             // Tasks list
             const tasksList = document.getElementById('student-tasks-list');
@@ -3593,7 +3613,7 @@ const QuranReview = {
                             statusBadge = '<span class="status-badge status-approved">مقبول ✓</span>';
                             actionBtn = '';
                         } else if (sub.status === 'rejected') {
-                            statusBadge = `<span class="status-badge status-rejected">مرفوض ✗</span>`;
+                            statusBadge = '<span class="status-badge status-rejected">مرفوض ✗</span>';
                             actionBtn = `<button class="btn btn-primary btn-sm" onclick="QuranReview.openRecordModal(${task.id}, '${task.title.replace(/'/g, "\\'")}')">🎤 إعادة التسجيل</button>`;
                         } else {
                             statusBadge = '<span class="status-badge status-pending">بانتظار التصحيح</span>';
@@ -3654,10 +3674,23 @@ const QuranReview = {
     async loadTeacherDashboard() {
         const token = localStorage.getItem(this.config.apiTokenKey);
         if (!token) {
-            this.showAuthModal('login');
+            this.showAuthModal();
             return;
         }
+
+        // Block students from accessing teacher page
+        if (this.state.user && this.state.user.role !== 'teacher' && !this.state.user.is_staff) {
+            this.navigateTo('mytasks');
+            return;
+        }
+
         const headers = { Authorization: `Bearer ${token}` };
+
+        // Update welcome message
+        if (this.state.user) {
+            const el = document.getElementById('teacher-welcome');
+            if (el) el.textContent = `مرحباً أستاذ ${this.state.user.first_name || this.state.user.username}`;
+        }
 
         try {
             const [studentsRes, pendingRes, tasksRes] = await Promise.all([
@@ -3670,23 +3703,33 @@ const QuranReview = {
             const pending = pendingRes.ok ? await pendingRes.json() : [];
             const tasks = tasksRes.ok ? await tasksRes.json() : [];
 
+            // Store for later use
+            this._teacherStudents = students;
+            this._teacherTasks = tasks;
+
             // Stats
             document.getElementById('teacher-total-students').textContent = students.length;
             document.getElementById('teacher-pending').textContent = pending.length;
             document.getElementById('teacher-tasks').textContent = tasks.length;
+            const approvedEl = document.getElementById('teacher-approved');
+            if (approvedEl) approvedEl.textContent = tasks.reduce((sum, t) => sum, 0);
 
             // Pending submissions
             const pendingList = document.getElementById('teacher-pending-list');
             if (!pending.length) {
-                pendingList.innerHTML = '<p class="empty-state">لا توجد تسليمات بانتظار التصحيح</p>';
+                pendingList.innerHTML = '<p class="empty-state">لا توجد تسليمات بانتظار التصحيح 🎉</p>';
             } else {
                 pendingList.innerHTML = pending.map(s => {
+                    const date = new Date(s.submitted_at).toLocaleDateString('ar-SA');
                     return `<div class="pending-card">
                         <div class="pending-card-header">
-                            <strong>${s.student_name}</strong>
+                            <strong>🎓 ${s.student_name}</strong>
                             <span class="task-type-badge">${s.task.title}</span>
                         </div>
-                        <div class="pending-card-meta">🏆 ${s.task.points} نقطة</div>
+                        <div class="pending-card-meta">
+                            <span>🏆 ${s.task.points} نقطة</span>
+                            <span>📅 ${date}</span>
+                        </div>
                         ${s.audio_url ? `<audio controls src="${s.audio_url}" style="width:100%;margin:0.5rem 0;"></audio>` : '<p class="empty-state">لا يوجد ملف صوتي</p>'}
                         <div class="pending-card-actions">
                             <button class="btn btn-success btn-sm" onclick="QuranReview.approveSubmission(${s.id})">✓ قبول</button>
@@ -3696,17 +3739,42 @@ const QuranReview = {
                 }).join('');
             }
 
-            // Students list
+            // Students list with click to see detail
             const studentsList = document.getElementById('teacher-students-list');
             if (!students.length) {
                 studentsList.innerHTML = '<p class="empty-state">لا يوجد طلاب بعد</p>';
             } else {
                 studentsList.innerHTML = students.map(s => {
-                    return `<div class="student-card">
+                    return `<div class="student-card clickable" onclick="QuranReview.viewStudentProgress(${s.id}, '${(s.first_name || s.username).replace(/'/g, "\\'")}')">
                         <div class="student-card-name">🎓 ${s.first_name || s.username}</div>
                         <div class="student-card-stats">
                             <span>🏆 ${s.total_points} نقطة</span>
                             <span>📝 ${s.submissions_count} تسليم</span>
+                        </div>
+                        <span class="student-card-arrow">←</span>
+                    </div>`;
+                }).join('');
+            }
+
+            // Tasks list
+            const taskListEl = document.getElementById('teacher-tasks-list');
+            if (!tasks.length) {
+                taskListEl.innerHTML = '<p class="empty-state">لا توجد مهام بعد</p>';
+            } else {
+                taskListEl.innerHTML = tasks.map(task => {
+                    const typeLabel = task.task_type === 'memorization' ? 'حفظ' : task.task_type === 'recitation' ? 'تلاوة' : 'أخرى';
+                    const dueDate = task.due_date ? new Date(task.due_date).toLocaleDateString('ar-SA') : '';
+                    const date = new Date(task.created_at).toLocaleDateString('ar-SA');
+                    return `<div class="task-card">
+                        <div class="task-card-header">
+                            <h3 class="task-card-title">${task.title}</h3>
+                            <span class="task-type-badge">${typeLabel}</span>
+                        </div>
+                        ${task.description ? `<p class="task-card-desc">${task.description}</p>` : ''}
+                        <div class="task-card-meta">
+                            <span>🏆 ${task.points} نقطة</span>
+                            <span>📅 أُنشئت: ${date}</span>
+                            ${dueDate ? `<span>⏰ تسليم: ${dueDate}</span>` : ''}
                         </div>
                     </div>`;
                 }).join('');
@@ -3717,10 +3785,82 @@ const QuranReview = {
         }
     },
 
+    async viewStudentProgress(studentId, studentName) {
+        const token = localStorage.getItem(this.config.apiTokenKey);
+        if (!token) return;
+
+        const panel = document.getElementById('student-detail-panel');
+        const nameEl = document.getElementById('student-detail-name');
+        const contentEl = document.getElementById('student-detail-content');
+
+        nameEl.textContent = `📊 تقدم الطالب: ${studentName}`;
+        contentEl.innerHTML = '<p class="empty-state">جاري التحميل...</p>';
+        panel.classList.remove('hidden');
+
+        try {
+            const response = await fetch(`${this.config.apiBaseUrl}/api/students/${studentId}/progress/`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            if (!response.ok) throw new Error('فشل تحميل بيانات الطالب');
+
+            const data = await response.json();
+
+            let html = `<div class="student-detail-stats">
+                <div class="stat-mini"><strong>🏆</strong> ${data.student.total_points} نقطة</div>
+            </div>`;
+
+            if (!data.tasks.length) {
+                html += '<p class="empty-state">لا توجد مهام معينة</p>';
+            } else {
+                html += '<div class="student-tasks-progress">';
+                data.tasks.forEach(task => {
+                    const typeLabel = task.task_type === 'memorization' ? 'حفظ' : task.task_type === 'recitation' ? 'تلاوة' : 'أخرى';
+                    let statusBadge = '';
+                    if (task.submission_status === 'approved') {
+                        statusBadge = '<span class="status-badge status-approved">مقبول ✓</span>';
+                    } else if (task.submission_status === 'rejected') {
+                        statusBadge = '<span class="status-badge status-rejected">مرفوض ✗</span>';
+                    } else if (task.submission_status === 'submitted') {
+                        statusBadge = '<span class="status-badge status-pending">بانتظار التصحيح</span>';
+                    } else {
+                        statusBadge = '<span class="status-badge status-new">لم يُسلَّم</span>';
+                    }
+
+                    html += `<div class="student-task-row">
+                        <div class="student-task-info">
+                            <span class="task-type-badge">${typeLabel}</span>
+                            <strong>${task.title}</strong>
+                            <span>🏆 ${task.points}</span>
+                        </div>
+                        ${statusBadge}
+                    </div>`;
+                });
+                html += '</div>';
+            }
+
+            contentEl.innerHTML = html;
+        } catch (error) {
+            contentEl.innerHTML = `<p class="empty-state">${error.message}</p>`;
+        }
+    },
+
     async handleCreateTask(event) {
         event.preventDefault();
         const token = localStorage.getItem(this.config.apiTokenKey);
         if (!token) return;
+
+        const assignMode = document.querySelector('input[name="assign-mode"]:checked')?.value || 'all';
+        const studentIds = [];
+        if (assignMode === 'select') {
+            document.querySelectorAll('input[name="student-ids"]:checked').forEach(cb => {
+                studentIds.push(parseInt(cb.value));
+            });
+            if (!studentIds.length) {
+                this.showNotification('يرجى اختيار طالب واحد على الأقل', 'error');
+                return;
+            }
+        }
 
         const body = {
             title: document.getElementById('task-title').value.trim(),
@@ -3728,7 +3868,8 @@ const QuranReview = {
             task_type: document.getElementById('task-type').value,
             points: parseInt(document.getElementById('task-points').value) || 0,
             due_date: document.getElementById('task-due-date').value || null,
-            assign_all: document.getElementById('task-assign-all').checked,
+            assign_all: assignMode === 'all',
+            student_ids: studentIds,
         };
 
         try {
@@ -3748,7 +3889,8 @@ const QuranReview = {
 
             this.showNotification('تم إنشاء المهمة بنجاح!', 'success');
             document.getElementById('teacher-create-task-form').reset();
-            document.getElementById('task-assign-all').checked = true;
+            document.getElementById('student-select-container')?.classList.add('hidden');
+            this.switchTeacherTab('pending');
             this.loadTeacherDashboard();
         } catch (error) {
             this.showNotification(error.message, 'error');
