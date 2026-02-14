@@ -149,9 +149,14 @@ STATICFILES_DIRS = [BASE_DIR / "tasks" / "static"]
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# CORS (GitHub Pages frontend)
+# CORS (Frontend origins)
 CORS_ALLOWED_ORIGINS = [
-    "https://btahmed.github.io",
+    origin.strip()
+    for origin in os.environ.get(
+        "CORS_ALLOWED_ORIGINS",
+        "https://btahmed.github.io,https://quranreview.live"
+    ).split(",")
+    if origin.strip()
 ]
 CORS_ALLOW_CREDENTIALS = False
 
