@@ -404,7 +404,6 @@ class SubmissionSerializer(serializers.ModelSerializer):
     def get_audio_url(self, obj):
         if not obj.audio_file:
             return None
-        # Return relative URL - frontend will build full URL
         return obj.audio_file.url
 
     def get_student_name(self, obj):
