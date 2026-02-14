@@ -192,8 +192,12 @@ const AudioManager = {
             }
 
             // Detach src to prevent weird reloads
-            this.audio.removeAttribute("src");
-            this.audio.load();
+            if (this.audio.hasAttribute("src")) {
+                this.audio.removeAttribute("src");
+                // Only call load() if we actually removed a src to stop downloading
+                // Calling load() on empty src causes "Invalid URI" errors
+                try { this.audio.load(); } catch (e) { /* ignore */ }
+            }
         }
 
         // Stop individual ayah audio if playing
@@ -4701,8 +4705,14 @@ const QuranReview = {
         document.getElementById('recording-timer').textContent = '00:00';
         document.getElementById('recording-status').textContent = 'اضغط للتسجيل';
         document.getElementById('recording-btn').classList.remove('recording-active');
-        document.getElementById('recording-preview').classList.add('hidden');
-        document.getElementById('recording-preview').src = '';
+
+        const preview = document.getElementById('recording-preview');
+        if (preview) {
+            preview.classList.add('hidden');
+            preview.removeAttribute('src'); // Clean way to clear audio without triggering 404
+            try { preview.load(); } catch (e) {} // Ensure previous audio stops
+        }
+
         document.getElementById('recording-submit-btn').classList.add('hidden');
         document.getElementById('audio-record-modal').classList.remove('hidden');
     },
