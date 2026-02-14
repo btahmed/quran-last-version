@@ -3985,6 +3985,9 @@ const QuranReview = {
             this._teacherStudents = students;
             this._teacherTasks = tasks;
 
+            // Load student checkboxes for task creation
+            this.loadStudentCheckboxes(students);
+
             // Stats
             document.getElementById('teacher-total-students').textContent = students.length;
             document.getElementById('teacher-pending').textContent = pending.length;
@@ -4008,7 +4011,19 @@ const QuranReview = {
                             <span>🏆 ${s.task.points} نقطة</span>
                             <span>📅 ${date}</span>
                         </div>
-                        ${s.audio_url ? `<audio controls src="${s.audio_url}" style="width:100%;margin:0.5rem 0;"></audio>` : '<p class="empty-state">لا يوجد ملف صوتي</p>'}
+                        ${s.audio_url ? `
+                            <div class="audio-player-container">
+                                <audio controls preload="metadata" style="width:100%;margin:0.5rem 0;">
+                                    <source src="${s.audio_url}" type="audio/mpeg">
+                                    <source src="${s.audio_url}" type="audio/wav">
+                                    <source src="${s.audio_url}" type="audio/mp4">
+                                    المتصفح لا يدعم تشغيل الصوت
+                                </audio>
+                                <div style="font-size:0.8rem;color:#666;margin-top:0.25rem;">
+                                    📎 <a href="${s.audio_url}" target="_blank" style="color:#007bff;">فتح الملف الصوتي</a>
+                                </div>
+                            </div>
+                        ` : '<p class="empty-state">لا يوجد ملف صوتي</p>'}
                         <div class="pending-card-actions">
                             <button class="btn btn-success btn-sm" onclick="QuranReview.approveSubmission(${s.id})">✓ قبول</button>
                             <button class="btn btn-danger btn-sm" onclick="QuranReview.rejectSubmissionPrompt(${s.id})">✗ رفض</button>
@@ -4120,6 +4135,34 @@ const QuranReview = {
             contentEl.innerHTML = html;
         } catch (error) {
             contentEl.innerHTML = `<p class="empty-state">${error.message}</p>`;
+        }
+    },
+
+    loadStudentCheckboxes(students) {
+        const container = document.getElementById('student-checkboxes');
+        if (!container) return;
+
+        if (!students.length) {
+            container.innerHTML = '<p class="empty-state">لا يوجد طلاب</p>';
+            return;
+        }
+
+        const checkboxes = students.map(student => `
+            <label class="student-checkbox-label">
+                <input type="checkbox" name="student-ids" value="${student.id}">
+                <span class="student-name">${student.first_name || student.username}</span>
+            </label>
+        `).join('');
+
+        container.innerHTML = checkboxes;
+    },
+
+    toggleAssignMode(mode) {
+        const container = document.getElementById('student-select-container');
+        if (mode === 'select') {
+            container.classList.remove('hidden');
+        } else {
+            container.classList.add('hidden');
         }
     },
 
