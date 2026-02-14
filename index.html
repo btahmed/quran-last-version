@@ -68,10 +68,69 @@
                     <a href="#" class="nav-link" data-page="hifz">🎭 وضع الحفظ</a>
                     <a href="#" class="nav-link" data-page="settings">الإعدادات</a>
                     <button id="theme-toggle" class="theme-toggle">🌙</button>
+                    <!-- Auth -->
+                    <div id="auth-nav" class="auth-nav">
+                        <button id="auth-login-btn" class="btn btn-auth" onclick="QuranReview.showAuthModal('login')">تسجيل الدخول</button>
+                        <div id="auth-user-info" class="auth-user-info hidden">
+                            <span id="auth-username"></span>
+                            <button class="btn btn-auth-logout" onclick="QuranReview.logout()">خروج</button>
+                        </div>
+                    </div>
                 </nav>
             </div>
         </div>
     </header>
+
+    <!-- Auth Modal -->
+    <div id="auth-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <button class="modal-close" onclick="QuranReview.hideAuthModal()">&times;</button>
+
+            <!-- Login Form -->
+            <div id="auth-login-form">
+                <h2 class="modal-title">تسجيل الدخول</h2>
+                <form onsubmit="QuranReview.handleLogin(event)">
+                    <div class="form-group">
+                        <label class="form-label" for="login-username">اسم المستخدم</label>
+                        <input type="text" id="login-username" class="form-input" required autocomplete="username">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="login-password">كلمة المرور</label>
+                        <input type="password" id="login-password" class="form-input" required autocomplete="current-password">
+                    </div>
+                    <div id="login-error" class="auth-error hidden"></div>
+                    <button type="submit" class="btn btn-primary btn-full" id="login-submit-btn">دخول</button>
+                </form>
+                <p class="auth-switch">ليس لديك حساب؟ <a href="#" onclick="QuranReview.showAuthModal('register'); return false;">إنشاء حساب</a></p>
+            </div>
+
+            <!-- Register Form -->
+            <div id="auth-register-form" class="hidden">
+                <h2 class="modal-title">إنشاء حساب جديد</h2>
+                <form onsubmit="QuranReview.handleRegister(event)">
+                    <div class="form-group">
+                        <label class="form-label" for="register-username">اسم المستخدم</label>
+                        <input type="text" id="register-username" class="form-input" required autocomplete="username">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="register-firstname">الاسم الأول</label>
+                        <input type="text" id="register-firstname" class="form-input" autocomplete="given-name">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="register-password">كلمة المرور</label>
+                        <input type="password" id="register-password" class="form-input" required minlength="6" autocomplete="new-password">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="register-password2">تأكيد كلمة المرور</label>
+                        <input type="password" id="register-password2" class="form-input" required minlength="6" autocomplete="new-password">
+                    </div>
+                    <div id="register-error" class="auth-error hidden"></div>
+                    <button type="submit" class="btn btn-primary btn-full" id="register-submit-btn">إنشاء الحساب</button>
+                </form>
+                <p class="auth-switch">لديك حساب بالفعل؟ <a href="#" onclick="QuranReview.showAuthModal('login'); return false;">تسجيل الدخول</a></p>
+            </div>
+        </div>
+    </div>
 
     <!-- Main Content -->
     <main class="main">
