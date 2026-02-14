@@ -537,16 +537,25 @@ const QuranReview = {
         const loginBtn = document.getElementById('auth-login-btn');
         const userInfo = document.getElementById('auth-user-info');
         const usernameEl = document.getElementById('auth-username');
+        const teacherLinks = document.querySelectorAll('.nav-teacher-only');
+        const studentLinks = document.querySelectorAll('.nav-student-only');
 
         if (loggedIn && this.state.user) {
             loginBtn?.classList.add('hidden');
             userInfo?.classList.remove('hidden');
             if (usernameEl) {
-                usernameEl.textContent = this.state.user.first_name || this.state.user.username;
+                const roleLabel = this.state.user.role === 'teacher' ? '👨‍🏫' : '🎓';
+                usernameEl.textContent = `${roleLabel} ${this.state.user.first_name || this.state.user.username}`;
             }
+            // Show/hide role-specific nav links
+            const isTeacher = this.state.user.role === 'teacher';
+            teacherLinks.forEach(el => el.style.display = isTeacher ? '' : 'none');
+            studentLinks.forEach(el => el.style.display = isTeacher ? 'none' : '');
         } else {
             loginBtn?.classList.remove('hidden');
             userInfo?.classList.add('hidden');
+            teacherLinks.forEach(el => el.style.display = 'none');
+            studentLinks.forEach(el => el.style.display = 'none');
         }
     },
 
@@ -635,7 +644,7 @@ const QuranReview = {
             const response = await fetch(`${this.config.apiBaseUrl}/api/register/`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password, first_name: firstName }),
+                body: JSON.stringify({ username, password, first_name: firstName, role: document.querySelector('.role-btn.active')?.dataset.role || 'student' }),
             });
 
             const data = await response.json();
@@ -647,7 +656,7 @@ const QuranReview = {
 
             localStorage.setItem(this.config.apiTokenKey, data.access);
             localStorage.setItem('quranreview_refresh_token', data.refresh);
-            this.state.user = { id: data.id, username: data.username, first_name: data.first_name };
+            this.state.user = { id: data.id, username: data.username, first_name: data.first_name, role: data.role };
             localStorage.setItem('quranreview_user', JSON.stringify(this.state.user));
             this.updateAuthUI(true);
             this.hideAuthModal();
@@ -919,6 +928,12 @@ const QuranReview = {
                 break;
             case 'hifz':
                 this.renderHifzPage();
+                break;
+            case 'mytasks':
+                this.loadStudentDashboard();
+                break;
+            case 'teacher':
+                this.loadTeacherDashboard();
                 break;
         }
     },
@@ -3526,6 +3541,385 @@ const QuranReview = {
             todayReview,
             newMemorization
         };
+    },
+
+    // ===================================
+    // STUDENT DASHBOARD
+    // ===================================
+
+    async loadStudentDashboard() {
+        const token = localStorage.getItem(this.config.apiTokenKey);
+        if (!token) {
+            this.showAuthModal('login');
+            return;
+        }
+        const headers = { Authorization: `Bearer ${token}` };
+
+        try {
+            const [tasksRes, subsRes, pointsRes] = await Promise.all([
+                fetch(`${this.config.apiBaseUrl}/api/tasks/`, { headers }),
+                fetch(`${this.config.apiBaseUrl}/api/my-submissions/`, { headers }),
+                fetch(`${this.config.apiBaseUrl}/api/points/`, { headers }),
+            ]);
+
+            const tasks = tasksRes.ok ? await tasksRes.json() : [];
+            const submissions = subsRes.ok ? await subsRes.json() : [];
+            const pointsData = pointsRes.ok ? await pointsRes.json() : { total_points: 0 };
+
+            // Build submission lookup by task id
+            const subByTask = {};
+            submissions.forEach(s => { subByTask[s.task.id] = s; });
+
+            const done = submissions.filter(s => s.status === 'approved').length;
+            const pending = tasks.length - done;
+
+            // Stats
+            document.getElementById('student-points').textContent = pointsData.total_points || 0;
+            document.getElementById('student-tasks-done').textContent = done;
+            document.getElementById('student-tasks-pending').textContent = pending > 0 ? pending : 0;
+
+            // Tasks list
+            const tasksList = document.getElementById('student-tasks-list');
+            if (!tasks.length) {
+                tasksList.innerHTML = '<p class="empty-state">لا توجد مهام حالياً</p>';
+            } else {
+                tasksList.innerHTML = tasks.map(task => {
+                    const sub = subByTask[task.id];
+                    let statusBadge = '<span class="status-badge status-new">لم يُسلَّم</span>';
+                    let actionBtn = `<button class="btn btn-primary btn-sm" onclick="QuranReview.openRecordModal(${task.id}, '${task.title.replace(/'/g, "\\'")}')">🎤 تسجيل</button>`;
+
+                    if (sub) {
+                        if (sub.status === 'approved') {
+                            statusBadge = '<span class="status-badge status-approved">مقبول ✓</span>';
+                            actionBtn = '';
+                        } else if (sub.status === 'rejected') {
+                            statusBadge = `<span class="status-badge status-rejected">مرفوض ✗</span>`;
+                            actionBtn = `<button class="btn btn-primary btn-sm" onclick="QuranReview.openRecordModal(${task.id}, '${task.title.replace(/'/g, "\\'")}')">🎤 إعادة التسجيل</button>`;
+                        } else {
+                            statusBadge = '<span class="status-badge status-pending">بانتظار التصحيح</span>';
+                            actionBtn = '';
+                        }
+                    }
+
+                    const typeLabel = task.task_type === 'memorization' ? 'حفظ' : task.task_type === 'recitation' ? 'تلاوة' : 'أخرى';
+                    const dueDate = task.due_date ? new Date(task.due_date).toLocaleDateString('ar-SA') : '';
+
+                    return `<div class="task-card">
+                        <div class="task-card-header">
+                            <h3 class="task-card-title">${task.title}</h3>
+                            ${statusBadge}
+                        </div>
+                        ${task.description ? `<p class="task-card-desc">${task.description}</p>` : ''}
+                        <div class="task-card-meta">
+                            <span class="task-type-badge">${typeLabel}</span>
+                            <span class="task-points-badge">🏆 ${task.points} نقطة</span>
+                            ${dueDate ? `<span class="task-due-date">📅 ${dueDate}</span>` : ''}
+                        </div>
+                        ${sub && sub.status === 'rejected' && sub.admin_feedback ? `<div class="task-feedback">💬 ${sub.admin_feedback}</div>` : ''}
+                        <div class="task-card-actions">${actionBtn}</div>
+                    </div>`;
+                }).join('');
+            }
+
+            // Submissions list
+            const subsList = document.getElementById('student-submissions-list');
+            if (!submissions.length) {
+                subsList.innerHTML = '<p class="empty-state">لا توجد تسليمات بعد</p>';
+            } else {
+                subsList.innerHTML = submissions.map(s => {
+                    const statusClass = s.status === 'approved' ? 'status-approved' : s.status === 'rejected' ? 'status-rejected' : 'status-pending';
+                    const statusText = s.status === 'approved' ? 'مقبول ✓' : s.status === 'rejected' ? 'مرفوض ✗' : 'بانتظار التصحيح';
+                    const date = new Date(s.submitted_at).toLocaleDateString('ar-SA');
+                    return `<div class="submission-card">
+                        <div class="submission-card-header">
+                            <span>${s.task.title}</span>
+                            <span class="status-badge ${statusClass}">${statusText}</span>
+                        </div>
+                        <div class="submission-card-meta">📅 ${date}</div>
+                        ${s.admin_feedback ? `<div class="task-feedback">💬 ${s.admin_feedback}</div>` : ''}
+                        ${s.audio_url ? `<audio controls src="${s.audio_url}" style="width:100%;margin-top:0.5rem;"></audio>` : ''}
+                    </div>`;
+                }).join('');
+            }
+        } catch (error) {
+            console.error('Failed to load student dashboard:', error);
+            this.showNotification('خطأ في تحميل البيانات', 'error');
+        }
+    },
+
+    // ===================================
+    // TEACHER DASHBOARD
+    // ===================================
+
+    async loadTeacherDashboard() {
+        const token = localStorage.getItem(this.config.apiTokenKey);
+        if (!token) {
+            this.showAuthModal('login');
+            return;
+        }
+        const headers = { Authorization: `Bearer ${token}` };
+
+        try {
+            const [studentsRes, pendingRes, tasksRes] = await Promise.all([
+                fetch(`${this.config.apiBaseUrl}/api/my-students/`, { headers }),
+                fetch(`${this.config.apiBaseUrl}/api/pending-submissions/`, { headers }),
+                fetch(`${this.config.apiBaseUrl}/api/tasks/`, { headers }),
+            ]);
+
+            const students = studentsRes.ok ? await studentsRes.json() : [];
+            const pending = pendingRes.ok ? await pendingRes.json() : [];
+            const tasks = tasksRes.ok ? await tasksRes.json() : [];
+
+            // Stats
+            document.getElementById('teacher-total-students').textContent = students.length;
+            document.getElementById('teacher-pending').textContent = pending.length;
+            document.getElementById('teacher-tasks').textContent = tasks.length;
+
+            // Pending submissions
+            const pendingList = document.getElementById('teacher-pending-list');
+            if (!pending.length) {
+                pendingList.innerHTML = '<p class="empty-state">لا توجد تسليمات بانتظار التصحيح</p>';
+            } else {
+                pendingList.innerHTML = pending.map(s => {
+                    return `<div class="pending-card">
+                        <div class="pending-card-header">
+                            <strong>${s.student_name}</strong>
+                            <span class="task-type-badge">${s.task.title}</span>
+                        </div>
+                        <div class="pending-card-meta">🏆 ${s.task.points} نقطة</div>
+                        ${s.audio_url ? `<audio controls src="${s.audio_url}" style="width:100%;margin:0.5rem 0;"></audio>` : '<p class="empty-state">لا يوجد ملف صوتي</p>'}
+                        <div class="pending-card-actions">
+                            <button class="btn btn-success btn-sm" onclick="QuranReview.approveSubmission(${s.id})">✓ قبول</button>
+                            <button class="btn btn-danger btn-sm" onclick="QuranReview.rejectSubmissionPrompt(${s.id})">✗ رفض</button>
+                        </div>
+                    </div>`;
+                }).join('');
+            }
+
+            // Students list
+            const studentsList = document.getElementById('teacher-students-list');
+            if (!students.length) {
+                studentsList.innerHTML = '<p class="empty-state">لا يوجد طلاب بعد</p>';
+            } else {
+                studentsList.innerHTML = students.map(s => {
+                    return `<div class="student-card">
+                        <div class="student-card-name">🎓 ${s.first_name || s.username}</div>
+                        <div class="student-card-stats">
+                            <span>🏆 ${s.total_points} نقطة</span>
+                            <span>📝 ${s.submissions_count} تسليم</span>
+                        </div>
+                    </div>`;
+                }).join('');
+            }
+        } catch (error) {
+            console.error('Failed to load teacher dashboard:', error);
+            this.showNotification('خطأ في تحميل البيانات', 'error');
+        }
+    },
+
+    async handleCreateTask(event) {
+        event.preventDefault();
+        const token = localStorage.getItem(this.config.apiTokenKey);
+        if (!token) return;
+
+        const body = {
+            title: document.getElementById('task-title').value.trim(),
+            description: document.getElementById('task-description').value.trim(),
+            task_type: document.getElementById('task-type').value,
+            points: parseInt(document.getElementById('task-points').value) || 0,
+            due_date: document.getElementById('task-due-date').value || null,
+            assign_all: document.getElementById('task-assign-all').checked,
+        };
+
+        try {
+            const response = await fetch(`${this.config.apiBaseUrl}/api/tasks/create/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify(body),
+            });
+
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.detail || 'خطأ في إنشاء المهمة');
+            }
+
+            this.showNotification('تم إنشاء المهمة بنجاح!', 'success');
+            document.getElementById('teacher-create-task-form').reset();
+            document.getElementById('task-assign-all').checked = true;
+            this.loadTeacherDashboard();
+        } catch (error) {
+            this.showNotification(error.message, 'error');
+        }
+    },
+
+    async approveSubmission(submissionId) {
+        const token = localStorage.getItem(this.config.apiTokenKey);
+        if (!token) return;
+
+        try {
+            const response = await fetch(`${this.config.apiBaseUrl}/api/submissions/${submissionId}/approve/`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            if (!response.ok) throw new Error('فشل القبول');
+            this.showNotification('تم قبول التسليم!', 'success');
+            this.loadTeacherDashboard();
+        } catch (error) {
+            this.showNotification(error.message, 'error');
+        }
+    },
+
+    rejectSubmissionPrompt(submissionId) {
+        const feedback = prompt('سبب الرفض (اختياري):');
+        if (feedback === null) return; // user cancelled
+        this.rejectSubmission(submissionId, feedback);
+    },
+
+    async rejectSubmission(submissionId, feedback) {
+        const token = localStorage.getItem(this.config.apiTokenKey);
+        if (!token) return;
+
+        try {
+            const response = await fetch(`${this.config.apiBaseUrl}/api/submissions/${submissionId}/reject/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ admin_feedback: feedback || '' }),
+            });
+
+            if (!response.ok) throw new Error('فشل الرفض');
+            this.showNotification('تم رفض التسليم', 'success');
+            this.loadTeacherDashboard();
+        } catch (error) {
+            this.showNotification(error.message, 'error');
+        }
+    },
+
+    // ===================================
+    // AUDIO RECORDING
+    // ===================================
+
+    _recorder: null,
+    _recordChunks: [],
+    _recordTaskId: null,
+    _recordTimer: null,
+    _recordSeconds: 0,
+    _recordBlob: null,
+
+    openRecordModal(taskId, taskTitle) {
+        this._recordTaskId = taskId;
+        this._recordBlob = null;
+        this._recordSeconds = 0;
+        document.getElementById('recording-task-name').textContent = taskTitle;
+        document.getElementById('recording-timer').textContent = '00:00';
+        document.getElementById('recording-status').textContent = 'اضغط للتسجيل';
+        document.getElementById('recording-btn').classList.remove('recording-active');
+        document.getElementById('recording-preview').classList.add('hidden');
+        document.getElementById('recording-preview').src = '';
+        document.getElementById('recording-submit-btn').classList.add('hidden');
+        document.getElementById('audio-record-modal').classList.remove('hidden');
+    },
+
+    async toggleRecording() {
+        if (this._recorder && this._recorder.state === 'recording') {
+            this.stopRecording(false);
+            return;
+        }
+
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            this._recordChunks = [];
+            this._recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+
+            this._recorder.ondataavailable = (e) => {
+                if (e.data.size > 0) this._recordChunks.push(e.data);
+            };
+
+            this._recorder.onstop = () => {
+                stream.getTracks().forEach(t => t.stop());
+                this._recordBlob = new Blob(this._recordChunks, { type: 'audio/webm' });
+                const url = URL.createObjectURL(this._recordBlob);
+                const preview = document.getElementById('recording-preview');
+                preview.src = url;
+                preview.classList.remove('hidden');
+                document.getElementById('recording-submit-btn').classList.remove('hidden');
+                document.getElementById('recording-status').textContent = 'تم التسجيل - يمكنك الاستماع أو الإرسال';
+            };
+
+            this._recorder.start();
+            this._recordSeconds = 0;
+            document.getElementById('recording-btn').classList.add('recording-active');
+            document.getElementById('recording-status').textContent = 'جاري التسجيل...';
+
+            this._recordTimer = setInterval(() => {
+                this._recordSeconds++;
+                if (this._recordSeconds >= 300) { // 5 min max
+                    this.stopRecording(false);
+                    return;
+                }
+                const mins = String(Math.floor(this._recordSeconds / 60)).padStart(2, '0');
+                const secs = String(this._recordSeconds % 60).padStart(2, '0');
+                document.getElementById('recording-timer').textContent = `${mins}:${secs}`;
+            }, 1000);
+        } catch (error) {
+            this.showNotification('لا يمكن الوصول إلى الميكروفون', 'error');
+        }
+    },
+
+    stopRecording(cancel) {
+        if (this._recordTimer) {
+            clearInterval(this._recordTimer);
+            this._recordTimer = null;
+        }
+        if (this._recorder && this._recorder.state === 'recording') {
+            this._recorder.stop();
+        }
+        document.getElementById('recording-btn').classList.remove('recording-active');
+
+        if (cancel) {
+            document.getElementById('audio-record-modal').classList.add('hidden');
+            this._recordBlob = null;
+        }
+    },
+
+    async submitRecording() {
+        if (!this._recordBlob || !this._recordTaskId) return;
+
+        const token = localStorage.getItem(this.config.apiTokenKey);
+        if (!token) return;
+
+        const formData = new FormData();
+        formData.append('task_id', this._recordTaskId);
+        formData.append('audio_file', this._recordBlob, 'recording.webm');
+
+        try {
+            document.getElementById('recording-submit-btn').disabled = true;
+            const response = await fetch(`${this.config.apiBaseUrl}/api/submissions/`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${token}` },
+                body: formData,
+            });
+
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.detail || data.non_field_errors?.[0] || 'خطأ في الإرسال');
+            }
+
+            this.showNotification('تم إرسال التسجيل بنجاح!', 'success');
+            document.getElementById('audio-record-modal').classList.add('hidden');
+            this._recordBlob = null;
+            this.loadStudentDashboard();
+        } catch (error) {
+            this.showNotification(error.message, 'error');
+        } finally {
+            document.getElementById('recording-submit-btn').disabled = false;
+        }
     }
 };
 
