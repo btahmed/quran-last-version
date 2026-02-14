@@ -1845,7 +1845,9 @@ const QuranReview = {
                 this.renderLocalLeaderboard();
             }
         },
+    },
 
+    hifzManager: {
         // ===================================
         // HIFZ SESSION MANAGEMENT
         // ===================================
