@@ -229,8 +229,7 @@ const AudioManager = {
 // APP STATE & CONFIGURATION
 // ===================================
 
-const API_BASE_URL = window.API_BASE_URL || "https://quranreview-
-  api.onrender.com";
+const API_BASE_URL = window.API_BASE_URL || "https://api.quranreview.live";
 
 const QuranReview = {
     // App Configuration
