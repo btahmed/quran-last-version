@@ -2970,6 +2970,16 @@ const QuranReview = {
     // UTILITY FUNCTIONS
     // ===================================
 
+    showLoading() {
+        const overlay = document.querySelector('.loading-overlay');
+        if (overlay) overlay.style.display = 'flex';
+    },
+
+    hideLoading() {
+        const overlay = document.querySelector('.loading-overlay');
+        if (overlay) overlay.style.display = 'none';
+    },
+
     escapeHtml(text) {
         if (!text) return '';
         return String(text)
@@ -4053,8 +4063,11 @@ const QuranReview = {
 
         // Load admin users list if admin tab is visible
         if (this.state.user && this.state.user.is_superuser) {
+            // Call without await to prevent blocking dashboard
             this.loadAdminUsersList();
         }
+
+        this.showLoading();
 
         try {
             const [studentsRes, pendingRes, tasksRes] = await Promise.all([
@@ -4136,10 +4149,21 @@ const QuranReview = {
 
             // Tasks list
             const taskListEl = document.getElementById('teacher-tasks-list');
+
+            // Add Delete All button header
+            const headerHtml = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h3>📋 قائمة المهام</h3>
+                    <button class="btn btn-danger btn-sm" onclick="QuranReview.handleDeleteAllTasks()" style="background-color: #dc3545;">
+                        🗑️ حذف جميع المهام
+                    </button>
+                </div>
+            `;
+
             if (!tasks.length) {
-                taskListEl.innerHTML = '<p class="empty-state">لا توجد مهام بعد</p>';
+                taskListEl.innerHTML = headerHtml + '<p class="empty-state">لا توجد مهام بعد</p>';
             } else {
-                taskListEl.innerHTML = tasks.map(task => {
+                taskListEl.innerHTML = headerHtml + tasks.map(task => {
                     const typeLabel = task.task_type === 'memorization' ? 'حفظ' : task.task_type === 'recitation' ? 'تلاوة' : 'أخرى';
                     const dueDate = task.due_date ? new Date(task.due_date).toLocaleDateString('ar-SA') : '';
                     const date = new Date(task.created_at).toLocaleDateString('ar-SA');
@@ -4160,6 +4184,8 @@ const QuranReview = {
         } catch (error) {
             console.error('Failed to load teacher dashboard:', error);
             this.showNotification('خطأ في تحميل البيانات', 'error');
+        } finally {
+            this.hideLoading();
         }
     },
 
@@ -4248,6 +4274,35 @@ const QuranReview = {
             container.classList.remove('hidden');
         } else {
             container.classList.add('hidden');
+        }
+    },
+
+    async handleDeleteAllTasks() {
+        if (!confirm('⚠️ تحذير خطير!\nهل أنت متأكد تماماً أنك تريد حذف جميع المهام؟\nهذا الإجراء سيحذف كل المهام وكل التسليمات المرتبطة بها ولا يمكن التراجع عنه.')) {
+            return;
+        }
+
+        const token = localStorage.getItem(this.config.apiTokenKey);
+        if (!token) return;
+
+        try {
+            const response = await fetch(`${this.config.apiBaseUrl}/api/admin/tasks/delete-all/`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.detail || 'خطأ في حذف المهام');
+            }
+
+            const result = await response.json();
+            this.showNotification(result.detail, 'success');
+            this.loadTeacherDashboard();
+        } catch (error) {
+            this.showNotification(error.message, 'error');
         }
     },
 
