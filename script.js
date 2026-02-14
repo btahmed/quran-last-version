@@ -3958,10 +3958,10 @@ const QuranReview = {
             if (el) el.textContent = `مرحباً أستاذ ${this.state.user.first_name || this.state.user.username}`;
         }
 
-        // Show admin tab for teachers (temporary)
+        // Show admin tab only for superusers
         const adminTab = document.querySelector('.admin-only-tab');
         if (adminTab) {
-            const isAdmin = this.state.user && (this.state.user.is_superuser || this.state.user.role === 'teacher');
+            const isAdmin = this.state.user && this.state.user.is_superuser;
             adminTab.style.display = isAdmin ? 'inline-block' : 'none';
         }
 
