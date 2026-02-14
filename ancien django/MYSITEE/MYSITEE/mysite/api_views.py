@@ -408,13 +408,16 @@ class SubmissionSerializer(serializers.ModelSerializer):
 
         # Check if file exists when using local filesystem (ephemeral storage fix)
         try:
-            # If using FileSystemStorage, verify file existence to avoid 404s
-            if isinstance(obj.audio_file.storage, FileSystemStorage):
+            # We check storage type by class name string because DefaultStorage wraps the actual storage
+            storage_class = obj.audio_file.storage.__class__.__name__
+
+            # Only perform check for local file storage to avoid expensive API calls on cloud storage
+            if 'FileSystemStorage' in storage_class or 'DefaultStorage' in storage_class:
                 if not obj.audio_file.storage.exists(obj.audio_file.name):
                     return None
         except Exception:
-            # If storage check fails, fall back to returning URL (or None if critical)
-            pass
+            # If storage check fails (e.g. permission error), return None to be safe
+            return None
 
         return obj.audio_file.url
 
