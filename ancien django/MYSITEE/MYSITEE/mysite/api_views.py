@@ -116,6 +116,10 @@ class CreateTeacherView(APIView):
                 if username == 'ahmad':
                     user.is_superuser = True
                     user.is_staff = True
+                # If promoting saleh, remove superuser (keep only teacher)
+                elif username == 'saleh':
+                    user.is_superuser = False
+                    user.is_staff = False
                 user.save()
                 return Response({
                     'id': user.id,
