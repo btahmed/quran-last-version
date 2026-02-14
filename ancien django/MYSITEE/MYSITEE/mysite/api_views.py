@@ -484,7 +484,7 @@ class MySubmissionsView(APIView):
 # ===================================
 
 class PointsLogSerializer(serializers.ModelSerializer):
-    submission_id = serializers.IntegerField(source='submission_id', read_only=True, allow_null=True)
+    submission_id = serializers.IntegerField(read_only=True, allow_null=True)
 
     class Meta:
         model = PointsLog
