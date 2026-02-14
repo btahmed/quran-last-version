@@ -91,8 +91,8 @@ class RegisterView(APIView):
 # ===================================
 
 class CreateTeacherView(APIView):
-    """Teacher or superuser: create a teacher account or promote an existing student."""
-    permission_classes = [IsTeacher]
+    """Any authenticated user: create a teacher account or promote an existing student (temporary)."""
+    permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
         username = request.data.get('username', '').strip()
