@@ -1500,16 +1500,6 @@ const QuranReview = {
             QuranReview.state.competition.leaderboard = board;
         },
 
-        escapeHtml(text) {
-            if (!text) return '';
-            return String(text)
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
-        },
-
         renderLeaderboard() {
             const list = document.getElementById('leaderboard-list');
             const board = QuranReview.state.competition.leaderboard || [];
@@ -1521,7 +1511,7 @@ const QuranReview = {
 
             list.innerHTML = board.map((entry, idx) => `
                 <div style="display:flex; justify-content:space-between; padding:0.5rem; border-bottom:1px solid #eee;">
-                    <span>#${idx+1} ${this.escapeHtml(entry.name)}</span>
+                    <span>#${idx+1} ${QuranReview.escapeHtml(entry.name)}</span>
                     <span>${entry.score} pts</span>
                 </div>
             `).join('');
@@ -2331,11 +2321,11 @@ const QuranReview = {
     createTableRow(item) {
         return `
             <tr>
-                <td class="arabic-text">${item.surahName}</td>
-                <td>${item.fromAyah} - ${item.toAyah}</td>
+                <td class="arabic-text">${this.escapeHtml(item.surahName)}</td>
+                <td>${this.escapeHtml(item.fromAyah)} - ${this.escapeHtml(item.toAyah)}</td>
                 <td>${this.getStatusBadge(item.status)}</td>
                 <td>${item.lastReviewed ? new Date(item.lastReviewed).toLocaleDateString('ar-SA') : 'لم يراجع بعد'}</td>
-                <td>${item.reviewCount || 0}</td>
+                <td>${this.escapeHtml(item.reviewCount || 0)}</td>
                 <td>${this.getNextReviewDate(item)}</td>
                 <td>
                     <button class="btn btn-sm btn-primary" onclick="QuranReview.markAsReviewed(${item.id})" title="تسجيل المراجعة">
@@ -2363,7 +2353,7 @@ const QuranReview = {
             weak: '<span class="status-badge status-weak">⚠ ضعيف</span>',
             new: '<span class="status-badge status-new">+ جديد</span>'
         };
-        return badges[status] || status;
+        return badges[status] || this.escapeHtml(status);
     },
     
     getNextReviewDate(item) {
@@ -2638,6 +2628,16 @@ const QuranReview = {
     // ===================================
     // UTILITY FUNCTIONS
     // ===================================
+
+    escapeHtml(text) {
+        if (!text) return '';
+        return String(text)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    },
 
     async fetchAyahText(surahId, ayahNumber) {
         try {
