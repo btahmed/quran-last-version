@@ -4002,11 +4002,11 @@ const QuranReview = {
                             <div class="audio-player-container">
                                 <audio controls preload="metadata" style="width:100%;margin-top:0.5rem;"
                                     onerror="this.parentElement.innerHTML='<p style=\\'color:#999;font-size:0.85rem;\\'>الملف الصوتي غير متاح حاليا</p>'">
-                                    <source src="${this.config.apiBaseUrl}${s.audio_url.startsWith('/') ? s.audio_url : '/' + s.audio_url}" type="audio/webm">
+                                    <source src="${s.audio_url.startsWith('http') ? s.audio_url : this.config.apiBaseUrl + (s.audio_url.startsWith('/') ? s.audio_url : '/' + s.audio_url)}" type="audio/webm">
                                     المتصفح لا يدعم تشغيل الصوت
                                 </audio>
                                 <div style="font-size:0.8rem;color:#666;margin-top:0.25rem;">
-                                    📎 <a href="${this.config.apiBaseUrl}${s.audio_url.startsWith('/') ? s.audio_url : '/' + s.audio_url}" target="_blank" style="color:#007bff;">فتح الملف الصوتي</a>
+                                    📎 <a href="${s.audio_url.startsWith('http') ? s.audio_url : this.config.apiBaseUrl + (s.audio_url.startsWith('/') ? s.audio_url : '/' + s.audio_url)}" target="_blank" style="color:#007bff;">فتح الملف الصوتي</a>
                                 </div>
                             </div>
                         ` : ''}
@@ -4101,11 +4101,11 @@ const QuranReview = {
                             <div class="audio-player-container">
                                 <audio controls preload="metadata" style="width:100%;margin:0.5rem 0;"
                                     onerror="this.parentElement.innerHTML='<p style=\\'color:#999;font-size:0.85rem;\\'>الملف الصوتي غير متاح حاليا</p>'">
-                                    <source src="${this.config.apiBaseUrl}${s.audio_url.startsWith('/') ? s.audio_url : '/' + s.audio_url}" type="audio/webm">
+                                    <source src="${s.audio_url.startsWith('http') ? s.audio_url : this.config.apiBaseUrl + (s.audio_url.startsWith('/') ? s.audio_url : '/' + s.audio_url)}" type="audio/webm">
                                     المتصفح لا يدعم تشغيل الصوت
                                 </audio>
                                 <div style="font-size:0.8rem;color:#666;margin-top:0.25rem;">
-                                    📎 <a href="${this.config.apiBaseUrl}${s.audio_url.startsWith('/') ? s.audio_url : '/' + s.audio_url}" target="_blank" style="color:#007bff;">فتح الملف الصوتي</a>
+                                    📎 <a href="${s.audio_url.startsWith('http') ? s.audio_url : this.config.apiBaseUrl + (s.audio_url.startsWith('/') ? s.audio_url : '/' + s.audio_url)}" target="_blank" style="color:#007bff;">فتح الملف الصوتي</a>
                                 </div>
                             </div>
                         ` : '<p class="empty-state">لا يوجد ملف صوتي</p>'}
