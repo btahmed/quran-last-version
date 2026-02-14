@@ -501,8 +501,7 @@ const QuranReview = {
 
             const savedTasks = localStorage.getItem(this.config.tasksKey);
             this.state.tasks = savedTasks ? JSON.parse(savedTasks) : [];
-            this.loadTasksFromApi();
-            
+
             console.log('📁 Data loaded successfully');
         } catch (error) {
             console.error('❌ Error loading data:', error);
