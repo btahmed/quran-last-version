@@ -3343,3 +3343,5 @@ window.addEventListener('unhandledrejection', (e) => {
 
 // Make QuranReview available globally
 window.QuranReview = QuranReview;
+
+
