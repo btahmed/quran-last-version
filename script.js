@@ -1741,7 +1741,7 @@ const QuranReview = {
             return { name: 'مبتدئ', icon: '🥉', level: 'bronze' };
         },
 
-        updateLeaderboard(score) {
+        async updateLeaderboard(score) {
             const entry = {
                 name: QuranReview.state.settings.userName || 'أنت',
                 score: score,
@@ -1752,31 +1752,66 @@ const QuranReview = {
             // Add to local leaderboard for demo
             let board = QuranReview.state.competition.leaderboard || [];
             board.push(entry);
-            board.sort((a, b) => b.score - a.score);
-            board = board.slice(0, 10); // Keep top 10
-            QuranReview.state.competition.leaderboard = board;
+
+            try {
+                const token = localStorage.getItem(QuranReview.config.apiTokenKey);
+                if (token) {
+                    const response = await fetch(`${QuranReview.config.apiBaseUrl}/api/leaderboard/`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                        },
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        this.renderLeaderboardData(data.leaderboard || []);
+                        return;
+                    }
+                }
+            } catch (error) {
+                Logger.error('LEADERBOARD', 'Failed to update leaderboard', error);
+            }
+
+            // Fallback to local leaderboard
+            this.renderLocalLeaderboard();
         },
 
-        renderLeaderboard() {
+        renderLocalLeaderboard() {
             const list = document.getElementById('leaderboard-list');
             const board = QuranReview.state.competition.leaderboard || [];
+            this.renderLeaderboardData(board);
+        },
+
+        renderLeaderboardData(board) {
+            const list = document.getElementById('leaderboard-list');
+            if (!list) return;
 
             if (board.length === 0) {
-                list.innerHTML = '<div style="text-align:center; color:gray;">لا توجد سجلات بعد</div>';
+                list.innerHTML = '<div style="text-align:center; color:gray; padding:2rem;">لا توجد سجلات بعد</div>';
                 return;
             }
 
-            list.innerHTML = board.map((entry, idx) => `
-                <div style="display:flex; justify-content:space-between; padding:0.5rem; border-bottom:1px solid #eee;">
-                    <span>#${idx+1} ${QuranReview.escapeHtml(entry.name)}</span>
-                    <span>${entry.score} pts</span>
-                </div>
-            `).join('');
-        }
-    },
+            list.innerHTML = board.map((entry, idx) => {
+                const rankIcon = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}.`;
+                return `
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem; border-bottom:1px solid var(--border-color); background: ${idx < 3 ? 'var(--bg-accent)' : 'transparent'};">
+                        <div style="display:flex; align-items:center; gap:0.5rem;">
+                            <span style="font-size:1.2rem;">${rankIcon}</span>
+                            <span style="font-weight:600;">${entry.name || 'مستخدم'}</span>
+                            ${entry.rank ? `<span class="user-badge ${entry.rank.toLowerCase()}">${entry.rank}</span>` : ''}
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-weight:bold; color:var(--accent-green);">${entry.score || entry.total_points || 0}</div>
+                            <div style="font-size:0.8rem; color:var(--text-secondary);">نقطة</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        },
 
-    hifzManager: {
-        hintsRemaining: 3,
+        // ===================================
+        // HIFZ SESSION MANAGEMENT
+        // ===================================
 
         startHifzSession(surahId, fromAyah, toAyah) {
             console.log(`Starting Hifz: ${surahId}:${fromAyah}-${toAyah}`);
@@ -2792,22 +2827,29 @@ const QuranReview = {
     // PROGRESS PAGE FUNCTIONS
     // ===================================
     
-    renderProgressStats() {
-        const stats = this.calculateStats();
-        
-        // Update stat cards
-        const elements = {
-            'progress-total': stats.total,
-            'progress-mastered': stats.mastered,
-            'progress-weak': stats.weak,
-            'progress-new': stats.new,
-            'progress-average': stats.averageReviews.toFixed(1)
-        };
-        
-        Object.entries(elements).forEach(([id, value]) => {
-            const element = document.getElementById(id);
-            if (element) element.textContent = value;
-        });
+    renderProgressPage() {
+        try {
+            const stats = this.calculateStats();
+            
+            // Update stat cards
+            const elements = {
+                'progress-total': stats.total,
+                'progress-mastered': stats.mastered,
+                'progress-weak': stats.weak,
+                'progress-new': stats.new,
+                'progress-average': stats.averageReviews.toFixed(1)
+            };
+            
+            Object.entries(elements).forEach(([id, value]) => {
+                const element = document.getElementById(id);
+                if (element) element.textContent = value;
+            });
+
+            // Render chart
+            this.renderProgressChart();
+        } catch (error) {
+            Logger.error('PROGRESS', 'Failed to render progress page', error);
+        }
     },
     
     renderProgressChart() {
@@ -4229,6 +4271,8 @@ const QuranReview = {
             document.getElementById('student-select-container')?.classList.add('hidden');
             this.switchTeacherTab('pending');
             this.loadTeacherDashboard();
+            // Also refresh tasks list to ensure sync
+            this._teacherTasks = null; // Force refresh
         } catch (error) {
             this.showNotification(error.message, 'error');
         }
