@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.db.models import Q
+from django.db.models import Q, Count, Sum
 from django.shortcuts import get_object_or_404
 
 from rest_framework import permissions, serializers, status
@@ -22,11 +22,30 @@ from tasks.models import Task
 User = get_user_model()
 
 
+# ===================================
+# PERMISSIONS
+# ===================================
+
+class IsTeacher(permissions.BasePermission):
+    """Only allow users with role='teacher' or staff."""
+    def has_permission(self, request, view):
+        return (
+            request.user
+            and request.user.is_authenticated
+            and (request.user.role == 'teacher' or request.user.is_staff)
+        )
+
+
+# ===================================
+# AUTHENTICATION
+# ===================================
+
 class RegisterSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=150)
     password = serializers.CharField(write_only=True, min_length=6)
     first_name = serializers.CharField(max_length=150, required=False, default='')
     last_name = serializers.CharField(max_length=150, required=False, default='')
+    role = serializers.ChoiceField(choices=['student', 'teacher'], default='student', required=False)
 
     def validate_username(self, value):
         if User.objects.filter(username=value).exists():
@@ -39,6 +58,7 @@ class RegisterSerializer(serializers.Serializer):
             password=validated_data['password'],
             first_name=validated_data.get('first_name', ''),
             last_name=validated_data.get('last_name', ''),
+            role=validated_data.get('role', 'student'),
         )
 
 
@@ -54,10 +74,15 @@ class RegisterView(APIView):
             'id': user.id,
             'username': user.username,
             'first_name': user.first_name,
+            'role': user.role,
             'access': str(refresh.access_token),
             'refresh': str(refresh),
         }, status=status.HTTP_201_CREATED)
 
+
+# ===================================
+# USER PROFILE
+# ===================================
 
 class MeView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -70,11 +95,18 @@ class MeView(APIView):
             'username': user.username,
             'first_name': user.first_name,
             'last_name': user.last_name,
+            'role': user.role,
             'total_points': total_points,
         })
 
 
+# ===================================
+# TASKS
+# ===================================
+
 class TaskSerializer(serializers.ModelSerializer):
+    author_name = serializers.CharField(source='author.username', read_only=True)
+
     class Meta:
         model = Task
         fields = [
@@ -86,6 +118,7 @@ class TaskSerializer(serializers.ModelSerializer):
             'task_type',
             'due_date',
             'created_at',
+            'author_name',
         ]
 
 
@@ -100,6 +133,46 @@ class TaskListView(APIView):
         ).distinct().order_by('-created_at')
         return Response(TaskSerializer(tasks, many=True).data)
 
+
+class TaskCreateView(APIView):
+    """Teachers create tasks and assign to students."""
+    permission_classes = [IsTeacher]
+
+    def post(self, request):
+        title = request.data.get('title', '').strip()
+        if not title:
+            return Response(
+                {'detail': 'عنوان المهمة مطلوب.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        task = Task.objects.create(
+            title=title,
+            description=request.data.get('description', ''),
+            task_type=request.data.get('task_type', 'other'),
+            points=int(request.data.get('points', 0)),
+            due_date=request.data.get('due_date') or None,
+            author=request.user,
+            is_private=False,
+        )
+
+        # Assign students by id list
+        student_ids = request.data.get('student_ids', [])
+        if student_ids:
+            students = User.objects.filter(id__in=student_ids, role='student')
+            task.assigned_users.set(students)
+
+        # Assign all students if assign_all flag
+        if request.data.get('assign_all'):
+            all_students = User.objects.filter(role='student')
+            task.assigned_users.set(all_students)
+
+        return Response(TaskSerializer(task).data, status=status.HTTP_201_CREATED)
+
+
+# ===================================
+# SUBMISSIONS
+# ===================================
 
 class SubmissionTaskSerializer(serializers.ModelSerializer):
     class Meta:
@@ -116,6 +189,7 @@ class SubmissionTaskSerializer(serializers.ModelSerializer):
 class SubmissionSerializer(serializers.ModelSerializer):
     task = SubmissionTaskSerializer(read_only=True)
     audio_url = serializers.SerializerMethodField()
+    student_name = serializers.SerializerMethodField()
 
     class Meta:
         model = Submission
@@ -127,6 +201,7 @@ class SubmissionSerializer(serializers.ModelSerializer):
             'submitted_at',
             'validated_at',
             'audio_url',
+            'student_name',
         ]
 
     def get_audio_url(self, obj):
@@ -136,6 +211,9 @@ class SubmissionSerializer(serializers.ModelSerializer):
         if request is None:
             return obj.audio_file.url
         return request.build_absolute_uri(obj.audio_file.url)
+
+    def get_student_name(self, obj):
+        return obj.student.first_name or obj.student.username
 
 
 class SubmissionCreateSerializer(serializers.Serializer):
@@ -148,13 +226,13 @@ class SubmissionCreateSerializer(serializers.Serializer):
 
         if not is_user_assigned_to_task(request.user, task):
             raise serializers.ValidationError(
-                "Vous n'êtes pas assigné à cette tâche."
+                "لست مسجلاً في هذه المهمة."
             )
 
         existing = get_submission_for_task(request.user, task)
         if existing and existing.status == 'approved':
             raise serializers.ValidationError(
-                "Votre soumission a déjà été approuvée. Vous ne pouvez pas la remplacer."
+                "تم قبول تسليمك بالفعل. لا يمكنك استبداله."
             )
 
         attrs['task'] = task
@@ -207,6 +285,10 @@ class MySubmissionsView(APIView):
         )
 
 
+# ===================================
+# POINTS
+# ===================================
+
 class PointsLogSerializer(serializers.ModelSerializer):
     submission_id = serializers.IntegerField(source='submission_id', read_only=True)
 
@@ -232,8 +314,12 @@ class PointsView(APIView):
         })
 
 
+# ===================================
+# TEACHER ENDPOINTS
+# ===================================
+
 class SubmissionApproveView(APIView):
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsTeacher]
 
     def post(self, request, submission_id):
         submission = get_object_or_404(Submission, id=submission_id)
@@ -242,7 +328,7 @@ class SubmissionApproveView(APIView):
 
 
 class SubmissionRejectView(APIView):
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [IsTeacher]
 
     def post(self, request, submission_id):
         submission = get_object_or_404(Submission, id=submission_id)
@@ -252,3 +338,85 @@ class SubmissionRejectView(APIView):
             feedback=request.data.get('admin_feedback', '')
         )
         return Response({'status': 'rejected'})
+
+
+class PendingSubmissionsView(APIView):
+    """List all pending submissions for tasks created by this teacher."""
+    permission_classes = [IsTeacher]
+
+    def get(self, request):
+        submissions = Submission.objects.filter(
+            task__author=request.user,
+            status='submitted',
+        ).select_related('task', 'student').order_by('-submitted_at')
+        return Response(
+            SubmissionSerializer(
+                submissions,
+                many=True,
+                context={'request': request}
+            ).data
+        )
+
+
+class MyStudentsView(APIView):
+    """List students assigned to any task created by this teacher."""
+    permission_classes = [IsTeacher]
+
+    def get(self, request):
+        student_ids = Task.objects.filter(
+            author=request.user
+        ).values_list('assigned_users', flat=True).distinct()
+
+        students = User.objects.filter(
+            id__in=student_ids, role='student'
+        ).annotate(
+            total_points=Sum('pointslog__delta'),
+            submissions_count=Count('submission', distinct=True),
+        )
+
+        data = []
+        for s in students:
+            data.append({
+                'id': s.id,
+                'username': s.username,
+                'first_name': s.first_name,
+                'total_points': s.total_points or 0,
+                'submissions_count': s.submissions_count,
+            })
+        return Response(data)
+
+
+class StudentProgressView(APIView):
+    """Get detailed progress for a specific student (teacher only)."""
+    permission_classes = [IsTeacher]
+
+    def get(self, request, student_id):
+        student = get_object_or_404(User, id=student_id, role='student')
+
+        # Tasks assigned to this student by this teacher
+        tasks = Task.objects.filter(
+            author=request.user,
+            assigned_users=student,
+        )
+
+        task_data = []
+        for task in tasks:
+            sub = Submission.objects.filter(task=task, student=student).first()
+            task_data.append({
+                'id': task.id,
+                'title': task.title,
+                'task_type': task.task_type,
+                'points': task.points,
+                'due_date': task.due_date,
+                'submission_status': sub.status if sub else 'not_submitted',
+            })
+
+        return Response({
+            'student': {
+                'id': student.id,
+                'username': student.username,
+                'first_name': student.first_name,
+                'total_points': PointsLog.get_total_points(student),
+            },
+            'tasks': task_data,
+        })
