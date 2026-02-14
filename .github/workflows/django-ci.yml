@@ -33,6 +33,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Collect static files
+        run: python manage.py collectstatic --noinput
+        env:
+          SECRET_KEY: test-secret-key-for-ci
+          DEBUG: 'False'
+          ALLOWED_HOSTS: localhost,127.0.0.1
+
       - name: Run Django system checks
         run: python manage.py check
         env:
