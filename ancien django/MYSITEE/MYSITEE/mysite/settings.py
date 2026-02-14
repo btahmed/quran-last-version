@@ -215,9 +215,6 @@ STORAGES = {
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
-    "media": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
-    },
 }
 
 # --- Security hardening (prod only) ---

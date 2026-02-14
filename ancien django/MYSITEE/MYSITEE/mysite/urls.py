@@ -38,4 +38,8 @@ if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 else:
     # In production, serve media files with whitenoise
+    from whitenoise.middleware import WhiteNoiseMiddleware
+    WhiteNoiseMiddleware.add_files_to_middleware(
+        settings.MEDIA_URL, document_root=settings.MEDIA_ROOT
+    )
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
