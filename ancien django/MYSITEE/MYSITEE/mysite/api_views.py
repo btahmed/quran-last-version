@@ -99,22 +99,15 @@ class ListUsersView(APIView):
     permission_classes = [IsSuperUser]
 
     def get(self, request):
-        users = User.objects.all().order_by('username')
-        user_list = []
-        for user in users:
-            user_list.append({
-                'id': user.id,
-                'username': user.username,
-                'first_name': user.first_name,
-                'last_name': user.last_name,
-                'role': user.role,
-                'is_superuser': user.is_superuser,
-                'is_staff': user.is_staff,
-                'date_joined': user.date_joined,
-            })
+        # Optimization: Use values() to fetch only needed fields, skipping model instantiation overhead
+        users = User.objects.all().values(
+            'id', 'username', 'first_name', 'last_name',
+            'role', 'is_superuser', 'is_staff', 'date_joined'
+        ).order_by('username')
+
         return Response({
-            'count': len(user_list),
-            'users': user_list
+            'count': users.count(),
+            'users': list(users)
         })
 
 
@@ -328,7 +321,7 @@ class TaskListView(APIView):
             Q(assigned_users=request.user) |
             Q(assigned_teams__members=request.user) |
             Q(author=request.user)
-        ).distinct().order_by('-created_at')
+        ).distinct().select_related('author').order_by('-created_at')
         return Response(TaskSerializer(tasks, many=True).data)
 
 

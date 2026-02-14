@@ -2970,6 +2970,16 @@ const QuranReview = {
     // UTILITY FUNCTIONS
     // ===================================
 
+    showLoading() {
+        const overlay = document.querySelector('.loading-overlay');
+        if (overlay) overlay.style.display = 'flex';
+    },
+
+    hideLoading() {
+        const overlay = document.querySelector('.loading-overlay');
+        if (overlay) overlay.style.display = 'none';
+    },
+
     escapeHtml(text) {
         if (!text) return '';
         return String(text)
@@ -4053,8 +4063,11 @@ const QuranReview = {
 
         // Load admin users list if admin tab is visible
         if (this.state.user && this.state.user.is_superuser) {
+            // Call without await to prevent blocking dashboard
             this.loadAdminUsersList();
         }
+
+        this.showLoading();
 
         try {
             const [studentsRes, pendingRes, tasksRes] = await Promise.all([
@@ -4171,6 +4184,8 @@ const QuranReview = {
         } catch (error) {
             console.error('Failed to load teacher dashboard:', error);
             this.showNotification('خطأ في تحميل البيانات', 'error');
+        } finally {
+            this.hideLoading();
         }
     },
 
