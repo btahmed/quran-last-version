@@ -3923,7 +3923,21 @@ const QuranReview = {
                         </div>
                         <div class="submission-card-meta">📅 ${date}</div>
                         ${s.admin_feedback ? `<div class="task-feedback">💬 ${s.admin_feedback}</div>` : ''}
-                        ${s.audio_url ? `<audio controls src="${s.audio_url}" style="width:100%;margin-top:0.5rem;"></audio>` : ''}
+                        ${s.audio_url ? `
+                            <div class="audio-player-container">
+                                <audio controls preload="metadata" style="width:100%;margin-top:0.5rem;">
+                                    <source src="${s.audio_url}" type="audio/webm">
+                                    <source src="${s.audio_url}" type="audio/mpeg">
+                                    <source src="${s.audio_url}" type="audio/wav">
+                                    <source src="${s.audio_url}" type="audio/mp4">
+                                    <source src="${s.audio_url}">
+                                    المتصفح لا يدعم تشغيل الصوت
+                                </audio>
+                                <div style="font-size:0.8rem;color:#666;margin-top:0.25rem;">
+                                    📎 <a href="${s.audio_url}" target="_blank" style="color:#007bff;">فتح الملف الصوتي</a>
+                                </div>
+                            </div>
+                        ` : ''}
                     </div>`;
                 }).join('');
             }
@@ -4014,9 +4028,11 @@ const QuranReview = {
                         ${s.audio_url ? `
                             <div class="audio-player-container">
                                 <audio controls preload="metadata" style="width:100%;margin:0.5rem 0;">
+                                    <source src="${s.audio_url}" type="audio/webm">
                                     <source src="${s.audio_url}" type="audio/mpeg">
                                     <source src="${s.audio_url}" type="audio/wav">
                                     <source src="${s.audio_url}" type="audio/mp4">
+                                    <source src="${s.audio_url}">
                                     المتصفح لا يدعم تشغيل الصوت
                                 </audio>
                                 <div style="font-size:0.8rem;color:#666;margin-top:0.25rem;">
