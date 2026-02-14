@@ -405,7 +405,8 @@ const QuranReview = {
             hifz: {},
             settings: { ...this.config.defaultSettings },
             todayDate: new Date().toISOString().split('T')[0],
-            imageQuality: 'normal'
+            imageQuality: 'normal',
+            user: null
         };
         
         // Load data
@@ -422,13 +423,21 @@ const QuranReview = {
         
         // Initialize theme
         this.initTheme();
-        
+
+        // Initialize auth
+        this.initAuth();
+
+        // Close modal on overlay click
+        document.getElementById('auth-modal')?.addEventListener('click', (e) => {
+            if (e.target.id === 'auth-modal') this.hideAuthModal();
+        });
+
         // Render initial page
         this.renderPage('home');
-        
+
         // Update today's date
         this.updateTodayDate();
-        
+
         console.log(' QuranReview App initialized successfully');
     },
     
@@ -503,13 +512,226 @@ const QuranReview = {
         }
     },
 
+    // ===================================
+    // AUTHENTICATION
+    // ===================================
+
+    initAuth() {
+        const token = localStorage.getItem(this.config.apiTokenKey);
+        const refreshToken = localStorage.getItem('quranreview_refresh_token');
+        const userData = localStorage.getItem('quranreview_user');
+
+        if (token && userData) {
+            try {
+                this.state.user = JSON.parse(userData);
+                this.updateAuthUI(true);
+                this.fetchMe();
+            } catch {
+                this.logout();
+            }
+        } else {
+            this.updateAuthUI(false);
+        }
+    },
+
+    updateAuthUI(loggedIn) {
+        const loginBtn = document.getElementById('auth-login-btn');
+        const userInfo = document.getElementById('auth-user-info');
+        const usernameEl = document.getElementById('auth-username');
+
+        if (loggedIn && this.state.user) {
+            loginBtn?.classList.add('hidden');
+            userInfo?.classList.remove('hidden');
+            if (usernameEl) {
+                usernameEl.textContent = this.state.user.first_name || this.state.user.username;
+            }
+        } else {
+            loginBtn?.classList.remove('hidden');
+            userInfo?.classList.add('hidden');
+        }
+    },
+
+    showAuthModal(mode) {
+        const modal = document.getElementById('auth-modal');
+        const loginForm = document.getElementById('auth-login-form');
+        const registerForm = document.getElementById('auth-register-form');
+
+        modal?.classList.remove('hidden');
+        document.getElementById('login-error')?.classList.add('hidden');
+        document.getElementById('register-error')?.classList.add('hidden');
+
+        if (mode === 'register') {
+            loginForm?.classList.add('hidden');
+            registerForm?.classList.remove('hidden');
+        } else {
+            loginForm?.classList.remove('hidden');
+            registerForm?.classList.add('hidden');
+        }
+    },
+
+    hideAuthModal() {
+        document.getElementById('auth-modal')?.classList.add('hidden');
+    },
+
+    async handleLogin(event) {
+        event.preventDefault();
+        const username = document.getElementById('login-username').value.trim();
+        const password = document.getElementById('login-password').value;
+        const errorEl = document.getElementById('login-error');
+        const submitBtn = document.getElementById('login-submit-btn');
+
+        errorEl?.classList.add('hidden');
+        if (submitBtn) submitBtn.disabled = true;
+
+        try {
+            const response = await fetch(`${this.config.apiBaseUrl}/api/token/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.detail || 'اسم المستخدم أو كلمة المرور غير صحيحة');
+            }
+
+            localStorage.setItem(this.config.apiTokenKey, data.access);
+            localStorage.setItem('quranreview_refresh_token', data.refresh);
+            this.hideAuthModal();
+            await this.fetchMe();
+            this.loadTasksFromApi();
+        } catch (error) {
+            if (errorEl) {
+                errorEl.textContent = error.message;
+                errorEl.classList.remove('hidden');
+            }
+        } finally {
+            if (submitBtn) submitBtn.disabled = false;
+        }
+    },
+
+    async handleRegister(event) {
+        event.preventDefault();
+        const username = document.getElementById('register-username').value.trim();
+        const firstName = document.getElementById('register-firstname').value.trim();
+        const password = document.getElementById('register-password').value;
+        const password2 = document.getElementById('register-password2').value;
+        const errorEl = document.getElementById('register-error');
+        const submitBtn = document.getElementById('register-submit-btn');
+
+        errorEl?.classList.add('hidden');
+
+        if (password !== password2) {
+            if (errorEl) {
+                errorEl.textContent = 'كلمتا المرور غير متطابقتين';
+                errorEl.classList.remove('hidden');
+            }
+            return;
+        }
+
+        if (submitBtn) submitBtn.disabled = true;
+
+        try {
+            const response = await fetch(`${this.config.apiBaseUrl}/api/register/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password, first_name: firstName }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                const msg = data.username?.[0] || data.password?.[0] || data.detail || 'خطأ في إنشاء الحساب';
+                throw new Error(msg);
+            }
+
+            localStorage.setItem(this.config.apiTokenKey, data.access);
+            localStorage.setItem('quranreview_refresh_token', data.refresh);
+            this.state.user = { id: data.id, username: data.username, first_name: data.first_name };
+            localStorage.setItem('quranreview_user', JSON.stringify(this.state.user));
+            this.updateAuthUI(true);
+            this.hideAuthModal();
+            this.showNotification('تم إنشاء الحساب بنجاح!', 'success');
+        } catch (error) {
+            if (errorEl) {
+                errorEl.textContent = error.message;
+                errorEl.classList.remove('hidden');
+            }
+        } finally {
+            if (submitBtn) submitBtn.disabled = false;
+        }
+    },
+
+    async fetchMe() {
+        const token = localStorage.getItem(this.config.apiTokenKey);
+        if (!token) return;
+
+        try {
+            const response = await fetch(`${this.config.apiBaseUrl}/api/me/`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            if (response.status === 401) {
+                const refreshed = await this.refreshToken();
+                if (refreshed) return this.fetchMe();
+                this.logout();
+                return;
+            }
+
+            if (!response.ok) throw new Error('Failed to fetch user');
+
+            this.state.user = await response.json();
+            localStorage.setItem('quranreview_user', JSON.stringify(this.state.user));
+            this.updateAuthUI(true);
+        } catch (error) {
+            console.warn('⚠️ Failed to fetch user info', error);
+        }
+    },
+
+    async refreshToken() {
+        const refresh = localStorage.getItem('quranreview_refresh_token');
+        if (!refresh) return false;
+
+        try {
+            const response = await fetch(`${this.config.apiBaseUrl}/api/token/refresh/`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ refresh }),
+            });
+
+            if (!response.ok) return false;
+
+            const data = await response.json();
+            localStorage.setItem(this.config.apiTokenKey, data.access);
+            return true;
+        } catch {
+            return false;
+        }
+    },
+
+    logout() {
+        localStorage.removeItem(this.config.apiTokenKey);
+        localStorage.removeItem('quranreview_refresh_token');
+        localStorage.removeItem('quranreview_user');
+        this.state.user = null;
+        this.updateAuthUI(false);
+    },
+
     async loadTasksFromApi() {
         if (!this.config.apiBaseUrl) return;
 
         try {
             const token = localStorage.getItem(this.config.apiTokenKey);
-            const headers = token ? { Authorization: `Bearer ${token}` } : {};
+            if (!token) return;
+            const headers = { Authorization: `Bearer ${token}` };
             const response = await fetch(`${this.config.apiBaseUrl}/api/tasks/`, { headers });
+
+            if (response.status === 401) {
+                const refreshed = await this.refreshToken();
+                if (refreshed) return this.loadTasksFromApi();
+                return;
+            }
 
             if (!response.ok) {
                 throw new Error(`API error: ${response.status}`);
