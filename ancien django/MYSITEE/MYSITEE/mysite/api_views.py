@@ -368,6 +368,19 @@ class TaskCreateView(APIView):
         return Response(TaskSerializer(task).data, status=status.HTTP_201_CREATED)
 
 
+class DeleteAllTasksView(APIView):
+    """Superuser or Teacher: delete all tasks."""
+    permission_classes = [IsTeacher]
+
+    def delete(self, request):
+        count = Task.objects.count()
+        Task.objects.all().delete()
+        return Response({
+            'detail': f'تم حذف {count} مهمة بنجاح.',
+            'count': count
+        })
+
+
 # ===================================
 # SUBMISSIONS
 # ===================================
