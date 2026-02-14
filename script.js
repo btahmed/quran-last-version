@@ -8,33 +8,154 @@
 // ===================================
 
 const Logger = {
-    debugMode: true, // Default to true for development
+    debugMode: true,
+    _history: [],
+    _maxHistory: 500,
+    _styles: {
+        LOG:   'color: #2d5016; font-weight: bold;',
+        WARN:  'color: #ffc107; font-weight: bold;',
+        ERROR: 'color: #dc3545; font-weight: bold;',
+        CLICK: 'color: #6f42c1; font-weight: bold;',
+        API:   'color: #0d6efd; font-weight: bold;',
+        NAV:   'color: #20c997; font-weight: bold;',
+        AUDIO: 'color: #fd7e14; font-weight: bold;',
+        AUTH:  'color: #e83e8c; font-weight: bold;',
+        STATE: 'color: #6610f2; font-weight: bold;',
+        STORE: 'color: #795548; font-weight: bold;',
+    },
+
+    _push(level, category, message, data) {
+        const entry = {
+            time: new Date().toISOString(),
+            ts: new Date().toLocaleTimeString(),
+            level,
+            category,
+            message,
+            data: data || null
+        };
+        this._history.push(entry);
+        if (this._history.length > this._maxHistory) this._history.shift();
+        return entry;
+    },
 
     log(category, message, data = null) {
         if (!this.debugMode) return;
-        const timestamp = new Date().toLocaleTimeString();
-        const style = 'color: #2d5016; font-weight: bold;';
-        console.log(`%c[${timestamp}] [${category}] ${message}`, style);
-        if (data) console.log('📝 Data:', data);
+        const e = this._push('LOG', category, message, data);
+        const s = this._styles[category] || this._styles.LOG;
+        console.log(`%c[${e.ts}] [${category}] ${message}`, s);
+        if (data) console.log('  📝', data);
     },
 
     error(category, message, error = null) {
-        const timestamp = new Date().toLocaleTimeString();
-        const style = 'color: #dc3545; font-weight: bold;';
-        console.error(`%c[${timestamp}] [${category}] ❌ ${message}`, style);
+        const e = this._push('ERROR', category, message, error);
+        console.error(`%c[${e.ts}] [${category}] ❌ ${message}`, this._styles.ERROR);
         if (error) {
-            console.error('🔍 Error Details:', error);
-            if (error.stack) console.error('Stack:', error.stack);
+            console.error('  🔍 Details:', error);
+            if (error.stack) console.error('  Stack:', error.stack);
         }
     },
 
     warn(category, message, data = null) {
-        const timestamp = new Date().toLocaleTimeString();
-        const style = 'color: #ffc107; font-weight: bold;';
-        console.warn(`%c[${timestamp}] [${category}] ⚠️ ${message}`, style);
-        if (data) console.warn('Data:', data);
+        if (!this.debugMode) return;
+        const e = this._push('WARN', category, message, data);
+        console.warn(`%c[${e.ts}] [${category}] ⚠️ ${message}`, this._styles.WARN);
+        if (data) console.warn('  📝', data);
+    },
+
+    // --- CLICK TRACKER ---
+    click(element, extra = null) {
+        if (!this.debugMode) return;
+        const tag = element.tagName?.toLowerCase() || '?';
+        const id = element.id ? `#${element.id}` : '';
+        const cls = element.className ? `.${String(element.className).split(' ')[0]}` : '';
+        const text = (element.textContent || '').trim().slice(0, 40);
+        const msg = `${tag}${id}${cls} → "${text}"`;
+        this._push('CLICK', 'CLICK', msg, extra);
+        console.log(`%c[${new Date().toLocaleTimeString()}] [CLICK] 🖱️ ${msg}`, this._styles.CLICK);
+    },
+
+    // --- API TRACKER ---
+    async api(method, url, options = {}) {
+        const start = performance.now();
+        this._push('LOG', 'API', `→ ${method} ${url}`);
+        console.log(`%c[${new Date().toLocaleTimeString()}] [API] → ${method} ${url}`, this._styles.API);
+        try {
+            const response = await fetch(url, { method, ...options });
+            const duration = Math.round(performance.now() - start);
+            const statusEmoji = response.ok ? '✅' : '❌';
+            this._push(response.ok ? 'LOG' : 'ERROR', 'API', `← ${response.status} ${method} ${url} (${duration}ms)`);
+            console.log(`%c[${new Date().toLocaleTimeString()}] [API] ← ${statusEmoji} ${response.status} ${method} ${url} (${duration}ms)`, this._styles.API);
+            return response;
+        } catch (err) {
+            const duration = Math.round(performance.now() - start);
+            this._push('ERROR', 'API', `✗ NETWORK ${method} ${url} (${duration}ms)`, err.message);
+            console.error(`%c[${new Date().toLocaleTimeString()}] [API] ✗ NETWORK ERROR ${method} ${url} (${duration}ms): ${err.message}`, this._styles.ERROR);
+            throw err;
+        }
+    },
+
+    // --- NAV TRACKER ---
+    nav(from, to) {
+        if (!this.debugMode) return;
+        this._push('LOG', 'NAV', `${from} → ${to}`);
+        console.log(`%c[${new Date().toLocaleTimeString()}] [NAV] 🧭 ${from} → ${to}`, this._styles.NAV);
+    },
+
+    // --- AUDIO TRACKER ---
+    audio(event, detail = '') {
+        if (!this.debugMode) return;
+        this._push('LOG', 'AUDIO', `${event} ${detail}`);
+        console.log(`%c[${new Date().toLocaleTimeString()}] [AUDIO] 🔊 ${event} ${detail}`, this._styles.AUDIO);
+    },
+
+    // --- STATE TRACKER ---
+    state(key, value) {
+        if (!this.debugMode) return;
+        this._push('LOG', 'STATE', `${key} changed`, value);
+        console.log(`%c[${new Date().toLocaleTimeString()}] [STATE] 📦 ${key} =`, this._styles.STATE, value);
+    },
+
+    // --- STORAGE TRACKER ---
+    store(action, key) {
+        if (!this.debugMode) return;
+        this._push('LOG', 'STORE', `${action} → ${key}`);
+        console.log(`%c[${new Date().toLocaleTimeString()}] [STORE] 💾 ${action} → ${key}`, this._styles.STORE);
+    },
+
+    // --- CONSOLE HELPERS ---
+    // Usage in F12: Logger.history()  Logger.history('API')  Logger.history('ERROR')
+    history(filter = null) {
+        let items = this._history;
+        if (filter) {
+            const f = filter.toUpperCase();
+            items = items.filter(e => e.category === f || e.level === f);
+        }
+        console.table(items.map(e => ({ time: e.ts, level: e.level, cat: e.category, message: e.message })));
+        return items;
+    },
+
+    // Usage in F12: Logger.errors()
+    errors() { return this.history('ERROR'); },
+
+    // Usage in F12: Logger.clicks()
+    clicks() { return this.history('CLICK'); },
+
+    // Usage in F12: Logger.apis()
+    apis() { return this.history('API'); },
+
+    // Usage in F12: Logger.clear()
+    clear() { this._history = []; console.clear(); console.log('🧹 Logger history cleared'); },
+
+    // Usage in F12: Logger.dump() — export as JSON
+    dump() {
+        const json = JSON.stringify(this._history, null, 2);
+        console.log(json);
+        return json;
     }
 };
+
+// Expose Logger globally for F12 console access
+window.Logger = Logger;
 
 // ===================================
 // AUDIO MANAGER - PROFESSIONAL AUDIO CONTROL
@@ -50,14 +171,14 @@ const AudioManager = {
     init() {
         this.audio = document.getElementById("audio-element");
         if (!this.audio) {
-            console.warn(' Audio element not found, creating fallback');
+            Logger.warn('AUDIO', 'Audio element not found, creating fallback');
             this.audio = new Audio();
         }
-        console.log(' AudioManager initialized');
+        Logger.audio('INIT', 'AudioManager initialized');
     },
 
     stopAll() {
-        console.log(' Stopping ALL audio and clearing everything...');
+        Logger.audio('STOP', 'Stopping ALL audio and clearing everything...');
 
         // Stop main audio element
         if (this.audio) {
@@ -89,7 +210,7 @@ const AudioManager = {
         // Reset mode
         this.mode = null;
 
-        console.log(' All audio stopped and cleared');
+        Logger.audio('STOP', 'All audio stopped and cleared');
     },
 
     playFullSurah(surahId) {
@@ -97,11 +218,11 @@ const AudioManager = {
         this.mode = "full";
         const src = `audio/${String(surahId).padStart(3, "0")}.mp3`;
 
-        console.log(` Playing full surah ${surahId} from ${src}`);
+        Logger.audio('PLAY_SURAH', `Surah ${surahId} from ${src}`);
 
         this.audio.src = src;
         this.audio.play().catch(error => {
-            console.error(' Error playing full surah:', error);
+            Logger.error('AUDIO', `Error playing full surah ${surahId}`, error);
             // Fallback to CDN
             this.playFullSurahFromCDN(surahId);
         });
@@ -114,11 +235,11 @@ const AudioManager = {
         this.mode = "full";
 
         const audioUrl = window.QuranAudio.getAudioUrl(surahId);
-        console.log(` Playing full surah ${surahId} from CDN: ${audioUrl}`);
+        Logger.audio('PLAY_CDN', `Surah ${surahId} from CDN: ${audioUrl}`);
 
         this.audio.src = audioUrl;
         this.audio.play().catch(error => {
-            console.error(' Error playing CDN surah:', error);
+            Logger.error('AUDIO', `Error playing CDN surah ${surahId}`, error);
         });
     },
 
@@ -131,7 +252,7 @@ const AudioManager = {
             return;
         }
 
-        Logger.log('AUDIO', `Playing Wird ayah sequence ${surahId}:${fromAyah}-${toAyah}`);
+        Logger.audio('PLAY_WIRD', `Sequence ${surahId}:${fromAyah}-${toAyah}`);
 
         let currentAyah = fromAyah;
         const urls = [];
@@ -148,12 +269,12 @@ const AudioManager = {
         const playNext = () => {
             // Guard: only continue if still in wird or surah mode
             if (this.mode !== "wird" && this.mode !== "surah") {
-                console.log(' Mode cancelled, stopping sequence');
+                Logger.audio('CANCEL', 'Mode cancelled, stopping sequence');
                 return;
             }
 
             if (i >= urls.length) {
-                console.log(' Sequence completed');
+                Logger.audio('COMPLETE', 'Sequence completed');
                 this.stopAll();
                 return;
             }
@@ -161,7 +282,7 @@ const AudioManager = {
             const url = urls[i++];
             const ayahNumber = fromAyah + i - 1;
 
-            console.log(` Playing ayah ${ayahNumber} (${i}/${urls.length})`);
+            Logger.audio('PLAY_AYAH', `Ayah ${ayahNumber} (${i}/${urls.length})`);
 
             // UPDATE PROGRESS DISPLAY FOR EACH AYAH
             if (window.QuranReview) {
@@ -178,18 +299,13 @@ const AudioManager = {
             this.currentAudio = new Audio(url);
 
             this.currentAudio.onended = () => {
-                console.log(` Ayah ${ayahNumber} finished`);
-                console.log(`🔍 DEBUG: autoPlayNext = ${QuranReview.state.settings.autoPlayNext}`);
-                console.log(`🔍 DEBUG: mode = ${this.mode}`);
-                console.log(`🔍 DEBUG: i = ${i}, urls.length = ${urls.length}`);
-                console.log(`🔍 DEBUG: fromAyah = ${fromAyah}, toAyah = ${toAyah}`);
+                Logger.audio('ENDED', `Ayah ${ayahNumber} finished`);
+                Logger.log('AUDIO', `State: autoPlayNext=${QuranReview.state.settings.autoPlayNext}, mode=${this.mode}, i=${i}/${urls.length}`);
 
                 // Check if this is the last ayah
                 const isLastAyah = ayahNumber >= toAyah;
-                console.log(`🔍 DEBUG: isLastAyah = ${isLastAyah}`);
-
                 if (isLastAyah) {
-                    console.log('✅ Last ayah completed - stopping sequence');
+                    Logger.audio('COMPLETE', 'Last ayah completed - stopping sequence');
                     this.stopAll();
                     return;
                 }
@@ -198,25 +314,23 @@ const AudioManager = {
                 const rawAyahDelay = QuranReview.state.settings.ayahDelay;
                 const currentDelay = rawAyahDelay !== undefined ? parseFloat(rawAyahDelay) : 2.0;
                 const delay = currentDelay * 1000; // Convert to milliseconds
-                console.log(`🔍 DEBUG: rawAyahDelay = ${rawAyahDelay} (type: ${typeof rawAyahDelay})`);
-                console.log(`🔍 DEBUG: parseFloat(rawAyahDelay) = ${parseFloat(rawAyahDelay)}`);
-                console.log(`🔍 DEBUG: currentDelay = ${currentDelay}s, delay = ${delay}ms`);
+                Logger.log('AUDIO', `Delay: raw=${rawAyahDelay}, computed=${currentDelay}s (${delay}ms)`);
 
                 if (QuranReview.state.settings.autoPlayNext && (this.mode === "wird" || this.mode === "surah")) {
-                    console.log(`🔄 Auto-playing next ayah after ${delay}ms delay`);
+                    Logger.audio('NEXT', `Auto-playing next ayah after ${delay}ms`);
                     const timer = setTimeout(() => {
                         playNext();
                     }, delay);
                     this.timers.add(timer);
                 } else {
-                    console.log('⏸️ Auto-play disabled or mode changed - stopping sequence');
+                    Logger.audio('PAUSE', 'Auto-play disabled or mode changed');
                     // Stop if auto-play is disabled
                     this.stopAll();
                 }
             };
 
             this.currentAudio.onerror = () => {
-                console.error(` Error playing ayah ${ayahNumber}`);
+                Logger.error('AUDIO', `Error loading ayah ${ayahNumber}`);
                 // Continue to next ayah even if error
                 if (this.mode === "wird" || this.mode === "surah") {
                     const timer = setTimeout(() => {
@@ -231,7 +345,7 @@ const AudioManager = {
 
             // Play audio
             this.currentAudio.play().catch(error => {
-                console.error(` Error playing ayah ${ayahNumber}:`, error);
+                Logger.error('AUDIO', `Error playing ayah ${ayahNumber}`, error);
                 // Continue to next ayah
                 if (this.mode === "wird" || this.mode === "surah") {
                     const timer = setTimeout(() => {
@@ -268,7 +382,7 @@ const API_BASE_URL = window.API_BASE_URL || (
     : 'https://api.quranreview.live'
 );
 
-console.log(`🔌 API Configuration: ${API_BASE_URL} (Hostname: ${window.location.hostname})`);
+Logger.log('APP', `API Configuration: ${API_BASE_URL} (Hostname: ${window.location.hostname})`);
 
 const QuranReview = {
     // App Configuration
@@ -430,7 +544,7 @@ const QuranReview = {
     // ===================================
     
     init() {
-        console.log(' Initializing QuranReview App...');
+        Logger.log('APP', 'Initializing QuranReview App...');
         
         // Initialize AudioManager first
         AudioManager.init();
@@ -477,7 +591,10 @@ const QuranReview = {
         // Update today's date
         this.updateTodayDate();
 
-        console.log(' QuranReview App initialized successfully');
+        // Global click tracker
+        document.addEventListener('click', (e) => Logger.click(e.target), true);
+
+        Logger.log('APP', 'QuranReview App initialized successfully');
     },
     
     updateTodayDate() {
@@ -534,8 +651,8 @@ const QuranReview = {
                 JSON.parse(savedHifz) :
                 { currentSession: null, level: 1 };
 
-            console.log('🔍 DEBUG: Loaded settings:', this.state.settings);
-            console.log(`🔍 DEBUG: autoPlayNext = ${this.state.settings.autoPlayNext}`);
+            Logger.store('LOAD', this.config.settingsKey);
+            Logger.state('settings', this.state.settings);
             
             // Load memorization data with storage key
             const savedData = localStorage.getItem(this.config.storageKey);
@@ -546,9 +663,10 @@ const QuranReview = {
             const savedTasks = localStorage.getItem(this.config.tasksKey);
             this.state.tasks = savedTasks ? JSON.parse(savedTasks) : [];
 
-            console.log('📁 Data loaded successfully');
+            Logger.store('LOAD', this.config.storageKey);
+            Logger.log('APP', 'All data loaded successfully');
         } catch (error) {
-            console.error('❌ Error loading data:', error);
+            Logger.error('APP', 'Error loading data', error);
             this.state.settings = { ...this.config.defaultSettings };
             this.state.memorizationData = this.getDefaultMemorizationData();
             this.state.tasks = [];
@@ -896,9 +1014,10 @@ const QuranReview = {
             // Save hifz data
             localStorage.setItem(this.config.hifzKey, JSON.stringify(this.state.hifz));
 
-            console.log('💾 Data saved successfully');
+            Logger.store('SAVE', 'all keys');
+            Logger.log('APP', 'Data saved successfully');
         } catch (error) {
-            console.error('❌ Error saving data:', error);
+            Logger.error('APP', 'Error saving data', error);
             this.showNotification('خطأ في حفظ البيانات', 'error');
         }
     },
@@ -960,7 +1079,7 @@ const QuranReview = {
         this.updateThemeToggle(newTheme);
         this.saveData();
         
-        console.log('🎨 Theme changed to:', newTheme);
+        Logger.log('APP', `Theme changed to: ${newTheme}`);
     },
     
     updateThemeToggle(theme) {
@@ -992,7 +1111,7 @@ const QuranReview = {
     },
     
     navigateTo(pageName) {
-        console.log('🔄 Navigating to:', pageName);
+        Logger.nav(this.state.currentPage, pageName);
         
         // Update navigation
         document.querySelectorAll('.nav-link').forEach(link => {
@@ -1001,9 +1120,8 @@ const QuranReview = {
         const activeLink = document.querySelector(`[data-page="${pageName}"]`);
         if (activeLink) {
             activeLink.classList.add('active');
-            console.log('✅ Navigation link updated');
         } else {
-            console.error('❌ Navigation link not found:', pageName);
+            Logger.warn('NAV', `Navigation link not found: ${pageName}`);
         }
         
         // Update pages
@@ -1013,9 +1131,8 @@ const QuranReview = {
         const targetPage = document.getElementById(`${pageName}-page`);
         if (targetPage) {
             targetPage.classList.add('active');
-            console.log('✅ Page element updated');
         } else {
-            console.error('❌ Page element not found:', `${pageName}-page`);
+            Logger.error('NAV', `Page element not found: ${pageName}-page`);
         }
         
         this.state.currentPage = pageName;
@@ -1023,7 +1140,7 @@ const QuranReview = {
         // Render page content
         this.renderPage(pageName);
         
-        console.log('📍 Navigation completed to:', pageName);
+        Logger.log('NAV', `Navigation completed to: ${pageName}`);
     },
     
     // ===================================
@@ -4236,14 +4353,14 @@ document.head.appendChild(style);
 // Global error handling
 window.addEventListener('error', (e) => {
   const msg = e?.message || 'Unknown error';
-  console.error('❌ Application Error:', e.error || msg);
+  Logger.error('GLOBAL', `Application Error: ${msg}`, e.error);
   QuranReview.showNotification(`خطأ: ${msg}`, 'error');
 });
 
 // Global unhandled promise rejection handling
 window.addEventListener('unhandledrejection', (e) => {
   const msg = e?.reason?.message || e?.reason || 'Unhandled promise rejection';
-  console.error('❌ Unhandled Promise Rejection:', e.reason);
+  Logger.error('GLOBAL', `Unhandled Promise Rejection: ${msg}`, e.reason);
   QuranReview.showNotification(`خطأ: ${msg}`, 'error');
 });
 
