@@ -45,7 +45,6 @@ class RegisterSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True, min_length=6)
     first_name = serializers.CharField(max_length=150, required=False, default='')
     last_name = serializers.CharField(max_length=150, required=False, default='')
-    role = serializers.ChoiceField(choices=['student', 'teacher'], default='student', required=False)
 
     def validate_username(self, value):
         if User.objects.filter(username=value).exists():
@@ -53,12 +52,13 @@ class RegisterSerializer(serializers.Serializer):
         return value
 
     def create(self, validated_data):
+        # Role is always 'student' - only admin can create teacher accounts
         return User.objects.create_user(
             username=validated_data['username'],
             password=validated_data['password'],
             first_name=validated_data.get('first_name', ''),
             last_name=validated_data.get('last_name', ''),
-            role=validated_data.get('role', 'student'),
+            role='student',
         )
 
 

@@ -1507,6 +1507,276 @@ body {
     font-size: 0.9rem;
 }
 
+/* ===================================
+   ROLE BANNERS
+   =================================== */
+
+.role-banner {
+    border-right: 5px solid;
+    padding: 1.5rem !important;
+}
+
+.teacher-banner {
+    border-right-color: var(--accent-green);
+    background: linear-gradient(135deg, rgba(45,80,22,0.08) 0%, transparent 100%);
+}
+
+.student-banner {
+    border-right-color: var(--accent-gold);
+    background: linear-gradient(135deg, rgba(212,165,116,0.08) 0%, transparent 100%);
+}
+
+[data-theme="dark"] .teacher-banner {
+    background: linear-gradient(135deg, rgba(45,80,22,0.15) 0%, transparent 100%);
+}
+
+[data-theme="dark"] .student-banner {
+    background: linear-gradient(135deg, rgba(212,165,116,0.15) 0%, transparent 100%);
+}
+
+.banner-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.banner-icon {
+    font-size: 2.5rem;
+}
+
+.banner-title {
+    margin: 0;
+    font-size: 1.4rem;
+    color: var(--text-primary);
+}
+
+.banner-subtitle {
+    margin: 0.25rem 0 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+/* ===================================
+   TEACHER TABS
+   =================================== */
+
+.teacher-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.teacher-tab {
+    padding: 0.6rem 1.2rem;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--bg-card);
+    color: var(--text-primary);
+    cursor: pointer;
+    font-family: var(--font-ui);
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.teacher-tab:hover {
+    border-color: var(--accent-green);
+    background: rgba(45,80,22,0.05);
+}
+
+.teacher-tab.active {
+    background: var(--accent-green);
+    color: white;
+    border-color: var(--accent-green);
+}
+
+.teacher-tab-content {
+    display: none;
+}
+
+.teacher-tab-content.active {
+    display: block;
+}
+
+/* ===================================
+   STUDENT CHECKBOXES (Task Assignment)
+   =================================== */
+
+.assign-options {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 0.5rem;
+}
+
+.assign-option {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    cursor: pointer;
+}
+
+.student-checkboxes {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 0.75rem;
+}
+
+.student-checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.5rem;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.student-checkbox-item:hover {
+    background: rgba(45,80,22,0.05);
+}
+
+.student-checkbox-points {
+    margin-right: auto;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+/* ===================================
+   STUDENT DETAIL (Teacher View)
+   =================================== */
+
+.student-detail-stats {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    background: rgba(45,80,22,0.05);
+    border-radius: var(--radius-sm);
+}
+
+.stat-mini {
+    font-size: 0.95rem;
+}
+
+.student-tasks-progress {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.student-task-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    gap: 0.5rem;
+}
+
+.student-task-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+/* Clickable card */
+.student-card.clickable {
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.student-card.clickable:hover {
+    border-color: var(--accent-green);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.student-card-arrow {
+    color: var(--text-secondary);
+    font-size: 1.2rem;
+}
+
+/* ===================================
+   POINTS LOG
+   =================================== */
+
+.points-log-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.points-log-item:last-child {
+    border-bottom: none;
+}
+
+.points-log-reason {
+    flex: 1;
+    font-size: 0.9rem;
+}
+
+.points-log-delta {
+    font-weight: bold;
+    font-size: 1rem;
+    min-width: 3rem;
+    text-align: center;
+}
+
+.points-positive {
+    color: #28a745;
+}
+
+.points-negative {
+    color: #dc3545;
+}
+
+.points-log-date {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    min-width: 5rem;
+    text-align: left;
+}
+
+/* ===================================
+   STAT CARD VARIANTS
+   =================================== */
+
+.stat-points .stat-number { color: var(--accent-gold); }
+.stat-done .stat-number { color: #28a745; }
+.stat-pending .stat-number { color: #ffc107; }
+.stat-rejected .stat-number { color: #dc3545; }
+.stat-students .stat-number { color: #17a2b8; }
+.stat-pending-t .stat-number { color: #ffc107; }
+.stat-tasks-t .stat-number { color: var(--accent-green); }
+.stat-approved-t .stat-number { color: #28a745; }
+
+/* ===================================
+   AUTH HINT
+   =================================== */
+
+.auth-hint {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    margin-top: 1rem;
+    padding: 0.5rem;
+    background: rgba(0,0,0,0.03);
+    border-radius: var(--radius-sm);
+}
+
+[data-theme="dark"] .auth-hint {
+    background: rgba(255,255,255,0.05);
+}
+
 /* Utilities */
 .hidden {
     display: none !important;

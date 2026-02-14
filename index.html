@@ -72,7 +72,7 @@
                     <button id="theme-toggle" class="theme-toggle">🌙</button>
                     <!-- Auth -->
                     <div id="auth-nav" class="auth-nav">
-                        <button id="auth-login-btn" class="btn btn-auth" onclick="QuranReview.showAuthModal('login')">تسجيل الدخول</button>
+                        <button id="auth-login-btn" class="btn btn-auth" onclick="QuranReview.showAuthModal()">تسجيل الدخول</button>
                         <div id="auth-user-info" class="auth-user-info hidden">
                             <span id="auth-username"></span>
                             <button class="btn btn-auth-logout" onclick="QuranReview.logout()">خروج</button>
@@ -103,40 +103,7 @@
                     <div id="login-error" class="auth-error hidden"></div>
                     <button type="submit" class="btn btn-primary btn-full" id="login-submit-btn">دخول</button>
                 </form>
-                <p class="auth-switch">ليس لديك حساب؟ <a href="#" onclick="QuranReview.showAuthModal('register'); return false;">إنشاء حساب</a></p>
-            </div>
-
-            <!-- Register Form -->
-            <div id="auth-register-form" class="hidden">
-                <h2 class="modal-title">إنشاء حساب جديد</h2>
-                <form onsubmit="QuranReview.handleRegister(event)">
-                    <div class="form-group">
-                        <label class="form-label" for="register-username">اسم المستخدم</label>
-                        <input type="text" id="register-username" class="form-input" required autocomplete="username">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="register-firstname">الاسم الأول</label>
-                        <input type="text" id="register-firstname" class="form-input" autocomplete="given-name">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="register-password">كلمة المرور</label>
-                        <input type="password" id="register-password" class="form-input" required minlength="6" autocomplete="new-password">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="register-password2">تأكيد كلمة المرور</label>
-                        <input type="password" id="register-password2" class="form-input" required minlength="6" autocomplete="new-password">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">أنا</label>
-                        <div class="role-selector">
-                            <button type="button" class="role-btn active" data-role="student" onclick="document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">🎓 طالب</button>
-                            <button type="button" class="role-btn" data-role="teacher" onclick="document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active')">👨‍🏫 أستاذ</button>
-                        </div>
-                    </div>
-                    <div id="register-error" class="auth-error hidden"></div>
-                    <button type="submit" class="btn btn-primary btn-full" id="register-submit-btn">إنشاء الحساب</button>
-                </form>
-                <p class="auth-switch">لديك حساب بالفعل؟ <a href="#" onclick="QuranReview.showAuthModal('login'); return false;">تسجيل الدخول</a></p>
+                <p class="auth-hint">يتم إنشاء الحسابات من طرف الإدارة فقط</p>
             </div>
         </div>
     </div>
@@ -808,15 +775,39 @@
 
             <!-- Student Tasks Page -->
             <div id="mytasks-page" class="page">
-                <div class="card">
-                    <div class="card-header"><h2 class="card-title">🏆 نقاطي</h2></div>
-                    <div class="stats-grid">
-                        <div class="stat-card"><div class="stat-number" id="student-points">0</div><div class="stat-label">نقاط</div></div>
-                        <div class="stat-card"><div class="stat-number" id="student-tasks-done">0</div><div class="stat-label">مهام مكتملة</div></div>
-                        <div class="stat-card"><div class="stat-number" id="student-tasks-pending">0</div><div class="stat-label">مهام متبقية</div></div>
+                <!-- Student welcome banner -->
+                <div class="card role-banner student-banner">
+                    <div class="banner-content">
+                        <div class="banner-icon">🎓</div>
+                        <div>
+                            <h2 class="banner-title" id="student-welcome">مرحباً</h2>
+                            <p class="banner-subtitle">صفحة الطالب - المهام والتسليمات</p>
+                        </div>
                     </div>
                 </div>
 
+                <!-- Student Stats -->
+                <div class="card">
+                    <div class="card-header"><h2 class="card-title">📊 إحصائياتي</h2></div>
+                    <div class="stats-grid">
+                        <div class="stat-card stat-points"><div class="stat-number" id="student-points">0</div><div class="stat-label">نقاط</div></div>
+                        <div class="stat-card stat-done"><div class="stat-number" id="student-tasks-done">0</div><div class="stat-label">مهام مكتملة</div></div>
+                        <div class="stat-card stat-pending"><div class="stat-number" id="student-tasks-pending">0</div><div class="stat-label">مهام متبقية</div></div>
+                        <div class="stat-card stat-rejected"><div class="stat-number" id="student-tasks-rejected">0</div><div class="stat-label">مرفوضة</div></div>
+                    </div>
+                </div>
+
+                <!-- Points History -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">🏆 سجل النقاط</h2>
+                    </div>
+                    <div id="student-points-log" class="dashboard-list">
+                        <p class="empty-state">جاري التحميل...</p>
+                    </div>
+                </div>
+
+                <!-- Tasks list -->
                 <div class="card">
                     <div class="card-header"><h2 class="card-title">📋 المهام المطلوبة</h2></div>
                     <div id="student-tasks-list" class="dashboard-list">
@@ -824,6 +815,7 @@
                     </div>
                 </div>
 
+                <!-- Submissions list -->
                 <div class="card">
                     <div class="card-header"><h2 class="card-title">🎤 تسليماتي</h2></div>
                     <div id="student-submissions-list" class="dashboard-list">
@@ -834,65 +826,128 @@
 
             <!-- Teacher Dashboard Page -->
             <div id="teacher-page" class="page">
+                <!-- Teacher welcome banner -->
+                <div class="card role-banner teacher-banner">
+                    <div class="banner-content">
+                        <div class="banner-icon">👨‍🏫</div>
+                        <div>
+                            <h2 class="banner-title" id="teacher-welcome">مرحباً أستاذ</h2>
+                            <p class="banner-subtitle">لوحة تحكم الأستاذ</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Teacher Stats -->
                 <div class="card">
-                    <div class="card-header"><h2 class="card-title">📊 لوحة تحكم الأستاذ</h2></div>
+                    <div class="card-header"><h2 class="card-title">📊 إحصائيات عامة</h2></div>
                     <div class="stats-grid">
-                        <div class="stat-card"><div class="stat-number" id="teacher-total-students">0</div><div class="stat-label">طلاب</div></div>
-                        <div class="stat-card"><div class="stat-number" id="teacher-pending">0</div><div class="stat-label">بانتظار التصحيح</div></div>
-                        <div class="stat-card"><div class="stat-number" id="teacher-tasks">0</div><div class="stat-label">مهام</div></div>
+                        <div class="stat-card stat-students"><div class="stat-number" id="teacher-total-students">0</div><div class="stat-label">طلاب</div></div>
+                        <div class="stat-card stat-pending-t"><div class="stat-number" id="teacher-pending">0</div><div class="stat-label">بانتظار التصحيح</div></div>
+                        <div class="stat-card stat-tasks-t"><div class="stat-number" id="teacher-tasks">0</div><div class="stat-label">مهام</div></div>
+                        <div class="stat-card stat-approved-t"><div class="stat-number" id="teacher-approved">0</div><div class="stat-label">مقبولة</div></div>
                     </div>
                 </div>
 
-                <div class="card">
-                    <div class="card-header"><h2 class="card-title">➕ إنشاء مهمة جديدة</h2></div>
-                    <form id="teacher-create-task-form" class="settings-form" onsubmit="QuranReview.handleCreateTask(event)">
-                        <div class="form-group">
-                            <label class="form-label">عنوان المهمة</label>
-                            <input type="text" id="task-title" class="form-input" required placeholder="مثال: حفظ سورة الملك">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">الوصف</label>
-                            <textarea id="task-description" class="form-input" rows="3" placeholder="تفاصيل المهمة..."></textarea>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label">النوع</label>
-                                <select id="task-type" class="form-select">
-                                    <option value="memorization">حفظ</option>
-                                    <option value="recitation">تلاوة</option>
-                                    <option value="other">أخرى</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">النقاط</label>
-                                <input type="number" id="task-points" class="form-input" min="0" value="10">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">تاريخ التسليم</label>
-                                <input type="date" id="task-due-date" class="form-input">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">
-                                <input type="checkbox" id="task-assign-all" checked>
-                                تعيين لجميع الطلاب
-                            </label>
-                        </div>
-                        <button type="submit" class="btn btn-primary">إنشاء المهمة</button>
-                    </form>
+                <!-- Teacher Tabs -->
+                <div class="teacher-tabs">
+                    <button class="teacher-tab active" data-tab="pending" onclick="QuranReview.switchTeacherTab('pending')">📝 التصحيح</button>
+                    <button class="teacher-tab" data-tab="create" onclick="QuranReview.switchTeacherTab('create')">➕ مهمة جديدة</button>
+                    <button class="teacher-tab" data-tab="students" onclick="QuranReview.switchTeacherTab('students')">👥 الطلاب</button>
+                    <button class="teacher-tab" data-tab="tasks-list" onclick="QuranReview.switchTeacherTab('tasks-list')">📋 المهام</button>
                 </div>
 
-                <div class="card">
-                    <div class="card-header"><h2 class="card-title">📝 التسليمات بانتظار التصحيح</h2></div>
-                    <div id="teacher-pending-list" class="dashboard-list">
-                        <p class="empty-state">جاري التحميل...</p>
+                <!-- Tab: Pending Submissions -->
+                <div id="teacher-tab-pending" class="teacher-tab-content active">
+                    <div class="card">
+                        <div class="card-header"><h2 class="card-title">📝 التسليمات بانتظار التصحيح</h2></div>
+                        <div id="teacher-pending-list" class="dashboard-list">
+                            <p class="empty-state">جاري التحميل...</p>
+                        </div>
                     </div>
                 </div>
 
-                <div class="card">
-                    <div class="card-header"><h2 class="card-title">👥 الطلاب</h2></div>
-                    <div id="teacher-students-list" class="dashboard-list">
-                        <p class="empty-state">جاري التحميل...</p>
+                <!-- Tab: Create Task -->
+                <div id="teacher-tab-create" class="teacher-tab-content">
+                    <div class="card">
+                        <div class="card-header"><h2 class="card-title">➕ إنشاء مهمة جديدة</h2></div>
+                        <form id="teacher-create-task-form" class="settings-form" onsubmit="QuranReview.handleCreateTask(event)">
+                            <div class="form-group">
+                                <label class="form-label">عنوان المهمة</label>
+                                <input type="text" id="task-title" class="form-input" required placeholder="مثال: حفظ سورة الملك">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">الوصف</label>
+                                <textarea id="task-description" class="form-input" rows="3" placeholder="تفاصيل المهمة..."></textarea>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">النوع</label>
+                                    <select id="task-type" class="form-select">
+                                        <option value="memorization">حفظ</option>
+                                        <option value="recitation">تلاوة</option>
+                                        <option value="other">أخرى</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">النقاط</label>
+                                    <input type="number" id="task-points" class="form-input" min="0" value="10">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">تاريخ التسليم</label>
+                                    <input type="date" id="task-due-date" class="form-input">
+                                </div>
+                            </div>
+                            <!-- Assignment options -->
+                            <div class="form-group">
+                                <label class="form-label">تعيين المهمة إلى</label>
+                                <div class="assign-options">
+                                    <label class="assign-option">
+                                        <input type="radio" name="assign-mode" value="all" checked onchange="QuranReview.toggleAssignMode(this.value)">
+                                        جميع الطلاب
+                                    </label>
+                                    <label class="assign-option">
+                                        <input type="radio" name="assign-mode" value="select" onchange="QuranReview.toggleAssignMode(this.value)">
+                                        اختيار طلاب محددين
+                                    </label>
+                                </div>
+                            </div>
+                            <div id="student-select-container" class="form-group hidden">
+                                <label class="form-label">اختر الطلاب</label>
+                                <div id="student-checkboxes" class="student-checkboxes">
+                                    <p class="empty-state">جاري التحميل...</p>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-full">إنشاء المهمة</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Tab: Students -->
+                <div id="teacher-tab-students" class="teacher-tab-content">
+                    <div class="card">
+                        <div class="card-header"><h2 class="card-title">👥 قائمة الطلاب</h2></div>
+                        <div id="teacher-students-list" class="dashboard-list">
+                            <p class="empty-state">جاري التحميل...</p>
+                        </div>
+                    </div>
+                    <!-- Student detail panel -->
+                    <div id="student-detail-panel" class="card hidden">
+                        <div class="card-header">
+                            <h2 class="card-title" id="student-detail-name">تفاصيل الطالب</h2>
+                            <button class="btn btn-secondary btn-sm" onclick="document.getElementById('student-detail-panel').classList.add('hidden')">✕ إغلاق</button>
+                        </div>
+                        <div id="student-detail-content" class="dashboard-list">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: Tasks List -->
+                <div id="teacher-tab-tasks-list" class="teacher-tab-content">
+                    <div class="card">
+                        <div class="card-header"><h2 class="card-title">📋 قائمة المهام</h2></div>
+                        <div id="teacher-tasks-list" class="dashboard-list">
+                            <p class="empty-state">جاري التحميل...</p>
+                        </div>
                     </div>
                 </div>
             </div>
