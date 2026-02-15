@@ -216,14 +216,26 @@ WHITENOISE_USE_FINDERS = True
 if not DEBUG:
     WHITENOISE_IMMUTABLE_FILE_TEST = r'\.[a-f0-9]{8,}\.'
     
-STORAGES = {
-    "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
-    },
-    "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
-    },
-}
+# Use Cloudinary for media storage in production (Render has ephemeral filesystem)
+if os.environ.get("CLOUDINARY_URL"):
+    INSTALLED_APPS += ['cloudinary_storage', 'cloudinary']
+    STORAGES = {
+        "default": {
+            "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        },
+    }
+else:
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        },
+    }
 
 # --- Security hardening (prod only) ---
 if not DEBUG:

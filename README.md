@@ -32,6 +32,12 @@ QuranReview/
 └── README.md           # This file
 ```
 
+## Recent Updates (Fixes & Optimizations)
+- **Performance:** Optimized Admin Dashboard loading speed by resolving N+1 queries and improving user list fetching. Added loading indicators.
+- **Audio:** Fixed "Audio not available" errors by adjusting API permissions (`AllowAny`) and preventing 404 errors for missing files on ephemeral storage.
+- **Features:** Added "Delete All Tasks" button for teachers to easily reset data.
+- **Bug Fixes:** Resolved 500 Internal Server Error on points endpoint and fixed serialization issues.
+
 ## Contributing
 Contributions are welcome! Please feel free to submit a Pull Request.
 
