@@ -67,3 +67,4 @@ ancien django/MYSITEE/MYSITEE/media/
 
 # Django static collected
 staticfiles/
+.claude/
