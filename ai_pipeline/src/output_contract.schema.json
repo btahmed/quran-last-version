@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SpecKitPipelineOutput",
+  "description": "Canonical output contract for the spec-kit → model → PR pipeline. Every model (free or paid) MUST return this shape.",
+  "type": "object",
+  "required": [
+    "problem_summary",
+    "implementation_plan",
+    "tasks",
+    "files_to_edit",
+    "tests_to_add_or_run",
+    "risk_notes",
+    "draft_pr_title",
+    "draft_pr_body",
+    "draft_email_subject",
+    "draft_email_body"
+  ],
+  "properties": {
+    "problem_summary": {
+      "type": "string",
+      "minLength": 10,
+      "description": "One-paragraph summary of the issue / problem to solve"
+    },
+    "implementation_plan": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "minItems": 1,
+      "description": "Ordered list of implementation steps"
+    },
+    "tasks": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "minItems": 1,
+      "description": "Granular task checklist"
+    },
+    "files_to_edit": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "description": "File paths to create or modify"
+    },
+    "tests_to_add_or_run": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "description": "Test files or commands to run"
+    },
+    "risk_notes": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Security, performance, or breaking-change warnings"
+    },
+    "draft_pr_title": {
+      "type": "string",
+      "minLength": 5,
+      "description": "Title for the Draft PR"
+    },
+    "draft_pr_body": {
+      "type": "string",
+      "minLength": 20,
+      "description": "Markdown body for the Draft PR"
+    },
+    "draft_email_subject": {
+      "type": "string",
+      "minLength": 5,
+      "description": "Email subject line"
+    },
+    "draft_email_body": {
+      "type": "string",
+      "minLength": 20,
+      "description": "Plain-text or HTML email body"
+    }
+  },
+  "additionalProperties": false
+}
