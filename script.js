@@ -192,8 +192,12 @@ const AudioManager = {
             }
 
             // Detach src to prevent weird reloads
-            this.audio.removeAttribute("src");
-            this.audio.load();
+            if (this.audio.hasAttribute("src")) {
+                this.audio.removeAttribute("src");
+                // Only call load() if we actually removed a src to stop downloading
+                // Calling load() on empty src causes "Invalid URI" errors
+                try { this.audio.load(); } catch (e) { /* ignore */ }
+            }
         }
 
         // Stop individual ayah audio if playing
@@ -2970,6 +2974,16 @@ const QuranReview = {
     // UTILITY FUNCTIONS
     // ===================================
 
+    showLoading() {
+        const overlay = document.querySelector('.loading-overlay');
+        if (overlay) overlay.style.display = 'flex';
+    },
+
+    hideLoading() {
+        const overlay = document.querySelector('.loading-overlay');
+        if (overlay) overlay.style.display = 'none';
+    },
+
     escapeHtml(text) {
         if (!text) return '';
         return String(text)
@@ -4000,16 +4014,13 @@ const QuranReview = {
                         ${s.admin_feedback ? `<div class="task-feedback">💬 ${s.admin_feedback}</div>` : ''}
                         ${s.audio_url ? `
                             <div class="audio-player-container">
-                                <audio controls preload="metadata" style="width:100%;margin-top:0.5rem;">
-                                    <source src="https://api.quranreview.live/api/media${s.audio_url.startsWith('/') ? s.audio_url : '/' + s.audio_url}" type="audio/webm">
-                                    <source src="https://api.quranreview.live/api/media${s.audio_url.startsWith('/') ? s.audio_url : '/' + s.audio_url}" type="audio/mpeg">
-                                    <source src="https://api.quranreview.live/api/media${s.audio_url.startsWith('/') ? s.audio_url : '/' + s.audio_url}" type="audio/wav">
-                                    <source src="https://api.quranreview.live/api/media${s.audio_url.startsWith('/') ? s.audio_url : '/' + s.audio_url}" type="audio/mp4">
-                                    <source src="https://api.quranreview.live/api/media${s.audio_url.startsWith('/') ? s.audio_url : '/' + s.audio_url}">
+                                <audio controls preload="metadata" style="width:100%;margin-top:0.5rem;"
+                                    onerror="this.parentElement.innerHTML='<p style=\\'color:#999;font-size:0.85rem;\\'>الملف الصوتي غير متاح حاليا</p>'">
+                                    <source src="${s.audio_url.startsWith('http') ? s.audio_url : this.config.apiBaseUrl + (s.audio_url.startsWith('/') ? s.audio_url : '/' + s.audio_url)}" type="audio/webm">
                                     المتصفح لا يدعم تشغيل الصوت
                                 </audio>
                                 <div style="font-size:0.8rem;color:#666;margin-top:0.25rem;">
-                                    📎 <a href="https://api.quranreview.live/api/media${s.audio_url.startsWith('/') ? s.audio_url : '/' + s.audio_url}" target="_blank" style="color:#007bff;">فتح الملف الصوتي</a>
+                                    📎 <a href="${s.audio_url.startsWith('http') ? s.audio_url : this.config.apiBaseUrl + (s.audio_url.startsWith('/') ? s.audio_url : '/' + s.audio_url)}" target="_blank" style="color:#007bff;">فتح الملف الصوتي</a>
                                 </div>
                             </div>
                         ` : ''}
@@ -4056,8 +4067,11 @@ const QuranReview = {
 
         // Load admin users list if admin tab is visible
         if (this.state.user && this.state.user.is_superuser) {
+            // Call without await to prevent blocking dashboard
             this.loadAdminUsersList();
         }
+
+        this.showLoading();
 
         try {
             const [studentsRes, pendingRes, tasksRes] = await Promise.all([
@@ -4102,16 +4116,13 @@ const QuranReview = {
                         </div>
                         ${s.audio_url ? `
                             <div class="audio-player-container">
-                                <audio controls preload="metadata" style="width:100%;margin:0.5rem 0;">
-                                    <source src="https://api.quranreview.live/api/media${s.audio_url.startsWith('/') ? s.audio_url : '/' + s.audio_url}" type="audio/webm">
-                                    <source src="https://api.quranreview.live/api/media${s.audio_url.startsWith('/') ? s.audio_url : '/' + s.audio_url}" type="audio/mpeg">
-                                    <source src="https://api.quranreview.live/api/media${s.audio_url.startsWith('/') ? s.audio_url : '/' + s.audio_url}" type="audio/wav">
-                                    <source src="https://api.quranreview.live/api/media${s.audio_url.startsWith('/') ? s.audio_url : '/' + s.audio_url}" type="audio/mp4">
-                                    <source src="https://api.quranreview.live/api/media${s.audio_url.startsWith('/') ? s.audio_url : '/' + s.audio_url}">
+                                <audio controls preload="metadata" style="width:100%;margin:0.5rem 0;"
+                                    onerror="this.parentElement.innerHTML='<p style=\\'color:#999;font-size:0.85rem;\\'>الملف الصوتي غير متاح حاليا</p>'">
+                                    <source src="${s.audio_url.startsWith('http') ? s.audio_url : this.config.apiBaseUrl + (s.audio_url.startsWith('/') ? s.audio_url : '/' + s.audio_url)}" type="audio/webm">
                                     المتصفح لا يدعم تشغيل الصوت
                                 </audio>
                                 <div style="font-size:0.8rem;color:#666;margin-top:0.25rem;">
-                                    📎 <a href="https://api.quranreview.live/api/media${s.audio_url.startsWith('/') ? s.audio_url : '/' + s.audio_url}" target="_blank" style="color:#007bff;">فتح الملف الصوتي</a>
+                                    📎 <a href="${s.audio_url.startsWith('http') ? s.audio_url : this.config.apiBaseUrl + (s.audio_url.startsWith('/') ? s.audio_url : '/' + s.audio_url)}" target="_blank" style="color:#007bff;">فتح الملف الصوتي</a>
                                 </div>
                             </div>
                         ` : '<p class="empty-state">لا يوجد ملف صوتي</p>'}
@@ -4142,10 +4153,21 @@ const QuranReview = {
 
             // Tasks list
             const taskListEl = document.getElementById('teacher-tasks-list');
+
+            // Add Delete All button header
+            const headerHtml = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h3>📋 قائمة المهام</h3>
+                    <button class="btn btn-danger btn-sm" onclick="QuranReview.handleDeleteAllTasks()" style="background-color: #dc3545;">
+                        🗑️ حذف جميع المهام
+                    </button>
+                </div>
+            `;
+
             if (!tasks.length) {
-                taskListEl.innerHTML = '<p class="empty-state">لا توجد مهام بعد</p>';
+                taskListEl.innerHTML = headerHtml + '<p class="empty-state">لا توجد مهام بعد</p>';
             } else {
-                taskListEl.innerHTML = tasks.map(task => {
+                taskListEl.innerHTML = headerHtml + tasks.map(task => {
                     const typeLabel = task.task_type === 'memorization' ? 'حفظ' : task.task_type === 'recitation' ? 'تلاوة' : 'أخرى';
                     const dueDate = task.due_date ? new Date(task.due_date).toLocaleDateString('ar-SA') : '';
                     const date = new Date(task.created_at).toLocaleDateString('ar-SA');
@@ -4166,6 +4188,8 @@ const QuranReview = {
         } catch (error) {
             console.error('Failed to load teacher dashboard:', error);
             this.showNotification('خطأ في تحميل البيانات', 'error');
+        } finally {
+            this.hideLoading();
         }
     },
 
@@ -4254,6 +4278,35 @@ const QuranReview = {
             container.classList.remove('hidden');
         } else {
             container.classList.add('hidden');
+        }
+    },
+
+    async handleDeleteAllTasks() {
+        if (!confirm('⚠️ تحذير خطير!\nهل أنت متأكد تماماً أنك تريد حذف جميع المهام؟\nهذا الإجراء سيحذف كل المهام وكل التسليمات المرتبطة بها ولا يمكن التراجع عنه.')) {
+            return;
+        }
+
+        const token = localStorage.getItem(this.config.apiTokenKey);
+        if (!token) return;
+
+        try {
+            const response = await fetch(`${this.config.apiBaseUrl}/api/admin/tasks/delete-all/`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.detail || 'خطأ في حذف المهام');
+            }
+
+            const result = await response.json();
+            this.showNotification(result.detail, 'success');
+            this.loadTeacherDashboard();
+        } catch (error) {
+            this.showNotification(error.message, 'error');
         }
     },
 
@@ -4652,8 +4705,14 @@ const QuranReview = {
         document.getElementById('recording-timer').textContent = '00:00';
         document.getElementById('recording-status').textContent = 'اضغط للتسجيل';
         document.getElementById('recording-btn').classList.remove('recording-active');
-        document.getElementById('recording-preview').classList.add('hidden');
-        document.getElementById('recording-preview').src = '';
+
+        const preview = document.getElementById('recording-preview');
+        if (preview) {
+            preview.classList.add('hidden');
+            preview.removeAttribute('src'); // Clean way to clear audio without triggering 404
+            try { preview.load(); } catch (e) {} // Ensure previous audio stops
+        }
+
         document.getElementById('recording-submit-btn').classList.add('hidden');
         document.getElementById('audio-record-modal').classList.remove('hidden');
     },

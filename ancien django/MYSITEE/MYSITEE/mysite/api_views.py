@@ -4,6 +4,7 @@ from django.shortcuts import get_object_or_404
 from django.http import JsonResponse, FileResponse, Http404
 from django.conf import settings
 import os
+from django.core.files.storage import FileSystemStorage
 
 from rest_framework import permissions, serializers, status
 from rest_framework.parsers import FormParser, MultiPartParser
@@ -98,22 +99,15 @@ class ListUsersView(APIView):
     permission_classes = [IsSuperUser]
 
     def get(self, request):
-        users = User.objects.all().order_by('username')
-        user_list = []
-        for user in users:
-            user_list.append({
-                'id': user.id,
-                'username': user.username,
-                'first_name': user.first_name,
-                'last_name': user.last_name,
-                'role': user.role,
-                'is_superuser': user.is_superuser,
-                'is_staff': user.is_staff,
-                'date_joined': user.date_joined,
-            })
+        # Optimization: Use values() to fetch only needed fields, skipping model instantiation overhead
+        users = User.objects.all().values(
+            'id', 'username', 'first_name', 'last_name',
+            'role', 'is_superuser', 'is_staff', 'date_joined'
+        ).order_by('username')
+
         return Response({
-            'count': len(user_list),
-            'users': user_list
+            'count': users.count(),
+            'users': list(users)
         })
 
 
@@ -327,7 +321,7 @@ class TaskListView(APIView):
             Q(assigned_users=request.user) |
             Q(assigned_teams__members=request.user) |
             Q(author=request.user)
-        ).distinct().order_by('-created_at')
+        ).distinct().select_related('author').order_by('-created_at')
         return Response(TaskSerializer(tasks, many=True).data)
 
 
@@ -367,6 +361,19 @@ class TaskCreateView(APIView):
         return Response(TaskSerializer(task).data, status=status.HTTP_201_CREATED)
 
 
+class DeleteAllTasksView(APIView):
+    """Superuser or Teacher: delete all tasks."""
+    permission_classes = [IsTeacher]
+
+    def delete(self, request):
+        count = Task.objects.count()
+        Task.objects.all().delete()
+        return Response({
+            'detail': f'تم حذف {count} مهمة بنجاح.',
+            'count': count
+        })
+
+
 # ===================================
 # SUBMISSIONS
 # ===================================
@@ -404,7 +411,20 @@ class SubmissionSerializer(serializers.ModelSerializer):
     def get_audio_url(self, obj):
         if not obj.audio_file:
             return None
-        # Return relative URL - frontend will build full URL
+
+        # Check if file exists when using local filesystem (ephemeral storage fix)
+        try:
+            # We check storage type by class name string because DefaultStorage wraps the actual storage
+            storage_class = obj.audio_file.storage.__class__.__name__
+
+            # Only perform check for local file storage to avoid expensive API calls on cloud storage
+            if 'FileSystemStorage' in storage_class or 'DefaultStorage' in storage_class:
+                if not obj.audio_file.storage.exists(obj.audio_file.name):
+                    return None
+        except Exception:
+            # If storage check fails (e.g. permission error), return None to be safe
+            return None
+
         return obj.audio_file.url
 
     def get_student_name(self, obj):
@@ -485,7 +505,7 @@ class MySubmissionsView(APIView):
 # ===================================
 
 class PointsLogSerializer(serializers.ModelSerializer):
-    submission_id = serializers.IntegerField(source='submission_id', read_only=True)
+    submission_id = serializers.IntegerField(read_only=True, allow_null=True)
 
     class Meta:
         model = PointsLog
@@ -623,7 +643,7 @@ class StudentProgressView(APIView):
 
 class MediaFileView(APIView):
     """Serve media files directly through API."""
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
     
     def get(self, request, file_path):
         # Remove leading slash if present

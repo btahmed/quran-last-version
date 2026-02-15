@@ -68,3 +68,11 @@ ancien django/MYSITEE/MYSITEE/media/
 # Django static collected
 staticfiles/
 .claude/
+
+# AI pipeline cache
+__pycache__/
+*.pyc
+.pytest_cache/
+lastfailed
+nodeids
+CACHEDIR.TAG

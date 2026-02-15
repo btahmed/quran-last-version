@@ -1,5 +1,3 @@
-import os
-
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
@@ -29,9 +27,7 @@ def submit_audio_for_task(user, task, audio_file, existing_submission=None):
 
     if existing_submission:
         if existing_submission.audio_file:
-            old_path = existing_submission.audio_file.path
-            if os.path.exists(old_path):
-                os.remove(old_path)
+            existing_submission.audio_file.delete(save=False)
 
         existing_submission.audio_file = audio_file
         existing_submission.status = 'submitted'
