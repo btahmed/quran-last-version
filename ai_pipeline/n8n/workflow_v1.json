@@ -1,0 +1,262 @@
+{
+  "name": "SpecKit Pipeline — Issue to Draft PR",
+  "nodes": [
+    {
+      "parameters": {
+        "events": ["issues"],
+        "additionalFields": {
+          "actions": ["opened", "edited"]
+        }
+      },
+      "id": "node-trigger",
+      "name": "GitHub Issue Trigger",
+      "type": "n8n-nodes-base.githubTrigger",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "credentials": {
+        "githubApi": {
+          "id": "GITHUB_CREDENTIAL_ID",
+          "name": "GitHub API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            { "name": "repo_owner", "value": "={{ $json.repository.owner.login }}" },
+            { "name": "repo_name", "value": "={{ $json.repository.name }}" },
+            { "name": "issue_number", "value": "={{ $json.issue.number }}" },
+            { "name": "issue_title", "value": "={{ $json.issue.title }}" },
+            { "name": "issue_body", "value": "={{ $json.issue.body }}" },
+            { "name": "issue_url", "value": "={{ $json.issue.html_url }}" },
+            { "name": "labels", "value": "={{ $json.issue.labels.map(l => l.name).join(', ') }}" }
+          ]
+        }
+      },
+      "id": "node-normalize",
+      "name": "Normalize Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [470, 300]
+    },
+    {
+      "parameters": {
+        "command": "cd /path/to/repo && npx speckit specify --issue \"{{ $json.issue_title }}\" --body \"{{ $json.issue_body }}\" && npx speckit plan && npx speckit tasks"
+      },
+      "id": "node-speckit",
+      "name": "Run spec-kit",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [690, 300],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "method": "POST",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "HTTP-Referer", "value": "https://github.com/spec-kit-pipeline" },
+            { "name": "X-Title", "value": "spec-kit-pipeline" }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "model", "value": "qwen/qwen3-coder-480b-a35b:free" },
+            { "name": "max_tokens", "value": "4096" },
+            { "name": "temperature", "value": "0.2" }
+          ]
+        },
+        "jsonBody": "={{ JSON.stringify({ model: 'qwen/qwen3-coder-480b-a35b:free', max_tokens: 4096, temperature: 0.2, messages: [{ role: 'system', content: $('Normalize Input').item.json.system_prompt || '' }, { role: 'user', content: $('Normalize Input').item.json.issue_title + '\\n\\n' + $('Normalize Input').item.json.issue_body }] }) }}"
+      },
+      "id": "node-model1",
+      "name": "Model #1 Qwen3-Coder",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [910, 200],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "OPENROUTER_CREDENTIAL_ID",
+          "name": "OpenRouter API"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.error !== undefined || $json.choices === undefined }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "node-check1",
+      "name": "Model #1 OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [1130, 200]
+    },
+    {
+      "parameters": {
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "method": "POST",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "jsonBody": "={{ JSON.stringify({ model: 'qwen/qwen3-next-80b-a3b-instruct:free', max_tokens: 4096, temperature: 0.2, messages: [{ role: 'system', content: '' }, { role: 'user', content: $('Normalize Input').item.json.issue_title + '\\n\\n' + $('Normalize Input').item.json.issue_body }] }) }}"
+      },
+      "id": "node-model2",
+      "name": "Model #2 Qwen3-Next",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1350, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "OPENROUTER_CREDENTIAL_ID",
+          "name": "OpenRouter API"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "method": "POST",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "jsonBody": "={{ JSON.stringify({ model: 'deepseek/deepseek-r1-0528:free', max_tokens: 4096, temperature: 0.2, messages: [{ role: 'system', content: '' }, { role: 'user', content: $('Normalize Input').item.json.issue_title + '\\n\\n' + $('Normalize Input').item.json.issue_body }] }) }}"
+      },
+      "id": "node-model3",
+      "name": "Model #3 DeepSeek-R1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1570, 400],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "OPENROUTER_CREDENTIAL_ID",
+          "name": "OpenRouter API"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "method": "POST",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "jsonBody": "={{ JSON.stringify({ model: 'stepfun/step-3.5-flash:free', max_tokens: 4096, temperature: 0.2, messages: [{ role: 'system', content: '' }, { role: 'user', content: $('Normalize Input').item.json.issue_title + '\\n\\n' + $('Normalize Input').item.json.issue_body }] }) }}"
+      },
+      "id": "node-model4",
+      "name": "Model #4 Step-3.5-Flash",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [1790, 500],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "OPENROUTER_CREDENTIAL_ID",
+          "name": "OpenRouter API"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "functionCode": "// Parse model response — handles markdown fences, <think> blocks\nconst raw = $input.first().json.choices?.[0]?.message?.content || '';\n\nlet cleaned = raw.replace(/<think>[\\s\\S]*?<\\/think>/g, '');\ncleaned = cleaned.replace(/```json\\s*/g, '').replace(/```\\s*/g, '');\n\nconst match = cleaned.match(/\\{[\\s\\S]*\\}/);\nif (!match) throw new Error('No JSON object found in model response');\n\nconst parsed = JSON.parse(match[0]);\n\n// Validate required fields\nconst required = ['problem_summary','implementation_plan','tasks','files_to_edit','tests_to_add_or_run','risk_notes','draft_pr_title','draft_pr_body','draft_email_subject','draft_email_body'];\nfor (const field of required) {\n  if (!(field in parsed)) parsed[field] = field.includes('_') && Array.isArray(parsed[field]) ? [] : '';\n}\n\nreturn [{ json: parsed }];"
+      },
+      "id": "node-parse",
+      "name": "Parse JSON Output",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [2010, 300]
+    },
+    {
+      "parameters": {
+        "functionCode": "const data = $input.first().json;\nconst warnings = [];\nconst blockers = [];\n\n// Check for secrets\nconst allText = JSON.stringify(data);\nconst secretPatterns = [/api[_-]?key\\s*[:=]\\s*['\"][^'\"]{8,}/i, /AKIA[0-9A-Z]{16}/, /sk-[A-Za-z0-9]{20,}/, /ghp_[A-Za-z0-9]{36}/];\nfor (const p of secretPatterns) {\n  if (p.test(allText)) blockers.push('Potential secret/API key detected!');\n}\n\n// Check tests\nif (!data.tests_to_add_or_run || data.tests_to_add_or_run.length === 0) {\n  warnings.push('No tests specified');\n}\n\n// Check breaking changes\nconst breakingKw = ['BREAKING', 'breaking change', 'deprecated', 'removed'];\nif (breakingKw.some(kw => allText.toLowerCase().includes(kw.toLowerCase()))) {\n  warnings.push('Possible breaking change detected');\n}\n\n// Check DB migration\nconst migrationKw = ['ALTER TABLE', 'DROP TABLE', 'CREATE TABLE', 'alembic', 'migration'];\nif (migrationKw.some(kw => allText.toLowerCase().includes(kw.toLowerCase()))) {\n  warnings.push('DB migration keywords found');\n}\n\nconst passed = blockers.length === 0;\nreturn [{ json: { ...data, review_passed: passed, review_warnings: warnings, review_blockers: blockers } }];"
+      },
+      "id": "node-review",
+      "name": "Heuristic Review",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [2230, 300]
+    },
+    {
+      "parameters": {
+        "owner": "={{ $('Normalize Input').item.json.repo_owner }}",
+        "repository": "={{ $('Normalize Input').item.json.repo_name }}",
+        "title": "={{ $json.draft_pr_title }}",
+        "body": "={{ $json.draft_pr_body }}",
+        "draft": true,
+        "base": "main",
+        "head": "=draft/issue-{{ $('Normalize Input').item.json.issue_number }}"
+      },
+      "id": "node-create-pr",
+      "name": "Create Draft PR",
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1,
+      "position": [2450, 200],
+      "credentials": {
+        "githubApi": {
+          "id": "GITHUB_CREDENTIAL_ID",
+          "name": "GitHub API"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "fromEmail": "pipeline@example.com",
+        "toEmail": "team@example.com",
+        "subject": "={{ $json.draft_email_subject }}",
+        "text": "={{ $json.draft_email_body }}"
+      },
+      "id": "node-send-email",
+      "name": "Send Notification Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [2450, 400],
+      "credentials": {
+        "smtp": {
+          "id": "SMTP_CREDENTIAL_ID",
+          "name": "SMTP"
+        }
+      },
+      "continueOnFail": true
+    }
+  ],
+  "connections": {
+    "GitHub Issue Trigger": { "main": [[{ "node": "Normalize Input", "type": "main", "index": 0 }]] },
+    "Normalize Input": { "main": [[{ "node": "Run spec-kit", "type": "main", "index": 0 }]] },
+    "Run spec-kit": { "main": [[{ "node": "Model #1 Qwen3-Coder", "type": "main", "index": 0 }]] },
+    "Model #1 Qwen3-Coder": { "main": [[{ "node": "Model #1 OK?", "type": "main", "index": 0 }]] },
+    "Model #1 OK?": {
+      "main": [
+        [{ "node": "Model #2 Qwen3-Next", "type": "main", "index": 0 }],
+        [{ "node": "Parse JSON Output", "type": "main", "index": 0 }]
+      ]
+    },
+    "Model #2 Qwen3-Next": { "main": [[{ "node": "Parse JSON Output", "type": "main", "index": 0 }]] },
+    "Model #3 DeepSeek-R1": { "main": [[{ "node": "Parse JSON Output", "type": "main", "index": 0 }]] },
+    "Model #4 Step-3.5-Flash": { "main": [[{ "node": "Parse JSON Output", "type": "main", "index": 0 }]] },
+    "Parse JSON Output": { "main": [[{ "node": "Heuristic Review", "type": "main", "index": 0 }]] },
+    "Heuristic Review": {
+      "main": [
+        [
+          { "node": "Create Draft PR", "type": "main", "index": 0 },
+          { "node": "Send Notification Email", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  },
+  "settings": { "executionOrder": "v1" }
+}
