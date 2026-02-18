@@ -52,7 +52,7 @@ class IsTeacher(permissions.BasePermission):
 
 class RegisterSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=150)
-    password = serializers.CharField(write_only=True, min_length=6)
+    password = serializers.CharField(write_only=True, min_length=8)
     first_name = serializers.CharField(max_length=150, required=False, default='')
     last_name = serializers.CharField(max_length=150, required=False, default='')
 
@@ -132,19 +132,11 @@ class CreateTeacherView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Promote existing user to teacher or superuser
+        # Promote existing user to teacher
         if promote:
             try:
                 user = User.objects.get(username=username)
                 user.role = 'teacher'
-                # If promoting ahmad, make him superuser
-                if username == 'ahmad':
-                    user.is_superuser = True
-                    user.is_staff = True
-                # If promoting saleh, remove superuser (keep only teacher)
-                elif username == 'saleh':
-                    user.is_superuser = False
-                    user.is_staff = False
                 user.save()
                 return Response({
                     'id': user.id,
@@ -161,9 +153,9 @@ class CreateTeacherView(APIView):
                 )
 
         # Create new teacher account
-        if not password or len(password) < 6:
+        if not password or len(password) < 8:
             return Response(
-                {'detail': 'كلمة المرور مطلوبة (6 أحرف على الأقل).'},
+                {'detail': 'كلمة المرور مطلوبة (8 أحرف على الأقل).'},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -362,8 +354,8 @@ class TaskCreateView(APIView):
 
 
 class DeleteAllTasksView(APIView):
-    """Superuser or Teacher: delete all tasks."""
-    permission_classes = [IsTeacher]
+    """Superuser only: delete all tasks."""
+    permission_classes = [IsSuperUser]
 
     def delete(self, request):
         count = Task.objects.count()
@@ -642,16 +634,17 @@ class StudentProgressView(APIView):
 # ===================================
 
 class MediaFileView(APIView):
-    """Serve media files directly through API."""
-    permission_classes = [permissions.AllowAny]
+    """Serve media files directly through API (authenticated users only)."""
+    permission_classes = [permissions.IsAuthenticated]
     
     def get(self, request, file_path):
         # Remove leading slash if present
         file_path = file_path.lstrip('/')
-        full_path = os.path.join(settings.MEDIA_ROOT, file_path)
+        full_path = os.path.realpath(os.path.join(settings.MEDIA_ROOT, file_path))
+        media_root = os.path.realpath(settings.MEDIA_ROOT)
         
-        # Security check: ensure file is within MEDIA_ROOT
-        if not os.path.abspath(full_path).startswith(os.path.abspath(settings.MEDIA_ROOT)):
+        # Security check: ensure resolved path is within MEDIA_ROOT (prevents symlink traversal)
+        if not full_path.startswith(media_root + os.sep) and full_path != media_root:
             raise Http404("File not found")
         
         if not os.path.exists(full_path):
