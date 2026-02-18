@@ -5,7 +5,7 @@
 **Status**: DRAFT
 
 ## Needed to Confirm (max 5 files)
-1. `ancien django/MYSITEE/MYSITEE/mysite/api_views.py` — Confirm exact API response shapes and error handling patterns
+1. `ancien django/MYSITEE/MYSITEE/mysite/api_views.py` — Confirm exact API response shapes and error handling patterns (Note: `ancien django` is the actual directory name in the repository, meaning "old/former Django" in French)
 2. `script.js` (lines 3000–4870) — Validate competition scoring algorithm and hifz difficulty engine details
 3. `ancien django/MYSITEE/MYSITEE/tasks/models.py` — Confirm Team model relationships and task assignment logic
 4. `ancien django/MYSITEE/MYSITEE/submissions/models.py` — Confirm file validation rules and status transitions
@@ -371,6 +371,7 @@ Admin [Superuser-only]
 
 **Schema — Frontend (localStorage)**: 🟢 CONFIRMED (from `script.js`)
 ```typescript
+// Pseudocode — conceptual data shapes, not actual TypeScript implementation
 // Current storage keys and shapes
 
 interface MemorizationItem {
@@ -416,6 +417,7 @@ interface AppSettings {
 
 **Schema — Backend (Django Models)**: 🟢 CONFIRMED (from `tasks/models.py`, `submissions/models.py`, `points/models.py`)
 ```typescript
+// Pseudocode — conceptual data shapes, not actual TypeScript implementation
 // Django model shapes
 
 interface User {
@@ -591,8 +593,8 @@ Authorization: Bearer <access_token> (superuser only)
 ### 3.4 Performance Strategy
 ⚠️ INFERRED (from current architecture)
 
-**Current Budgets** (estimated):
-- Bundle: `script.js` ~4,870 lines unminified (~150KB+), `style.css` ~1,400 lines (~40KB+), `audio-config.js` ~300 lines (~10KB)
+**Current Budgets** (estimated, unminified sizes — gzipped sizes would be ~3–5x smaller):
+- Bundle: `script.js` ~4,870 lines unminified (~150KB raw, ~30–50KB gzipped), `style.css` ~1,400 lines (~40KB raw, ~8–12KB gzipped), `audio-config.js` ~300 lines (~10KB raw, ~3KB gzipped)
 - TTI: Dependent on font loading (Google Fonts) and CDN availability
 - Lighthouse: Not currently measured
 
@@ -712,7 +714,7 @@ Authorization: Bearer <access_token> (superuser only)
 - [ ] Unit tests > 80% coverage for modified/new code
 - [ ] A11y: Keyboard navigation works for all interactive elements; screen reader announcement for dynamic content
 - [ ] i18n: All user-facing strings in Arabic; RTL layout verified on all new screens
-- [ ] Performance budget met: No single JS file > 100KB minified; TTI < 3s on 3G
+- [ ] Performance budget met: No single JS file > 100KB minified+gzipped; TTI < 3s on 3G
 - [ ] Security: Input validation on all API endpoints; no secrets in source code; JWT token handling follows best practices
 - [ ] QA checklist executed (see below)
 
