@@ -644,7 +644,7 @@ class MediaFileView(APIView):
         media_root = os.path.realpath(settings.MEDIA_ROOT)
         
         # Security check: ensure resolved path is within MEDIA_ROOT (prevents symlink traversal)
-        if not full_path.startswith(media_root + os.sep) and full_path != media_root:
+        if not full_path.startswith(media_root + os.sep):
             raise Http404("File not found")
         
         if not os.path.exists(full_path):
