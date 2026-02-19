@@ -107,7 +107,7 @@ docker-compose up --build
 ## 3. GITHUB PAGES (Production)
 
 ### Repository GitHub
-**URL:** https://github.com/[USERNAME]/QuranReview
+**URL:** https://github.com/btahmed/QuranReview
 
 ### Deploiement automatique
 Le workflow deploye automatiquement sur push vers `main`:
@@ -121,7 +121,7 @@ git push origin main
 ```
 
 ### URL GitHub Pages
-**Production:** https://[USERNAME].github.io/QuranReview/
+**Production:** https://btahmed.github.io/QuranReview/
 
 **Domaine perso (si configure):** https://quranreview.ma
 
@@ -211,7 +211,7 @@ cd C:\dev\QuranReview; docker-compose logs -f frontend
 
 ### Verifier GitHub Pages
 ```powershell
-Invoke-RestMethod -Uri "https://[USERNAME].github.io/QuranReview/" -Method Head
+Invoke-RestMethod -Uri "https://btahmed.github.io/QuranReview/" -Method Head
 ```
 
 ### Verifier Backend Local
@@ -246,5 +246,5 @@ docker-compose ps
 | Local Backend | http://localhost:8000 |
 | Docker Frontend | http://localhost |
 | Docker Backend | http://localhost:8000 |
-| GitHub Pages | https://[USERNAME].github.io/QuranReview/ |
+| GitHub Pages | https://btahmed.github.io/QuranReview/ |
 | Domaine Perso | https://quranreview.ma |
