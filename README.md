@@ -1,6 +1,6 @@
 # QuranReview 🕌
 
-🌐 **Live Website:** [https://btahmed.github.io/QuranReview/](https://btahmed.github.io/QuranReview/)
+🌐 **Live Website:** [https://quranreview.live](https://quranreview.live)
 
 ## Description
 A comprehensive Quran review and memorization application designed to help users effectively review, memorize, and understand the Holy Quran.
