@@ -1,192 +1,147 @@
-/**
- * QuranReview Service Worker
- * Professional PWA Implementation
- */
-
-const CACHE_NAME = 'quranreview-v1.0.2';
-const APP_SHELL = [
-    './',
-    './index.html',
-    './style.css',
-    './script.js',
-    './audio-config.js',
-    './manifest.json'
+// QuranReview - Service Worker for PWA
+const CACHE_NAME = 'quranreview-v1';
+const STATIC_ASSETS = [
+    '/',
+    '/index.html',
+    '/style.css',
+    '/script.js',
+    '/audio-config.js',
+    '/quran-metadata.json',
+    '/manifest.json',
+    '/assets/logo.svg',
+    '/assets/logo-192.png',
+    '/assets/logo-512.png',
+    '/assets/favicon.ico',
+    '/assets/fonts/NotoNaskhArabic-Bold.ttf',
+    '/assets/fonts/NotoNaskhArabic-Medium.ttf',
+    '/assets/fonts/NotoNaskhArabic-Regular.ttf',
+    '/assets/fonts/NotoNaskhArabic-SemiBold.ttf'
 ];
 
-const AUDIO_CACHE = 'quranreview-audio-v1.0.0';
-
-// Install event - cache app shell
+// Install event - cache static assets
 self.addEventListener('install', (event) => {
-    console.log('🕌 Service Worker: Installing...');
-    
+    console.log('[SW] Installing...');
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then((cache) => {
-                console.log('🕌 Service Worker: Caching app shell');
-                return cache.addAll(APP_SHELL);
+                console.log('[SW] Caching static assets');
+                return cache.addAll(STATIC_ASSETS);
             })
-            .then(() => {
-                console.log('🕌 Service Worker: Skip waiting');
-                return self.skipWaiting();
+            .catch((err) => {
+                console.error('[SW] Cache failed:', err);
             })
     );
+    self.skipWaiting();
 });
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-    console.log('🕌 Service Worker: Activating...');
-    
+    console.log('[SW] Activating...');
     event.waitUntil(
-        caches.keys()
-            .then((cacheNames) => {
-                return Promise.all(
-                    cacheNames.map((cacheName) => {
-                        if (cacheName !== CACHE_NAME && cacheName !== AUDIO_CACHE) {
-                            console.log('🕌 Service Worker: Deleting old cache', cacheName);
-                            return caches.delete(cacheName);
-                        }
+        caches.keys().then((cacheNames) => {
+            return Promise.all(
+                cacheNames
+                    .filter((name) => name !== CACHE_NAME)
+                    .map((name) => {
+                        console.log('[SW] Deleting old cache:', name);
+                        return caches.delete(name);
                     })
-                );
-            })
-            .then(() => {
-                console.log('🕌 Service Worker: Claiming clients');
-                return self.clients.claim();
-            })
+            );
+        })
     );
+    self.clients.claim();
 });
 
-// Fetch event - serve from cache first, then network
+// Fetch event - cache strategies
 self.addEventListener('fetch', (event) => {
     const { request } = event;
     const url = new URL(request.url);
     
-    // Handle different request types
-    if (url.origin === self.location.origin) {
-        // Same origin - network first for app shell to ensure updates
-        if (APP_SHELL.includes(url.pathname) || url.pathname === '/') {
-            // App shell - network first
-            event.respondWith(
-                fetch(request)
-                    .then((response) => {
-                        // Cache successful responses
-                        if (response.status === 200) {
-                            const responseClone = response.clone();
-                            caches.open(CACHE_NAME)
-                                .then((cache) => {
-                                    cache.put(request, responseClone);
-                                });
+    // Skip non-GET requests
+    if (request.method !== 'GET') {
+        return;
+    }
+    
+    // Skip API calls (don't cache API responses)
+    if (url.pathname.startsWith('/api/')) {
+        return;
+    }
+    
+    // Skip external resources (CDN)
+    if (!url.origin.includes(self.location.origin)) {
+        return;
+    }
+    
+    // Strategy: Cache First for static assets
+    event.respondWith(
+        caches.match(request)
+            .then((cachedResponse) => {
+                if (cachedResponse) {
+                    // Return cached version
+                    return cachedResponse;
+                }
+                
+                // Fetch from network and cache
+                return fetch(request)
+                    .then((networkResponse) => {
+                        // Don't cache non-successful responses
+                        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
+                            return networkResponse;
                         }
-                        return response;
-                    })
-                    .catch(() => {
-                        // Network failed, try cache
-                        return caches.match(request)
-                            .then((response) => {
-                                if (response) {
-                                    return response;
-                                }
-                                // If not in cache either, try fallback
-                                return caches.match('./index.html');
+                        
+                        // Clone the response
+                        const responseToCache = networkResponse.clone();
+                        
+                        caches.open(CACHE_NAME)
+                            .then((cache) => {
+                                cache.put(request, responseToCache);
                             });
+                        
+                        return networkResponse;
                     })
-            );
-        } else if (url.pathname.includes('audio/') || url.hostname.includes('qurancdn.com')) {
-            // Audio files - cache first with network fallback
-            event.respondWith(
-                caches.open(AUDIO_CACHE)
-                    .then((cache) => {
-                        return cache.match(request)
-                            .then((response) => {
-                                if (response) {
-                                    return response;
-                                }
-                                
-                                // Not in cache, fetch and cache
-                                return fetch(request)
-                                    .then((networkResponse) => {
-                                        if (networkResponse.status === 200) {
-                                            cache.put(request, networkResponse.clone());
-                                        }
-                                        return networkResponse;
-                                    });
-                            });
-                    })
-            );
-        } else {
-            // Other same-origin requests - network first
-            event.respondWith(
-                fetch(request)
-                    .catch(() => {
-                        // Network failed, try cache
-                        return caches.match(request);
-                    })
-            );
-        }
-    } else {
-        // Cross-origin requests - network only (no caching)
-        event.respondWith(fetch(request));
+                    .catch((err) => {
+                        console.error('[SW] Fetch failed:', err);
+                        // Return offline fallback if available
+                        if (request.mode === 'navigate') {
+                            return caches.match('/index.html');
+                        }
+                    });
+            })
+    );
+});
+
+// Background sync for offline actions
+self.addEventListener('sync', (event) => {
+    if (event.tag === 'sync-tasks') {
+        event.waitUntil(syncPendingTasks());
     }
 });
 
-// Background sync for offline data
-self.addEventListener('sync', (event) => {
-    if (event.tag === 'background-sync') {
-        console.log('🕌 Service Worker: Background sync triggered');
+// Push notifications (for future implementation)
+self.addEventListener('push', (event) => {
+    if (event.data) {
+        const data = event.data.json();
         event.waitUntil(
-            // Handle background sync tasks
-            Promise.resolve()
+            self.registration.showNotification(data.title, {
+                body: data.body,
+                icon: '/assets/logo-192.png',
+                badge: '/assets/logo-72.png',
+                data: data.data
+            })
         );
     }
-});
-
-// Push notifications
-self.addEventListener('push', (event) => {
-    console.log('🕌 Service Worker: Push received');
-    
-    const options = {
-        body: event.data ? event.data.text() : 'حان وقت مراجعة القرآن',
-        icon: './manifest.json',
-        badge: './manifest.json',
-        vibrate: [100, 50, 100],
-        data: {
-            dateOfArrival: Date.now(),
-            primaryKey: 1
-        },
-        actions: [
-            {
-                action: 'explore',
-                title: 'فتح التطبيق',
-                icon: './manifest.json'
-            },
-            {
-                action: 'close',
-                title: 'إغلاق',
-                icon: './manifest.json'
-            }
-        ]
-    };
-    
-    event.waitUntil(
-        self.registration.showNotification('مراجعة القرآن', options)
-    );
 });
 
 // Notification click handler
 self.addEventListener('notificationclick', (event) => {
-    console.log('🕌 Service Worker: Notification click received');
-    
     event.notification.close();
-    
-    if (event.action === 'explore') {
-        event.waitUntil(
-            clients.openWindow('./')
-        );
-    }
+    event.waitUntil(
+        clients.openWindow('/')
+    );
 });
 
-// Message handling
-self.addEventListener('message', (event) => {
-    if (event.data && event.data.type === 'SKIP_WAITING') {
-        self.skipWaiting();
-    }
-});
+// Helper function to sync pending tasks
+async function syncPendingTasks() {
+    // This will be implemented when background sync is needed
+    console.log('[SW] Syncing pending tasks...');
+}
