@@ -107,7 +107,7 @@ docker-compose up --build
 ## 3. GITHUB PAGES (Production)
 
 ### Repository GitHub
-**URL:** https://github.com/[USERNAME]/QuranReview
+**URL:** https://github.com/btahmed/QuranReview
 
 ### Deploiement automatique
 Le workflow deploye automatiquement sur push vers `main`:
@@ -121,14 +121,14 @@ git push origin main
 ```
 
 ### URL GitHub Pages
-**Production:** https://[USERNAME].github.io/QuranReview/
+**Production:** https://btahmed.github.io/QuranReview/
 
-**Domaine perso (si configure):** https://quranreview.ma
+**Domaine perso (si configure):** https://quranreview.live
 
 ### Configurer domaine perso
 1. Editer fichier `CNAME`:
 ```
-quranreview.ma
+quranreview.live
 ```
 2. Dans GitHub repo > Settings > Pages > Custom domain
 3. Ajouter DNS chez registrar:
@@ -211,7 +211,7 @@ cd C:\dev\QuranReview; docker-compose logs -f frontend
 
 ### Verifier GitHub Pages
 ```powershell
-Invoke-RestMethod -Uri "https://[USERNAME].github.io/QuranReview/" -Method Head
+Invoke-RestMethod -Uri "https://btahmed.github.io/QuranReview/" -Method Head
 ```
 
 ### Verifier Backend Local
@@ -230,6 +230,7 @@ docker-compose ps
 
 | Probleme | Solution |
 |----------|----------|
+| ERR_TUNNEL_CONNECTION_FAILED sur le domaine | Verifier les DNS chez le registrar (4 enregistrements A vers GitHub). En attendant, utiliser https://btahmed.github.io/QuranReview/ |
 | Port 80 occupe | `docker-compose down` ou changer ports dans docker-compose.yml |
 | Erreur migrations | `docker-compose exec backend python manage.py migrate` |
 | Static files manquants | `docker-compose exec backend python manage.py collectstatic` |
@@ -246,5 +247,5 @@ docker-compose ps
 | Local Backend | http://localhost:8000 |
 | Docker Frontend | http://localhost |
 | Docker Backend | http://localhost:8000 |
-| GitHub Pages | https://[USERNAME].github.io/QuranReview/ |
-| Domaine Perso | https://quranreview.ma |
+| GitHub Pages | https://btahmed.github.io/QuranReview/ |
+| Domaine Perso | https://quranreview.live |
