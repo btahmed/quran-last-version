@@ -230,6 +230,7 @@ docker-compose ps
 
 | Probleme | Solution |
 |----------|----------|
+| ERR_TUNNEL_CONNECTION_FAILED sur quranreview.ma | Verifier les DNS chez le registrar (4 enregistrements A vers GitHub). En attendant, utiliser https://btahmed.github.io/QuranReview/ |
 | Port 80 occupe | `docker-compose down` ou changer ports dans docker-compose.yml |
 | Erreur migrations | `docker-compose exec backend python manage.py migrate` |
 | Static files manquants | `docker-compose exec backend python manage.py collectstatic` |

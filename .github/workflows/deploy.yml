@@ -30,6 +30,7 @@ jobs:
         run: |
           mkdir -p dist
           cp -r *.html *.css *.js assets manifest.json sw.js dist/ 2>/dev/null || true
+          cp CNAME dist/ 2>/dev/null || true
 
       - name: Update API URL for production
         run: |
