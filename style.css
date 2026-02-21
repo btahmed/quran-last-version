@@ -1099,3 +1099,66 @@ tr:last-child td { border-bottom: none; }
         transition-duration: 0.01ms !important;
     }
 }
+
+/* =============================================
+   9. RESPONSIVE — MOBILE FIRST
+   ============================================= */
+
+/* Base < 480px */
+.stats-grid       { grid-template-columns: repeat(2, 1fr); }
+.ward-selection   { grid-template-columns: 1fr; }
+.competition-grid { grid-template-columns: 1fr; }
+
+.ward-ayah-text {
+    font-size: clamp(1.2rem, 5vw, 1.8rem);
+    padding: var(--space-4);
+}
+
+/* sm : 480px+ */
+@media (min-width: 480px) {
+    .stats-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    }
+    .nav-link {
+        font-size: var(--font-size-sm);
+        padding: var(--space-2) var(--space-3);
+    }
+}
+
+/* md : 768px+ */
+@media (min-width: 768px) {
+    .header-content { padding: var(--space-3) var(--space-6); }
+    .header-subtitle { display: block; }
+
+    .main { padding: var(--space-8) var(--space-6); }
+
+    .glass-card, .card { padding: var(--space-6); }
+
+    .ward-selection {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    }
+    .competition-grid { grid-template-columns: repeat(2, 1fr); }
+
+    .modal-content { padding: var(--space-12); }
+
+    .ward-controls { gap: var(--space-4); }
+
+    .ward-ayah-text {
+        font-size: var(--font-size-arabic-lg);
+        padding: var(--space-8);
+    }
+}
+
+/* lg : 1024px+ */
+@media (min-width: 1024px) {
+    .container { padding: 0 var(--space-8); }
+    .competition-grid { grid-template-columns: repeat(3, 1fr); }
+    .home-hero { padding: var(--space-16) var(--space-8); }
+    .hifz-display { padding: var(--space-12); }
+}
+
+/* xl : 1280px+ */
+@media (min-width: 1280px) {
+    .main { padding: var(--space-12) var(--space-8); }
+    .stats-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+}
