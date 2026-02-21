@@ -1,5 +1,5 @@
 // QuranReview - Service Worker for PWA
-const CACHE_NAME = 'quranreview-v1';
+const CACHE_NAME = 'quranreview-v2';
 const STATIC_ASSETS = [
     '/',
     '/index.html',

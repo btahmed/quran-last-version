@@ -18,4 +18,9 @@ urlpatterns = [
     path('competitions/<int:pk>/', views.CompetitionDetailView.as_view(), name='competition-detail'),
     path('competitions/<int:pk>/join/', views.join_competition, name='competition-join'),
     path('competitions/<int:pk>/score/', views.submit_competition_score, name='competition-score'),
+
+    # Compatibility endpoints used by frontend dashboard/competition
+    path('my-submissions/', views.MySubmissionsView.as_view(), name='my-submissions'),
+    path('points/', views.PointsView.as_view(), name='points'),
+    path('leaderboard/', views.LeaderboardView.as_view(), name='leaderboard'),
 ]

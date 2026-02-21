@@ -4,6 +4,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.utils import timezone
+from django.contrib.auth import get_user_model
+from django.db.models import Sum
+from django.db.models.functions import Coalesce
 from datetime import datetime, timedelta
 
 from .models import Task, Progress, ReviewSchedule, Achievement, Competition, CompetitionScore
@@ -11,6 +14,8 @@ from .serializers import (
     TaskSerializer, ProgressSerializer, ReviewScheduleSerializer,
     AchievementSerializer, CompetitionSerializer, CompetitionScoreSerializer
 )
+
+User = get_user_model()
 
 
 # ============ Tasks ============
@@ -204,6 +209,70 @@ def submit_competition_score(request, pk):
             {'success': False, 'error': 'المسابقة غير موجودة'},
             status=status.HTTP_404_NOT_FOUND
         )
+
+
+# ============ Compatibility Endpoints ============
+
+class MySubmissionsView(APIView):
+    """
+    Compatibility endpoint used by the frontend student dashboard.
+    This backend variant does not manage submission records yet, so return empty list.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        return Response([])
+
+
+class PointsView(APIView):
+    """
+    Compatibility endpoint used by the frontend student dashboard.
+    We expose points as the sum of competition scores for the user.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        total_points = CompetitionScore.objects.filter(user=request.user).aggregate(
+            total=Coalesce(Sum('score'), 0)
+        )['total']
+        return Response({
+            'total_points': total_points,
+            'logs': [],
+        })
+
+
+class LeaderboardView(APIView):
+    """
+    Compatibility endpoint used by competition UI.
+    GET returns aggregated leaderboard.
+    POST is accepted for compatibility and returns the refreshed board.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def _build_leaderboard(self):
+        rows = (
+            User.objects
+            .annotate(
+                total_points=Coalesce(Sum('competition_scores__score'), 0),
+                submissions_count=Coalesce(Sum('competition_scores__ayah_count'), 0),
+            )
+            .order_by('-total_points', 'username')[:20]
+        )
+        return [
+            {
+                'username': u.username,
+                'total_points': u.total_points,
+                'score': u.total_points,
+                'submissions_count': u.submissions_count,
+            }
+            for u in rows
+        ]
+
+    def get(self, request):
+        return Response({'leaderboard': self._build_leaderboard()})
+
+    def post(self, request):
+        return Response({'leaderboard': self._build_leaderboard()})
 
 
 # ============ Helper Functions ============
