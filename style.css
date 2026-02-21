@@ -133,3 +133,88 @@
     --shadow-lg:  0 10px 30px rgba(0, 0, 0, 0.50);
     --shadow-xl:  0 20px 60px rgba(0, 0, 0, 0.60);
 }
+
+/* =============================================
+   2. RESET & BASE
+   ============================================= */
+
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: var(--font-ui);
+    font-size: var(--font-size-base);
+    line-height: 1.6;
+    min-height: 100vh;
+    transition: background-color var(--transition-slow), color var(--transition-slow);
+    overflow-x: hidden;
+}
+
+/* Fond dégradé subtil sur le body */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+        radial-gradient(ellipse at 20% 20%, rgba(26, 122, 74, 0.06) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(201, 146, 42, 0.05) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: -1;
+}
+
+a { color: var(--color-primary); text-decoration: none; }
+a:hover { color: var(--color-primary-light); }
+
+img { max-width: 100%; height: auto; display: block; }
+
+ul, ol { list-style: none; }
+
+button { cursor: pointer; border: none; background: none; font-family: inherit; }
+
+input, textarea, select {
+    font-family: inherit;
+    font-size: inherit;
+    color: inherit;
+}
+
+.hidden { display: none !important; }
+.sr-only {
+    position: absolute;
+    width: 1px; height: 1px;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    white-space: nowrap;
+}
+
+/* =============================================
+   3. TYPOGRAPHIE ARABE
+   ============================================= */
+
+.arabic, .arabic-text, [lang="ar"] {
+    font-family: var(--font-arabic);
+    direction: rtl;
+    text-align: right;
+}
+
+.arabic-sm  { font-size: clamp(1rem, 3vw, 1.3rem);   line-height: 2.2; }
+.arabic-md  { font-size: var(--font-size-arabic);      line-height: 2.4; }
+.arabic-lg  { font-size: var(--font-size-arabic-lg);   line-height: 2.6; }
+.arabic-xl  { font-size: clamp(2rem, 6vw, 3rem);       line-height: 2.8; }
+
+/* Texte gradient vert/or */
+.gradient-text {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-gold) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
