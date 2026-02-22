@@ -1,4 +1,9 @@
+import os
+import uuid
+from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models import Sum
+from django.utils import timezone
 from django.conf import settings
 from django.contrib.auth import get_user_model
 
@@ -239,3 +244,94 @@ class AuditLog(models.Model):
 
     def __str__(self):
         return f"{self.action} par {self.admin_user} - {self.timestamp}"
+
+
+# ── Soumissions Audio ──────────────────────────────────────────
+
+def submission_audio_path(instance, filename):
+    """Chemin d'upload : submissions/<task_id>/<student_id>/<uuid>_<filename>"""
+    unique_filename = f"{uuid.uuid4().hex}_{filename}"
+    return f"submissions/{instance.task_id}/{instance.student_id}/{unique_filename}"
+
+
+def validate_audio_file(file):
+    """Valide l'extension et la taille du fichier audio."""
+    ext = os.path.splitext(file.name)[1].lower()
+    allowed = ['.webm', '.mp3', '.wav', '.m4a']
+    if ext not in allowed:
+        raise ValidationError(f"Extension '{ext}' non autorisée. Acceptées: {', '.join(allowed)}")
+    if file.size > 10 * 1024 * 1024:
+        raise ValidationError("Fichier trop volumineux (max 10 MB).")
+
+
+class Submission(models.Model):
+    STATUS_CHOICES = [
+        ('submitted', 'Soumis'),
+        ('approved', 'Approuvé'),
+        ('rejected', 'Rejeté'),
+    ]
+    task = models.ForeignKey(
+        Task, on_delete=models.CASCADE, related_name='submissions'
+    )
+    student = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='submissions'
+    )
+    audio_file = models.FileField(
+        upload_to=submission_audio_path,
+        validators=[validate_audio_file]
+    )
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='submitted')
+    admin_feedback = models.TextField(blank=True)
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    validated_at = models.DateTimeField(null=True, blank=True)
+    validated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='validated_submissions'
+    )
+    awarded_points = models.PositiveIntegerField(null=True, blank=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['task', 'student'],
+                name='unique_submission_per_task_student'
+            )
+        ]
+        ordering = ['-submitted_at']
+
+    def __str__(self):
+        return f"{self.student.username} - {self.task.title}"
+
+
+class PointsLog(models.Model):
+    """Ledger de tous les changements de points."""
+    student = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='points_logs'
+    )
+    delta = models.IntegerField(help_text="Changement de points (positif ou négatif)")
+    reason = models.CharField(max_length=255)
+    submission = models.ForeignKey(
+        Submission,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='points_logs'
+    )
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        sign = '+' if self.delta >= 0 else ''
+        return f"{self.student.username}: {sign}{self.delta} ({self.reason})"
+
+    @classmethod
+    def get_total_points(cls, student):
+        result = cls.objects.filter(student=student).aggregate(total=Sum('delta'))
+        return result['total'] or 0

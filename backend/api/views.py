@@ -1,4 +1,5 @@
 from rest_framework import generics, status, filters
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -9,7 +10,7 @@ from django.db.models import Sum
 from django.db.models.functions import Coalesce
 from datetime import datetime, timedelta
 
-from .models import Task, Progress, ReviewSchedule, Achievement, Competition, CompetitionScore
+from .models import Task, Progress, ReviewSchedule, Achievement, Competition, CompetitionScore, Submission, PointsLog
 from .serializers import (
     TaskSerializer, ProgressSerializer, ReviewScheduleSerializer,
     AchievementSerializer, CompetitionSerializer, CompetitionScoreSerializer
@@ -214,31 +215,31 @@ def submit_competition_score(request, pk):
 # ============ Compatibility Endpoints ============
 
 class MySubmissionsView(APIView):
-    """
-    Compatibility endpoint used by the frontend student dashboard.
-    This backend variant does not manage submission records yet, so return empty list.
-    """
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        return Response([])
+        subs = Submission.objects.filter(student=request.user).select_related('task')
+        data = [{
+            'id': s.id,
+            'task_title': s.task.title,
+            'status': s.status,
+            'submitted_at': s.submitted_at,
+            'admin_feedback': s.admin_feedback,
+        } for s in subs]
+        return Response(data)
 
 
 class PointsView(APIView):
-    """
-    Compatibility endpoint used by the frontend student dashboard.
-    We expose points as the sum of competition scores for the user.
-    """
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        total_points = CompetitionScore.objects.filter(user=request.user).aggregate(
-            total=Coalesce(Sum('score'), 0)
-        )['total']
-        return Response({
-            'total_points': total_points,
-            'logs': [],
-        })
+        total = PointsLog.get_total_points(request.user)
+        logs = PointsLog.objects.filter(student=request.user)[:20]
+        data = {
+            'total': total,
+            'logs': [{'delta': l.delta, 'reason': l.reason, 'created_at': l.created_at} for l in logs]
+        }
+        return Response(data)
 
 
 class LeaderboardView(APIView):
@@ -297,3 +298,90 @@ def calculate_streak(user):
             break
     
     return streak
+
+
+class SubmissionCreateView(APIView):
+    parser_classes = [MultiPartParser, FormParser]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        task_id = request.data.get('task_id')
+        audio = request.FILES.get('audio_file')
+        if not task_id or not audio:
+            return Response({'detail': 'task_id et audio_file requis'}, status=400)
+        try:
+            task = Task.objects.get(pk=task_id)
+        except Task.DoesNotExist:
+            return Response({'detail': 'Tache introuvable'}, status=404)
+        sub, created = Submission.objects.get_or_create(
+            task=task, student=request.user,
+            defaults={'audio_file': audio}
+        )
+        if not created:
+            if sub.status != 'submitted':
+                return Response({'detail': 'Soumission deja traitee'}, status=400)
+            sub.audio_file = audio
+            sub.status = 'submitted'
+            sub.save()
+        return Response({'id': sub.id, 'status': sub.status}, status=201 if created else 200)
+
+
+class PendingSubmissionsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if request.user.role not in ['teacher', 'admin'] and not request.user.is_superuser:
+            return Response({'detail': 'Forbidden'}, status=403)
+        subs = Submission.objects.filter(status='submitted').select_related('task', 'student')
+        data = [{
+            'id': s.id,
+            'student': s.student.username,
+            'student_name': f"{s.student.first_name} {s.student.last_name}".strip(),
+            'task': s.task.title,
+            'submitted_at': s.submitted_at,
+        } for s in subs]
+        return Response(data)
+
+
+class SubmissionApproveView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, submission_id):
+        if request.user.role not in ['teacher', 'admin'] and not request.user.is_superuser:
+            return Response({'detail': 'Forbidden'}, status=403)
+        try:
+            sub = Submission.objects.get(pk=submission_id)
+        except Submission.DoesNotExist:
+            return Response({'detail': 'Not found'}, status=404)
+        sub.status = 'approved'
+        sub.validated_at = timezone.now()
+        sub.validated_by = request.user
+        points = getattr(sub.task, 'points', 0) or 0
+        sub.awarded_points = points
+        sub.save()
+        if points:
+            PointsLog.objects.create(
+                student=sub.student,
+                delta=points,
+                reason=f"Tache approuvee: {sub.task.title}",
+                submission=sub
+            )
+        return Response({'status': 'approved', 'points_awarded': points})
+
+
+class SubmissionRejectView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, submission_id):
+        if request.user.role not in ['teacher', 'admin'] and not request.user.is_superuser:
+            return Response({'detail': 'Forbidden'}, status=403)
+        try:
+            sub = Submission.objects.get(pk=submission_id)
+        except Submission.DoesNotExist:
+            return Response({'detail': 'Not found'}, status=404)
+        sub.status = 'rejected'
+        sub.admin_feedback = request.data.get('feedback', '')
+        sub.validated_at = timezone.now()
+        sub.validated_by = request.user
+        sub.save()
+        return Response({'status': 'rejected'})

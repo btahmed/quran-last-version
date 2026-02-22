@@ -23,4 +23,10 @@ urlpatterns = [
     path('my-submissions/', views.MySubmissionsView.as_view(), name='my-submissions'),
     path('points/', views.PointsView.as_view(), name='points'),
     path('leaderboard/', views.LeaderboardView.as_view(), name='leaderboard'),
+
+    # Soumissions audio
+    path('submissions/', views.SubmissionCreateView.as_view(), name='submission-create'),
+    path('pending-submissions/', views.PendingSubmissionsView.as_view(), name='pending-submissions'),
+    path('submissions/<int:submission_id>/approve/', views.SubmissionApproveView.as_view(), name='submission-approve'),
+    path('submissions/<int:submission_id>/reject/', views.SubmissionRejectView.as_view(), name='submission-reject'),
 ]
