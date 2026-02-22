@@ -3919,6 +3919,20 @@ const QuranReview = {
             if (el) el.textContent = `مرحباً ${this.state.user.first_name || this.state.user.username}`;
         }
 
+        // Charger le nom du professeur assigné
+        fetch(`${this.config.apiBaseUrl}/api/my-teacher/`, { headers })
+            .then(r => r.ok ? r.json() : null)
+            .then(data => {
+                const el = document.getElementById('student-teacher-info');
+                if (!el) return;
+                if (data && data.teacher_name) {
+                    el.innerHTML = `👨‍🏫 أستاذك: <strong>${data.teacher_name}</strong> &nbsp;|&nbsp; 🕐 فوج ${data.classe_name || ''}`;
+                } else {
+                    el.textContent = '';
+                }
+            })
+            .catch(() => {});
+
         try {
             const [tasksRes, subsRes, pointsRes] = await Promise.all([
                 fetch(`${this.config.apiBaseUrl}/api/tasks/`, { headers }),

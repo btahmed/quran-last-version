@@ -405,3 +405,42 @@ class MyStudentsView(ClassePermissionMixin, APIView):
             'role': u.role,
         } for u in students]
         return Response(data)
+
+
+class MyTeacherView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        # Chercher les groupes de l'étudiant au format Classe_*_Prof_*
+        student_groups = user.groups.filter(name__startswith='Classe_', name__contains='_Prof_')
+
+        if not student_groups.exists():
+            return Response({'teacher_name': None})
+
+        # Prendre le premier groupe trouvé
+        group = student_groups.first()
+        group_name = group.name  # ex: Classe_8h45_Prof_Oum_Wael
+
+        # Extraire le nom de classe depuis le nom du groupe
+        # Format : Classe_{classe_name}_Prof_{prof_name}
+        parts = group_name.split('_Prof_')
+        classe_name = parts[0].replace('Classe_', '', 1) if len(parts) >= 2 else None
+        prof_part = parts[1] if len(parts) >= 2 else None
+
+        # Trouver le teacher membre de ce groupe avec role='teacher'
+        teacher = User.objects.filter(groups=group, role='teacher').first()
+
+        if not teacher:
+            return Response({'teacher_name': None})
+
+        # Ignorer les valeurs "nan" issues de l'import pandas
+        fn = teacher.first_name if teacher.first_name and teacher.first_name.lower() != 'nan' else ''
+        ln = teacher.last_name if teacher.last_name and teacher.last_name.lower() != 'nan' else ''
+        display_name = f"{fn} {ln}".strip() or teacher.username
+
+        return Response({
+            'teacher_name': display_name,
+            'teacher_username': teacher.username,
+            'classe_name': classe_name,
+        })
