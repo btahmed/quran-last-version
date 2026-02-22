@@ -141,41 +141,34 @@
             <div class="loading-progress" id="loading-progress"></div>
         </div>
     </div>
-
-    <!-- Aurora Background -->
-    <div class="aurora-bg"></div>
-    
-    <!-- Particles -->
-    <div class="particles-container" id="particles"></div>
-
     <!-- Header -->
-    <header class="header-pro header-glass">
-        <div class="container-pro">
-            <div class="flex-pro" style="justify-content: space-between;">
-                <div class="flex-pro" style="gap: var(--space-3);">
+    <header class="header">
+        <div class="container">
+            <div class="d-flex" style="justify-content: space-between;">
+                <div class="d-flex" style="gap: var(--space-3);">
                     <h1 class="gradient-text" style="font-size: 1.5rem; font-weight: 700;">🕌 مراجعة القرآن</h1>
                     <span id="demo-badge" class="badge badge-warning hidden" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white;">🎮 MODE DÉMO</span>
                 </div>
-                <nav class="flex-pro" style="gap: var(--space-2);">
-                    <a href="#" class="nav-link-pro nav-link active" data-page="home">الرئيسية</a>
-                    <a href="#" class="nav-link-pro nav-link" data-page="memorization">الحفظ</a>
-                    <a href="#" class="nav-link-pro nav-link" data-page="ward">الورد</a>
-                    <a href="#" class="nav-link-pro nav-link" data-page="progress">التقدم</a>
-                    <a href="#" class="nav-link-pro nav-link" data-page="competition">🏆</a>
-                    <a href="#" class="nav-link-pro nav-link" data-page="hifz">🎭</a>
-                    <a href="#" class="nav-link-pro nav-link nav-student-only" data-page="mytasks" style="display: none;">مهامي</a>
-                    <a href="#" class="nav-link-pro nav-link nav-teacher-only" data-page="teacher" style="display: none;">المعلم</a>
+                <nav class="d-flex" style="gap: var(--space-2);">
+                    <a href="#" class="nav-link active" data-page="home">الرئيسية</a>
+                    <a href="#" class="nav-link" data-page="memorization">الحفظ</a>
+                    <a href="#" class="nav-link" data-page="ward">الورد</a>
+                    <a href="#" class="nav-link" data-page="progress">التقدم</a>
+                    <a href="#" class="nav-link" data-page="competition">🏆</a>
+                    <a href="#" class="nav-link" data-page="hifz">🎭</a>
+                    <a href="#" class="nav-link nav-student-only" data-page="mytasks" style="display: none;">مهامي</a>
+                    <a href="#" class="nav-link nav-teacher-only" data-page="teacher" style="display: none;">المعلم</a>
                     <button id="theme-toggle" class="btn btn-icon" style="margin-right: var(--space-4);">
                         <span id="theme-icon">🌙</span>
                     </button>
                     <div id="auth-nav">
-                        <button id="auth-login-btn" class="btn btn-glow btn-sm" onclick="showAuthModal()">
+                        <button id="auth-login-btn" class="btn btn-primary btn-sm" onclick="showAuthModal()">
                             <span>👤</span>
                             دخول
                         </button>
-                        <div id="auth-user-info" class="hidden flex-pro" style="gap: var(--space-2);">
+                        <div id="auth-user-info" class="hidden d-flex" style="gap: var(--space-2);">
                             <span id="auth-username" class="badge badge-primary"></span>
-                            <button class="btn btn-outline-glow btn-sm" onclick="QuranReview.logout()">خروج</button>
+                            <button class="btn btn-outline btn-sm" onclick="QuranReview.logout()">خروج</button>
                         </div>
                     </div>
                 </nav>
@@ -188,20 +181,20 @@
         <!-- HOME PAGE -->
         <div id="home-page" class="page active">
             <!-- Hero Section -->
-            <section class="section-pro" style="text-align: center; padding-top: var(--space-16);">
-                <div class="container-pro">
-                    <h1 class="hero-title gradient-text animate-fade-in-up">
+            <section class="section" style="text-align: center; padding-top: var(--space-16);">
+                <div class="container">
+                    <h1 class="hero-title gradient-text animate-fade-up">
                         حفظ القرآن<br>بطريقة عصرية
                     </h1>
-                    <p class="hero-subtitle animate-fade-in-up" style="animation-delay: 0.1s;">
+                    <p class="hero-subtitle animate-fade-up" style="animation-delay: 0.1s;">
                         تطبيق احترافي يجمع بين التقنية الحديثة والطريقة النبوية في حفظ ومراجعة القرآن الكريم
                     </p>
-                    <div class="flex-pro" style="justify-content: center; gap: var(--space-4); animation-delay: 0.2s;" class="animate-fade-in-up">
-                        <button class="btn btn-glow btn-ripple" onclick="navigateTo('memorization')">
+                    <div class="d-flex" style="justify-content: center; gap: var(--space-4); animation-delay: 0.2s;" class="animate-fade-up">
+                        <button class="btn btn-primary" onclick="navigateTo('memorization')">
                             <span>📖</span>
                             ابدأ الحفظ
                         </button>
-                        <button class="btn btn-outline-glow" onclick="navigateTo('ward')">
+                        <button class="btn btn-outline" onclick="navigateTo('ward')">
                             <span>🎧</span>
                             استمع للورد
                         </button>
@@ -210,9 +203,9 @@
             </section>
 
             <!-- Daily Motivation -->
-            <section class="section-pro">
-                <div class="container-pro">
-                    <div class="card-glass-pro shimmer" style="text-align: center; max-width: 800px; margin: 0 auto;">
+            <section class="section">
+                <div class="container">
+                    <div class="glass-card shimmer" style="text-align: center; max-width: 800px; margin: 0 auto;">
                         <span class="badge badge-gold" style="margin-bottom: var(--space-4);">✨ حكمة اليوم</span>
                         <div class="arabic-large motivation-text" id="motivation-text" style="margin: var(--space-6) 0; font-size: 2rem;">
                             خَيْرُكُمْ مَنْ تَعَلَّمَ الْقُرْآنَ وَعَلَّمَهُ
@@ -223,23 +216,23 @@
             </section>
 
             <!-- Stats Section -->
-            <section class="section-pro">
-                <div class="container-pro">
+            <section class="section">
+                <div class="container">
                     <h2 class="section-title" style="text-align: center; margin-bottom: var(--space-8);">📊 إحصائياتك <span style="font-size: 0.875rem; color: var(--color-text-secondary); font-weight: 400;">يوم <span id="today-date"></span></span></h2>
-                    <div class="grid-pro grid-cols-4 stagger-children" id="home-stats">
-                        <div class="card-stat-premium" style="text-align: center;">
+                    <div class="grid grid-cols-4 stagger-children" id="home-stats">
+                        <div class="stat-card" style="text-align: center;">
                             <div class="stat-value stat-number" id="home-total-surahs">0</div>
                             <p style="color: var(--color-text-secondary); margin-top: var(--space-2);">إجمالي السور</p>
                         </div>
-                        <div class="card-stat-premium" style="text-align: center;">
+                        <div class="stat-card" style="text-align: center;">
                             <div class="stat-value stat-number" id="home-mastered">0</div>
                             <p style="color: var(--color-text-secondary); margin-top: var(--space-2);">متقنة</p>
                         </div>
-                        <div class="card-stat-premium" style="text-align: center;">
+                        <div class="stat-card" style="text-align: center;">
                             <div class="stat-value stat-number" id="home-weak">0</div>
                             <p style="color: var(--color-text-secondary); margin-top: var(--space-2);">ضعيفة</p>
                         </div>
-                        <div class="card-stat-premium" style="text-align: center;">
+                        <div class="stat-card" style="text-align: center;">
                             <div class="stat-value stat-number" id="home-new">0</div>
                             <p style="color: var(--color-text-secondary); margin-top: var(--space-2);">جديدة</p>
                         </div>
@@ -248,36 +241,36 @@
             </section>
 
             <!-- Features Grid -->
-            <section class="section-pro">
-                <div class="container-pro">
+            <section class="section">
+                <div class="container">
                     <h2 class="section-title" style="text-align: center; margin-bottom: var(--space-8);">✨ المميزات</h2>
-                    <div class="grid-pro grid-cols-3 stagger-children">
-                        <div class="card-glass-pro hover-lift" style="text-align: center;">
+                    <div class="grid grid-cols-3 stagger-children">
+                        <div class="glass-card hover-lift" style="text-align: center;">
                             <div class="feature-icon-pro">📖</div>
                             <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: var(--space-2);">قراءة وتلاوة</h3>
                             <p style="color: var(--color-text-secondary);">استماع للقراءات بأصوات مختلفة مع عرض المصحف</p>
                         </div>
-                        <div class="card-glass-pro hover-lift" style="text-align: center;">
+                        <div class="glass-card hover-lift" style="text-align: center;">
                             <div class="feature-icon-pro">🧠</div>
                             <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: var(--space-2);">تتبع ذكي</h3>
                             <p style="color: var(--color-text-secondary);">نظام تكرار متباعد لضمان الحفظ القوي</p>
                         </div>
-                        <div class="card-glass-pro hover-lift" style="text-align: center;">
+                        <div class="glass-card hover-lift" style="text-align: center;">
                             <div class="feature-icon-pro">🎯</div>
                             <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: var(--space-2);">وضع الحفظ</h3>
                             <p style="color: var(--color-text-secondary);">تمارين تفاعلية لاختبار الحفظ بمستويات مختلفة</p>
                         </div>
-                        <div class="card-glass-pro hover-lift" style="text-align: center;">
+                        <div class="glass-card hover-lift" style="text-align: center;">
                             <div class="feature-icon-pro">🏆</div>
                             <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: var(--space-2);">تحديات</h3>
                             <p style="color: var(--color-text-secondary);">تنافس مع الأصدقاء واكسب النقاط</p>
                         </div>
-                        <div class="card-glass-pro hover-lift" style="text-align: center;">
+                        <div class="glass-card hover-lift" style="text-align: center;">
                             <div class="feature-icon-pro">📈</div>
                             <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: var(--space-2);">إحصائيات</h3>
                             <p style="color: var(--color-text-secondary);">تتبع تقدمك يومياً وأسبوعياً وشهرياً</p>
                         </div>
-                        <div class="card-glass-pro hover-lift" style="text-align: center;">
+                        <div class="glass-card hover-lift" style="text-align: center;">
                             <div class="feature-icon-pro">👨‍🏫</div>
                             <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: var(--space-2);">معلمك</h3>
                             <p style="color: var(--color-text-secondary);">تواصل مع معلميك واستلم المهام</p>
@@ -289,18 +282,18 @@
 
         <!-- MEMORIZATION PAGE -->
         <div id="memorization-page" class="page">
-            <section class="section-pro">
-                <div class="container-pro">
-                    <div class="flex-pro" style="justify-content: space-between; align-items: center; margin-bottom: var(--space-8); flex-wrap: wrap; gap: var(--space-4);">
+            <section class="section">
+                <div class="container">
+                    <div class="d-flex" style="justify-content: space-between; align-items: center; margin-bottom: var(--space-8); flex-wrap: wrap; gap: var(--space-4);">
                         <h2 class="section-title" style="margin: 0;">📖 قائمة الحفظ</h2>
-                        <button class="btn btn-glow" onclick="QuranReview.showAddMemorization()">
+                        <button class="btn btn-primary" onclick="QuranReview.showAddMemorization()">
                             <span>➕</span>
                             إضافة حفظ جديد
                         </button>
                     </div>
                     
                     <!-- Add Form -->
-                    <div class="card-glass-pro" id="add-memorization-form-container" style="margin-bottom: var(--space-6); display: none;">
+                    <div class="glass-card" id="add-memorization-form-container" style="margin-bottom: var(--space-6); display: none;">
                         <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: var(--space-6);">➕ إضافة حفظ جديد</h3>
                         <form id="add-memorization-form" onsubmit="QuranReview.handleAddMemorization(event)">
                             <div class="form-floating" style="margin-bottom: var(--space-4);">
@@ -320,7 +313,7 @@
                                 <label for="surah-select">السورة</label>
                             </div>
                             
-                            <div class="grid-pro grid-cols-2" style="margin-bottom: var(--space-4);">
+                            <div class="grid grid-cols-2" style="margin-bottom: var(--space-4);">
                                 <div class="form-floating">
                                     <input type="number" id="from-ayah" min="1" placeholder=" " required>
                                     <label for="from-ayah">من الآية</label>
@@ -331,16 +324,16 @@
                                 </div>
                             </div>
                             
-                            <div class="flex-pro" style="justify-content: flex-end; gap: var(--space-3);">
-                                <button type="button" class="btn btn-outline-glow" onclick="QuranReview.hideAddMemorization()">إلغاء</button>
-                                <button type="submit" class="btn btn-glow">إضافة</button>
+                            <div class="d-flex" style="justify-content: flex-end; gap: var(--space-3);">
+                                <button type="button" class="btn btn-outline" onclick="QuranReview.hideAddMemorization()">إلغاء</button>
+                                <button type="submit" class="btn btn-primary">إضافة</button>
                             </div>
                         </form>
                     </div>
                     
                     <!-- Table -->
-                    <div class="card-glass-pro">
-                        <div class="flex-pro" style="justify-content: space-between; align-items: center; margin-bottom: var(--space-6);">
+                    <div class="glass-card">
+                        <div class="d-flex" style="justify-content: space-between; align-items: center; margin-bottom: var(--space-6);">
                             <h3 style="font-size: 1.125rem; font-weight: 600;">📋 جدول الحفظ</h3>
                             <span class="badge badge-glass" id="memorization-count">0 سور</span>
                         </div>
@@ -367,7 +360,7 @@
                             <div style="font-size: 4rem; margin-bottom: var(--space-4);">📚</div>
                             <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: var(--space-2);">لا توجد سور محفوظة</h3>
                             <p style="color: var(--color-text-secondary); margin-bottom: var(--space-4);">ابدأ رحلة الحفظ بإضافة سورة جديدة</p>
-                            <button class="btn btn-glow" onclick="QuranReview.showAddMemorization()">
+                            <button class="btn btn-primary" onclick="QuranReview.showAddMemorization()">
                                 <span>➕</span>
                                 إضافة سورة
                             </button>
@@ -379,11 +372,11 @@
 
         <!-- WARD PAGE -->
         <div id="ward-page" class="page">
-            <section class="section-pro">
-                <div class="container-pro" style="max-width: 800px;">
+            <section class="section">
+                <div class="container" style="max-width: 800px;">
                     <h2 class="section-title" style="text-align: center; margin-bottom: var(--space-8);">🎧 الورد اليومي</h2>
                     
-                    <div class="card-glass-pro" style="margin-bottom: var(--space-6);">
+                    <div class="glass-card" style="margin-bottom: var(--space-6);">
                         <div class="form-floating" style="margin-bottom: var(--space-4);">
                             <select id="ward-surah-select" class="select-modern">
                                 <option value="">اختر السورة</option>
@@ -394,7 +387,7 @@
                             <label for="ward-surah-select">السورة</label>
                         </div>
                         
-                        <div class="grid-pro grid-cols-2" style="margin-bottom: var(--space-6);">
+                        <div class="grid grid-cols-2" style="margin-bottom: var(--space-6);">
                             <div class="form-floating">
                                 <input type="number" id="ward-from-ayah" placeholder=" " min="1" value="1">
                                 <label for="ward-from-ayah">من الآية</label>
@@ -405,7 +398,7 @@
                             </div>
                         </div>
                         
-                        <div class="grid-pro grid-cols-2" style="margin-bottom: var(--space-4);">
+                        <div class="grid grid-cols-2" style="margin-bottom: var(--space-4);">
                             <div class="form-floating">
                                 <select id="ward-reciter-selector">
                                     <option value="alafasy">مشاري بن راشد العفاسي</option>
@@ -422,7 +415,7 @@
                             </div>
                         </div>
                         
-                        <div class="grid-pro grid-cols-2" style="margin-bottom: var(--space-4);">
+                        <div class="grid grid-cols-2" style="margin-bottom: var(--space-4);">
                             <div class="form-floating">
                                 <select id="ward-audio-source">
                                     <option value="cdn" selected>الخادم المباشر</option>
@@ -460,7 +453,7 @@
                             </label>
                         </div>
                         
-                        <button class="btn btn-glow btn-full" onclick="playWard()">
+                        <button class="btn btn-primary btn-full" onclick="playWard()">
                             <span>▶️</span>
                             تشغيل الورد
                         </button>
@@ -495,8 +488,8 @@
                             </button>
                         </div>
                         
-                        <div class="flex-pro" style="justify-content: center; margin-top: var(--space-4);">
-                            <button class="btn btn-outline-glow btn-sm" id="stop-ward-btn" onclick="AudioManager.stopAll()">
+                        <div class="d-flex" style="justify-content: center; margin-top: var(--space-4);">
+                            <button class="btn btn-outline btn-sm" id="stop-ward-btn" onclick="AudioManager.stopAll()">
                                 ⏹️ إيقاف
                             </button>
                         </div>
@@ -507,63 +500,63 @@
 
         <!-- PROGRESS PAGE -->
         <div id="progress-page" class="page">
-            <section class="section-pro">
-                <div class="container-pro">
+            <section class="section">
+                <div class="container">
                     <h2 class="section-title" style="text-align: center; margin-bottom: var(--space-8);">📈 تقدمك في الحفظ</h2>
                     
-                    <div class="grid-pro grid-cols-4" style="margin-bottom: var(--space-8);">
-                        <div class="card-stat-premium" style="text-align: center;">
+                    <div class="grid grid-cols-4" style="margin-bottom: var(--space-8);">
+                        <div class="stat-card" style="text-align: center;">
                             <div class="stat-value" id="progress-total-surahs">0</div>
                             <p style="color: var(--color-text-secondary); margin-top: var(--space-2);">سورة محفوظة</p>
                         </div>
-                        <div class="card-stat-premium" style="text-align: center;">
+                        <div class="stat-card" style="text-align: center;">
                             <div class="stat-value" id="progress-total-ayahs">0</div>
                             <p style="color: var(--color-text-secondary); margin-top: var(--space-2);">آية محفوظة</p>
                         </div>
-                        <div class="card-stat-premium" style="text-align: center;">
+                        <div class="stat-card" style="text-align: center;">
                             <div class="stat-value" id="progress-completion">0%</div>
                             <p style="color: var(--color-text-secondary); margin-top: var(--space-2);">نسبة الإنجاز</p>
                         </div>
-                        <div class="card-stat-premium" style="text-align: center;">
+                        <div class="stat-card" style="text-align: center;">
                             <div class="stat-value" id="progress-streak">0</div>
                             <p style="color: var(--color-text-secondary); margin-top: var(--space-2);">يوم متتالي</p>
                         </div>
                     </div>
                     
-                    <div class="grid-pro grid-cols-2" style="margin-bottom: var(--space-8);">
-                        <div class="card-glass-pro">
+                    <div class="grid grid-cols-2" style="margin-bottom: var(--space-8);">
+                        <div class="glass-card">
                             <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">📊 توزيع الحالات</h3>
                             <div style="display: flex; flex-direction: column; gap: var(--space-3);">
-                                <div class="flex-pro" style="justify-content: space-between;">
-                                    <span class="flex-pro" style="gap: var(--space-2);"><span class="status-badge status-strong"></span><span>متقن</span></span>
+                                <div class="d-flex" style="justify-content: space-between;">
+                                    <span class="d-flex" style="gap: var(--space-2);"><span class="status-badge status-strong"></span><span>متقن</span></span>
                                     <span id="status-strong-count" style="font-weight: 600;">0</span>
                                 </div>
-                                <div class="flex-pro" style="justify-content: space-between;">
-                                    <span class="flex-pro" style="gap: var(--space-2);"><span class="status-badge status-weak"></span><span>ضعيف</span></span>
+                                <div class="d-flex" style="justify-content: space-between;">
+                                    <span class="d-flex" style="gap: var(--space-2);"><span class="status-badge status-weak"></span><span>ضعيف</span></span>
                                     <span id="status-weak-count" style="font-weight: 600;">0</span>
                                 </div>
-                                <div class="flex-pro" style="justify-content: space-between;">
-                                    <span class="flex-pro" style="gap: var(--space-2);"><span class="status-badge status-new"></span><span>جديد</span></span>
+                                <div class="d-flex" style="justify-content: space-between;">
+                                    <span class="d-flex" style="gap: var(--space-2);"><span class="status-badge status-new"></span><span>جديد</span></span>
                                     <span id="status-new-count" style="font-weight: 600;">0</span>
                                 </div>
                             </div>
                         </div>
                         
-                        <div class="card-glass-pro">
+                        <div class="glass-card">
                             <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">📅 نشاط الأسبوع</h3>
-                            <div class="grid-pro grid-cols-7" style="text-align: center; gap: var(--space-2);">
-                                <div class="card-glass-pro" style="padding: var(--space-3);"><div style="font-size: 0.75rem; color: var(--color-text-secondary);">سبت</div><div style="font-weight: 600;" id="activity-sat">0</div></div>
-                                <div class="card-glass-pro" style="padding: var(--space-3);"><div style="font-size: 0.75rem; color: var(--color-text-secondary);">أحد</div><div style="font-weight: 600;" id="activity-sun">0</div></div>
-                                <div class="card-glass-pro" style="padding: var(--space-3);"><div style="font-size: 0.75rem; color: var(--color-text-secondary);">اثن</div><div style="font-weight: 600;" id="activity-mon">0</div></div>
-                                <div class="card-glass-pro" style="padding: var(--space-3);"><div style="font-size: 0.75rem; color: var(--color-text-secondary);">ثلا</div><div style="font-weight: 600;" id="activity-tue">0</div></div>
-                                <div class="card-glass-pro" style="padding: var(--space-3);"><div style="font-size: 0.75rem; color: var(--color-text-secondary);">أرب</div><div style="font-weight: 600;" id="activity-wed">0</div></div>
-                                <div class="card-glass-pro" style="padding: var(--space-3);"><div style="font-size: 0.75rem; color: var(--color-text-secondary);">خمي</div><div style="font-weight: 600;" id="activity-thu">0</div></div>
-                                <div class="card-glass-pro" style="padding: var(--space-3);"><div style="font-size: 0.75rem; color: var(--color-text-secondary);">جمعة</div><div style="font-weight: 600;" id="activity-fri">0</div></div>
+                            <div class="grid grid-cols-7" style="text-align: center; gap: var(--space-2);">
+                                <div class="glass-card" style="padding: var(--space-3);"><div style="font-size: 0.75rem; color: var(--color-text-secondary);">سبت</div><div style="font-weight: 600;" id="activity-sat">0</div></div>
+                                <div class="glass-card" style="padding: var(--space-3);"><div style="font-size: 0.75rem; color: var(--color-text-secondary);">أحد</div><div style="font-weight: 600;" id="activity-sun">0</div></div>
+                                <div class="glass-card" style="padding: var(--space-3);"><div style="font-size: 0.75rem; color: var(--color-text-secondary);">اثن</div><div style="font-weight: 600;" id="activity-mon">0</div></div>
+                                <div class="glass-card" style="padding: var(--space-3);"><div style="font-size: 0.75rem; color: var(--color-text-secondary);">ثلا</div><div style="font-weight: 600;" id="activity-tue">0</div></div>
+                                <div class="glass-card" style="padding: var(--space-3);"><div style="font-size: 0.75rem; color: var(--color-text-secondary);">أرب</div><div style="font-weight: 600;" id="activity-wed">0</div></div>
+                                <div class="glass-card" style="padding: var(--space-3);"><div style="font-size: 0.75rem; color: var(--color-text-secondary);">خمي</div><div style="font-weight: 600;" id="activity-thu">0</div></div>
+                                <div class="glass-card" style="padding: var(--space-3);"><div style="font-size: 0.75rem; color: var(--color-text-secondary);">جمعة</div><div style="font-weight: 600;" id="activity-fri">0</div></div>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="card-glass-pro">
+                    <div class="glass-card">
                         <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">📈 تطور الحفظ</h3>
                         <div style="height: 300px; background: rgba(45, 80, 22, 0.05); border-radius: var(--radius-xl); display: flex; align-items: center; justify-content: center; color: var(--color-text-secondary);">
                             <div style="text-align: center;"><div style="font-size: 3rem; margin-bottom: var(--space-4);">📊</div><p>الرسم البياني قريباً</p></div>
@@ -575,29 +568,29 @@
 
         <!-- COMPETITION PAGE -->
         <div id="competition-page" class="page">
-            <section class="section-pro" style="min-height: 80vh;">
-                <div class="container-pro">
+            <section class="section" style="min-height: 80vh;">
+                <div class="container">
                     <h2 class="section-title" style="text-align: center; margin-bottom: var(--space-8);">🏆 التحديات</h2>
                     
                     <!-- Competition Dashboard Container -->
                     <div id="competition-dashboard" style="display: block;">
-                    <div class="card-gradient-border" style="margin-bottom: var(--space-8);">
-                        <div class="card-gradient-border-inner" style="text-align: center; padding: var(--space-8);">
+                    <div class="card" style="margin-bottom: var(--space-8);">
+                        <div class="" style="text-align: center; padding: var(--space-8);">
                             <div style="font-size: 5rem; margin-bottom: var(--space-4);">🥇</div>
                             <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: var(--space-2);">رتبتك: <span id="user-rank">ذهبي</span></h3>
                             <p style="color: var(--color-text-secondary); margin-bottom: var(--space-4);">لديك <span id="user-points" style="font-weight: 600; color: var(--color-primary);">1,250</span> نقطة</p>
                             
                             <!-- Stats Grid for Competition -->
-                            <div class="grid-pro grid-cols-3" style="max-width: 400px; margin: 0 auto var(--space-4);">
-                                <div class="card-glass-pro" style="padding: var(--space-3);">
+                            <div class="grid grid-cols-3" style="max-width: 400px; margin: 0 auto var(--space-4);">
+                                <div class="glass-card" style="padding: var(--space-3);">
                                     <div style="font-size: 1.25rem; font-weight: 700;" id="comp-wins">0</div>
                                     <div style="font-size: 0.75rem; color: var(--color-text-secondary);">انتصارات</div>
                                 </div>
-                                <div class="card-glass-pro" style="padding: var(--space-3);">
+                                <div class="glass-card" style="padding: var(--space-3);">
                                     <div style="font-size: 1.25rem; font-weight: 700;" id="comp-streak">🔥 0</div>
                                     <div style="font-size: 0.75rem; color: var(--color-text-secondary);">متتالية</div>
                                 </div>
-                                <div class="card-glass-pro" style="padding: var(--space-3);">
+                                <div class="glass-card" style="padding: var(--space-3);">
                                     <div style="font-size: 1.25rem; font-weight: 700;" id="comp-challenges">0</div>
                                     <div style="font-size: 0.75rem; color: var(--color-text-secondary);">تحديات</div>
                                 </div>
@@ -609,28 +602,28 @@
                     </div>
                     
                     <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: var(--space-6);">🎮 اختر تحدياً</h3>
-                    <div class="grid-pro grid-cols-3" style="margin-bottom: var(--space-8);">
-                        <div class="card-glass-pro hover-lift" style="text-align: center;">
+                    <div class="grid grid-cols-3" style="margin-bottom: var(--space-8);">
+                        <div class="glass-card hover-lift" style="text-align: center;">
                             <div style="font-size: 3rem; margin-bottom: var(--space-4);">⚡</div>
                             <h4 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-2);">السباق</h4>
                             <p style="color: var(--color-text-secondary); font-size: 0.875rem; margin-bottom: var(--space-4);">5 آيات في 5 دقائق</p>
-                            <button class="btn btn-glow" onclick="QuranReview.startChallenge('speed_run')">ابدأ</button>
+                            <button class="btn btn-primary" onclick="QuranReview.startChallenge('speed_run')">ابدأ</button>
                         </div>
-                        <div class="card-glass-pro hover-lift" style="text-align: center;">
+                        <div class="glass-card hover-lift" style="text-align: center;">
                             <div style="font-size: 3rem; margin-bottom: var(--space-4);">🔍</div>
                             <h4 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-2);">صيد الآية</h4>
                             <p style="color: var(--color-text-secondary); font-size: 0.875rem; margin-bottom: var(--space-4);">حدد السورة من الآية</p>
-                            <button class="btn btn-glow" onclick="QuranReview.startChallenge('ayah_hunt')">ابدأ</button>
+                            <button class="btn btn-primary" onclick="QuranReview.startChallenge('ayah_hunt')">ابدأ</button>
                         </div>
-                        <div class="card-glass-pro hover-lift" style="text-align: center;">
+                        <div class="glass-card hover-lift" style="text-align: center;">
                             <div style="font-size: 3rem; margin-bottom: var(--space-4);">🎯</div>
                             <h4 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-2);">سيد الدقة</h4>
                             <p style="color: var(--color-text-secondary); font-size: 0.875rem; margin-bottom: var(--space-4);">اكتب الآية بشكل صحيح</p>
-                            <button class="btn btn-glow" onclick="QuranReview.startChallenge('precision')">ابدأ</button>
+                            <button class="btn btn-primary" onclick="QuranReview.startChallenge('precision')">ابدأ</button>
                         </div>
                     </div>
                     
-                    <div class="card-glass-pro">
+                    <div class="glass-card">
                         <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">🏅 لوحة المتصدرين</h3>
                         <div id="leaderboard-list">
                             <div class="memorization-item" style="background: rgba(212, 165, 116, 0.1); border-color: var(--color-gold);">
@@ -654,8 +647,8 @@
                     
                     <!-- Competition Active Container (Hidden by default) -->
                     <div id="competition-active" class="hidden" style="display: none;">
-                        <div class="card-glass-pro">
-                            <div class="flex-pro" style="justify-content: space-between; margin-bottom: var(--space-4); flex-wrap: wrap; gap: var(--space-2);">
+                        <div class="glass-card">
+                            <div class="d-flex" style="justify-content: space-between; margin-bottom: var(--space-4); flex-wrap: wrap; gap: var(--space-2);">
                                 <span class="badge badge-primary" id="comp-score">النقاط: 0</span>
                                 <span class="badge badge-glass" id="comp-timer">⏱️ 05:00</span>
                                 <span class="badge badge-gold" id="comp-streak">🔥 0</span>
@@ -672,12 +665,12 @@
 
         <!-- HIFZ PAGE -->
         <div id="hifz-page" class="page">
-            <section class="section-pro" style="min-height: 80vh;">
-                <div class="container-pro" style="max-width: 900px;">
+            <section class="section" style="min-height: 80vh;">
+                <div class="container" style="max-width: 900px;">
                     <h2 class="section-title" style="text-align: center; margin-bottom: var(--space-8);">🎭 وضع الحفظ</h2>
                     
                     <!-- Hifz Selection Container -->
-                    <div class="card-glass-pro" id="hifz-selection" style="margin-bottom: var(--space-6); display: block;">
+                    <div class="glass-card" id="hifz-selection" style="margin-bottom: var(--space-6); display: block;">
                         <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">اختيار التمرين</h3>
                         
                         <form id="hifz-start-form">
@@ -688,7 +681,7 @@
                                 <label for="hifz-surah-select">السورة</label>
                             </div>
                             
-                            <div class="grid-pro grid-cols-2" style="margin-bottom: var(--space-4);">
+                            <div class="grid grid-cols-2" style="margin-bottom: var(--space-4);">
                                 <div class="form-floating">
                                     <input type="number" id="hifz-from-ayah" min="1" value="1" placeholder=" " required>
                                     <label for="hifz-from-ayah">من الآية</label>
@@ -699,7 +692,7 @@
                                 </div>
                             </div>
                             
-                            <button type="submit" class="btn btn-glow btn-full">
+                            <button type="submit" class="btn btn-primary btn-full">
                                 <span>🎮</span>
                                 ابدأ التمرين
                             </button>
@@ -707,8 +700,8 @@
                     </div>
                     
                     <!-- Hifz Active Game Container -->
-                    <div class="card-glass-pro" id="hifz-active-container" style="display: none;">
-                        <div class="flex-pro" style="justify-content: space-between; margin-bottom: var(--space-4); flex-wrap: wrap; gap: var(--space-2);">
+                    <div class="glass-card" id="hifz-active-container" style="display: none;">
+                        <div class="d-flex" style="justify-content: space-between; margin-bottom: var(--space-4); flex-wrap: wrap; gap: var(--space-2);">
                             <div>
                                 <span class="badge badge-primary" id="hifz-score">النقاط: 0</span>
                                 <span class="badge badge-glass" id="hints-count" style="margin-right: var(--space-2);">تلميحات: 3</span>
@@ -729,20 +722,20 @@
                         <!-- Feedback Area -->
                         <div id="hifz-feedback" style="text-align: center; margin: var(--space-4) 0; min-height: 30px;"></div>
                         
-                        <div class="flex-pro" style="justify-content: center; gap: var(--space-3); flex-wrap: wrap;">
-                            <button class="btn btn-outline-glow" onclick="QuranReview.showHint()">
+                        <div class="d-flex" style="justify-content: center; gap: var(--space-3); flex-wrap: wrap;">
+                            <button class="btn btn-outline" onclick="QuranReview.showHint()">
                                 <span>💡</span>
                                 تلميح
                             </button>
-                            <button class="btn btn-glow" onclick="QuranReview.checkMemorization()">
+                            <button class="btn btn-primary" onclick="QuranReview.checkMemorization()">
                                 <span>✓</span>
                                 تحقق
                             </button>
-                            <button class="btn btn-outline-glow" onclick="QuranReview.nextLevel()">
+                            <button class="btn btn-outline" onclick="QuranReview.nextLevel()">
                                 <span>⏭️</span>
                                 التالي
                             </button>
-                            <button class="btn btn-outline-glow" onclick="QuranReview.stopHifzSession()">
+                            <button class="btn btn-outline" onclick="QuranReview.stopHifzSession()">
                                 <span>⏹️</span>
                                 إيقاف
                             </button>
@@ -754,11 +747,11 @@
 
         <!-- SETTINGS PAGE -->
         <div id="settings-page" class="page">
-            <section class="section-pro">
-                <div class="container-pro" style="max-width: 600px;">
+            <section class="section">
+                <div class="container" style="max-width: 600px;">
                     <h2 class="section-title" style="text-align: center; margin-bottom: var(--space-8);">⚙️ الإعدادات</h2>
                     
-                    <div class="card-glass-pro" style="margin-bottom: var(--space-6);">
+                    <div class="glass-card" style="margin-bottom: var(--space-6);">
                         <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">👤 الملف الشخصي</h3>
                         <form id="settings-form" onsubmit="QuranReview.saveSettings(event)">
                             <div class="form-floating" style="margin-bottom: var(--space-4);">
@@ -779,18 +772,18 @@
                                 </label>
                             </div>
                             
-                            <button type="submit" class="btn btn-glow btn-full">حفظ التغييرات</button>
+                            <button type="submit" class="btn btn-primary btn-full">حفظ التغييرات</button>
                         </form>
                     </div>
                     
-                    <div class="card-glass-pro" style="margin-bottom: var(--space-6);">
+                    <div class="glass-card" style="margin-bottom: var(--space-6);">
                         <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">🎨 المظهر</h3>
                         
                         <div style="margin-bottom: var(--space-4);">
                             <label style="display: block; margin-bottom: var(--space-3); font-weight: 500;">الوضع</label>
-                            <div class="flex-pro" style="gap: var(--space-3);">
-                                <button type="button" class="btn btn-outline-glow" id="theme-light-btn" onclick="QuranReview.setTheme('light')">☀️ فاتح</button>
-                                <button type="button" class="btn btn-outline-glow" id="theme-dark-btn" onclick="QuranReview.setTheme('dark')">🌙 داكن</button>
+                            <div class="d-flex" style="gap: var(--space-3);">
+                                <button type="button" class="btn btn-outline" id="theme-light-btn" onclick="QuranReview.setTheme('light')">☀️ فاتح</button>
+                                <button type="button" class="btn btn-outline" id="theme-dark-btn" onclick="QuranReview.setTheme('dark')">🌙 داكن</button>
                             </div>
                         </div>
                         
@@ -803,16 +796,16 @@
                         </div>
                     </div>
                     
-                    <div class="card-glass-pro">
+                    <div class="glass-card">
                         <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">💾 إدارة البيانات</h3>
                         <div style="display: flex; flex-direction: column; gap: var(--space-3);">
-                            <button class="btn btn-outline-glow" onclick="QuranReview.exportData()">
+                            <button class="btn btn-outline" onclick="QuranReview.exportData()">
                                 <span>📤</span> تصدير البيانات
                             </button>
-                            <button class="btn btn-outline-glow" onclick="QuranReview.importData()">
+                            <button class="btn btn-outline" onclick="QuranReview.importData()">
                                 <span>📥</span> استيراد البيانات
                             </button>
-                            <button class="btn btn-outline-glow" onclick="QuranReview.resetData()" style="color: var(--color-danger);">
+                            <button class="btn btn-outline" onclick="QuranReview.resetData()" style="color: var(--color-danger);">
                                 <span>🗑️</span> إعادة تعيين
                             </button>
                         </div>
@@ -823,26 +816,26 @@
 
         <!-- MY TASKS PAGE -->
         <div id="mytasks-page" class="page">
-            <section class="section-pro">
-                <div class="container-pro">
+            <section class="section">
+                <div class="container">
                     <h2 class="section-title" style="text-align: center; margin-bottom: var(--space-8);">📝 مهامي</h2>
                     <p id="student-welcome" style="text-align: center; color: var(--color-text-secondary); margin-bottom: var(--space-6);"></p>
                     
                     <!-- Student Task Stats -->
-                    <div class="grid-pro grid-cols-4" style="margin-bottom: var(--space-6);">
-                        <div class="card-stat-premium" style="text-align: center;">
+                    <div class="grid grid-cols-4" style="margin-bottom: var(--space-6);">
+                        <div class="stat-card" style="text-align: center;">
                             <div class="stat-value" id="student-points">0</div>
                             <p style="color: var(--color-text-secondary);">النقاط</p>
                         </div>
-                        <div class="card-stat-premium" style="text-align: center;">
+                        <div class="stat-card" style="text-align: center;">
                             <div class="stat-value" id="student-tasks-done">0</div>
                             <p style="color: var(--color-text-secondary);">مكتملة</p>
                         </div>
-                        <div class="card-stat-premium" style="text-align: center;">
+                        <div class="stat-card" style="text-align: center;">
                             <div class="stat-value" id="student-tasks-pending">0</div>
                             <p style="color: var(--color-text-secondary);">قيد الانتظار</p>
                         </div>
-                        <div class="card-stat-premium" style="text-align: center;">
+                        <div class="stat-card" style="text-align: center;">
                             <div class="stat-value" id="student-tasks-rejected">0</div>
                             <p style="color: var(--color-text-secondary);">مرفوضة</p>
                         </div>
@@ -853,7 +846,7 @@
                         <button class="tab" onclick="QuranReview.switchTaskTab('completed')">مكتملة</button>
                     </div>
                     
-                    <div id="student-tasks-list" class="card-glass-pro">
+                    <div id="student-tasks-list" class="glass-card">
                         <div class="task-card">
                             <span class="task-status task-status-pending"></span>
                             <div style="flex: 1;">
@@ -864,12 +857,12 @@
                         </div>
                     </div>
 
-                    <div class="card-glass-pro" style="margin-top: var(--space-6);">
+                    <div class="glass-card" style="margin-top: var(--space-6);">
                         <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">🏅 سجل النقاط</h3>
                         <div id="student-points-log"></div>
                     </div>
 
-                    <div class="card-glass-pro" style="margin-top: var(--space-6);">
+                    <div class="glass-card" style="margin-top: var(--space-6);">
                         <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">📤 تسليماتي</h3>
                         <div id="student-submissions-list"></div>
                     </div>
@@ -879,30 +872,30 @@
 
         <!-- TEACHER PAGE -->
         <div id="teacher-page" class="page">
-            <section class="section-pro">
-                <div class="container-pro">
+            <section class="section">
+                <div class="container">
                     <h2 class="section-title" style="text-align: center; margin-bottom: var(--space-8);">📋 لوحة المعلم</h2>
                     
-                    <div class="grid-pro grid-cols-4" style="margin-bottom: var(--space-8);">
-                        <div class="card-stat-premium" style="text-align: center;">
+                    <div class="grid grid-cols-4" style="margin-bottom: var(--space-8);">
+                        <div class="stat-card" style="text-align: center;">
                             <div class="stat-value" id="teacher-total-students">0</div>
                             <p style="color: var(--color-text-secondary);">عدد الطلاب</p>
                         </div>
-                        <div class="card-stat-premium" style="text-align: center;">
+                        <div class="stat-card" style="text-align: center;">
                             <div class="stat-value" id="teacher-pending">0</div>
                             <p style="color: var(--color-text-secondary);">تسليمات معلقة</p>
                         </div>
-                        <div class="card-stat-premium" style="text-align: center;">
+                        <div class="stat-card" style="text-align: center;">
                             <div class="stat-value" id="teacher-tasks">0</div>
                             <p style="color: var(--color-text-secondary);">المهام</p>
                         </div>
-                        <div class="card-stat-premium" style="text-align: center;">
+                        <div class="stat-card" style="text-align: center;">
                             <div class="stat-value" id="teacher-approved">0</div>
                             <p style="color: var(--color-text-secondary);">مقبولة</p>
                         </div>
                     </div>
                     
-                    <div class="card-glass-pro" style="margin-bottom: var(--space-6);">
+                    <div class="glass-card" style="margin-bottom: var(--space-6);">
                         <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">➕ إنشاء مهمة جديدة</h3>
                         <form id="teacher-create-task-form" onsubmit="QuranReview.createTask(event)">
                             <div class="form-floating" style="margin-bottom: var(--space-4);">
@@ -913,7 +906,7 @@
                                 <textarea id="task-description" placeholder=" " style="min-height: 80px; resize: vertical;"></textarea>
                                 <label for="task-description">وصف المهمة</label>
                             </div>
-                            <div class="grid-pro grid-cols-2" style="margin-bottom: var(--space-4);">
+                            <div class="grid grid-cols-2" style="margin-bottom: var(--space-4);">
                                 <div class="form-floating">
                                     <select id="task-type">
                                         <option value="memorization">حفظ</option>
@@ -931,11 +924,11 @@
                                 <input type="date" id="task-due-date" placeholder=" ">
                                 <label for="task-due-date">تاريخ التسليم</label>
                             </div>
-                            <button type="submit" class="btn btn-glow btn-full">إنشاء المهمة</button>
+                            <button type="submit" class="btn btn-primary btn-full">إنشاء المهمة</button>
                         </form>
                     </div>
                     
-                    <div class="card-glass-pro">
+                    <div class="glass-card">
                         <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">📥 تسليمات الطلاب</h3>
                         <div id="teacher-tasks-list">
                             <div class="task-card">
@@ -944,7 +937,7 @@
                                     <div style="font-weight: 600;">أحمد - سورة البقرة</div>
                                     <div style="font-size: 0.875rem; color: var(--color-text-secondary);">تم التسليم: اليوم</div>
                                 </div>
-                                <button class="btn btn-sm btn-glow">تصحيح</button>
+                                <button class="btn btn-sm btn-primary">تصحيح</button>
                             </div>
                         </div>
                     </div>
@@ -954,8 +947,8 @@
     </main>
 
     <!-- User Edit Modal (Admin) -->
-    <div class="modal-overlay-pro hidden" id="user-edit-modal">
-        <div class="modal-content-pro" style="max-width: 420px;">
+    <div class="modal-overlay hidden" id="user-edit-modal">
+        <div class="modal-content" style="max-width: 420px;">
             <div style="text-align: center; margin-bottom: var(--space-6);">
                 <div style="font-size: 3rem; margin-bottom: var(--space-2);">✏️</div>
                 <h2 style="font-size: 1.5rem; font-weight: 700;">تعديل المستخدم</h2>
@@ -999,17 +992,17 @@
                     </label>
                 </div>
                 
-                <div class="flex-pro" style="gap: var(--space-3);">
-                    <button type="button" class="btn btn-outline-glow" style="flex: 1;" onclick="QuranReview.closeUserEditModal()">إلغاء</button>
-                    <button type="submit" class="btn btn-glow" style="flex: 1;">حفظ التغييرات</button>
+                <div class="d-flex" style="gap: var(--space-3);">
+                    <button type="button" class="btn btn-outline" style="flex: 1;" onclick="QuranReview.closeUserEditModal()">إلغاء</button>
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">حفظ التغييرات</button>
                 </div>
             </form>
         </div>
     </div>
 
     <!-- Auth Modal -->
-    <div class="modal-overlay-pro hidden" id="auth-modal">
-        <div class="modal-content-pro" style="max-width: 420px;">
+    <div class="modal-overlay hidden" id="auth-modal">
+        <div class="modal-content" style="max-width: 420px;">
             <!-- Login Form -->
             <div id="auth-login-form" class="active">
                 <div style="text-align: center; margin-bottom: var(--space-6);">
@@ -1031,7 +1024,7 @@
                         <label for="login-password">كلمة المرور</label>
                     </div>
                     
-                    <button type="button" class="btn btn-glow btn-full" id="login-submit-btn" onclick="QuranReview.handleLogin(event)">
+                    <button type="button" class="btn btn-primary btn-full" id="login-submit-btn" onclick="QuranReview.handleLogin(event)">
                         <span>🔐</span>
                         دخول
                     </button>
@@ -1074,7 +1067,7 @@
                         <label for="reg-password">كلمة المرور</label>
                     </div>
                     
-                    <button type="button" class="btn btn-gradient btn-full" id="reg-submit-btn" onclick="QuranReview.handleRegister(event)">
+                    <button type="button" class="btn btn-primary btn-full" id="reg-submit-btn" onclick="QuranReview.handleRegister(event)">
                         <span>✨</span>
                         إنشاء الحساب
                     </button>
@@ -1142,7 +1135,7 @@
         // Initialize Animations
         function initAnimations() {
             // Stagger animations for cards
-            gsap.from('.card-glass-pro', {
+            gsap.from('.glass-card', {
                 opacity: 0,
                 y: 50,
                 duration: 0.8,
@@ -1207,7 +1200,7 @@
             document.getElementById(page + '-page').classList.add('active');
             
             // Update nav links
-            document.querySelectorAll('.nav-link-pro').forEach(link => {
+            document.querySelectorAll('.nav-link').forEach(link => {
                 link.classList.remove('active');
                 if (link.getAttribute('data-page') === page) {
                     link.classList.add('active');
@@ -1226,7 +1219,7 @@
         }
         
         // Nav link click handlers
-        document.querySelectorAll('.nav-link-pro').forEach(link => {
+        document.querySelectorAll('.nav-link').forEach(link => {
             link.addEventListener('click', (e) => {
                 e.preventDefault();
                 const page = link.getAttribute('data-page');
@@ -1330,7 +1323,7 @@
                 }
                 
                 // Update nav links
-                document.querySelectorAll('.nav-link-pro').forEach(link => {
+                document.querySelectorAll('.nav-link').forEach(link => {
                     link.classList.remove('active');
                     if (link.getAttribute('data-page') === page) {
                         link.classList.add('active');
@@ -1396,7 +1389,7 @@
                     }
                     
                     // Update nav links
-                    document.querySelectorAll('.nav-link-pro').forEach(link => {
+                    document.querySelectorAll('.nav-link').forEach(link => {
                         link.classList.remove('active');
                         if (link.getAttribute('data-page') === page) {
                             link.classList.add('active');
@@ -1463,7 +1456,7 @@
             };
             
             window.handleLogin = function() {
-                const btn = document.querySelector('#auth-modal .btn-glow');
+                const btn = document.querySelector('#auth-modal .btn-primary');
                 if (btn) {
                     btn.classList.add('btn-loading');
                     setTimeout(() => {
@@ -1481,5 +1474,30 @@
     
     <!-- Hidden file input for import -->
     <input type="file" id="import-file-input" accept=".json" style="display: none;" onchange="QuranReview.handleImportFile(event)">
+
+    <!-- Scroll reveal via IntersectionObserver (compatible avec .main comme scroller) -->
+    <script>
+        (function() {
+            const observer = new IntersectionObserver(function(entries) {
+                entries.forEach(function(entry) {
+                    if (!entry.isIntersecting) return;
+                    const el = entry.target;
+                    el.classList.add('revealed');
+                    if (el.classList.contains('stagger-children') && typeof gsap !== 'undefined') {
+                        gsap.fromTo(el.children,
+                            { opacity: 0, y: 20 },
+                            { opacity: 1, y: 0, duration: 0.5, stagger: 0.08, ease: 'power2.out' }
+                        );
+                    }
+                    observer.unobserve(el);
+                });
+            }, { threshold: 0.1, root: null });
+
+            document.querySelectorAll('.reveal, .stagger-children').forEach(function(el) {
+                if (el.classList.contains('stagger-children')) el.classList.add('js-animate');
+                observer.observe(el);
+            });
+        })();
+    </script>
 </body>
 </html>
