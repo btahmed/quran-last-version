@@ -15,6 +15,7 @@ from .serializers import (
     TaskSerializer, ProgressSerializer, ReviewScheduleSerializer,
     AchievementSerializer, CompetitionSerializer, CompetitionScoreSerializer
 )
+from .middleware import ClassePermissionMixin
 
 User = get_user_model()
 
@@ -385,3 +386,22 @@ class SubmissionRejectView(APIView):
         sub.validated_by = request.user
         sub.save()
         return Response({'status': 'rejected'})
+
+
+class MyStudentsView(ClassePermissionMixin, APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if request.user.role not in ['teacher', 'admin'] and not request.user.is_superuser:
+            return Response({'detail': 'Forbidden'}, status=403)
+        from authentication.serializers import UserSerializer as AuthUserSerializer
+        students = self.get_users_for_class(request.user).filter(role='student')
+        data = [{
+            'id': u.id,
+            'username': u.username,
+            'first_name': u.first_name,
+            'last_name': u.last_name,
+            'email': u.email,
+            'role': u.role,
+        } for u in students]
+        return Response(data)

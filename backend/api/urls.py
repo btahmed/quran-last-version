@@ -29,4 +29,5 @@ urlpatterns = [
     path('pending-submissions/', views.PendingSubmissionsView.as_view(), name='pending-submissions'),
     path('submissions/<int:submission_id>/approve/', views.SubmissionApproveView.as_view(), name='submission-approve'),
     path('submissions/<int:submission_id>/reject/', views.SubmissionRejectView.as_view(), name='submission-reject'),
+    path('my-students/', views.MyStudentsView.as_view(), name='my-students'),
 ]
