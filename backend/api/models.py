@@ -43,6 +43,13 @@ class Task(models.Model):
     completed_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    # Champs pour les tâches créées par un enseignant
+    points = models.PositiveIntegerField(default=0)
+    assigned_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='assigned_tasks'
+    )
     
     class Meta:
         db_table = 'tasks'

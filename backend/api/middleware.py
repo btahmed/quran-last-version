@@ -48,9 +48,8 @@ class ClassePermissionMixin:
         from authentication.models import User
         if user.is_superuser or user.role == 'admin':
             return User.objects.all()
-        user_groups = user.groups.filter(
-            name__in=['Classe_8h45', 'Classe_10h45']
-        )
+        # Groupes du type Classe_*_Prof_* (nouveau format après migration)
+        user_groups = user.groups.filter(name__startswith='Classe_')
         return User.objects.filter(groups__in=user_groups).distinct()
 
     def get_tasks_for_class(self, user):
