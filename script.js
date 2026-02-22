@@ -4482,7 +4482,7 @@ const QuranReview = {
         if (!token) return;
 
         try {
-            const response = await fetch(`${this.config.apiBaseUrl}/api/admin/users/`, {
+            const response = await fetch(`${this.config.apiBaseUrl}/api/auth/admin/users/`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                 },
@@ -4580,7 +4580,7 @@ const QuranReview = {
         successEl?.classList.add('hidden');
 
         try {
-            const response = await fetch(`${this.config.apiBaseUrl}/api/admin/users/${userId}/update/`, {
+            const response = await fetch(`${this.config.apiBaseUrl}/api/auth/admin/users/${userId}/update/`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -4630,7 +4630,7 @@ const QuranReview = {
         const token = localStorage.getItem(this.config.apiTokenKey);
 
         try {
-            const response = await fetch(`${this.config.apiBaseUrl}/api/admin/users/${userId}/delete/`, {
+            const response = await fetch(`${this.config.apiBaseUrl}/api/auth/admin/users/${userId}/delete/`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`,
