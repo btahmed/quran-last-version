@@ -1398,6 +1398,16 @@ tr:last-child td { border-bottom: none; }
 /* ── Motivation source ── */
 .motivation-source { color: var(--text-secondary); font-size: var(--font-size-sm); margin-top: var(--space-2); }
 
+/* ── Audio recording modal ── */
+#recording-btn.recording-active {
+    background-color: var(--color-danger, #ef4444);
+    animation: pulse-record 1s infinite;
+}
+@keyframes pulse-record {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+    50%       { transform: scale(1.05); box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+}
+
 /* ── Responsive grid utilities ── */
 @media (max-width: 767px) {
     .grid-cols-2,
