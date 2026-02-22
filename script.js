@@ -704,21 +704,25 @@ const QuranReview = {
         const usernameEl = document.getElementById('auth-username');
         const teacherLinks = document.querySelectorAll('.nav-teacher-only');
         const studentLinks = document.querySelectorAll('.nav-student-only');
+        const adminLinks = document.querySelectorAll('.nav-admin-only');
 
         if (loggedIn && this.state.user) {
             loginBtn?.classList.add('hidden');
             userInfo?.classList.remove('hidden');
+            const isAdmin = this.state.user.role === 'admin' || this.state.user.is_superuser;
+            const isTeacher = this.state.user.role === 'teacher';
             if (usernameEl) {
-                const roleLabel = this.state.user.role === 'teacher' ? '👨‍🏫' : '🎓';
+                const roleLabel = isAdmin ? '🛡️' : isTeacher ? '👨‍🏫' : '🎓';
                 usernameEl.textContent = `${roleLabel} ${this.state.user.first_name || this.state.user.username}`;
             }
             // Show/hide role-specific nav links
-            const isTeacher = this.state.user.role === 'teacher';
-            teacherLinks.forEach(el => el.style.display = isTeacher ? 'inline-block' : 'none');
-            studentLinks.forEach(el => el.style.display = isTeacher ? 'none' : 'inline-block');
+            adminLinks.forEach(el => el.style.display = isAdmin ? 'inline-block' : 'none');
+            teacherLinks.forEach(el => el.style.display = isTeacher && !isAdmin ? 'inline-block' : 'none');
+            studentLinks.forEach(el => el.style.display = !isAdmin && !isTeacher ? 'inline-block' : 'none');
         } else {
             loginBtn?.classList.remove('hidden');
             userInfo?.classList.add('hidden');
+            adminLinks.forEach(el => el.style.display = 'none');
             teacherLinks.forEach(el => el.style.display = 'none');
             studentLinks.forEach(el => el.style.display = 'none');
         }
@@ -751,7 +755,7 @@ const QuranReview = {
     async performLogin(username, password) {
         Logger.log('AUTH', `Attempting login for user: ${username}`);
         try {
-            const response = await fetch(`${this.config.apiBaseUrl}/api/token/`, {
+            const response = await fetch(`${this.config.apiBaseUrl}/api/auth/token/`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password }),
@@ -776,7 +780,9 @@ const QuranReview = {
             // Auto-redirect based on role
             if (this.state.user) {
                 Logger.log('AUTH', `Redirecting user role: ${this.state.user.role}`);
-                if (this.state.user.role === 'teacher') {
+                if (this.state.user.role === 'admin' || this.state.user.is_superuser) {
+                    this.navigateTo('admin');
+                } else if (this.state.user.role === 'teacher') {
                     this.navigateTo('teacher');
                 } else {
                     this.navigateTo('mytasks');
@@ -939,7 +945,7 @@ const QuranReview = {
         if (!refresh) return false;
 
         try {
-            const response = await fetch(`${this.config.apiBaseUrl}/api/token/refresh/`, {
+            const response = await fetch(`${this.config.apiBaseUrl}/api/auth/token/refresh/`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ refresh }),
@@ -1182,6 +1188,9 @@ const QuranReview = {
                 break;
             case 'teacher':
                 this.loadTeacherDashboard();
+                break;
+            case 'admin':
+                this.loadAdminDashboard();
                 break;
         }
     },
@@ -4408,6 +4417,46 @@ const QuranReview = {
         } catch (error) {
             this.showNotification(error.message, 'error');
         }
+    },
+
+    // ===================================
+    // ADMIN - DASHBOARD (page #admin-page)
+    // ===================================
+
+    async loadAdminDashboard() {
+        const token = localStorage.getItem(this.config.apiTokenKey);
+        try {
+            const res = await fetch(`${this.config.apiBaseUrl}/api/auth/admin/users/`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (!res.ok) throw new Error('Erreur chargement users');
+            const users = await res.json();
+            const el = id => document.getElementById(id);
+            if (el('admin-total-users')) el('admin-total-users').textContent = users.length;
+            if (el('admin-total-students')) el('admin-total-students').textContent = users.filter(u => u.role === 'student').length;
+            if (el('admin-total-teachers')) el('admin-total-teachers').textContent = users.filter(u => u.role === 'teacher').length;
+            if (el('admin-total-admins')) el('admin-total-admins').textContent = users.filter(u => u.role === 'admin' || u.is_superuser).length;
+            const roleColors = { student: 'badge-primary', teacher: 'badge-success', admin: 'badge-warning' };
+            const roleLabels = { student: 'طالب', teacher: 'معلم', admin: 'مدير' };
+            const rows = users.map(u => `
+                <div class="task-card" style="display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3);">
+                    <div style="flex:1;">
+                        <div style="font-weight:600;">${u.first_name || ''} ${u.last_name || ''} <span style="color:var(--color-text-secondary);font-size:0.85rem;">(${u.username})</span></div>
+                        <div style="font-size:0.8rem;color:var(--color-text-secondary);">${u.email || ''}</div>
+                    </div>
+                    <span class="badge ${roleColors[u.role] || 'badge-primary'}">${roleLabels[u.role] || u.role}</span>
+                    ${u.is_superuser ? '<span class="badge badge-warning">Super</span>' : ''}
+                    <button class="btn btn-sm" onclick="QuranReview.openUserEditModal(${u.id}, '${(u.username || '').replace(/'/g, "\\'")}', '${(u.first_name || '').replace(/'/g, "\\'")}', '${(u.last_name || '').replace(/'/g, "\\'")}', '${u.role || ''}', ${!!u.is_superuser})">✏️</button>
+                    <button class="btn btn-sm" style="color:var(--color-error);" onclick="QuranReview.deleteUser(${u.id}, '${u.username.replace(/'/g, "\\'")}')">🗑️</button>
+                </div>`).join('');
+            if (el('admin-users-list')) el('admin-users-list').innerHTML = rows || '<p style="text-align:center;padding:var(--space-4);">لا يوجد مستخدمون</p>';
+        } catch (e) {
+            this.showNotification('خطأ في تحميل المستخدمين: ' + e.message, 'error');
+        }
+    },
+
+    refreshAdminUsers() {
+        this.loadAdminDashboard();
     },
 
     // ===================================

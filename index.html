@@ -158,6 +158,7 @@
                     <a href="#" class="nav-link" data-page="hifz">🎭</a>
                     <a href="#" class="nav-link nav-student-only" data-page="mytasks" style="display: none;">مهامي</a>
                     <a href="#" class="nav-link nav-teacher-only" data-page="teacher" style="display: none;">المعلم</a>
+                    <a href="#" class="nav-link nav-admin-only" data-page="admin" style="display: none;">⚙️ الإدارة</a>
                     <button id="theme-toggle" class="btn btn-icon" style="margin-right: var(--space-4);">
                         <span id="theme-icon">🌙</span>
                     </button>
@@ -939,6 +940,42 @@
                                 </div>
                                 <button class="btn btn-sm btn-primary">تصحيح</button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- ADMIN PAGE -->
+        <div id="admin-page" class="page">
+            <section class="section">
+                <div class="container">
+                    <h2 class="section-title" style="text-align: center; margin-bottom: var(--space-8);">⚙️ لوحة الإدارة</h2>
+                    <div class="grid grid-cols-4" style="margin-bottom: var(--space-8);">
+                        <div class="stat-card" style="text-align: center;">
+                            <div class="stat-value" id="admin-total-users">0</div>
+                            <p style="color: var(--color-text-secondary);">إجمالي المستخدمين</p>
+                        </div>
+                        <div class="stat-card" style="text-align: center;">
+                            <div class="stat-value" id="admin-total-students">0</div>
+                            <p style="color: var(--color-text-secondary);">الطلاب</p>
+                        </div>
+                        <div class="stat-card" style="text-align: center;">
+                            <div class="stat-value" id="admin-total-teachers">0</div>
+                            <p style="color: var(--color-text-secondary);">الأساتذة</p>
+                        </div>
+                        <div class="stat-card" style="text-align: center;">
+                            <div class="stat-value" id="admin-total-admins">0</div>
+                            <p style="color: var(--color-text-secondary);">المديرون</p>
+                        </div>
+                    </div>
+                    <div class="glass-card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4);">
+                            <h3 style="font-size: 1.125rem; font-weight: 600;">👥 إدارة المستخدمين</h3>
+                            <button class="btn btn-primary btn-sm" onclick="QuranReview.refreshAdminUsers()">🔄 تحديث</button>
+                        </div>
+                        <div id="admin-users-list">
+                            <p style="color: var(--color-text-secondary); text-align: center; padding: var(--space-6);">جارٍ التحميل...</p>
                         </div>
                     </div>
                 </div>
