@@ -919,7 +919,7 @@ const QuranReview = {
         if (!token) return;
 
         try {
-            const response = await fetch(`${this.config.apiBaseUrl}/api/me/`, {
+            const response = await fetch(`${this.config.apiBaseUrl}/api/auth/me/`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
 
