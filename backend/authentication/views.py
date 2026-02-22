@@ -66,3 +66,47 @@ class MeView(APIView):
 
     def get(self, request):
         return Response(UserSerializer(request.user).data)
+
+
+class AdminUsersListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if not (request.user.is_staff or request.user.role == 'admin'):
+            return Response({'detail': 'Forbidden'}, status=403)
+        users = User.objects.all().order_by('role', 'username')
+        return Response(UserSerializer(users, many=True).data)
+
+
+class AdminUserUpdateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request, pk):
+        if not (request.user.is_staff or request.user.role == 'admin'):
+            return Response({'detail': 'Forbidden'}, status=403)
+        try:
+            user = User.objects.get(pk=pk)
+        except User.DoesNotExist:
+            return Response({'detail': 'Not found'}, status=404)
+        allowed = ['first_name', 'last_name', 'role', 'is_superuser']
+        for field in allowed:
+            if field in request.data:
+                setattr(user, field, request.data[field])
+        user.save()
+        return Response(UserSerializer(user).data)
+
+
+class AdminUserDeleteView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, pk):
+        if not (request.user.is_staff or request.user.role == 'admin'):
+            return Response({'detail': 'Forbidden'}, status=403)
+        if request.user.pk == pk:
+            return Response({'detail': 'Cannot delete yourself'}, status=400)
+        try:
+            user = User.objects.get(pk=pk)
+            user.delete()
+            return Response(status=204)
+        except User.DoesNotExist:
+            return Response({'detail': 'Not found'}, status=404)
