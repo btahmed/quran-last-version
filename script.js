@@ -878,6 +878,65 @@ const QuranReview = {
         document.getElementById(`teacher-tab-${tabName}`)?.classList.add('active');
     },
 
+    // Student task tab switching (pending / completed)
+    switchTaskTab(tabName) {
+        // Mettre à jour le bouton actif
+        document.querySelectorAll('.tabs .tab').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.tab === tabName);
+        });
+        // Afficher/masquer les cartes selon data-tab
+        const cards = document.querySelectorAll('#student-tasks-list .task-card');
+        if (!cards.length) return;
+        cards.forEach(card => {
+            card.style.display = card.dataset.tab === tabName ? '' : 'none';
+        });
+    },
+
+    // Création de tâche par l'enseignant (appelée depuis le form teacher-create-task-form)
+    async createTask(event) {
+        event.preventDefault();
+        const token = localStorage.getItem(this.config.apiTokenKey);
+        if (!token) return;
+
+        const title = document.getElementById('task-title').value.trim();
+        if (!title) { this.showNotification('عنوان المهمة مطلوب', 'error'); return; }
+
+        const body = {
+            title,
+            description: document.getElementById('task-description').value.trim(),
+            task_type: document.getElementById('task-type').value,
+            points: parseInt(document.getElementById('task-points').value) || 0,
+            due_date: document.getElementById('task-due-date').value || null,
+            assign_all: true,
+            student_ids: [],
+        };
+
+        const submitBtn = event.target.querySelector('button[type="submit"]');
+        if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'جارٍ الإنشاء...'; }
+
+        try {
+            const response = await fetch(`${this.config.apiBaseUrl}/api/tasks/create/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify(body),
+            });
+
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.detail || 'خطأ في إنشاء المهمة');
+
+            this.showNotification(data.detail || 'تم إنشاء المهمة بنجاح!', 'success');
+            document.getElementById('teacher-create-task-form').reset();
+            this.loadTeacherDashboard();
+        } catch (error) {
+            this.showNotification(error.message, 'error');
+        } finally {
+            if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'إنشاء المهمة'; }
+        }
+    },
+
     toggleAssignMode(mode) {
         const container = document.getElementById('student-select-container');
         if (mode === 'select') {
@@ -3999,10 +4058,11 @@ const QuranReview = {
                         }
                     }
 
-                    const typeLabel = task.task_type === 'memorization' ? 'حفظ' : task.task_type === 'recitation' ? 'تلاوة' : 'أخرى';
+                    const typeLabel = task.task_type === 'memorization' ? 'حفظ' : task.task_type === 'recitation' ? 'تلاوة' : task.type === 'hifz' ? 'حفظ' : task.type === 'muraja' ? 'مراجعة' : 'أخرى';
                     const dueDate = task.due_date ? new Date(task.due_date).toLocaleDateString('ar-SA') : '';
+                    const tabStatus = (sub && sub.status === 'approved') ? 'completed' : 'pending';
 
-                    return `<div class="task-card">
+                    return `<div class="task-card" data-tab="${tabStatus}">
                         <div class="task-card-header">
                             <h3 class="task-card-title">${task.title}</h3>
                             ${statusBadge}
@@ -4163,11 +4223,13 @@ const QuranReview = {
                 studentsList.innerHTML = '<p class="empty-state">لا يوجد طلاب بعد</p>';
             } else {
                 studentsList.innerHTML = students.map(s => {
+                    const pts = s.total_points !== undefined ? s.total_points : 0;
+                    const subs = s.submissions_count !== undefined ? s.submissions_count : 0;
                     return `<div class="student-card clickable" onclick="QuranReview.viewStudentProgress(${s.id}, '${(s.first_name || s.username).replace(/'/g, "\\'")}')">
                         <div class="student-card-name">🎓 ${s.first_name || s.username}</div>
                         <div class="student-card-stats">
-                            <span>🏆 ${s.total_points} نقطة</span>
-                            <span>📝 ${s.submissions_count} تسليم</span>
+                            <span>🏆 ${pts} نقطة</span>
+                            <span>📝 ${subs} تسليم</span>
                         </div>
                         <span class="student-card-arrow">←</span>
                     </div>`;

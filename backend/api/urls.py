@@ -5,6 +5,7 @@ urlpatterns = [
     # Tasks
     path('tasks/', views.TaskListCreateView.as_view(), name='task-list'),
     path('tasks/<int:pk>/', views.TaskDetailView.as_view(), name='task-detail'),
+    path('tasks/create/', views.TeacherTaskCreateView.as_view(), name='teacher-task-create'),
     
     # Progress
     path('progress/', views.ProgressListCreateView.as_view(), name='progress-list'),

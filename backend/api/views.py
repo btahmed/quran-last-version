@@ -27,19 +27,22 @@ class TaskListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
     filter_backends = [filters.OrderingFilter]
     ordering_fields = ['due_date', 'priority', 'created_at']
-    
+
     def get_queryset(self):
-        queryset = Task.objects.filter(user=self.request.user)
+        user = self.request.user
+        # Les enseignants voient les tâches qu'ils ont créées pour leurs élèves
+        if getattr(user, 'role', None) == 'teacher' or user.is_staff:
+            queryset = Task.objects.filter(assigned_by=user)
+        else:
+            queryset = Task.objects.filter(user=user)
         status_filter = self.request.query_params.get('status')
         type_filter = self.request.query_params.get('type')
-        
         if status_filter:
             queryset = queryset.filter(status=status_filter)
         if type_filter:
             queryset = queryset.filter(type=type_filter)
-        
         return queryset
-    
+
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
@@ -394,16 +397,21 @@ class MyStudentsView(ClassePermissionMixin, APIView):
     def get(self, request):
         if request.user.role not in ['teacher', 'admin'] and not request.user.is_superuser:
             return Response({'detail': 'Forbidden'}, status=403)
-        from authentication.serializers import UserSerializer as AuthUserSerializer
         students = self.get_users_for_class(request.user).filter(role='student')
-        data = [{
-            'id': u.id,
-            'username': u.username,
-            'first_name': u.first_name,
-            'last_name': u.last_name,
-            'email': u.email,
-            'role': u.role,
-        } for u in students]
+        data = []
+        for u in students:
+            total_pts = PointsLog.get_total_points(u)
+            subs_count = u.submissions.count()
+            data.append({
+                'id': u.id,
+                'username': u.username,
+                'first_name': u.first_name,
+                'last_name': u.last_name,
+                'email': u.email,
+                'role': u.role,
+                'total_points': total_pts,
+                'submissions_count': subs_count,
+            })
         return Response(data)
 
 
@@ -444,3 +452,63 @@ class MyTeacherView(APIView):
             'teacher_username': teacher.username,
             'classe_name': classe_name,
         })
+
+
+class TeacherTaskCreateView(APIView):
+    """
+    POST /api/tasks/create/
+    Crée une tâche pour tous les élèves du groupe de l'enseignant connecté.
+    """
+    permission_classes = [IsAuthenticated]
+
+    TASK_TYPE_MAP = {
+        'memorization': 'hifz',
+        'review': 'muraja',
+        'tajweed': 'tilawa',
+        'hifz': 'hifz',
+        'muraja': 'muraja',
+        'tilawa': 'tilawa',
+    }
+
+    def post(self, request):
+        user = request.user
+        if getattr(user, 'role', None) != 'teacher' and not user.is_staff:
+            return Response({'detail': 'Accès réservé aux enseignants.'}, status=403)
+
+        title = request.data.get('title', '').strip()
+        if not title:
+            return Response({'detail': 'Le titre est obligatoire.'}, status=400)
+
+        description = request.data.get('description', '')
+        task_type_raw = request.data.get('task_type', 'hifz')
+        task_type = self.TASK_TYPE_MAP.get(task_type_raw, 'hifz')
+        points = int(request.data.get('points', 0) or 0)
+        due_date = request.data.get('due_date') or None
+        assign_all = request.data.get('assign_all', True)
+        student_ids = request.data.get('student_ids', [])
+
+        # Récupérer les élèves du groupe de l'enseignant
+        teacher_groups = user.groups.filter(name__startswith='Classe_')
+        students = User.objects.filter(groups__in=teacher_groups, role='student').distinct()
+
+        if not assign_all and student_ids:
+            students = students.filter(id__in=student_ids)
+
+        if not students.exists():
+            return Response({'detail': 'Aucun élève trouvé dans votre groupe.'}, status=400)
+
+        # Créer une tâche pour chaque élève
+        created = 0
+        for student in students:
+            Task.objects.create(
+                user=student,
+                assigned_by=user,
+                title=title,
+                description=description,
+                type=task_type,
+                points=points,
+                due_date=due_date,
+            )
+            created += 1
+
+        return Response({'detail': f'{created} مهمة تم إنشاؤها بنجاح.', 'count': created})
