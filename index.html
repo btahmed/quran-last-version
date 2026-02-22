@@ -1363,6 +1363,42 @@
     
     <!-- Main Application Script -->
     <script src="script.js"></script>
+
+    <!-- Alias patch: méthodes appelées depuis les onclick du HTML -->
+    <script>
+        // hifzManager → les méthodes hifz vivent dans competitionManager
+        QuranReview.hifzManager = QuranReview.competitionManager;
+
+        // Mémorisation : afficher/masquer le formulaire d'ajout
+        QuranReview.showAddMemorization = function() {
+            const el = document.getElementById('add-memorization-form-container');
+            if (el) el.style.display = 'block';
+        };
+        QuranReview.hideAddMemorization = function() {
+            const el = document.getElementById('add-memorization-form-container');
+            if (el) { el.style.display = 'none'; }
+            const form = document.getElementById('add-memorization-form');
+            if (form) form.reset();
+        };
+        QuranReview.handleAddMemorization = function(event) {
+            if (event) event.preventDefault();
+            QuranReview.addNewMemorization();
+            QuranReview.hideAddMemorization();
+        };
+
+        // Ward player : boutons de navigation et toggle play/pause
+        QuranReview.nextWardAyah     = function() { QuranReview.playNextWardAyah(); };
+        QuranReview.previousWardAyah = function() { QuranReview.playPreviousAyah(); };
+        QuranReview.toggleWardPlay   = function() {
+            if (QuranReview.state.wardPlayer && QuranReview.state.wardPlayer.isPlaying) {
+                QuranReview.stopWardPlayback();
+            } else {
+                QuranReview.playWard();
+            }
+        };
+
+        console.log('[PATCH] Alias methods injected:', typeof QuranReview.showAddMemorization);
+    </script>
     
     <!-- Pro Features & Fixes -->
     <script>
