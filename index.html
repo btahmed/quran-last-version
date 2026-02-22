@@ -1126,6 +1126,42 @@
         </div>
     </div>
 
+    <!-- Audio Record Modal (Student task submission) -->
+    <div class="modal-overlay hidden" id="audio-record-modal">
+        <div class="modal-content" style="max-width: 480px; text-align: center;">
+            <div style="margin-bottom: var(--space-4);">
+                <div style="font-size: 2.5rem; margin-bottom: var(--space-2);">🎤</div>
+                <h2 style="font-size: 1.25rem; font-weight: 700;">تسجيل التلاوة</h2>
+                <p id="recording-task-name" style="color: var(--color-text-secondary); margin-top: var(--space-1);"></p>
+            </div>
+
+            <div style="font-size: 2rem; font-weight: 700; margin: var(--space-4) 0;" id="recording-timer">00:00</div>
+
+            <p id="recording-status" style="color: var(--color-text-secondary); margin-bottom: var(--space-4);">اضغط للتسجيل</p>
+
+            <button
+                id="recording-btn"
+                class="btn btn-primary"
+                style="width: 80px; height: 80px; border-radius: 50%; font-size: 1.5rem; margin-bottom: var(--space-6);"
+                onclick="QuranReview.toggleRecording()">
+                🎤
+            </button>
+
+            <audio id="recording-preview" controls class="hidden" style="width: 100%; margin-bottom: var(--space-4);"></audio>
+
+            <div style="display: flex; gap: var(--space-3); justify-content: center;">
+                <button type="button" class="btn btn-outline" onclick="QuranReview.stopRecording(true)">إلغاء</button>
+                <button
+                    type="button"
+                    id="recording-submit-btn"
+                    class="btn btn-primary hidden"
+                    onclick="QuranReview.submitRecording()">
+                    📤 إرسال التسجيل
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Register GSAP ScrollTrigger
         gsap.registerPlugin(ScrollTrigger);
@@ -1224,17 +1260,19 @@
             });
         }
         
-        // Generate Particles
+        // Generate Particles (guard: element may not exist on all pages)
         const particlesContainer = document.getElementById('particles');
-        for (let i = 0; i < 30; i++) {
-            const particle = document.createElement('div');
-            particle.className = 'particle';
-            particle.style.left = Math.random() * 100 + '%';
-            particle.style.animationDelay = Math.random() * 20 + 's';
-            particle.style.animationDuration = (15 + Math.random() * 10) + 's';
-            particle.style.width = (3 + Math.random() * 6) + 'px';
-            particle.style.height = particle.style.width;
-            particlesContainer.appendChild(particle);
+        if (particlesContainer) {
+            for (let i = 0; i < 30; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 20 + 's';
+                particle.style.animationDuration = (15 + Math.random() * 10) + 's';
+                particle.style.width = (3 + Math.random() * 6) + 'px';
+                particle.style.height = particle.style.width;
+                particlesContainer.appendChild(particle);
+            }
         }
         
         // Navigation
