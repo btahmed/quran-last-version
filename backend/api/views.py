@@ -50,9 +50,13 @@ class TaskListCreateView(generics.ListCreateAPIView):
 class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = TaskSerializer
     permission_classes = [IsAuthenticated]
-    
+
     def get_queryset(self):
-        return Task.objects.filter(user=self.request.user)
+        user = self.request.user
+        # Les profs peuvent accéder aux tâches qu'ils ont créées pour leurs élèves
+        if getattr(user, 'role', None) == 'teacher' or user.is_staff:
+            return Task.objects.filter(assigned_by=user)
+        return Task.objects.filter(user=user)
 
 
 # ============ Progress ============
@@ -225,7 +229,11 @@ class MySubmissionsView(APIView):
         subs = Submission.objects.filter(student=request.user).select_related('task')
         data = [{
             'id': s.id,
-            'task_title': s.task.title,
+            'task': {
+                'id': s.task.id,
+                'title': s.task.title,
+                'points': getattr(s.task, 'points', 0),
+            },
             'status': s.status,
             'submitted_at': s.submitted_at,
             'admin_feedback': s.admin_feedback,
@@ -330,24 +338,36 @@ class SubmissionCreateView(APIView):
         return Response({'id': sub.id, 'status': sub.status}, status=201 if created else 200)
 
 
-class PendingSubmissionsView(APIView):
+class PendingSubmissionsView(ClassePermissionMixin, APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         if request.user.role not in ['teacher', 'admin'] and not request.user.is_superuser:
             return Response({'detail': 'Forbidden'}, status=403)
-        subs = Submission.objects.filter(status='submitted').select_related('task', 'student')
+        # Filtrer uniquement les élèves de la classe du prof
+        my_students = self.get_users_for_class(request.user).filter(role='student')
+        subs = Submission.objects.filter(
+            status='submitted',
+            student__in=my_students
+        ).select_related('task', 'student')
         data = [{
             'id': s.id,
             'student': s.student.username,
-            'student_name': f"{s.student.first_name} {s.student.last_name}".strip(),
-            'task': s.task.title,
+            'student_name': (f"{s.student.first_name} {s.student.last_name}".strip()
+                             or s.student.username),
+            'task': {
+                'id': s.task.id,
+                'title': s.task.title,
+                'points': getattr(s.task, 'points', 0),
+            },
             'submitted_at': s.submitted_at,
+            'audio_url': (request.build_absolute_uri(s.audio_file.url)
+                          if s.audio_file else None),
         } for s in subs]
         return Response(data)
 
 
-class SubmissionApproveView(APIView):
+class SubmissionApproveView(ClassePermissionMixin, APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, submission_id):
@@ -357,6 +377,11 @@ class SubmissionApproveView(APIView):
             sub = Submission.objects.get(pk=submission_id)
         except Submission.DoesNotExist:
             return Response({'detail': 'Not found'}, status=404)
+        # Vérifier que l'élève appartient à la classe du prof
+        if not request.user.is_superuser and request.user.role != 'admin':
+            my_students = self.get_users_for_class(request.user).filter(role='student')
+            if not my_students.filter(pk=sub.student.pk).exists():
+                return Response({'detail': 'Forbidden'}, status=403)
         sub.status = 'approved'
         sub.validated_at = timezone.now()
         sub.validated_by = request.user
@@ -373,7 +398,7 @@ class SubmissionApproveView(APIView):
         return Response({'status': 'approved', 'points_awarded': points})
 
 
-class SubmissionRejectView(APIView):
+class SubmissionRejectView(ClassePermissionMixin, APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, submission_id):
@@ -383,6 +408,11 @@ class SubmissionRejectView(APIView):
             sub = Submission.objects.get(pk=submission_id)
         except Submission.DoesNotExist:
             return Response({'detail': 'Not found'}, status=404)
+        # Vérifier que l'élève appartient à la classe du prof
+        if not request.user.is_superuser and request.user.role != 'admin':
+            my_students = self.get_users_for_class(request.user).filter(role='student')
+            if not my_students.filter(pk=sub.student.pk).exists():
+                return Response({'detail': 'Forbidden'}, status=403)
         sub.status = 'rejected'
         sub.admin_feedback = request.data.get('feedback', '')
         sub.validated_at = timezone.now()
@@ -413,6 +443,55 @@ class MyStudentsView(ClassePermissionMixin, APIView):
                 'submissions_count': subs_count,
             })
         return Response(data)
+
+
+class StudentProgressView(ClassePermissionMixin, APIView):
+    """
+    GET /api/students/<student_id>/progress/
+    Retourne le détail des tâches et soumissions d'un élève (pour le prof).
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, student_id):
+        if request.user.role not in ['teacher', 'admin'] and not request.user.is_superuser:
+            return Response({'detail': 'Forbidden'}, status=403)
+        # Vérifier que l'élève appartient à la classe du prof
+        my_students = self.get_users_for_class(request.user).filter(role='student')
+        try:
+            student = my_students.get(pk=student_id)
+        except User.DoesNotExist:
+            return Response({'detail': 'Not found'}, status=404)
+
+        # Tâches assignées par ce prof à cet élève
+        tasks = Task.objects.filter(user=student, assigned_by=request.user).prefetch_related('submissions')
+        task_data = []
+        for t in tasks:
+            sub = t.submissions.filter(student=student).first()
+            task_data.append({
+                'id': t.id,
+                'title': t.title,
+                'task_type': t.type,          # JS attend task_type
+                'points': getattr(t, 'points', 0),
+                'due_date': t.due_date,
+                'submission_status': sub.status if sub else 'not_submitted',  # JS attend submission_status
+                'submitted_at': sub.submitted_at if sub else None,
+                'audio_url': (request.build_absolute_uri(sub.audio_file.url)
+                              if sub and sub.audio_file else None),
+                'admin_feedback': sub.admin_feedback if sub else '',
+                'awarded_points': sub.awarded_points if sub else 0,
+            })
+
+        total_points = PointsLog.get_total_points(student)
+        return Response({
+            'student': {                      # JS attend data.student.total_points
+                'id': student.id,
+                'username': student.username,
+                'first_name': student.first_name,
+                'last_name': student.last_name,
+                'total_points': total_points,
+            },
+            'tasks': task_data,
+        })
 
 
 class MyTeacherView(APIView):

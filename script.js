@@ -4005,7 +4005,9 @@ const QuranReview = {
 
             // Build submission lookup by task id
             const subByTask = {};
-            submissions.forEach(s => { subByTask[s.task.id] = s; });
+            submissions.forEach(s => {
+                if (s && s.task) { subByTask[s.task.id] = s; }
+            });
 
             const done = submissions.filter(s => s.status === 'approved').length;
             const rejected = submissions.filter(s => s.status === 'rejected').length;
@@ -4239,27 +4241,37 @@ const QuranReview = {
             // Tasks list
             const taskListEl = document.getElementById('teacher-tasks-list');
 
-            // Add Delete All button header
-            const headerHtml = `
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                    <h3>📋 قائمة المهام</h3>
-                    <button class="btn btn-danger btn-sm" onclick="QuranReview.handleDeleteAllTasks()" style="background-color: #dc3545;">
-                        🗑️ حذف جميع المهام
-                    </button>
-                </div>
-            `;
+            const typeMap = { hifz: 'حفظ', muraja: 'مراجعة', tilawa: 'تلاوة', memorization: 'حفظ', review: 'مراجعة', tajweed: 'تلاوة' };
 
             if (!tasks.length) {
-                taskListEl.innerHTML = headerHtml + '<p class="empty-state">لا توجد مهام بعد</p>';
+                taskListEl.innerHTML = '<p class="empty-state">لا توجد مهام بعد</p>';
             } else {
-                taskListEl.innerHTML = headerHtml + tasks.map(task => {
-                    const typeLabel = task.task_type === 'memorization' ? 'حفظ' : task.task_type === 'recitation' ? 'تلاوة' : 'أخرى';
+                // Regrouper les tâches par titre+type (une tâche = N copies, une par élève)
+                const taskGroups = {};
+                tasks.forEach(t => {
+                    const key = t.title + '|' + (t.type || t.task_type);
+                    if (!taskGroups[key]) {
+                        taskGroups[key] = { ...t, studentCount: 0, allIds: [] };
+                    }
+                    taskGroups[key].studentCount++;
+                    taskGroups[key].allIds.push(t.id);
+                });
+                taskListEl.innerHTML = Object.values(taskGroups).map(task => {
+                    const typeLabel = typeMap[task.type] || typeMap[task.task_type] || 'أخرى';
                     const dueDate = task.due_date ? new Date(task.due_date).toLocaleDateString('ar-SA') : '';
                     const date = new Date(task.created_at).toLocaleDateString('ar-SA');
-                    return `<div class="task-card">
-                        <div class="task-card-header">
-                            <h3 class="task-card-title">${task.title}</h3>
-                            <span class="task-type-badge">${typeLabel}</span>
+                    const idsStr = task.allIds.join(',');
+                    return `<div class="task-card" style="margin-bottom: var(--space-3);">
+                        <div class="task-card-header" style="display:flex;justify-content:space-between;align-items:flex-start;">
+                            <div>
+                                <h3 class="task-card-title">${task.title}</h3>
+                                <span class="task-type-badge">${typeLabel}</span>
+                                <span style="font-size:0.8rem;color:#999;margin-right:0.5rem;">👤 ${task.studentCount} طالب</span>
+                            </div>
+                            <button class="btn btn-danger btn-sm" style="flex-shrink:0;margin-right:0.5rem;"
+                                onclick="QuranReview.deleteTask('${idsStr}', '${task.title.replace(/'/g, "\\'")}')">
+                                🗑️
+                            </button>
                         </div>
                         ${task.description ? `<p class="task-card-desc">${task.description}</p>` : ''}
                         <div class="task-card-meta">
@@ -4275,6 +4287,38 @@ const QuranReview = {
             this.showNotification('خطأ في تحميل البيانات', 'error');
         } finally {
             this.hideLoading();
+            // Force les glass-cards du dashboard prof à être visibles
+            // (les animations scroll-triggered bloquent à opacity:0 sur chargement dynamique)
+            document.querySelectorAll('#teacher-page .glass-card').forEach(card => {
+                card.style.opacity = '1';
+                card.style.transform = 'none';
+                card.style.transition = 'none';
+            });
+        }
+    },
+
+    async deleteTask(taskIds, taskTitle) {
+        if (!confirm(`هل تريد حذف المهمة "${taskTitle}"؟\nسيتم حذفها لجميع الطلاب.`)) return;
+        const token = localStorage.getItem(this.config.apiTokenKey);
+        if (!token) return;
+        try {
+            // taskIds peut être un seul ID ou une liste séparée par des virgules
+            const ids = String(taskIds).split(',').map(id => id.trim()).filter(Boolean);
+            const results = await Promise.all(ids.map(id =>
+                fetch(`${this.config.apiBaseUrl}/api/tasks/${id}/`, {
+                    method: 'DELETE',
+                    headers: { Authorization: `Bearer ${token}` },
+                })
+            ));
+            const allOk = results.every(r => r.ok || r.status === 204);
+            if (allOk) {
+                this.showNotification('تم حذف المهمة بنجاح', 'success');
+                this.loadTeacherDashboard();
+            } else {
+                this.showNotification('خطأ في حذف المهمة', 'error');
+            }
+        } catch (err) {
+            this.showNotification('خطأ في الاتصال', 'error');
         }
     },
 
@@ -4308,7 +4352,8 @@ const QuranReview = {
             } else {
                 html += '<div class="student-tasks-progress">';
                 data.tasks.forEach(task => {
-                    const typeLabel = task.task_type === 'memorization' ? 'حفظ' : task.task_type === 'recitation' ? 'تلاوة' : 'أخرى';
+                    const typeLabelMap = { hifz: 'حفظ', muraja: 'مراجعة', tilawa: 'تلاوة', memorization: 'حفظ', recitation: 'تلاوة', review: 'مراجعة' };
+                    const typeLabel = typeLabelMap[task.task_type] || 'أخرى';
                     let statusBadge = '';
                     if (task.submission_status === 'approved') {
                         statusBadge = '<span class="status-badge status-approved">مقبول ✓</span>';
