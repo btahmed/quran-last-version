@@ -950,6 +950,17 @@
                             <p class="empty-state">جارٍ التحميل...</p>
                         </div>
                     </div>
+
+                    <!-- Panneau de détails d'un élève (affiché au clic) -->
+                    <div id="student-detail-panel" class="glass-card hidden" style="margin-top: var(--space-6); border: 2px solid var(--color-primary, #6366f1);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4);">
+                            <h3 id="student-detail-name" style="font-size: 1.125rem; font-weight: 600;">📊 تقدم الطالب</h3>
+                            <button class="btn btn-outline btn-sm" onclick="document.getElementById('student-detail-panel').classList.add('hidden')">✕ إغلاق</button>
+                        </div>
+                        <div id="student-detail-content">
+                            <p class="empty-state">جارٍ التحميل...</p>
+                        </div>
+                    </div>
                 </div>
             </section>
         </div>
@@ -1215,13 +1226,21 @@
         
         // Initialize Animations
         function initAnimations() {
-            // Stagger animations for cards
-            gsap.from('.glass-card', {
+            // Stagger animations for cards (home page uniquement)
+            // Les autres pages SPA ont leurs propres glass-cards qui ne doivent pas être bloquées à opacity:0
+            gsap.from('#home-page .glass-card', {
                 opacity: 0,
                 y: 50,
                 duration: 0.8,
                 stagger: 0.1,
-                ease: 'power3.out'
+                ease: 'power3.out',
+                onComplete: function() {
+                    // S'assurer que toutes les glass-cards sont visibles après l'animation
+                    document.querySelectorAll('.glass-card').forEach(function(c) {
+                        c.style.opacity = '1';
+                        c.style.transform = '';
+                    });
+                }
             });
             
             // Stats counter animation
