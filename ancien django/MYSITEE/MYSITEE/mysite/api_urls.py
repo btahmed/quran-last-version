@@ -2,6 +2,7 @@ from django.urls import path
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from .api_views import (
+    CreateStudentView,
     CreateTeacherView,
     DeleteAllTasksView,
     DeleteUserView,
@@ -20,6 +21,17 @@ from .api_views import (
     TaskCreateView,
     TaskListView,
     UpdateUserView,
+)
+from .api_views_classes import MyStudentsViewClasses
+from .api_views_admin import (
+    GroupManagementView,
+    GroupDetailView,
+    StudentGroupAssignmentView,
+    StudentProfileAdminView,
+    TeacherClassAssignmentView,
+    AuditLogView,
+    ClassesAndTeachersView,
+    SyncUpdatesView,
 )
 
 urlpatterns = [
@@ -47,13 +59,32 @@ urlpatterns = [
 
     # Teacher-only
     path('pending-submissions/', PendingSubmissionsView.as_view(), name='api_pending_submissions'),
-    path('my-students/', MyStudentsView.as_view(), name='api_my_students'),
+    path('my-students/', MyStudentsViewClasses.as_view(), name='api_my_students'),
     path('students/<int:student_id>/progress/', StudentProgressView.as_view(), name='api_student_progress'),
 
     # Admin-only
+    path('admin/users/create/', CreateStudentView.as_view(), name='api_create_student'),
     path('admin/create-teacher/', CreateTeacherView.as_view(), name='api_create_teacher'),
     path('admin/users/', ListUsersView.as_view(), name='api_list_users'),
     path('admin/users/<int:user_id>/update/', UpdateUserView.as_view(), name='api_update_user'),
     path('admin/users/<int:user_id>/delete/', DeleteUserView.as_view(), name='api_delete_user'),
     path('admin/tasks/delete-all/', DeleteAllTasksView.as_view(), name='api_delete_all_tasks'),
+    
+    # Admin - Gestion avancée des groupes
+    path('admin/groups/', GroupManagementView.as_view(), name='api_admin_groups'),
+    path('admin/groups/<int:group_id>/', GroupDetailView.as_view(), name='api_admin_group_detail'),
+    path('admin/assign-student/', StudentGroupAssignmentView.as_view(), name='api_admin_assign_student'),
+    
+    # Admin - Gestion des profils étudiants
+    path('admin/students/<int:student_id>/profile/', StudentProfileAdminView.as_view(), name='api_admin_student_profile'),
+    
+    # Admin - Gestion des professeurs et classes
+    path('admin/assign-teacher/', TeacherClassAssignmentView.as_view(), name='api_admin_assign_teacher'),
+    path('admin/classes-teachers/', ClassesAndTeachersView.as_view(), name='api_admin_classes_teachers'),
+    
+    # Admin - Journal d'audit
+    path('admin/audit-log/', AuditLogView.as_view(), name='api_admin_audit_log'),
+    
+    # Admin - Synchronisation
+    path('admin/sync-updates/', SyncUpdatesView.as_view(), name='api_admin_sync_updates'),
 ]

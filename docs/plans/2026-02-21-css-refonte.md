@@ -1,3 +1,86 @@
+# CSS Refonte — Implementation Plan
+
+> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
+
+**Goal:** Fusionner 4 fichiers CSS (4239 lignes, conflits multiples) en un seul `style.css` propre (~1100 lignes) avec glassmorphism + neumorphisme hybride, palette modernisée, dark mode complet et GSAP.
+
+**Architecture:** Un seul `style.css` structuré en 10 sections. Glassmorphism sur les cartes/header/modals. Neumorphisme sur boutons/inputs. Dark mode via `[data-theme="dark"]` sur `<html>`. GSAP conservé pour les animations au scroll.
+
+**Tech Stack:** CSS3 custom properties, backdrop-filter, GSAP 3.12 + ScrollTrigger (CDN), Amiri + Noto Naskh Arabic (Google Fonts)
+
+---
+
+## Fichiers impactés
+
+| Fichier | Action |
+|---------|--------|
+| `style.css` | Réécriture complète |
+| `style-pro.css` | Supprimé |
+| `style-pro-fixes.css` | Supprimé |
+| `style-modern.css` | Supprimé (jamais chargé) |
+| `index.html` | Retirer les `<link>` vers CSS supprimés |
+
+---
+
+### Task 1 : Sauvegarder les anciens CSS + nettoyer index.html
+
+**Files:**
+- Modify: `index.html` (lignes 22-27)
+- Delete: `style-pro.css`, `style-pro-fixes.css`, `style-modern.css`
+
+**Step 1 : Créer un backup des 4 CSS actuels**
+
+```bash
+cd C:/Users/ahmad/quran.reviewer/QuranReviewLocal
+mkdir -p docs/css-backup
+cp style.css docs/css-backup/style.css.bak
+cp style-pro.css docs/css-backup/style-pro.css.bak
+cp style-pro-fixes.css docs/css-backup/style-pro-fixes.css.bak
+cp style-modern.css docs/css-backup/style-modern.css.bak
+```
+
+**Step 2 : Retirer les liens CSS supprimés de index.html**
+
+Dans `index.html`, remplacer :
+```html
+    <!-- Base Styles -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Pro Styles -->
+    <link rel="stylesheet" href="style-pro.css">
+    <link rel="stylesheet" href="style-pro-fixes.css">
+```
+Par :
+```html
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css">
+```
+
+**Step 3 : Supprimer les anciens fichiers CSS**
+
+```bash
+rm style-pro.css style-pro-fixes.css style-modern.css
+```
+
+**Step 4 : Commit**
+
+```bash
+git add -A
+git commit -m "chore: suppression CSS redondants, nettoyage index.html"
+```
+
+---
+
+### Task 2 : Section 1 — Tokens & Variables CSS
+
+**Files:**
+- Modify: `style.css` — remplacer tout le contenu par la Section 1
+
+**Step 1 : Écrire les variables CSS (début du fichier)**
+
+Remplacer le contenu de `style.css` par :
+
+```css
 /* =============================================
    QURAN REVIEW — DESIGN SYSTEM
    Version 2.0 — Glassmorphism + Neumorphisme
@@ -133,7 +216,29 @@
     --shadow-lg:  0 10px 30px rgba(0, 0, 0, 0.50);
     --shadow-xl:  0 20px 60px rgba(0, 0, 0, 0.60);
 }
+```
 
+**Step 2 : Vérifier dans le navigateur**
+
+Ouvrir `index.html` dans le navigateur. La page doit s'afficher (même basiquement) sans erreur console CSS.
+
+**Step 3 : Commit**
+
+```bash
+git add style.css
+git commit -m "feat(css): section 1 - tokens et variables CSS light/dark"
+```
+
+---
+
+### Task 3 : Section 2 — Reset & Base + Typographie
+
+**Files:**
+- Modify: `style.css` — ajouter après la section 1
+
+**Step 1 : Ajouter Reset, Base et Typographie**
+
+```css
 /* =============================================
    2. RESET & BASE
    ============================================= */
@@ -218,7 +323,29 @@ input, textarea, select {
     -webkit-text-fill-color: transparent;
     background-clip: text;
 }
+```
 
+**Step 2 : Vérifier**
+
+Ouvrir le navigateur. Le fond crème doit s'afficher, le texte doit être lisible.
+
+**Step 3 : Commit**
+
+```bash
+git add style.css
+git commit -m "feat(css): section 2-3 - reset base et typographie arabe"
+```
+
+---
+
+### Task 4 : Section 4 — Layout (Header, Nav, Main, Pages)
+
+**Files:**
+- Modify: `style.css` — ajouter après section 3
+
+**Step 1 : Ajouter le Layout**
+
+```css
 /* =============================================
    4. LAYOUT
    ============================================= */
@@ -336,11 +463,29 @@ input, textarea, select {
 /* Pages */
 .page { display: none; }
 .page.active { display: block; }
+```
 
-/* Nav student/teacher only — masqués par défaut, affichés via JS */
-.nav-student-only,
-.nav-teacher-only { display: none; }
+**Step 2 : Vérifier**
 
+Header doit être visible et sticky. Les onglets de navigation doivent être cliquables et changer de page.
+
+**Step 3 : Commit**
+
+```bash
+git add style.css
+git commit -m "feat(css): section 4 - layout header nav main pages"
+```
+
+---
+
+### Task 5 : Section 5 — Composants Glassmorphism
+
+**Files:**
+- Modify: `style.css` — ajouter après section 4
+
+**Step 1 : Ajouter les composants glassmorphism**
+
+```css
 /* =============================================
    5. COMPOSANTS GLASSMORPHISM
    ============================================= */
@@ -493,7 +638,29 @@ input, textarea, select {
     color: var(--text-secondary);
     margin-top: var(--space-1);
 }
+```
 
+**Step 2 : Vérifier**
+
+Les cards doivent avoir l'effet glassmorphism visible. La modal doit s'animer à l'ouverture.
+
+**Step 3 : Commit**
+
+```bash
+git add style.css
+git commit -m "feat(css): section 5 - composants glassmorphism"
+```
+
+---
+
+### Task 6 : Section 6 — Composants Neumorphisme
+
+**Files:**
+- Modify: `style.css` — ajouter après section 5
+
+**Step 1 : Ajouter les composants neumorphisme**
+
+```css
 /* =============================================
    6. COMPOSANTS NEUMORPHISME
    ============================================= */
@@ -517,6 +684,7 @@ input, textarea, select {
     overflow: hidden;
 }
 
+/* Bouton primaire — neumorphisme + gradient */
 .btn-primary {
     background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
     color: white;
@@ -529,17 +697,26 @@ input, textarea, select {
     transform: translateY(-2px);
 }
 
-.btn-primary:active { transform: translateY(0); box-shadow: var(--shadow-sm); }
+.btn-primary:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-sm);
+}
 
+/* Bouton secondaire — neumorphisme flat */
 .btn-secondary {
     background: var(--neu-bg);
     color: var(--text);
     box-shadow: var(--neu-shadow-sm);
 }
 
-.btn-secondary:hover { box-shadow: var(--neu-shadow); color: var(--color-primary); }
+.btn-secondary:hover {
+    box-shadow: var(--neu-shadow);
+    color: var(--color-primary);
+}
+
 .btn-secondary:active { box-shadow: var(--neu-shadow-inset); }
 
+/* Bouton danger */
 .btn-danger {
     background: linear-gradient(135deg, var(--color-danger) 0%, #d44d4d 100%);
     color: white;
@@ -548,19 +725,25 @@ input, textarea, select {
 
 .btn-danger:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
 
+/* Bouton outline */
 .btn-outline {
     background: transparent;
     color: var(--color-primary);
     border: 2px solid var(--color-primary);
 }
 
-.btn-outline:hover { background: rgba(26, 122, 74, 0.08); transform: translateY(-1px); }
+.btn-outline:hover {
+    background: rgba(26, 122, 74, 0.08);
+    transform: translateY(-1px);
+}
 
-.btn-sm  { padding: var(--space-2) var(--space-4); font-size: var(--font-size-sm); }
-.btn-lg  { padding: var(--space-4) var(--space-8); font-size: var(--font-size-lg); }
+/* Tailles */
+.btn-sm { padding: var(--space-2) var(--space-4); font-size: var(--font-size-sm); }
+.btn-lg { padding: var(--space-4) var(--space-8); font-size: var(--font-size-lg); }
 .btn-full { width: 100%; }
 .btn-icon { width: 40px; height: 40px; padding: 0; border-radius: var(--radius-full); }
 
+/* Auth buttons */
 .btn-auth {
     background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
     color: white;
@@ -570,8 +753,6 @@ input, textarea, select {
     font-weight: 600;
     box-shadow: var(--shadow-sm);
     transition: all var(--transition-fast);
-    cursor: pointer;
-    border: none;
 }
 
 .btn-auth:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
@@ -584,8 +765,6 @@ input, textarea, select {
     font-size: var(--font-size-sm);
     font-weight: 600;
     transition: all var(--transition-fast);
-    cursor: pointer;
-    border: none;
 }
 
 .btn-auth-logout:hover { background: rgba(184, 61, 61, 0.2); }
@@ -612,6 +791,7 @@ input, textarea, select {
 
 .neu-input::placeholder, .form-input::placeholder { color: var(--text-muted); }
 
+/* Form groups */
 .form-group { margin-bottom: var(--space-4); }
 .form-label {
     display: block;
@@ -633,10 +813,10 @@ input, textarea, select {
     white-space: nowrap;
 }
 
-.badge-primary { background: rgba(26, 122, 74, 0.12);  color: var(--color-primary); }
+.badge-primary { background: rgba(26, 122, 74, 0.12); color: var(--color-primary); }
 .badge-gold    { background: rgba(201, 146, 42, 0.12); color: var(--color-gold); }
-.badge-danger  { background: rgba(184, 61, 61, 0.12);  color: var(--color-danger); }
-.badge-success { background: rgba(26, 122, 74, 0.12);  color: var(--color-success); }
+.badge-danger  { background: rgba(184, 61, 61, 0.12); color: var(--color-danger); }
+.badge-success { background: rgba(26, 122, 74, 0.12); color: var(--color-success); }
 .badge-glass {
     background: var(--glass-bg);
     backdrop-filter: blur(8px);
@@ -644,13 +824,19 @@ input, textarea, select {
     color: var(--text);
 }
 
-.status-badge { width: 10px; height: 10px; border-radius: var(--radius-full); display: inline-block; }
+/* Status badges */
+.status-badge {
+    width: 10px; height: 10px;
+    border-radius: var(--radius-full);
+    display: inline-block;
+}
 .status-strong { background: var(--color-success); box-shadow: 0 0 8px rgba(26,122,74,0.5); }
 .status-weak   { background: var(--color-warning); box-shadow: 0 0 8px rgba(201,146,42,0.5); }
 .status-new    { background: var(--color-info);    box-shadow: 0 0 8px rgba(47,118,183,0.5); }
 
 /* Progress bar */
 .progress-bar-container {
+    background: var(--neu-shadow-inset);
     background: var(--bg);
     box-shadow: var(--neu-shadow-inset);
     border-radius: var(--radius-full);
@@ -666,7 +852,11 @@ input, textarea, select {
 }
 
 /* Table */
-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
 
 th {
     background: rgba(26, 122, 74, 0.06);
@@ -687,9 +877,10 @@ td {
 
 tr:hover td { background: rgba(26, 122, 74, 0.04); }
 tr:last-child td { border-bottom: none; }
+
 .memorization-table { width: 100%; }
 
-/* Auth messages */
+/* Auth error */
 .auth-error {
     background: rgba(184, 61, 61, 0.08);
     border: 1px solid rgba(184, 61, 61, 0.2);
@@ -706,23 +897,29 @@ tr:last-child td { border-bottom: none; }
     color: var(--text-secondary);
     margin-top: var(--space-4);
 }
+```
 
-/* Role badges */
-.role-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-1);
-    padding: var(--space-1) var(--space-2);
-    border-radius: var(--radius-full);
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
+**Step 2 : Vérifier**
 
-.role-teacher { background: rgba(201,146,42,0.15); color: var(--color-gold); }
-.role-student { background: rgba(26,122,74,0.12);  color: var(--color-primary); }
+Les boutons doivent avoir l'effet neumorphisme. Les inputs doivent avoir l'ombre inset et le focus vert.
 
+**Step 3 : Commit**
+
+```bash
+git add style.css
+git commit -m "feat(css): section 6 - composants neumorphisme btns inputs badges"
+```
+
+---
+
+### Task 7 : Section 7 — Pages Métier
+
+**Files:**
+- Modify: `style.css` — ajouter après section 6
+
+**Step 1 : Ajouter les styles des pages métier**
+
+```css
 /* =============================================
    7. PAGES MÉTIER
    ============================================= */
@@ -798,23 +995,9 @@ tr:last-child td { border-bottom: none; }
     margin-bottom: var(--space-2);
 }
 
-.ward-progress-bar-container {
-    background: var(--bg);
-    box-shadow: var(--neu-shadow-inset);
-    border-radius: var(--radius-full);
-    height: 8px;
-    overflow: hidden;
-    margin-bottom: var(--space-4);
+.ward-display {
+    margin-top: var(--space-6);
 }
-
-.ward-progress-bar {
-    height: 100%;
-    background: linear-gradient(90deg, var(--color-primary), var(--color-gold));
-    border-radius: var(--radius-full);
-    transition: width 0.5s ease;
-}
-
-.ward-display { margin-top: var(--space-6); }
 
 .ward-ayah-text {
     font-family: var(--font-arabic);
@@ -826,21 +1009,6 @@ tr:last-child td { border-bottom: none; }
     background: var(--glass-bg);
     border-radius: var(--radius-xl);
     border: 1px solid var(--glass-border);
-}
-
-.ward-ayah-image img {
-    max-width: 100%;
-    border-radius: var(--radius-lg);
-    margin: 0 auto;
-}
-
-/* Reading navigation */
-.reading-navigation {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: var(--space-4);
-    gap: var(--space-3);
 }
 
 /* --- HIFZ PAGE --- */
@@ -857,7 +1025,6 @@ tr:last-child td { border-bottom: none; }
 .hifz-display {
     background: var(--glass-bg);
     backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
     border: 1px solid var(--glass-border);
     border-radius: var(--radius-2xl);
     padding: var(--space-8);
@@ -865,7 +1032,6 @@ tr:last-child td { border-bottom: none; }
     display: flex;
     align-items: center;
     justify-content: center;
-    flex-wrap: wrap;
 }
 
 .ayah-line {
@@ -878,7 +1044,6 @@ tr:last-child td { border-bottom: none; }
     margin: var(--space-2) 0;
     cursor: pointer;
     transition: all var(--transition-fast);
-    width: 100%;
 }
 
 .word {
@@ -909,9 +1074,17 @@ tr:last-child td { border-bottom: none; }
     margin-top: var(--space-4);
 }
 
-.hifz-feedback.correct   { background: rgba(26, 122, 74, 0.1); color: var(--color-success); }
-.hifz-feedback.incorrect  { background: rgba(184, 61, 61, 0.1); color: var(--color-danger); }
+.hifz-feedback.correct {
+    background: rgba(26, 122, 74, 0.1);
+    color: var(--color-success);
+}
 
+.hifz-feedback.incorrect {
+    background: rgba(184, 61, 61, 0.1);
+    color: var(--color-danger);
+}
+
+/* Difficulty buttons */
 .diff-btn {
     padding: var(--space-2) var(--space-4);
     border-radius: var(--radius-md);
@@ -921,21 +1094,11 @@ tr:last-child td { border-bottom: none; }
     box-shadow: var(--neu-shadow-sm);
     color: var(--text-secondary);
     transition: all var(--transition-fast);
-    cursor: pointer;
-    border: none;
 }
 
 .diff-btn.active, .diff-btn:hover {
     color: var(--color-primary);
     box-shadow: var(--neu-shadow-inset);
-}
-
-/* Hifz arabic large */
-.arabic-large {
-    font-family: var(--font-arabic);
-    font-size: var(--font-size-arabic-lg);
-    direction: rtl;
-    line-height: 2.6;
 }
 
 /* --- COMPETITION PAGE --- */
@@ -963,27 +1126,6 @@ tr:last-child td { border-bottom: none; }
     box-shadow: var(--shadow-md);
 }
 
-/* Submission cards */
-.submission-card {
-    background: var(--bg-surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: var(--space-4);
-    margin-bottom: var(--space-3);
-    transition: all var(--transition-base);
-}
-
-.submission-card:hover { box-shadow: var(--shadow-sm); }
-
-/* Pending cards (teacher) */
-.pending-card {
-    background: rgba(201, 146, 42, 0.05);
-    border: 1px solid rgba(201, 146, 42, 0.2);
-    border-radius: var(--radius-lg);
-    padding: var(--space-4);
-    margin-bottom: var(--space-3);
-}
-
 /* --- AUDIO PLAYER --- */
 .audio-player-container {
     display: flex;
@@ -992,13 +1134,12 @@ tr:last-child td { border-bottom: none; }
     padding: var(--space-3) var(--space-4);
     background: var(--glass-bg);
     backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
     border: 1px solid var(--glass-border);
     border-radius: var(--radius-xl);
     margin-top: var(--space-4);
 }
 
-/* --- DIVERS --- */
+/* --- MOTIVATION TEXT --- */
 .motivation-text {
     text-align: center;
     font-size: var(--font-size-lg);
@@ -1011,14 +1152,44 @@ tr:last-child td { border-bottom: none; }
 #competition-page.active,
 #hifz-page.active { display: block !important; }
 
-/* Student checkboxes */
-.student-checkbox {
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
-    accent-color: var(--color-primary);
+/* User role badges */
+.role-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
+.role-teacher { background: rgba(201,146,42,0.15); color: var(--color-gold); }
+.role-student { background: rgba(26,122,74,0.12); color: var(--color-primary); }
+```
+
+**Step 2 : Vérifier**
+
+Naviguer vers chaque page. Les sections ward, hifz, competition doivent s'afficher correctement.
+
+**Step 3 : Commit**
+
+```bash
+git add style.css
+git commit -m "feat(css): section 7 - styles pages metier"
+```
+
+---
+
+### Task 8 : Section 8 — Animations CSS
+
+**Files:**
+- Modify: `style.css` — ajouter après section 7
+
+**Step 1 : Ajouter les animations**
+
+```css
 /* =============================================
    8. ANIMATIONS CSS
    ============================================= */
@@ -1050,7 +1221,7 @@ tr:last-child td { border-bottom: none; }
 
 @keyframes shimmer {
     from { background-position: -200% 0; }
-    to   { background-position:  200% 0; }
+    to   { background-position: 200% 0; }
 }
 
 @keyframes spin {
@@ -1061,13 +1232,16 @@ tr:last-child td { border-bottom: none; }
     from { width: 0; }
 }
 
-/* Utilitaires */
+/* Utilitaires d'animation */
 .animate-fade-up    { animation: fadeInUp    0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
 .animate-fade-scale { animation: fadeInScale 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
-.animate-pulse      { animation: pulse 2s ease-in-out infinite; }
-.animate-spin       { animation: spin  1s linear infinite; }
+.animate-pulse      { animation: pulse       2s ease-in-out infinite; }
 
-/* Skeleton */
+/* Stagger enfants (pour GSAP override) */
+.stagger-children > * { opacity: 0; }
+.stagger-children.revealed > * { opacity: 1; }
+
+/* Skeleton loading */
 .skeleton {
     background: linear-gradient(
         90deg,
@@ -1080,17 +1254,16 @@ tr:last-child td { border-bottom: none; }
     border-radius: var(--radius-md);
 }
 
-/* Révélation scroll (GSAP / IntersectionObserver) */
+/* Révélation au scroll (classe ajoutée par GSAP/IntersectionObserver) */
 .reveal {
     opacity: 0;
     transform: translateY(20px);
     transition: opacity 0.6s ease, transform 0.6s ease;
 }
-.reveal.revealed { opacity: 1; transform: translateY(0); }
-
-/* Stagger enfants GSAP — visible par défaut, animé si GSAP actif */
-.stagger-children.js-animate > * { opacity: 0; transition: opacity 0.5s ease, transform 0.5s ease; }
-.stagger-children.revealed > * { opacity: 1; transform: none; }
+.reveal.revealed {
+    opacity: 1;
+    transform: translateY(0);
+}
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
@@ -1099,15 +1272,64 @@ tr:last-child td { border-bottom: none; }
         transition-duration: 0.01ms !important;
     }
 }
+```
 
+**Step 2 : Vérifier**
+
+Ajouter temporairement `class="animate-fade-up"` à un élément dans l'HTML et vérifier l'animation.
+
+**Step 3 : Commit**
+
+```bash
+git add style.css
+git commit -m "feat(css): section 8 - animations CSS et keyframes"
+```
+
+---
+
+### Task 9 : Section 9 — Responsive Mobile-First
+
+**Files:**
+- Modify: `style.css` — ajouter après section 8
+
+**Step 1 : Ajouter le responsive**
+
+```css
 /* =============================================
    9. RESPONSIVE — MOBILE FIRST
    ============================================= */
 
-/* Base < 480px */
-.stats-grid       { grid-template-columns: repeat(2, 1fr); }
-.ward-selection   { grid-template-columns: 1fr; }
-.competition-grid { grid-template-columns: 1fr; }
+/* Base : < 480px (mobile) */
+.header-content {
+    padding: var(--space-2) var(--space-3);
+}
+
+.header-subtitle { display: none; }
+
+.nav {
+    gap: 0;
+}
+
+.nav-link {
+    padding: var(--space-1) var(--space-2);
+    font-size: 0.75rem;
+}
+
+.main {
+    padding: var(--space-4) var(--space-3);
+}
+
+.glass-card, .card {
+    padding: var(--space-4);
+}
+
+.stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.ward-selection {
+    grid-template-columns: 1fr;
+}
 
 .ward-ayah-text {
     font-size: clamp(1.2rem, 5vw, 1.8rem);
@@ -1119,6 +1341,7 @@ tr:last-child td { border-bottom: none; }
     .stats-grid {
         grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
     }
+
     .nav-link {
         font-size: var(--font-size-sm);
         padding: var(--space-2) var(--space-3);
@@ -1127,292 +1350,121 @@ tr:last-child td { border-bottom: none; }
 
 /* md : 768px+ */
 @media (min-width: 768px) {
-    .header-content { padding: var(--space-3) var(--space-6); }
+    .header-content {
+        padding: var(--space-3) var(--space-6);
+    }
+
     .header-subtitle { display: block; }
 
-    .main { padding: var(--space-8) var(--space-6); }
+    .main {
+        padding: var(--space-8) var(--space-6);
+    }
 
-    .glass-card, .card { padding: var(--space-6); }
+    .glass-card, .card {
+        padding: var(--space-6);
+    }
 
     .ward-selection {
         grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     }
-    .competition-grid { grid-template-columns: repeat(2, 1fr); }
 
-    .modal-content { padding: var(--space-12); }
+    .competition-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
 
-    .ward-controls { gap: var(--space-4); }
-
-    .ward-ayah-text {
-        font-size: var(--font-size-arabic-lg);
-        padding: var(--space-8);
+    .modal-content {
+        padding: var(--space-12);
     }
 }
 
 /* lg : 1024px+ */
 @media (min-width: 1024px) {
-    .container { padding: 0 var(--space-8); }
-    .competition-grid { grid-template-columns: repeat(3, 1fr); }
-    .home-hero { padding: var(--space-16) var(--space-8); }
-    .hifz-display { padding: var(--space-12); }
+    .container {
+        padding: 0 var(--space-8);
+    }
+
+    .competition-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .home-hero {
+        padding: var(--space-16) var(--space-8);
+    }
 }
 
 /* xl : 1280px+ */
 @media (min-width: 1280px) {
-    .main { padding: var(--space-12) var(--space-8); }
-    .stats-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+    .main {
+        padding: var(--space-12) var(--space-8);
+    }
 }
+```
 
-/* ══════════════════════════════════════════════════════════════
-   UTILITIES — classes manquantes ajoutées après refonte
-   ══════════════════════════════════════════════════════════════ */
+**Step 2 : Vérifier**
 
-/* Flex */
-.d-flex { display: flex; align-items: center; }
+Tester en redimensionnant la fenêtre. À 375px (mobile), la nav doit rester lisible, les cards empilées.
 
-/* Section */
-.section { padding: var(--space-16) 0; }
+**Step 3 : Commit**
 
-/* Section title */
-.section-title {
-    font-size: var(--font-size-2xl);
-    font-weight: 700;
-    color: var(--text);
-}
+```bash
+git add style.css
+git commit -m "feat(css): section 9 - responsive mobile-first 4 breakpoints"
+```
 
-/* Grid utilities */
-.grid { display: grid; gap: var(--space-6); }
-.grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
-.grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
-.grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
-.grid-cols-7 { grid-template-columns: repeat(7, 1fr); }
+---
 
-/* Hover lift */
-.hover-lift { transition: transform var(--transition-base), box-shadow var(--transition-base); }
-.hover-lift:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+### Task 10 : Vérification finale et nettoyage
 
-/* Badge warning */
-.badge-warning { background: rgba(245, 158, 11, 0.12); color: #f59e0b; }
+**Files:**
+- Modify: `index.html` — vérifier les classes utilisées
 
-/* Shimmer overlay on card */
-.shimmer { position: relative; overflow: hidden; }
-.shimmer::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%);
-    animation: shimmer 2.5s ease-in-out infinite;
-    pointer-events: none;
-}
+**Step 1 : Vérifier que toutes les classes utilisées dans index.html existent dans style.css**
 
-/* Stat number (large number display) */
-.stat-number {
-    font-size: clamp(2rem, 5vw, 3rem);
-    font-weight: 800;
-    color: var(--color-primary);
-    line-height: 1;
-}
+```bash
+cd C:/Users/ahmad/quran.reviewer/QuranReviewLocal
 
-/* ── Form floating label ── */
-.form-floating { position: relative; }
-.form-floating > input,
-.form-floating > select {
-    padding: 1.5rem 0.875rem 0.5rem;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    width: 100%;
-    font-size: var(--font-size-base);
-    color: var(--text);
-    transition: border-color var(--transition-fast);
-    box-sizing: border-box;
-}
-.form-floating > input:focus,
-.form-floating > select:focus { border-color: var(--color-primary); outline: none; box-shadow: 0 0 0 3px rgba(26,122,74,0.12); }
-.form-floating > label {
-    position: absolute;
-    top: 0.5rem;
-    right: 0.875rem;
-    font-size: var(--font-size-xs);
-    color: var(--text-secondary);
-    pointer-events: none;
-}
+# Extraire toutes les classes utilisées dans index.html
+grep -o 'class="[^"]*"' index.html | grep -o '[a-zA-Z][a-zA-Z0-9_-]*' | sort -u > /tmp/classes_html.txt
 
-/* ── Toggle switch ── */
-.toggle-switch { display: flex; align-items: center; gap: var(--space-3); cursor: pointer; }
-.toggle-switch input { position: absolute; opacity: 0; width: 0; height: 0; }
-.toggle-slider {
-    position: relative;
-    width: 48px;
-    height: 26px;
-    background: var(--bg-surface);
-    border-radius: var(--radius-full);
-    box-shadow: var(--neu-shadow-inset);
-    transition: var(--transition-base);
-    flex-shrink: 0;
-}
-.toggle-slider::after {
-    content: '';
-    position: absolute;
-    top: 4px;
-    right: 4px;
-    width: 18px;
-    height: 18px;
-    background: var(--text-secondary);
-    border-radius: var(--radius-full);
-    transition: var(--transition-base);
-    box-shadow: var(--shadow-sm);
-}
-.toggle-switch input:checked + .toggle-slider { background: rgba(26,122,74,0.15); }
-.toggle-switch input:checked + .toggle-slider::after {
-    right: calc(100% - 22px);
-    background: var(--color-primary);
-}
+# Extraire toutes les classes définies dans style.css
+grep -o '\.[a-zA-Z][a-zA-Z0-9_-]*' style.css | sed 's/^\.//' | sort -u > /tmp/classes_css.txt
 
-/* ── Select modern ── */
-.select-modern {
-    appearance: none;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: var(--space-3) var(--space-4);
-    font-size: var(--font-size-base);
-    color: var(--text);
-    cursor: pointer;
-    width: 100%;
-    transition: border-color var(--transition-fast);
-}
-.select-modern:focus { border-color: var(--color-primary); outline: none; }
+# Classes dans HTML mais pas dans CSS (à surveiller)
+comm -23 /tmp/classes_html.txt /tmp/classes_css.txt | head -30
+```
 
-/* ── Table responsive ── */
-.table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+**Step 2 : Tester le dark mode**
 
-/* ── Tabs ── */
-.tabs {
-    display: flex;
-    gap: var(--space-1);
-    border-bottom: 2px solid var(--border);
-    margin-bottom: var(--space-6);
-}
-.tab {
-    padding: var(--space-3) var(--space-5);
-    background: transparent;
-    border: none;
-    border-bottom: 3px solid transparent;
-    margin-bottom: -2px;
-    color: var(--text-secondary);
-    cursor: pointer;
-    font-size: var(--font-size-base);
-    font-weight: 500;
-    transition: var(--transition-fast);
-    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-}
-.tab:hover { color: var(--color-primary); background: rgba(26,122,74,0.05); }
-.tab.active { color: var(--color-primary); border-bottom-color: var(--color-primary); font-weight: 600; }
+Dans le navigateur, ouvrir la console et taper :
+```js
+document.documentElement.setAttribute('data-theme', 'dark')
+```
+Vérifier que le fond devient vert sombre, le texte crème, les cards glass adaptées.
 
-/* ── Task status ── */
-.task-status {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-1);
-    font-size: var(--font-size-sm);
-    font-weight: 500;
-    padding: var(--space-1) var(--space-3);
-    border-radius: var(--radius-full);
-}
-.task-status-pending   { background: rgba(245,158,11,0.10); color: #d97706; }
-.task-status-submitted { background: rgba(26,122,74,0.10);  color: var(--color-primary); }
+**Step 3 : Supprimer le backup si tout est OK**
 
-/* ── Audio player ── */
-.player-glass {
-    background: var(--glass-bg);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border: 1px solid var(--glass-border);
-    border-radius: var(--radius-2xl);
-    padding: var(--space-6);
-    box-shadow: var(--shadow-lg);
-}
-.progress-glass {
-    height: 6px;
-    background: var(--bg);
-    border-radius: var(--radius-full);
-    overflow: hidden;
-    box-shadow: var(--neu-shadow-inset);
-    margin: var(--space-6) 0;
-}
-.progress-glass .fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--color-primary), var(--color-gold));
-    border-radius: var(--radius-full);
-    transition: width 0.3s ease;
-    width: 0%;
-}
-.player-controls {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--space-4);
-}
-.player-btn {
-    width: 48px;
-    height: 48px;
-    border-radius: var(--radius-full);
-    border: none;
-    background: var(--bg);
-    color: var(--text);
-    font-size: 1.25rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: var(--neu-shadow);
-    transition: var(--transition-base);
-}
-.player-btn:hover { transform: scale(1.05); box-shadow: var(--shadow-md); }
-.player-btn:active { box-shadow: var(--neu-shadow-inset); transform: scale(0.97); }
-.player-btn-secondary { opacity: 0.7; }
-.player-btn-lg {
-    width: 64px;
-    height: 64px;
-    font-size: 1.75rem;
-    background: var(--color-primary);
-    color: white;
-    box-shadow: 0 4px 15px rgba(26,122,74,0.4);
-}
-.player-btn-lg:hover { box-shadow: 0 6px 20px rgba(26,122,74,0.5); transform: scale(1.05); }
+```bash
+rm -rf docs/css-backup/
+```
 
-/* ── Ward ayah image container ── */
-.ward-ayah-image {
-    min-height: 200px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(26,122,74,0.05);
-    border-radius: var(--radius-2xl);
-    margin-bottom: var(--space-4);
-    overflow: hidden;
-}
-.ward-ayah-image img { max-width: 100%; border-radius: var(--radius-xl); }
+**Step 4 : Commit final**
 
-/* ── Motivation source ── */
-.motivation-source { color: var(--text-secondary); font-size: var(--font-size-sm); margin-top: var(--space-2); }
+```bash
+git add -A
+git commit -m "feat(css): refonte complete - 4 fichiers fusionnes en 1 style.css"
+```
 
-/* ── Audio recording modal ── */
-#recording-btn.recording-active {
-    background-color: var(--color-danger, #ef4444);
-    animation: pulse-record 1s infinite;
-}
-@keyframes pulse-record {
-    0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
-    50%       { transform: scale(1.05); box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
-}
+---
 
-/* ── Responsive grid utilities ── */
-@media (max-width: 767px) {
-    .grid-cols-2,
-    .grid-cols-3,
-    .grid-cols-4 { grid-template-columns: 1fr; }
-    .grid-cols-7 { grid-template-columns: repeat(4, 1fr); }
-    .section { padding: var(--space-10) 0; }
-}
+## Résultat attendu
+
+```
+Avant : 4 fichiers CSS, 4239 lignes, conflits multiples
+Après : 1 fichier style.css, ~1100 lignes, zéro conflit
+Gain  : -74% de CSS
+
+Light mode : fond crème #f7f3ee, vert émeraude, or raffiné
+Dark mode  : fond #0f1a13, texte crème, glass adapté
+Style      : glassmorphism (cards/header/modal) + neumorphisme (btns/inputs)
+GSAP       : conservé pour scroll animations
+```

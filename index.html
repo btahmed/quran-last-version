@@ -1,80 +1,175 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>مراجعة القرآن - تطبيق حفظ ومراجعة القرآن</title>
+    <title>مراجعة القرآن - Pro Edition</title>
     <meta name="description" content="تطبيق احترافي لحفظ ومراجعة القرآن الكريم">
-    <meta name="keywords" content="قرآن, حفظ, مراجعة, إسلامي, تعلم">
-    <meta name="author" content="فريق مراجعة القرآن">
     
-    <!-- PWA Meta Tags -->
+    <!-- PWA -->
     <meta name="theme-color" content="#2d5016">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="مراجعة القرآن">
+    <link rel="manifest" href="manifest.json">
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Naskh+Arabic:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Styles -->
+    <!-- GSAP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    
+    <!-- Base Styles -->
     <link rel="stylesheet" href="style.css">
-    
-    <!-- Audio Configuration -->
-    <script src="audio-config.js"></script>
-    
-    <!-- Icons -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%232d5016'><path d='M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z'/></svg>">
-    
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="manifest.json">
-    
-    <!-- Service Worker Registration -->
-    <script>
-        // Only register service worker if served from HTTPS or localhost
-        if (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(registration => {
-                        console.log('🕌 Service Worker registered successfully:', registration.scope);
-                    })
-                    .catch(error => {
-                        console.error('🕌 Service Worker registration failed:', error);
-                    });
-            }
-        } else {
-            console.log('🕌 Service Worker skipped: not HTTPS or localhost');
+<style>
+        /* Additional custom styles */
+        .hero-title {
+            font-size: clamp(2.5rem, 8vw, 4rem);
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 1rem;
         }
-    </script>
+        
+        .hero-subtitle {
+            font-size: 1.25rem;
+            color: var(--color-text-secondary);
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+        
+        .feature-icon-pro {
+            width: 64px;
+            height: 64px;
+            border-radius: var(--radius-2xl);
+            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-gold) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin-bottom: var(--space-4);
+            box-shadow: 0 8px 20px rgba(45, 80, 22, 0.3);
+        }
+        
+        .ayah-display {
+            font-family: var(--font-arabic);
+            font-size: 2rem;
+            line-height: 2.5;
+            text-align: center;
+            padding: var(--space-8);
+            background: linear-gradient(135deg, rgba(45, 80, 22, 0.05) 0%, rgba(212, 165, 116, 0.05) 100%);
+            border-radius: var(--radius-3xl);
+            border: 1px solid rgba(45, 80, 22, 0.1);
+        }
+        
+        .memorization-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+            padding: var(--space-4);
+            background: var(--color-surface);
+            border-radius: var(--radius-xl);
+            margin-bottom: var(--space-3);
+            transition: all var(--transition-base);
+            border: 1px solid var(--color-border);
+        }
+        
+        .memorization-item:hover {
+            transform: translateX(-4px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--color-primary);
+        }
+        
+        .status-badge {
+            width: 12px;
+            height: 12px;
+            border-radius: var(--radius-full);
+            flex-shrink: 0;
+        }
+        
+        .status-strong { background: var(--color-success); box-shadow: 0 0 10px rgba(16, 185, 129, 0.5); }
+        .status-weak { background: var(--color-warning); box-shadow: 0 0 10px rgba(245, 158, 11, 0.5); }
+        .status-new { background: var(--color-info); box-shadow: 0 0 10px rgba(59, 130, 246, 0.5); }
+        
+        /* Loading Screen */
+        .loading-screen {
+            position: fixed;
+            inset: 0;
+            background: var(--color-bg, #ffffff);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+        }
+        
+        .loading-screen.hidden {
+            display: none !important;
+        }
+        
+        .loading-logo {
+            font-size: 4rem;
+            margin-bottom: var(--space-4);
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        .loading-bar {
+            width: 200px;
+            height: 4px;
+            background: var(--color-gray-200);
+            border-radius: var(--radius-full);
+            overflow: hidden;
+        }
+        
+        .loading-progress {
+            height: 100%;
+            background: linear-gradient(90deg, var(--color-primary), var(--color-gold));
+            width: 0%;
+            border-radius: var(--radius-full);
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+    </style>
 </head>
 <body>
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loading-screen">
+        <div class="loading-logo">🕌</div>
+        <div class="loading-bar">
+            <div class="loading-progress" id="loading-progress"></div>
+        </div>
+    </div>
     <!-- Header -->
     <header class="header">
         <div class="container">
-            <div class="header-content">
-                <div>
-                    <h1>🕌 مراجعة القرآن</h1>
-                    <p class="header-subtitle">تطبيق احترافي لحفظ ومراجعة القرآن الكريم</p>
+            <div class="d-flex" style="justify-content: space-between;">
+                <div class="d-flex" style="gap: var(--space-3);">
+                    <h1 class="gradient-text" style="font-size: 1.5rem; font-weight: 700;">🕌 مراجعة القرآن</h1>
+                    <span id="demo-badge" class="badge badge-warning hidden" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white;">🎮 MODE DÉMO</span>
                 </div>
-                <nav class="nav">
-                    <a href="#" class="nav-link" data-page="home">الرئيسية</a>
-                    <a href="#" class="nav-link" data-page="memorization">الحفظ اليومي</a>
+                <nav class="d-flex" style="gap: var(--space-2);">
+                    <a href="#" class="nav-link active" data-page="home">الرئيسية</a>
+                    <a href="#" class="nav-link" data-page="memorization">الحفظ</a>
                     <a href="#" class="nav-link" data-page="ward">الورد</a>
-                                        <a href="#" class="nav-link" data-page="progress">التقدم</a>
-                    <a href="#" class="nav-link" data-page="competition">🏆 التحديات</a>
-                    <a href="#" class="nav-link" data-page="hifz">🎭 وضع الحفظ</a>
-                    <a href="#" class="nav-link" data-page="settings">الإعدادات</a>
-                    <a href="#" class="nav-link nav-student-only" data-page="mytasks">📝 مهامي</a>
-                    <a href="#" class="nav-link nav-teacher-only" data-page="teacher">📋 لوحة الأستاذ</a>
-                    <button id="theme-toggle" class="theme-toggle">🌙</button>
-                    <!-- Auth -->
-                    <div id="auth-nav" class="auth-nav">
-                        <button id="auth-login-btn" class="btn btn-auth" onclick="QuranReview.showAuthModal()">تسجيل الدخول</button>
-                        <div id="auth-user-info" class="auth-user-info hidden">
-                            <span id="auth-username"></span>
-                            <button class="btn btn-auth-logout" onclick="QuranReview.logout()">خروج</button>
+                    <a href="#" class="nav-link" data-page="progress">التقدم</a>
+                    <a href="#" class="nav-link" data-page="competition">🏆</a>
+                    <a href="#" class="nav-link" data-page="hifz">🎭</a>
+                    <a href="#" class="nav-link nav-student-only" data-page="mytasks" style="display: none;">مهامي</a>
+                    <a href="#" class="nav-link nav-teacher-only" data-page="teacher" style="display: none;">المعلم</a>
+                    <a href="#" class="nav-link nav-admin-only" data-page="admin" style="display: none;">⚙️ الإدارة</a>
+                    <button id="theme-toggle" class="btn btn-icon" style="margin-right: var(--space-4);">
+                        <span id="theme-icon">🌙</span>
+                    </button>
+                    <div id="auth-nav">
+                        <button id="auth-login-btn" class="btn btn-primary btn-sm" onclick="showAuthModal()">
+                            <span>👤</span>
+                            دخول
+                        </button>
+                        <div id="auth-user-info" class="hidden d-flex" style="gap: var(--space-2);">
+                            <span id="auth-username" class="badge badge-primary"></span>
+                            <button class="btn btn-outline btn-sm" onclick="QuranReview.logout()">خروج</button>
                         </div>
                     </div>
                 </nav>
@@ -82,954 +177,1334 @@
         </div>
     </header>
 
-    <!-- Auth Modal -->
-    <div id="auth-modal" class="modal-overlay hidden">
-        <div class="modal-content">
-            <button class="modal-close" onclick="QuranReview.hideAuthModal()">&times;</button>
-
-            <!-- Login Form -->
-            <div id="auth-login-form">
-                <h2 class="modal-title">تسجيل الدخول</h2>
-                <form onsubmit="QuranReview.handleLogin(event)">
-                    <div class="form-group">
-                        <label class="form-label" for="login-username">اسم المستخدم</label>
-                        <input type="text" id="login-username" class="form-input" required autocomplete="username">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="login-password">كلمة المرور</label>
-                        <input type="password" id="login-password" class="form-input" required autocomplete="current-password">
-                    </div>
-                    <div id="login-error" class="auth-error hidden"></div>
-                    <button type="submit" class="btn btn-primary btn-full" id="login-submit-btn">دخول</button>
-                </form>
-                <p class="auth-hint">ليس لديك حساب؟ <a href="#" onclick="QuranReview.showRegisterForm(event)">إنشاء حساب جديد</a></p>
-            </div>
-
-            <!-- Register Form -->
-            <div id="auth-register-form" class="hidden">
-                <h2 class="modal-title">إنشاء حساب جديد</h2>
-                <form onsubmit="QuranReview.handleRegister(event)">
-                    <div class="form-group">
-                        <label class="form-label" for="reg-username">اسم المستخدم</label>
-                        <input type="text" id="reg-username" class="form-input" required autocomplete="username">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="reg-first-name">الاسم الأول</label>
-                        <input type="text" id="reg-first-name" class="form-input" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="reg-last-name">اسم العائلة</label>
-                        <input type="text" id="reg-last-name" class="form-input">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="reg-password">كلمة المرور</label>
-                        <input type="password" id="reg-password" class="form-input" required autocomplete="new-password">
-                    </div>
-                    <div id="reg-error" class="auth-error hidden"></div>
-                    <button type="submit" class="btn btn-primary btn-full" id="reg-submit-btn">تسجيل</button>
-                </form>
-                <p class="auth-hint">لديك حساب بالفعل؟ <a href="#" onclick="QuranReview.showLoginForm(event)">تسجيل الدخول</a></p>
-            </div>
-        </div>
-    </div>
-
     <!-- Main Content -->
     <main class="main">
-        <div class="container">
-            
-            <!-- Home Page -->
-            <div id="home-page" class="page active">
-                <!-- Daily Motivation -->
-                <div class="card motivation-card">
-                    <div class="card-header">
-                        <h2 class="card-title">🌟 حكمة اليوم</h2>
-                    </div>
-                    <div class="motivation-text arabic-large" id="motivation-text">
-                        خَيْرُكُمْ مَنْ تَعَلَّمَ الْقُرْآنَ وَعَلَّمَهُ
-                    </div>
-                    <div class="motivation-source" id="motivation-source">
-                        رواه البخاري
-                    </div>
-                </div>
-
-                <!-- Quick Stats -->
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title">📊 إحصائيات سريعة</h2>
-                    </div>
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-number" id="home-total-surahs">0</div>
-                            <div class="stat-label">إجمالي السور</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-number" id="home-mastered">0</div>
-                            <div class="stat-label">متقنة</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-number" id="home-weak">0</div>
-                            <div class="stat-label">ضعيفة</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-number" id="home-new">0</div>
-                            <div class="stat-label">جديدة</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Features -->
-                <div class="features-grid">
-                    <div class="card feature-card">
-                        <div class="feature-icon">📖</div>
-                        <h3 class="feature-title">القراءة والحفظ</h3>
-                        <p class="feature-description">قراءة ومراجعة آيات القرآن الكريم مع التجويد الصحيح</p>
-                    </div>
-                    
-                    <div class="card feature-card">
-                        <div class="feature-icon">🧠</div>
-                        <h3 class="feature-title">تتبع الحفظ</h3>
-                        <p class="feature-description">مراقبة تقدم الحفظ وجدولة المراجعات الذكية</p>
-                    </div>
-                    
-                    <div class="card feature-card">
-                        <div class="feature-icon">📈</div>
-                        <h3 class="feature-title">التحليلات</h3>
-                        <p class="feature-description">مراقبة التقدم التعلمي مع تحليلات مفصلة</p>
-                    </div>
-                    
-                    <div class="card feature-card">
-                        <div class="feature-icon">🎯</div>
-                        <h3 class="feature-title">مراجعة ذكية</h3>
-                        <p class="feature-description">نظام مراجعة ذكي يعتمد على التكرار المتباعد</p>
-                    </div>
-                    
-                    <div class="card feature-card">
-                        <div class="feature-icon">🎧</div>
-                        <h3 class="feature-title">تطبيق ترتيل</h3>
-                        <p class="feature-description">فتح تطبيق ترتيل للمساعدة في الحفظ والمراجعة</p>
-                        <button class="btn btn-primary" onclick="QuranReview.openTarteel()" style="margin-top: 1rem;">
+        <!-- HOME PAGE -->
+        <div id="home-page" class="page active">
+            <!-- Hero Section -->
+            <section class="section" style="text-align: center; padding-top: var(--space-16);">
+                <div class="container">
+                    <h1 class="hero-title gradient-text animate-fade-up">
+                        حفظ القرآن<br>بطريقة عصرية
+                    </h1>
+                    <p class="hero-subtitle animate-fade-up" style="animation-delay: 0.1s;">
+                        تطبيق احترافي يجمع بين التقنية الحديثة والطريقة النبوية في حفظ ومراجعة القرآن الكريم
+                    </p>
+                    <div class="d-flex" style="justify-content: center; gap: var(--space-4); animation-delay: 0.2s;" class="animate-fade-up">
+                        <button class="btn btn-primary" onclick="navigateTo('memorization')">
+                            <span>📖</span>
+                            ابدأ الحفظ
+                        </button>
+                        <button class="btn btn-outline" onclick="navigateTo('ward')">
                             <span>🎧</span>
-                            فتح تطبيق ترتيل
+                            استمع للورد
                         </button>
                     </div>
                 </div>
-            </div>
+            </section>
 
-            <!-- Ward Page -->
-            <div id="ward-page" class="page">
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title">🎧 مشغل الورد</h2>
-                        <p class="text-secondary">استماع وتلاوة الورد اليومي</p>
+            <!-- Daily Motivation -->
+            <section class="section">
+                <div class="container">
+                    <div class="glass-card shimmer" style="text-align: center; max-width: 800px; margin: 0 auto;">
+                        <span class="badge badge-gold" style="margin-bottom: var(--space-4);">✨ حكمة اليوم</span>
+                        <div class="arabic-large motivation-text" id="motivation-text" style="margin: var(--space-6) 0; font-size: 2rem;">
+                            خَيْرُكُمْ مَنْ تَعَلَّمَ الْقُرْآنَ وَعَلَّمَهُ
+                        </div>
+                        <p class="motivation-source" id="motivation-source" style="color: var(--color-text-secondary);">رواه البخاري</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Stats Section -->
+            <section class="section">
+                <div class="container">
+                    <h2 class="section-title" style="text-align: center; margin-bottom: var(--space-8);">📊 إحصائياتك <span style="font-size: 0.875rem; color: var(--color-text-secondary); font-weight: 400;">يوم <span id="today-date"></span></span></h2>
+                    <div class="grid grid-cols-4 stagger-children" id="home-stats">
+                        <div class="stat-card" style="text-align: center;">
+                            <div class="stat-value stat-number" id="home-total-surahs">0</div>
+                            <p style="color: var(--color-text-secondary); margin-top: var(--space-2);">إجمالي السور</p>
+                        </div>
+                        <div class="stat-card" style="text-align: center;">
+                            <div class="stat-value stat-number" id="home-mastered">0</div>
+                            <p style="color: var(--color-text-secondary); margin-top: var(--space-2);">متقنة</p>
+                        </div>
+                        <div class="stat-card" style="text-align: center;">
+                            <div class="stat-value stat-number" id="home-weak">0</div>
+                            <p style="color: var(--color-text-secondary); margin-top: var(--space-2);">ضعيفة</p>
+                        </div>
+                        <div class="stat-card" style="text-align: center;">
+                            <div class="stat-value stat-number" id="home-new">0</div>
+                            <p style="color: var(--color-text-secondary); margin-top: var(--space-2);">جديدة</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Features Grid -->
+            <section class="section">
+                <div class="container">
+                    <h2 class="section-title" style="text-align: center; margin-bottom: var(--space-8);">✨ المميزات</h2>
+                    <div class="grid grid-cols-3 stagger-children">
+                        <div class="glass-card hover-lift" style="text-align: center;">
+                            <div class="feature-icon-pro">📖</div>
+                            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: var(--space-2);">قراءة وتلاوة</h3>
+                            <p style="color: var(--color-text-secondary);">استماع للقراءات بأصوات مختلفة مع عرض المصحف</p>
+                        </div>
+                        <div class="glass-card hover-lift" style="text-align: center;">
+                            <div class="feature-icon-pro">🧠</div>
+                            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: var(--space-2);">تتبع ذكي</h3>
+                            <p style="color: var(--color-text-secondary);">نظام تكرار متباعد لضمان الحفظ القوي</p>
+                        </div>
+                        <div class="glass-card hover-lift" style="text-align: center;">
+                            <div class="feature-icon-pro">🎯</div>
+                            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: var(--space-2);">وضع الحفظ</h3>
+                            <p style="color: var(--color-text-secondary);">تمارين تفاعلية لاختبار الحفظ بمستويات مختلفة</p>
+                        </div>
+                        <div class="glass-card hover-lift" style="text-align: center;">
+                            <div class="feature-icon-pro">🏆</div>
+                            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: var(--space-2);">تحديات</h3>
+                            <p style="color: var(--color-text-secondary);">تنافس مع الأصدقاء واكسب النقاط</p>
+                        </div>
+                        <div class="glass-card hover-lift" style="text-align: center;">
+                            <div class="feature-icon-pro">📈</div>
+                            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: var(--space-2);">إحصائيات</h3>
+                            <p style="color: var(--color-text-secondary);">تتبع تقدمك يومياً وأسبوعياً وشهرياً</p>
+                        </div>
+                        <div class="glass-card hover-lift" style="text-align: center;">
+                            <div class="feature-icon-pro">👨‍🏫</div>
+                            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: var(--space-2);">معلمك</h3>
+                            <p style="color: var(--color-text-secondary);">تواصل مع معلميك واستلم المهام</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- MEMORIZATION PAGE -->
+        <div id="memorization-page" class="page">
+            <section class="section">
+                <div class="container">
+                    <div class="d-flex" style="justify-content: space-between; align-items: center; margin-bottom: var(--space-8); flex-wrap: wrap; gap: var(--space-4);">
+                        <h2 class="section-title" style="margin: 0;">📖 قائمة الحفظ</h2>
+                        <button class="btn btn-primary" onclick="QuranReview.showAddMemorization()">
+                            <span>➕</span>
+                            إضافة حفظ جديد
+                        </button>
                     </div>
                     
-                    <!-- Ward Selection -->
-                    <div class="ward-selection">
-                        <div class="form-group">
-                            <label class="form-label" for="ward-surah-select">اختر السورة</label>
-                            <select id="ward-surah-select" class="form-select">
-                                <option value="">-- اختر السورة --</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label" for="ward-from-ayah">من الآية</label>
-                                <input type="number" id="ward-from-ayah" class="form-input" min="1" placeholder="من">
+                    <!-- Add Form -->
+                    <div class="glass-card" id="add-memorization-form-container" style="margin-bottom: var(--space-6); display: none;">
+                        <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: var(--space-6);">➕ إضافة حفظ جديد</h3>
+                        <form id="add-memorization-form" onsubmit="QuranReview.handleAddMemorization(event)">
+                            <div class="form-floating" style="margin-bottom: var(--space-4);">
+                                <select id="surah-select" required>
+                                    <option value="">-- اختر السورة --</option>
+                                    <option value="1">1. الفاتحة (7 آيات)</option>
+                                    <option value="2">2. البقرة (286 آية)</option>
+                                    <option value="3">3. آل عمران (200 آية)</option>
+                                    <option value="4">4. النساء (176 آية)</option>
+                                    <option value="5">5. المائدة (120 آية)</option>
+                                    <option value="6">6. الأنعام (165 آية)</option>
+                                    <option value="7">7. الأعراف (206 آيات)</option>
+                                    <option value="8">8. الأنفال (75 آية)</option>
+                                    <option value="9">9. التوبة (129 آية)</option>
+                                    <option value="10">10. يونس (109 آيات)</option>
+                                </select>
+                                <label for="surah-select">السورة</label>
                             </div>
                             
-                            <div class="form-group">
-                                <label class="form-label" for="ward-to-ayah">إلى الآية</label>
-                                <input type="number" id="ward-to-ayah" class="form-input" min="1" placeholder="إلى">
+                            <div class="grid grid-cols-2" style="margin-bottom: var(--space-4);">
+                                <div class="form-floating">
+                                    <input type="number" id="from-ayah" min="1" placeholder=" " required>
+                                    <label for="from-ayah">من الآية</label>
+                                </div>
+                                <div class="form-floating">
+                                    <input type="number" id="to-ayah" min="1" placeholder=" " required>
+                                    <label for="to-ayah">إلى الآية</label>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex" style="justify-content: flex-end; gap: var(--space-3);">
+                                <button type="button" class="btn btn-outline" onclick="QuranReview.hideAddMemorization()">إلغاء</button>
+                                <button type="submit" class="btn btn-primary">إضافة</button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Table -->
+                    <div class="glass-card">
+                        <div class="d-flex" style="justify-content: space-between; align-items: center; margin-bottom: var(--space-6);">
+                            <h3 style="font-size: 1.125rem; font-weight: 600;">📋 جدول الحفظ</h3>
+                            <span class="badge badge-glass" id="memorization-count">0 سور</span>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="memorization-table" id="memorization-table">
+                                <thead>
+                                    <tr>
+                                        <th>السورة</th>
+                                        <th>الآيات</th>
+                                        <th>الحالة</th>
+                                        <th>آخر مراجعة</th>
+                                        <th>التالي</th>
+                                        <th>الإجراءات</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="memorization-table-body">
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div id="memorization-empty" style="text-align: center; padding: var(--space-10);">
+                            <div style="font-size: 4rem; margin-bottom: var(--space-4);">📚</div>
+                            <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: var(--space-2);">لا توجد سور محفوظة</h3>
+                            <p style="color: var(--color-text-secondary); margin-bottom: var(--space-4);">ابدأ رحلة الحفظ بإضافة سورة جديدة</p>
+                            <button class="btn btn-primary" onclick="QuranReview.showAddMemorization()">
+                                <span>➕</span>
+                                إضافة سورة
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- WARD PAGE -->
+        <div id="ward-page" class="page">
+            <section class="section">
+                <div class="container" style="max-width: 800px;">
+                    <h2 class="section-title" style="text-align: center; margin-bottom: var(--space-8);">🎧 الورد اليومي</h2>
+                    
+                    <div class="glass-card" style="margin-bottom: var(--space-6);">
+                        <div class="form-floating" style="margin-bottom: var(--space-4);">
+                            <select id="ward-surah-select" class="select-modern">
+                                <option value="">اختر السورة</option>
+                                <option value="1">سورة الفاتحة</option>
+                                <option value="2">سورة البقرة</option>
+                                <option value="3">سورة آل عمران</option>
+                            </select>
+                            <label for="ward-surah-select">السورة</label>
+                        </div>
+                        
+                        <div class="grid grid-cols-2" style="margin-bottom: var(--space-6);">
+                            <div class="form-floating">
+                                <input type="number" id="ward-from-ayah" placeholder=" " min="1" value="1">
+                                <label for="ward-from-ayah">من الآية</label>
+                            </div>
+                            <div class="form-floating">
+                                <input type="number" id="ward-to-ayah" placeholder=" " min="1" value="7">
+                                <label for="ward-to-ayah">إلى الآية</label>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2" style="margin-bottom: var(--space-4);">
+                            <div class="form-floating">
+                                <select id="ward-reciter-selector">
+                                    <option value="alafasy">مشاري بن راشد العفاسي</option>
+                                </select>
+                                <label for="ward-reciter-selector">القارئ</label>
+                            </div>
+                            <div class="form-floating">
+                                <select id="ward-audio-quality">
+                                    <option value="192">عالية (192 kbps)</option>
+                                    <option value="128" selected>متوسطة (128 kbps)</option>
+                                    <option value="64">منخفضة (64 kbps)</option>
+                                </select>
+                                <label for="ward-audio-quality">جودة الصوت</label>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2" style="margin-bottom: var(--space-4);">
+                            <div class="form-floating">
+                                <select id="ward-audio-source">
+                                    <option value="cdn" selected>الخادم المباشر</option>
+                                    <option value="api">API</option>
+                                </select>
+                                <label for="ward-audio-source">مصدر الصوت</label>
+                            </div>
+                            <div class="form-floating">
+                                <select id="ward-image-quality">
+                                    <option value="high" selected>عالية</option>
+                                    <option value="medium">متوسطة</option>
+                                    <option value="low">منخفضة</option>
+                                </select>
+                                <label for="ward-image-quality">جودة الصورة</label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-floating" style="margin-bottom: var(--space-4);">
+                            <select id="ward-ayah-delay">
+                                <option value="0" selected>بدون تأخير</option>
+                                <option value="0.5">0.5 ثانية</option>
+                                <option value="1">1 ثانية</option>
+                                <option value="2">2 ثوان</option>
+                                <option value="3">3 ثوان</option>
+                                <option value="5">5 ثوان</option>
+                            </select>
+                            <label for="ward-ayah-delay">تأخير بين الآيات</label>
+                        </div>
+                        
+                        <div style="margin-bottom: var(--space-4);">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="ward-autoplay-next" checked>
+                                <span class="toggle-slider"></span>
+                                <span style="margin-right: var(--space-3);">التشغيل التلقائي للآية التالية</span>
+                            </label>
+                        </div>
+                        
+                        <button class="btn btn-primary btn-full" onclick="playWard()">
+                            <span>▶️</span>
+                            تشغيل الورد
+                        </button>
+                    </div>
+                    
+                    <!-- Audio Player -->
+                    <div class="player-glass" id="ward-player">
+                        <div style="text-align: center; margin-bottom: var(--space-4);">
+                            <span class="badge badge-glass" id="ward-progress-text">الآية 1 من 7</span>
+                        </div>
+                        
+                        <div class="ward-ayah-image" id="ward-image-container" style="min-height: 200px; display: flex; align-items: center; justify-content: center; background: rgba(45, 80, 22, 0.05); border-radius: var(--radius-2xl); margin-bottom: var(--space-4);">
+                            <img id="ward-image" src="" alt="Ayah Image" style="display: none; max-width: 100%; border-radius: var(--radius-xl);">
+                            <div id="ward-ayah-text" class="arabic-large" style="text-align: center; padding: var(--space-6); font-size: 1.75rem;">
+                                بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
+                            </div>
+                        </div>
+                        
+                        <div class="progress-glass" style="margin: var(--space-6) 0;">
+                            <div class="fill" id="ward-progress-bar" style="width: 0%;"></div>
+                        </div>
+                        
+                        <div class="player-controls">
+                            <button class="player-btn player-btn-secondary" id="prev-ayah-btn" onclick="QuranReview.previousWardAyah()">
+                                ⏮️
+                            </button>
+                            <button class="player-btn player-btn-lg" id="play-ward-btn" onclick="QuranReview.toggleWardPlay()">
+                                ▶️
+                            </button>
+                            <button class="player-btn player-btn-secondary" id="next-ayah-btn" onclick="QuranReview.nextWardAyah()">
+                                ⏭️
+                            </button>
+                        </div>
+                        
+                        <div class="d-flex" style="justify-content: center; margin-top: var(--space-4);">
+                            <button class="btn btn-outline btn-sm" id="stop-ward-btn" onclick="AudioManager.stopAll()">
+                                ⏹️ إيقاف
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- PROGRESS PAGE -->
+        <div id="progress-page" class="page">
+            <section class="section">
+                <div class="container">
+                    <h2 class="section-title" style="text-align: center; margin-bottom: var(--space-8);">📈 تقدمك في الحفظ</h2>
+                    
+                    <div class="grid grid-cols-4" style="margin-bottom: var(--space-8);">
+                        <div class="stat-card" style="text-align: center;">
+                            <div class="stat-value" id="progress-total-surahs">0</div>
+                            <p style="color: var(--color-text-secondary); margin-top: var(--space-2);">سورة محفوظة</p>
+                        </div>
+                        <div class="stat-card" style="text-align: center;">
+                            <div class="stat-value" id="progress-total-ayahs">0</div>
+                            <p style="color: var(--color-text-secondary); margin-top: var(--space-2);">آية محفوظة</p>
+                        </div>
+                        <div class="stat-card" style="text-align: center;">
+                            <div class="stat-value" id="progress-completion">0%</div>
+                            <p style="color: var(--color-text-secondary); margin-top: var(--space-2);">نسبة الإنجاز</p>
+                        </div>
+                        <div class="stat-card" style="text-align: center;">
+                            <div class="stat-value" id="progress-streak">0</div>
+                            <p style="color: var(--color-text-secondary); margin-top: var(--space-2);">يوم متتالي</p>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2" style="margin-bottom: var(--space-8);">
+                        <div class="glass-card">
+                            <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">📊 توزيع الحالات</h3>
+                            <div style="display: flex; flex-direction: column; gap: var(--space-3);">
+                                <div class="d-flex" style="justify-content: space-between;">
+                                    <span class="d-flex" style="gap: var(--space-2);"><span class="status-badge status-strong"></span><span>متقن</span></span>
+                                    <span id="status-strong-count" style="font-weight: 600;">0</span>
+                                </div>
+                                <div class="d-flex" style="justify-content: space-between;">
+                                    <span class="d-flex" style="gap: var(--space-2);"><span class="status-badge status-weak"></span><span>ضعيف</span></span>
+                                    <span id="status-weak-count" style="font-weight: 600;">0</span>
+                                </div>
+                                <div class="d-flex" style="justify-content: space-between;">
+                                    <span class="d-flex" style="gap: var(--space-2);"><span class="status-badge status-new"></span><span>جديد</span></span>
+                                    <span id="status-new-count" style="font-weight: 600;">0</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="glass-card">
+                            <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">📅 نشاط الأسبوع</h3>
+                            <div class="grid grid-cols-7" style="text-align: center; gap: var(--space-2);">
+                                <div class="glass-card" style="padding: var(--space-3);"><div style="font-size: 0.75rem; color: var(--color-text-secondary);">سبت</div><div style="font-weight: 600;" id="activity-sat">0</div></div>
+                                <div class="glass-card" style="padding: var(--space-3);"><div style="font-size: 0.75rem; color: var(--color-text-secondary);">أحد</div><div style="font-weight: 600;" id="activity-sun">0</div></div>
+                                <div class="glass-card" style="padding: var(--space-3);"><div style="font-size: 0.75rem; color: var(--color-text-secondary);">اثن</div><div style="font-weight: 600;" id="activity-mon">0</div></div>
+                                <div class="glass-card" style="padding: var(--space-3);"><div style="font-size: 0.75rem; color: var(--color-text-secondary);">ثلا</div><div style="font-weight: 600;" id="activity-tue">0</div></div>
+                                <div class="glass-card" style="padding: var(--space-3);"><div style="font-size: 0.75rem; color: var(--color-text-secondary);">أرب</div><div style="font-weight: 600;" id="activity-wed">0</div></div>
+                                <div class="glass-card" style="padding: var(--space-3);"><div style="font-size: 0.75rem; color: var(--color-text-secondary);">خمي</div><div style="font-weight: 600;" id="activity-thu">0</div></div>
+                                <div class="glass-card" style="padding: var(--space-3);"><div style="font-size: 0.75rem; color: var(--color-text-secondary);">جمعة</div><div style="font-weight: 600;" id="activity-fri">0</div></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="glass-card">
+                        <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">📈 تطور الحفظ</h3>
+                        <div style="height: 300px; background: rgba(45, 80, 22, 0.05); border-radius: var(--radius-xl); display: flex; align-items: center; justify-content: center; color: var(--color-text-secondary);">
+                            <div style="text-align: center;"><div style="font-size: 3rem; margin-bottom: var(--space-4);">📊</div><p>الرسم البياني قريباً</p></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- COMPETITION PAGE -->
+        <div id="competition-page" class="page">
+            <section class="section" style="min-height: 80vh;">
+                <div class="container">
+                    <h2 class="section-title" style="text-align: center; margin-bottom: var(--space-8);">🏆 التحديات</h2>
+                    
+                    <!-- Competition Dashboard Container -->
+                    <div id="competition-dashboard" style="display: block;">
+                    <div class="card" style="margin-bottom: var(--space-8);">
+                        <div class="" style="text-align: center; padding: var(--space-8);">
+                            <div style="font-size: 5rem; margin-bottom: var(--space-4);">🥇</div>
+                            <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: var(--space-2);">رتبتك: <span id="user-rank">ذهبي</span></h3>
+                            <p style="color: var(--color-text-secondary); margin-bottom: var(--space-4);">لديك <span id="user-points" style="font-weight: 600; color: var(--color-primary);">1,250</span> نقطة</p>
+                            
+                            <!-- Stats Grid for Competition -->
+                            <div class="grid grid-cols-3" style="max-width: 400px; margin: 0 auto var(--space-4);">
+                                <div class="glass-card" style="padding: var(--space-3);">
+                                    <div style="font-size: 1.25rem; font-weight: 700;" id="comp-wins">0</div>
+                                    <div style="font-size: 0.75rem; color: var(--color-text-secondary);">انتصارات</div>
+                                </div>
+                                <div class="glass-card" style="padding: var(--space-3);">
+                                    <div style="font-size: 1.25rem; font-weight: 700;" id="comp-streak">🔥 0</div>
+                                    <div style="font-size: 0.75rem; color: var(--color-text-secondary);">متتالية</div>
+                                </div>
+                                <div class="glass-card" style="padding: var(--space-3);">
+                                    <div style="font-size: 1.25rem; font-weight: 700;" id="comp-challenges">0</div>
+                                    <div style="font-size: 0.75rem; color: var(--color-text-secondary);">تحديات</div>
+                                </div>
+                            </div>
+                            
+                            <div class="progress-glass" style="max-width: 400px; margin: 0 auto;"><div class="fill" style="width: 65%;"></div></div>
+                            <p style="font-size: 0.875rem; color: var(--color-text-secondary); margin-top: var(--space-2);">750 نقطة للوصول إلى البلاتينيوم</p>
+                        </div>
+                    </div>
+                    
+                    <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: var(--space-6);">🎮 اختر تحدياً</h3>
+                    <div class="grid grid-cols-3" style="margin-bottom: var(--space-8);">
+                        <div class="glass-card hover-lift" style="text-align: center;">
+                            <div style="font-size: 3rem; margin-bottom: var(--space-4);">⚡</div>
+                            <h4 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-2);">السباق</h4>
+                            <p style="color: var(--color-text-secondary); font-size: 0.875rem; margin-bottom: var(--space-4);">5 آيات في 5 دقائق</p>
+                            <button class="btn btn-primary" onclick="QuranReview.startChallenge('speed_run')">ابدأ</button>
+                        </div>
+                        <div class="glass-card hover-lift" style="text-align: center;">
+                            <div style="font-size: 3rem; margin-bottom: var(--space-4);">🔍</div>
+                            <h4 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-2);">صيد الآية</h4>
+                            <p style="color: var(--color-text-secondary); font-size: 0.875rem; margin-bottom: var(--space-4);">حدد السورة من الآية</p>
+                            <button class="btn btn-primary" onclick="QuranReview.startChallenge('ayah_hunt')">ابدأ</button>
+                        </div>
+                        <div class="glass-card hover-lift" style="text-align: center;">
+                            <div style="font-size: 3rem; margin-bottom: var(--space-4);">🎯</div>
+                            <h4 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-2);">سيد الدقة</h4>
+                            <p style="color: var(--color-text-secondary); font-size: 0.875rem; margin-bottom: var(--space-4);">اكتب الآية بشكل صحيح</p>
+                            <button class="btn btn-primary" onclick="QuranReview.startChallenge('precision')">ابدأ</button>
+                        </div>
+                    </div>
+                    
+                    <div class="glass-card">
+                        <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">🏅 لوحة المتصدرين</h3>
+                        <div id="leaderboard-list">
+                            <div class="memorization-item" style="background: rgba(212, 165, 116, 0.1); border-color: var(--color-gold);">
+                                <span style="font-size: 1.5rem; margin-left: var(--space-3);">🥇</span>
+                                <div style="flex: 1;"><div style="font-weight: 600;">أحمد</div><div style="font-size: 0.875rem; color: var(--color-text-secondary);">2,400 نقطة</div></div>
+                                <span class="badge badge-gold">💎 ماسي</span>
+                            </div>
+                            <div class="memorization-item">
+                                <span style="font-size: 1.5rem; margin-left: var(--space-3);">🥈</span>
+                                <div style="flex: 1;"><div style="font-weight: 600;">فاطمة</div><div style="font-size: 0.875rem; color: var(--color-text-secondary);">1,800 نقطة</div></div>
+                                <span class="badge badge-primary">🏆 بلاتينيوم</span>
+                            </div>
+                            <div class="memorization-item">
+                                <span style="font-size: 1.5rem; margin-left: var(--space-3);">🥉</span>
+                                <div style="flex: 1;"><div style="font-weight: 600;">محمد</div><div style="font-size: 0.875rem; color: var(--color-text-secondary);">1,250 نقطة</div></div>
+                                <span class="badge badge-gold">🥇 ذهبي</span>
+                            </div>
+                        </div>
+                    </div>
+                    </div><!-- /competition-dashboard -->
+                    
+                    <!-- Competition Active Container (Hidden by default) -->
+                    <div id="competition-active" class="hidden" style="display: none;">
+                        <div class="glass-card">
+                            <div class="d-flex" style="justify-content: space-between; margin-bottom: var(--space-4); flex-wrap: wrap; gap: var(--space-2);">
+                                <span class="badge badge-primary" id="comp-score">النقاط: 0</span>
+                                <span class="badge badge-glass" id="comp-timer">⏱️ 05:00</span>
+                                <span class="badge badge-gold" id="comp-streak">🔥 0</span>
+                            </div>
+                            <div id="game-area" style="min-height: 300px; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+                                <div style="font-size: 4rem; margin-bottom: var(--space-4);">🎮</div>
+                                <p style="color: var(--color-text-secondary);">اختر تحدياً للبدء</p>
                             </div>
                         </div>
                     </div>
                 </div>
+            </section>
+        </div>
 
-                <!-- Ward Player -->
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title">🎵 مشغل الورد</h2>
+        <!-- HIFZ PAGE -->
+        <div id="hifz-page" class="page">
+            <section class="section" style="min-height: 80vh;">
+                <div class="container" style="max-width: 900px;">
+                    <h2 class="section-title" style="text-align: center; margin-bottom: var(--space-8);">🎭 وضع الحفظ</h2>
+                    
+                    <!-- Hifz Selection Container -->
+                    <div class="glass-card" id="hifz-selection" style="margin-bottom: var(--space-6); display: block;">
+                        <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">اختيار التمرين</h3>
+                        
+                        <form id="hifz-start-form">
+                            <div class="form-floating" style="margin-bottom: var(--space-4);">
+                                <select id="hifz-surah-select" required>
+                                    <option value="">-- اختر السورة --</option>
+                                </select>
+                                <label for="hifz-surah-select">السورة</label>
+                            </div>
+                            
+                            <div class="grid grid-cols-2" style="margin-bottom: var(--space-4);">
+                                <div class="form-floating">
+                                    <input type="number" id="hifz-from-ayah" min="1" value="1" placeholder=" " required>
+                                    <label for="hifz-from-ayah">من الآية</label>
+                                </div>
+                                <div class="form-floating">
+                                    <input type="number" id="hifz-to-ayah" min="1" value="7" placeholder=" " required>
+                                    <label for="hifz-to-ayah">إلى الآية</label>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary btn-full">
+                                <span>🎮</span>
+                                ابدأ التمرين
+                            </button>
+                        </form>
                     </div>
                     
-                    <!-- Ward Controls -->
-                    <div class="ward-player">
-                        <h3>🎧 مشغل الورد</h3>
-                        <div class="ward-controls">
-                            <button id="play-ward-btn" class="btn btn-primary">
-                                <span>▶️</span>
-                                استماع للورد
+                    <!-- Hifz Active Game Container -->
+                    <div class="glass-card" id="hifz-active-container" style="display: none;">
+                        <div class="d-flex" style="justify-content: space-between; margin-bottom: var(--space-4); flex-wrap: wrap; gap: var(--space-2);">
+                            <div>
+                                <span class="badge badge-primary" id="hifz-score">النقاط: 0</span>
+                                <span class="badge badge-glass" id="hints-count" style="margin-right: var(--space-2);">تلميحات: 3</span>
+                            </div>
+                            <span class="badge badge-gold" id="hifz-level">المستوى: ⭐⭐⭐</span>
+                        </div>
+                        
+                        <!-- Hifz Display Container -->
+                        <div id="hifz-display" style="margin: var(--space-6) 0; min-height: 150px; background: rgba(45, 80, 22, 0.03); border-radius: var(--radius-xl); padding: var(--space-4); display: flex; align-items: center; justify-content: center;">
+                            <p style="color: var(--color-text-secondary);">اختر سورة وآيات للبدء</p>
+                        </div>
+                        
+                        <!-- Hifz Text (fallback display) -->
+                        <div class="arabic-large" id="hifz-text" style="text-align: center; line-height: 2.5; margin: var(--space-6) 0; font-size: 1.75rem; display: none;">
+                            بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
+                        </div>
+                        
+                        <!-- Feedback Area -->
+                        <div id="hifz-feedback" style="text-align: center; margin: var(--space-4) 0; min-height: 30px;"></div>
+                        
+                        <div class="d-flex" style="justify-content: center; gap: var(--space-3); flex-wrap: wrap;">
+                            <button class="btn btn-outline" onclick="QuranReview.showHint()">
+                                <span>💡</span>
+                                تلميح
                             </button>
-                            <button id="play-surah-btn" class="btn btn-secondary">
-                                <span>📖</span>
-                                استماع للسورة كاملة (مع الصور)
+                            <button class="btn btn-primary" onclick="QuranReview.checkMemorization()">
+                                <span>✓</span>
+                                تحقق
                             </button>
-                            <button id="stop-ward-btn" class="btn btn-danger">
+                            <button class="btn btn-outline" onclick="QuranReview.nextLevel()">
+                                <span>⏭️</span>
+                                التالي
+                            </button>
+                            <button class="btn btn-outline" onclick="QuranReview.stopHifzSession()">
                                 <span>⏹️</span>
                                 إيقاف
                             </button>
                         </div>
-                        
-                        <!-- Navigation Controls -->
-                        <div class="ward-navigation">
-                            <button id="prev-ayah-btn" class="btn btn-outline" title="الآية السابقة">
-                                <span>⏮️</span>
-                                السابقة
-                            </button>
-                            <button id="next-ayah-btn" class="btn btn-outline" title="الآية التالية">
-                                <span>⏭️</span>
-                                التالية
-                            </button>
-                        </div>
-                        <div class="ward-progress">
-                            <div class="ward-progress-info">
-                                <span id="current-ayah-info">الآية الحالية: -</span>
-                                <span id="ward-progress-text">0 / 0</span>
-                            </div>
-                            <div class="ward-progress-bar-container">
-                                <div id="ward-progress-bar" class="ward-progress-bar"></div>
-                            </div>
-                        </div>
-                        <div class="ward-display">
-                            <div id="ward-ayah-image" class="ward-ayah-image">
-                                <img id="ward-image" src="" alt="Ayah Image" style="display: none;">
-                            </div>
-                            <div id="ward-ayah-text" class="ward-ayah-text" style="display: none;"></div>
-                        </div>
                     </div>
                 </div>
+            </section>
+        </div>
 
-                <!-- Reciter Settings -->
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title">⚙️ إعدادات التلاوة</h2>
-                    </div>
-                    <div class="settings-form">
-                        <div class="form-group">
-                            <label class="form-label" for="ward-reciter-selector">القارئ</label>
-                            <select id="ward-reciter-selector" class="form-select">
-                                <option value="alafasy">مشاري بن راشد العفاسي</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="ward-audio-source">مصدر الصوت</label>
-                            <select id="ward-audio-source" class="form-select">
-                                <option value="cdn">عبر الإنترنت (CDN)</option>
-                                <option value="local">ملفات محلية (MP3)</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="ward-audio-quality">جودة الصوت</label>
-                            <select id="ward-audio-quality" class="form-select">
-                                <option value="192">عالية (192 kbps)</option>
-                                <option value="128" selected>متوسطة (128 kbps)</option>
-                                <option value="64">منخفضة (64 kbps)</option>
-                                <option value="32">منخفضة جداً (32 kbps)</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="ward-image-quality">جودة الصور</label>
-                            <select id="ward-image-quality" class="form-select">
-                                <option value="normal">عادية</option>
-                                <option value="high">عالية الدقة</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="ward-ayah-delay">تأخفير مدة الآية (ثواني)</label>
-                            <select id="ward-ayah-delay" class="form-select">
-                                <option value="0" selected>بدون تأخير (فوري)</option>
-                                <option value="0.1">0.1 ثانية</option>
-                                <option value="0.5">0.5 ثانية</option>
-                                <option value="1.0">1 ثانية</option>
-                                <option value="2.0">2 ثوان</option>
-                                <option value="3.0">3 ثوان</option>
-                                <option value="4.0">4 ثوان</option>
-                                <option value="5.0">5 ثوان</option>
-                                <option value="10.0">10 ثوان</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">
-                                <input type="checkbox" id="ward-autoplay-next" checked>
-                                تشغيل الآية التالية تلقائياً
-                            </label>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div id="memorization-page" class="page">
-                <!-- Add New Memorization -->
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title">➕ إضافة حفظ جديد</h2>
-                    </div>
-                    <form id="add-memorization-form" class="settings-form">
-                        <div class="form-group">
-                            <label class="form-label" for="surah-select">اختر السورة</label>
-                            <select id="surah-select" class="form-select" required>
-                                <option value="">-- اختر السورة --</option>
-                                <option value="1">الفاتحة (7 آيات)</option>
-                                <option value="2">البقرة (286 آية)</option>
-                                <option value="3">آل عمران (200 آية)</option>
-                                <option value="4">النساء (176 آية)</option>
-                                <option value="5">المائدة (120 آية)</option>
-                                <option value="6">الأنعام (165 آية)</option>
-                                <option value="7">الأعراف (206 آيات)</option>
-                                <option value="8">الأنفال (75 آية)</option>
-                                <option value="9">التوبة (129 آية)</option>
-                                <option value="10">يونس (109 آيات)</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="from-ayah">من الآية</label>
-                            <input type="number" id="from-ayah" class="form-input" min="1" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="to-ayah">إلى الآية</label>
-                            <input type="number" id="to-ayah" class="form-input" min="1" required>
-                        </div>
-                        
-                        <button type="submit" class="btn btn-primary">
-                            <span>➕</span>
-                            إضافة الحفظ
-                        </button>
-                    </form>
-                </div>
-
-                <!-- Audio Player -->
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title">🎵 القرآن الصوتي</h2>
-                    </div>
-                    <div style="padding: 1rem;">
-                        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
-                            <select id="reciter-selector" class="form-select" style="flex: 1;">
-                                <option value="alafasy">مشاري بن راشد العفاسي</option>
-                            </select>
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 1rem;">
-                            <audio id="audio-element" controls style="flex: 1;">
-                                <source id="audio-source" type="audio/mpeg">
-                            </audio>
-                            <div id="audio-info" style="color: var(--text-secondary); font-size: 0.9rem;">
-                                <div id="audio-surah-name">اختر سورة للاستماع</div>
-                                <div id="audio-reciter">القارئ: مشاري بن راشد العفاسي</div>
+        <!-- SETTINGS PAGE -->
+        <div id="settings-page" class="page">
+            <section class="section">
+                <div class="container" style="max-width: 600px;">
+                    <h2 class="section-title" style="text-align: center; margin-bottom: var(--space-8);">⚙️ الإعدادات</h2>
+                    
+                    <div class="glass-card" style="margin-bottom: var(--space-6);">
+                        <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">👤 الملف الشخصي</h3>
+                        <form id="settings-form" onsubmit="QuranReview.saveSettings(event)">
+                            <div class="form-floating" style="margin-bottom: var(--space-4);">
+                                <input type="text" id="user-name" placeholder=" " value="">
+                                <label for="user-name">اسمك</label>
                             </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Memorization Table -->
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title">📋 جدول الحفظ اليومي</h2>
-                        <p class="text-secondary">يوم <span id="today-date"></span></p>
+                            
+                            <div class="form-floating" style="margin-bottom: var(--space-4);">
+                                <input type="number" id="daily-goal" min="1" max="50" value="5" placeholder=" ">
+                                <label for="daily-goal">الهدف اليومي (آيات)</label>
+                            </div>
+                            
+                            <div style="margin-bottom: var(--space-4);">
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="notifications" checked>
+                                    <span class="toggle-slider"></span>
+                                    <span style="margin-right: var(--space-3);">الإشعارات</span>
+                                </label>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary btn-full">حفظ التغييرات</button>
+                        </form>
                     </div>
                     
-                    <div class="table-container">
-                        <table class="memorization-table">
-                            <thead>
-                                <tr>
-                                    <th>السورة</th>
-                                    <th>الآيات</th>
-                                    <th>الحالة</th>
-                                    <th>آخر مراجعة</th>
-                                    <th>المراجعات</th>
-                                    <th>التالي</th>
-                                    <th>الإجراءات</th>
-                                </tr>
-                            </thead>
-                            <tbody id="memorization-table-body">
-                                <!-- Will be populated by JavaScript -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Progress Page -->
-            <div id="progress-page" class="page">
-                <!-- Progress Stats -->
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title">📊 إحصائيات التقدم</h2>
-                    </div>
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-number" id="progress-total">0</div>
-                            <div class="stat-label">إجمالي الحفظ</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-number" id="progress-mastered">0</div>
-                            <div class="stat-label">سور متقنة</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-number" id="progress-weak">0</div>
-                            <div class="stat-label">تحتاج مراجعة</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-number" id="progress-new">0</div>
-                            <div class="stat-label">جديدة</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Progress Chart -->
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title">📈 مراجعات آخر 7 أيام</h2>
-                    </div>
-                    <div class="progress-chart" id="progress-chart">
-                        <!-- Will be populated by JavaScript -->
-                    </div>
-                </div>
-
-                <!-- Average Stats -->
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title">📈 متوسطات الأداء</h2>
-                    </div>
-                    <div style="text-align: center; padding: 2rem;">
-                        <div style="font-size: 3rem; font-weight: bold; color: var(--accent-green);" id="progress-average">0</div>
-                        <div style="color: var(--text-secondary);">متوسط عدد المراجعات لكل سورة</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Competition Page -->
-            <div id="competition-page" class="page">
-                <!-- Dashboard -->
-                <div id="competition-dashboard">
-                    <div class="card stats-dashboard">
-                        <div class="rank-badge" id="user-rank">🥉</div>
-                        <div class="stats-grid">
-                            <div class="stat-item">
-                                <span class="stat-value" id="comp-score">0</span>
-                                <span class="stat-label">نقاط</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-value" id="comp-wins">0</span>
-                                <span class="stat-label">انتصارات</span>
-                            </div>
-                            <div class="stat-item">
-                                <span class="stat-value" id="comp-streak">🔥 0</span>
-                                <span class="stat-label">أيام متتالية</span>
+                    <div class="glass-card" style="margin-bottom: var(--space-6);">
+                        <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">🎨 المظهر</h3>
+                        
+                        <div style="margin-bottom: var(--space-4);">
+                            <label style="display: block; margin-bottom: var(--space-3); font-weight: 500;">الوضع</label>
+                            <div class="d-flex" style="gap: var(--space-3);">
+                                <button type="button" class="btn btn-outline" id="theme-light-btn" onclick="QuranReview.setTheme('light')">☀️ فاتح</button>
+                                <button type="button" class="btn btn-outline" id="theme-dark-btn" onclick="QuranReview.setTheme('dark')">🌙 داكن</button>
                             </div>
                         </div>
-                    </div>
-
-                    <!-- Challenge Selection -->
-                    <div class="challenge-cards">
-                        <div class="challenge-card" onclick="QuranReview.startChallenge('speed_run')">
-                            <div class="challenge-icon">⚡</div>
-                            <h4>سباق الحفظ</h4>
-                            <p>حفظ أكبر عدد من الآيات في 5 دقائق</p>
-                            <div class="difficulty-selector">
-                                <button class="diff-btn" data-diff="easy">سهل</button>
-                                <button class="diff-btn active" data-diff="medium">متوسط</button>
-                                <button class="diff-btn" data-diff="hard">صعب</button>
-                            </div>
-                        </div>
-
-                        <div class="challenge-card" onclick="QuranReview.startChallenge('ayah_hunt')">
-                            <div class="challenge-icon">🎯</div>
-                            <h4>صياد الآيات</h4>
-                            <p>حدد السورة من الآية المعروضة</p>
-                        </div>
-
-                        <div class="challenge-card" onclick="QuranReview.startChallenge('precision')">
-                            <div class="challenge-icon">🎓</div>
-                            <h4>اختبار الدقة</h4>
-                            <p>حفظ كامل بدون أخطاء</p>
-                        </div>
-                    </div>
-
-                    <!-- Leaderboard -->
-                    <div class="card leaderboard" style="margin-top: 2rem;">
-                        <h3>🏆 لوحة المتصدرين</h3>
-                        <div id="leaderboard-list"></div>
-                    </div>
-                </div>
-
-                <!-- Active Challenge Interface (Hidden by default) -->
-                <div id="competition-active" class="hidden">
-                    <!-- Dynamic Content -->
-                </div>
-            </div>
-
-            <!-- Hifz Page -->
-            <div id="hifz-page" class="page">
-                <!-- Selection Form -->
-                <div id="hifz-selection" class="card">
-                    <div class="card-header">
-                        <h2 class="card-title">🎭 إعداد جلسة الحفظ</h2>
-                    </div>
-                    <form id="hifz-start-form" class="settings-form">
-                        <div class="form-group">
-                            <label class="form-label">اختر السورة</label>
-                            <select id="hifz-surah-select" class="form-select" required>
-                                <option value="">-- اختر السورة --</option>
-                            </select>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label">من الآية</label>
-                                <input type="number" id="hifz-from-ayah" class="form-input" min="1" required>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">إلى الآية</label>
-                                <input type="number" id="hifz-to-ayah" class="form-input" min="1" required>
-                            </div>
-                        </div>
-                        <button type="submit" class="btn btn-primary">ابدأ الحفظ</button>
-                    </form>
-                </div>
-
-                <!-- Active Session -->
-                <div id="hifz-active-container" class="hifz-container hidden">
-                    <!-- Header -->
-                    <div class="hifz-header">
-                        <div class="hifz-level-indicator">
-                            <span>المستوى:</span>
-                            <div class="level-dots">
-                                <span class="dot active"></span>
-                                <span class="dot"></span>
-                                <span class="dot"></span>
-                                <span class="dot"></span>
-                                <span class="dot"></span>
-                            </div>
-                        </div>
-                        <div class="hifz-controls">
-                            <button class="btn btn-secondary" onclick="QuranReview.showHint()">
-                                💡 تلميح (<span id="hints-count">3</span>)
-                            </button>
-                            <button class="btn btn-primary" onclick="QuranReview.checkMemorization()">
-                                ✅ تحقق
-                            </button>
-                            <button class="btn btn-danger" onclick="QuranReview.stopHifzSession()">
-                                ⏹️ إنهاء
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Display Zone -->
-                    <div id="hifz-display" class="hifz-display">
-                        <!-- Dynamic Content -->
-                    </div>
-
-                    <!-- Feedback -->
-                    <div id="hifz-feedback" class="hifz-feedback hidden">
-                        <div class="feedback-content">
-                            <span class="feedback-icon" style="font-size: 3rem;">🎉</span>
-                            <h3>أحسنت!</h3>
-                            <button class="btn btn-primary" onclick="QuranReview.nextLevel()">المستوى التالي</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Settings Page -->
-            <div id="settings-page" class="page">
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title">⚙️ الإعدادات</h2>
-                    </div>
-                    
-                    <form id="settings-form" class="settings-form">
-                        <div class="form-group">
-                            <label class="form-label" for="user-name">اسم المستخدم</label>
-                            <input type="text" id="user-name" class="form-input" placeholder="أدخل اسمك">
-                        </div>
                         
-                        <div class="form-group">
-                            <label class="form-label" for="daily-goal">هدف الحفظ اليومي (سور)</label>
-                            <input type="number" id="daily-goal" class="form-input" min="1" max="20" value="5">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="notifications">التنبيهات</label>
-                            <label class="switch">
-                                <input type="checkbox" id="notifications">
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label" for="debug-mode">وضع المطور (Debug Log)</label>
-                            <label class="switch">
-                                <input type="checkbox" id="debug-mode">
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="prefer-tarteel">تفضيل فتح تطبيق ترتيل</label>
-                            <label class="switch">
-                                <input type="checkbox" id="prefer-tarteel">
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="reciter-selector">القارئ المفضل</label>
-                            <select id="reciter-selector" class="form-select">
-                                <option value="alafasy">مشاري بن راشد العفاسي</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="audio-quality">جودة الصوت</label>
-                            <select id="audio-quality" class="form-select">
-                                <option value="192">عالية (192 kbps)</option>
-                                <option value="128" selected>متوسطة (128 kbps)</option>
-                                <option value="64">منخفضة (64 kbps)</option>
-                                <option value="32">منخفضة جداً (32 kbps)</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="image-quality">جودة الصور</label>
-                            <select id="image-quality" class="form-select">
-                                <option value="normal">عادية</option>
-                                <option value="high">عالية الدقة</option>
-                            </select>
-                        </div>
-                        
-                        <button type="submit" class="btn btn-primary">
-                            <span>💾</span>
-                            حفظ الإعدادات
-                        </button>
-                    </form>
-                </div>
-
-                <!-- Data Management -->
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title">🗂️ إدارة البيانات</h2>
-                    </div>
-                    
-                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                        <button class="btn btn-secondary" onclick="QuranReview.exportData()">
-                            <span>📤</span>
-                            تصدير البيانات
-                        </button>
-                        <button class="btn btn-secondary" onclick="QuranReview.importData()">
-                            <span>📥</span>
-                            استيراد البيانات
-                        </button>
-                        <button class="btn btn-danger" onclick="QuranReview.clearData()">
-                            <span>🗑️</span>
-                            مسح البيانات
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Student Tasks Page -->
-            <div id="mytasks-page" class="page">
-                <!-- Student welcome banner -->
-                <div class="card role-banner student-banner">
-                    <div class="banner-content">
-                        <div class="banner-icon">🎓</div>
                         <div>
-                            <h2 class="banner-title" id="student-welcome">مرحباً</h2>
-                            <p class="banner-subtitle">صفحة الطالب - المهام والتسليمات</p>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="settings-notifications" checked>
+                                <span class="toggle-slider"></span>
+                                <span style="margin-right: var(--space-3);">الإشعارات</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="glass-card">
+                        <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">💾 إدارة البيانات</h3>
+                        <div style="display: flex; flex-direction: column; gap: var(--space-3);">
+                            <button class="btn btn-outline" onclick="QuranReview.exportData()">
+                                <span>📤</span> تصدير البيانات
+                            </button>
+                            <button class="btn btn-outline" onclick="QuranReview.importData()">
+                                <span>📥</span> استيراد البيانات
+                            </button>
+                            <button class="btn btn-outline" onclick="QuranReview.resetData()" style="color: var(--color-danger);">
+                                <span>🗑️</span> إعادة تعيين
+                            </button>
                         </div>
                     </div>
                 </div>
+            </section>
+        </div>
 
-                <!-- Student Stats -->
-                <div class="card">
-                    <div class="card-header"><h2 class="card-title">📊 إحصائياتي</h2></div>
-                    <div class="stats-grid">
-                        <div class="stat-card stat-points"><div class="stat-number" id="student-points">0</div><div class="stat-label">نقاط</div></div>
-                        <div class="stat-card stat-done"><div class="stat-number" id="student-tasks-done">0</div><div class="stat-label">مهام مكتملة</div></div>
-                        <div class="stat-card stat-pending"><div class="stat-number" id="student-tasks-pending">0</div><div class="stat-label">مهام متبقية</div></div>
-                        <div class="stat-card stat-rejected"><div class="stat-number" id="student-tasks-rejected">0</div><div class="stat-label">مرفوضة</div></div>
-                    </div>
-                </div>
-
-                <!-- Points History -->
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title">🏆 سجل النقاط</h2>
-                    </div>
-                    <div id="student-points-log" class="dashboard-list">
-                        <p class="empty-state">جاري التحميل...</p>
-                    </div>
-                </div>
-
-                <!-- Tasks list -->
-                <div class="card">
-                    <div class="card-header"><h2 class="card-title">📋 المهام المطلوبة</h2></div>
-                    <div id="student-tasks-list" class="dashboard-list">
-                        <p class="empty-state">جاري التحميل...</p>
-                    </div>
-                </div>
-
-                <!-- Submissions list -->
-                <div class="card">
-                    <div class="card-header"><h2 class="card-title">🎤 تسليماتي</h2></div>
-                    <div id="student-submissions-list" class="dashboard-list">
-                        <p class="empty-state">جاري التحميل...</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Teacher Dashboard Page -->
-            <div id="teacher-page" class="page">
-                <!-- Teacher welcome banner -->
-                <div class="card role-banner teacher-banner">
-                    <div class="banner-content">
-                        <div class="banner-icon">👨‍🏫</div>
-                        <div>
-                            <h2 class="banner-title" id="teacher-welcome">مرحباً أستاذ</h2>
-                            <p class="banner-subtitle">لوحة تحكم الأستاذ</p>
+        <!-- MY TASKS PAGE -->
+        <div id="mytasks-page" class="page">
+            <section class="section">
+                <div class="container">
+                    <h2 class="section-title" style="text-align: center; margin-bottom: var(--space-8);">📝 مهامي</h2>
+                    <p id="student-welcome" style="text-align: center; color: var(--color-text-secondary); margin-bottom: var(--space-2);"></p>
+                    <p id="student-teacher-info" style="text-align: center; color: var(--color-text-secondary); margin-bottom: var(--space-6); font-size: 0.9rem;"></p>
+                    
+                    <!-- Student Task Stats -->
+                    <div class="grid grid-cols-4" style="margin-bottom: var(--space-6);">
+                        <div class="stat-card" style="text-align: center;">
+                            <div class="stat-value" id="student-points">0</div>
+                            <p style="color: var(--color-text-secondary);">النقاط</p>
+                        </div>
+                        <div class="stat-card" style="text-align: center;">
+                            <div class="stat-value" id="student-tasks-done">0</div>
+                            <p style="color: var(--color-text-secondary);">مكتملة</p>
+                        </div>
+                        <div class="stat-card" style="text-align: center;">
+                            <div class="stat-value" id="student-tasks-pending">0</div>
+                            <p style="color: var(--color-text-secondary);">قيد الانتظار</p>
+                        </div>
+                        <div class="stat-card" style="text-align: center;">
+                            <div class="stat-value" id="student-tasks-rejected">0</div>
+                            <p style="color: var(--color-text-secondary);">مرفوضة</p>
                         </div>
                     </div>
-                </div>
-
-                <!-- Teacher Stats -->
-                <div class="card">
-                    <div class="card-header"><h2 class="card-title">📊 إحصائيات عامة</h2></div>
-                    <div class="stats-grid">
-                        <div class="stat-card stat-students"><div class="stat-number" id="teacher-total-students">0</div><div class="stat-label">طلاب</div></div>
-                        <div class="stat-card stat-pending-t"><div class="stat-number" id="teacher-pending">0</div><div class="stat-label">بانتظار التصحيح</div></div>
-                        <div class="stat-card stat-tasks-t"><div class="stat-number" id="teacher-tasks">0</div><div class="stat-label">مهام</div></div>
-                        <div class="stat-card stat-approved-t"><div class="stat-number" id="teacher-approved">0</div><div class="stat-label">مقبولة</div></div>
+                    
+                    <div class="tabs">
+                        <button class="tab active" data-tab="pending" onclick="QuranReview.switchTaskTab('pending')">قيد الانتظار</button>
+                        <button class="tab" data-tab="completed" onclick="QuranReview.switchTaskTab('completed')">مكتملة</button>
                     </div>
-                </div>
-
-                <!-- Teacher Tabs -->
-                <div class="teacher-tabs">
-                    <button class="teacher-tab active" data-tab="pending" onclick="QuranReview.switchTeacherTab('pending')">📝 التصحيح</button>
-                    <button class="teacher-tab" data-tab="create" onclick="QuranReview.switchTeacherTab('create')">➕ مهمة جديدة</button>
-                    <button class="teacher-tab" data-tab="students" onclick="QuranReview.switchTeacherTab('students')">👥 الطلاب</button>
-                    <button class="teacher-tab" data-tab="tasks-list" onclick="QuranReview.switchTeacherTab('tasks-list')">📋 المهام</button>
-                    <button class="teacher-tab admin-only-tab" data-tab="admin" onclick="QuranReview.switchTeacherTab('admin')" style="display:none;">⚙️ إدارة</button>
-                </div>
-
-                <!-- Tab: Pending Submissions -->
-                <div id="teacher-tab-pending" class="teacher-tab-content active">
-                    <div class="card">
-                        <div class="card-header"><h2 class="card-title">📝 التسليمات بانتظار التصحيح</h2></div>
-                        <div id="teacher-pending-list" class="dashboard-list">
-                            <p class="empty-state">جاري التحميل...</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Tab: Create Task -->
-                <div id="teacher-tab-create" class="teacher-tab-content">
-                    <div class="card">
-                        <div class="card-header"><h2 class="card-title">➕ إنشاء مهمة جديدة</h2></div>
-                        <form id="teacher-create-task-form" class="settings-form" onsubmit="QuranReview.handleCreateTask(event)">
-                            <div class="form-group">
-                                <label class="form-label">عنوان المهمة</label>
-                                <input type="text" id="task-title" class="form-input" required placeholder="مثال: حفظ سورة الملك">
+                    
+                    <div id="student-tasks-list" class="glass-card">
+                        <div class="task-card">
+                            <span class="task-status task-status-pending"></span>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600;">حفظ سورة الفاتحة</div>
+                                <div style="font-size: 0.875rem; color: var(--color-text-secondary);">معلم: أحمد • تسليم: غداً</div>
                             </div>
-                            <div class="form-group">
-                                <label class="form-label">الوصف</label>
-                                <textarea id="task-description" class="form-input" rows="3" placeholder="تفاصيل المهمة..."></textarea>
+                            <span class="badge badge-primary">10 نقاط</span>
+                        </div>
+                    </div>
+
+                    <div class="glass-card" style="margin-top: var(--space-6);">
+                        <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">🏅 سجل النقاط</h3>
+                        <div id="student-points-log"></div>
+                    </div>
+
+                    <div class="glass-card" style="margin-top: var(--space-6);">
+                        <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">📤 تسليماتي</h3>
+                        <div id="student-submissions-list"></div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- TEACHER PAGE -->
+        <div id="teacher-page" class="page">
+            <section class="section">
+                <div class="container">
+                    <h2 class="section-title" style="text-align: center; margin-bottom: var(--space-8);">📋 لوحة المعلم</h2>
+                    
+                    <div class="grid grid-cols-4" style="margin-bottom: var(--space-8);">
+                        <div class="stat-card" style="text-align: center;">
+                            <div class="stat-value" id="teacher-total-students">0</div>
+                            <p style="color: var(--color-text-secondary);">عدد الطلاب</p>
+                        </div>
+                        <div class="stat-card" style="text-align: center;">
+                            <div class="stat-value" id="teacher-pending">0</div>
+                            <p style="color: var(--color-text-secondary);">تسليمات معلقة</p>
+                        </div>
+                        <div class="stat-card" style="text-align: center;">
+                            <div class="stat-value" id="teacher-tasks">0</div>
+                            <p style="color: var(--color-text-secondary);">المهام</p>
+                        </div>
+                        <div class="stat-card" style="text-align: center;">
+                            <div class="stat-value" id="teacher-approved">0</div>
+                            <p style="color: var(--color-text-secondary);">مقبولة</p>
+                        </div>
+                    </div>
+                    
+                    <div class="glass-card" style="margin-bottom: var(--space-6);">
+                        <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">➕ إنشاء مهمة جديدة</h3>
+                        <form id="teacher-create-task-form" onsubmit="QuranReview.createTask(event)">
+                            <div class="form-floating" style="margin-bottom: var(--space-4);">
+                                <input type="text" id="task-title" placeholder=" " required>
+                                <label for="task-title">عنوان المهمة</label>
                             </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label class="form-label">النوع</label>
-                                    <select id="task-type" class="form-select">
+                            <div class="form-floating" style="margin-bottom: var(--space-4);">
+                                <textarea id="task-description" placeholder=" " style="min-height: 80px; resize: vertical;"></textarea>
+                                <label for="task-description">وصف المهمة</label>
+                            </div>
+                            <div class="grid grid-cols-2" style="margin-bottom: var(--space-4);">
+                                <div class="form-floating">
+                                    <select id="task-type">
                                         <option value="memorization">حفظ</option>
-                                        <option value="recitation">تلاوة</option>
-                                        <option value="other">أخرى</option>
+                                        <option value="review">مراجعة</option>
+                                        <option value="tajweed">تجويد</option>
                                     </select>
+                                    <label for="task-type">نوع المهمة</label>
                                 </div>
-                                <div class="form-group">
-                                    <label class="form-label">النقاط</label>
-                                    <input type="number" id="task-points" class="form-input" min="0" value="10">
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">تاريخ التسليم</label>
-                                    <input type="date" id="task-due-date" class="form-input">
+                                <div class="form-floating">
+                                    <input type="number" id="task-points" min="0" value="10" placeholder=" ">
+                                    <label for="task-points">النقاط</label>
                                 </div>
                             </div>
-                            <!-- Assignment options -->
-                            <div class="form-group">
-                                <label class="form-label">تعيين المهمة إلى</label>
-                                <div class="assign-options">
-                                    <label class="assign-option">
-                                        <input type="radio" name="assign-mode" value="all" checked onchange="QuranReview.toggleAssignMode(this.value)">
-                                        جميع الطلاب
-                                    </label>
-                                    <label class="assign-option">
-                                        <input type="radio" name="assign-mode" value="select" onchange="QuranReview.toggleAssignMode(this.value)">
-                                        اختيار طلاب محددين
-                                    </label>
-                                </div>
-                            </div>
-                            <div id="student-select-container" class="form-group hidden">
-                                <label class="form-label">اختر الطلاب</label>
-                                <div id="student-checkboxes" class="student-checkboxes">
-                                    <p class="empty-state">جاري التحميل...</p>
-                                </div>
+                            <div class="form-floating" style="margin-bottom: var(--space-4);">
+                                <input type="date" id="task-due-date" placeholder=" ">
+                                <label for="task-due-date">تاريخ التسليم</label>
                             </div>
                             <button type="submit" class="btn btn-primary btn-full">إنشاء المهمة</button>
                         </form>
                     </div>
-                </div>
-
-                <!-- Tab: Students -->
-                <div id="teacher-tab-students" class="teacher-tab-content">
-                    <div class="card">
-                        <div class="card-header"><h2 class="card-title">👥 قائمة الطلاب</h2></div>
-                        <div id="teacher-students-list" class="dashboard-list">
-                            <p class="empty-state">جاري التحميل...</p>
+                    
+                    <div class="glass-card" style="margin-bottom: var(--space-6);">
+                        <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">👥 قائمة الطلاب</h3>
+                        <div id="teacher-students-list">
+                            <p class="empty-state">جارٍ التحميل...</p>
                         </div>
                     </div>
-                    <!-- Student detail panel -->
-                    <div id="student-detail-panel" class="card hidden">
-                        <div class="card-header">
-                            <h2 class="card-title" id="student-detail-name">تفاصيل الطالب</h2>
-                            <button class="btn btn-secondary btn-sm" onclick="document.getElementById('student-detail-panel').classList.add('hidden')">✕ إغلاق</button>
+
+                    <div class="glass-card" style="margin-bottom: var(--space-6);">
+                        <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">📥 تسليمات معلقة</h3>
+                        <div id="teacher-pending-list">
+                            <p class="empty-state">جارٍ التحميل...</p>
                         </div>
-                        <div id="student-detail-content" class="dashboard-list">
+                    </div>
+
+                    <div class="glass-card">
+                        <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">📋 قائمة المهام</h3>
+                        <div id="teacher-tasks-list">
+                            <p class="empty-state">جارٍ التحميل...</p>
+                        </div>
+                    </div>
+
+                    <!-- Panneau de détails d'un élève (affiché au clic) -->
+                    <div id="student-detail-panel" class="glass-card hidden" style="margin-top: var(--space-6); border: 2px solid var(--color-primary, #6366f1);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4);">
+                            <h3 id="student-detail-name" style="font-size: 1.125rem; font-weight: 600;">📊 تقدم الطالب</h3>
+                            <button class="btn btn-outline btn-sm" onclick="document.getElementById('student-detail-panel').classList.add('hidden')">✕ إغلاق</button>
+                        </div>
+                        <div id="student-detail-content">
+                            <p class="empty-state">جارٍ التحميل...</p>
                         </div>
                     </div>
                 </div>
+            </section>
+        </div>
 
-                <!-- Tab: Tasks List -->
-                <div id="teacher-tab-tasks-list" class="teacher-tab-content">
-                    <div class="card">
-                        <div class="card-header"><h2 class="card-title">📋 قائمة المهام</h2></div>
-                        <div id="teacher-tasks-list" class="dashboard-list">
-                            <p class="empty-state">جاري التحميل...</p>
+        <!-- ADMIN PAGE -->
+        <div id="admin-page" class="page">
+            <section class="section">
+                <div class="container">
+                    <h2 class="section-title" style="text-align: center; margin-bottom: var(--space-8);">⚙️ لوحة الإدارة</h2>
+                    <div class="grid grid-cols-4" style="margin-bottom: var(--space-8);">
+                        <div class="stat-card" style="text-align: center;">
+                            <div class="stat-value" id="admin-total-users">0</div>
+                            <p style="color: var(--color-text-secondary);">إجمالي المستخدمين</p>
+                        </div>
+                        <div class="stat-card" style="text-align: center;">
+                            <div class="stat-value" id="admin-total-students">0</div>
+                            <p style="color: var(--color-text-secondary);">الطلاب</p>
+                        </div>
+                        <div class="stat-card" style="text-align: center;">
+                            <div class="stat-value" id="admin-total-teachers">0</div>
+                            <p style="color: var(--color-text-secondary);">الأساتذة</p>
+                        </div>
+                        <div class="stat-card" style="text-align: center;">
+                            <div class="stat-value" id="admin-total-admins">0</div>
+                            <p style="color: var(--color-text-secondary);">المديرون</p>
+                        </div>
+                    </div>
+                    <div class="glass-card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4);">
+                            <h3 style="font-size: 1.125rem; font-weight: 600;">👥 إدارة المستخدمين</h3>
+                            <button class="btn btn-primary btn-sm" onclick="QuranReview.refreshAdminUsers()">🔄 تحديث</button>
+                        </div>
+                        <div id="admin-users-list">
+                            <p style="color: var(--color-text-secondary); text-align: center; padding: var(--space-6);">جارٍ التحميل...</p>
                         </div>
                     </div>
                 </div>
-
-                <!-- Tab: Admin (superuser only) -->
-                <div id="teacher-tab-admin" class="teacher-tab-content">
-                    <div class="card">
-                        <div class="card-header"><h2 class="card-title">⚙️ إدارة الحسابات</h2></div>
-
-                        <!-- Users List -->
-                        <h3 style="margin:1rem 0 0.5rem;">👥 قائمة المستخدمين</h3>
-                        <div id="admin-users-list" class="dashboard-list" style="max-height:300px;overflow-y:auto;">
-                            <p class="empty-state">جاري التحميل...</p>
-                        </div>
-
-                        <!-- User Edit Modal -->
-                        <div id="user-edit-modal" class="modal-overlay hidden">
-                            <div class="modal-content">
-                                <button class="modal-close" onclick="QuranReview.closeUserEditModal()">&times;</button>
-                                <h2 class="modal-title">✏️ تعديل بيانات المستخدم</h2>
-                                <form id="user-edit-form" class="settings-form" onsubmit="QuranReview.handleUpdateUser(event)">
-                                    <input type="hidden" id="edit-user-id">
-                                    <div class="form-group">
-                                        <label class="form-label" for="edit-username">اسم المستخدم</label>
-                                        <input type="text" id="edit-username" class="form-input" readonly>
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="form-label" for="edit-first-name">الاسم الأول</label>
-                                        <input type="text" id="edit-first-name" class="form-input" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="form-label" for="edit-last-name">اسم العائلة</label>
-                                        <input type="text" id="edit-last-name" class="form-input">
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="form-label" for="edit-role">الدور</label>
-                                        <select id="edit-role" class="form-input">
-                                            <option value="student">طالب</option>
-                                            <option value="teacher">أستاذ</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label class="form-label">
-                                            <input type="checkbox" id="edit-is-superuser" style="margin-left:0.5rem;">
-                                            مدير (Superuser)
-                                        </label>
-                                    </div>
-                                    <div id="user-edit-error" class="auth-error hidden"></div>
-                                    <div id="user-edit-success" class="auth-success hidden"></div>
-                                    <button type="submit" class="btn btn-primary btn-full">حفظ التغييرات</button>
-                                </form>
-                            </div>
-                        </div>
-
-                        <hr style="margin:1.5rem 0;">
-
-                        <!-- Create Teacher -->
-                        <h3 style="margin:1rem 0 0.5rem;">👨‍🏫 إنشاء حساب أستاذ جديد</h3>
-                        <form id="admin-create-teacher-form" class="settings-form" onsubmit="QuranReview.handleCreateTeacher(event)">
-                            <div class="form-group">
-                                <label class="form-label" for="teacher-new-username">اسم المستخدم</label>
-                                <input type="text" id="teacher-new-username" class="form-input" required>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label" for="teacher-new-firstname">الاسم الأول</label>
-                                <input type="text" id="teacher-new-firstname" class="form-input" required>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label" for="teacher-new-lastname">اسم العائلة</label>
-                                <input type="text" id="teacher-new-lastname" class="form-input">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label" for="teacher-new-password">كلمة المرور</label>
-                                <input type="password" id="teacher-new-password" class="form-input" required minlength="6">
-                            </div>
-                            <div id="admin-create-error" class="auth-error hidden"></div>
-                            <div id="admin-create-success" class="auth-success hidden"></div>
-                            <button type="submit" class="btn btn-primary btn-full">إنشاء حساب أستاذ</button>
-                        </form>
-
-                        <hr style="margin:1.5rem 0;">
-
-                        <!-- Promote Student to Teacher -->
-                        <h3 style="margin:0 0 0.5rem;">⬆️ ترقية طالب إلى أستاذ</h3>
-                        <form id="admin-promote-form" class="settings-form" onsubmit="QuranReview.handlePromoteTeacher(event)">
-                            <div class="form-group">
-                                <label class="form-label" for="promote-username">اسم المستخدم للطالب</label>
-                                <input type="text" id="promote-username" class="form-input" required>
-                            </div>
-                            <div id="admin-promote-error" class="auth-error hidden"></div>
-                            <div id="admin-promote-success" class="auth-success hidden"></div>
-                            <button type="submit" class="btn btn-primary btn-full">ترقية إلى أستاذ</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Audio Recording Modal -->
-            <div id="audio-record-modal" class="modal-overlay hidden">
-                <div class="modal-content">
-                    <button class="modal-close" onclick="QuranReview.stopRecording(true)">&times;</button>
-                    <h2 class="modal-title">🎤 تسجيل صوتي</h2>
-                    <p id="recording-task-name" class="text-secondary"></p>
-                    <div class="audio-recorder">
-                        <div id="recording-timer" class="recording-timer">00:00</div>
-                        <button id="recording-btn" class="recording-btn" onclick="QuranReview.toggleRecording()">
-                            <span class="recording-icon">🎤</span>
-                        </button>
-                        <p id="recording-status" class="recording-status">اضغط للتسجيل</p>
-                    </div>
-                    <audio id="recording-preview" controls class="hidden" style="width:100%;margin-top:1rem;"></audio>
-                    <button id="recording-submit-btn" class="btn btn-primary btn-full hidden" style="margin-top:1rem;" onclick="QuranReview.submitRecording()">إرسال التسجيل</button>
-                </div>
-            </div>
-
+            </section>
         </div>
     </main>
 
-    <!-- JavaScript -->
-    <script src="script.js"></script>
-    
-    <!-- Update today's date -->
+    <!-- User Edit Modal (Admin) -->
+    <div class="modal-overlay hidden" id="user-edit-modal">
+        <div class="modal-content" style="max-width: 420px;">
+            <div style="text-align: center; margin-bottom: var(--space-6);">
+                <div style="font-size: 3rem; margin-bottom: var(--space-2);">✏️</div>
+                <h2 style="font-size: 1.5rem; font-weight: 700;">تعديل المستخدم</h2>
+            </div>
+            
+            <div id="user-edit-error" class="hidden" style="background: rgba(239, 68, 68, 0.1); color: var(--color-danger); padding: var(--space-3); border-radius: var(--radius-lg); margin-bottom: var(--space-4); text-align: center;"></div>
+            <div id="user-edit-success" class="hidden" style="background: rgba(34, 197, 94, 0.1); color: var(--color-success); padding: var(--space-3); border-radius: var(--radius-lg); margin-bottom: var(--space-4); text-align: center;">تم الحفظ بنجاح</div>
+            
+            <form id="user-edit-form" onsubmit="QuranReview.handleUpdateUser(event)">
+                <input type="hidden" id="edit-user-id">
+                
+                <div class="form-floating" style="margin-bottom: var(--space-4);">
+                    <input type="text" id="edit-username" placeholder=" " disabled>
+                    <label for="edit-username">اسم المستخدم</label>
+                </div>
+                
+                <div class="form-floating" style="margin-bottom: var(--space-4);">
+                    <input type="text" id="edit-first-name" placeholder=" ">
+                    <label for="edit-first-name">الاسم الأول</label>
+                </div>
+                
+                <div class="form-floating" style="margin-bottom: var(--space-4);">
+                    <input type="text" id="edit-last-name" placeholder=" ">
+                    <label for="edit-last-name">اسم العائلة</label>
+                </div>
+                
+                <div class="form-floating" style="margin-bottom: var(--space-4);">
+                    <select id="edit-role">
+                        <option value="student">طالب</option>
+                        <option value="teacher">معلم</option>
+                        <option value="admin">مدير</option>
+                    </select>
+                    <label for="edit-role">الدور</label>
+                </div>
+                
+                <div style="margin-bottom: var(--space-6);">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="edit-is-superuser">
+                        <span class="toggle-slider"></span>
+                        <span style="margin-right: var(--space-3);">مدير نظام (Superuser)</span>
+                    </label>
+                </div>
+                
+                <div class="d-flex" style="gap: var(--space-3);">
+                    <button type="button" class="btn btn-outline" style="flex: 1;" onclick="QuranReview.closeUserEditModal()">إلغاء</button>
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">حفظ التغييرات</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Auth Modal -->
+    <div class="modal-overlay hidden" id="auth-modal">
+        <div class="modal-content" style="max-width: 420px;">
+            <!-- Login Form -->
+            <div id="auth-login-form" class="active">
+                <div style="text-align: center; margin-bottom: var(--space-6);">
+                    <div style="font-size: 3rem; margin-bottom: var(--space-2);">🕌</div>
+                    <h2 style="font-size: 1.5rem; font-weight: 700;">تسجيل الدخول</h2>
+                    <p style="color: var(--color-text-secondary);">أهلاً بك مجدداً في مراجعة القرآن</p>
+                </div>
+                
+                <form id="login-form">
+                    <div id="login-error" class="hidden" style="background: rgba(239, 68, 68, 0.1); color: var(--color-danger); padding: var(--space-3); border-radius: var(--radius-lg); margin-bottom: var(--space-4); text-align: center;"></div>
+                    
+                    <div class="form-floating" style="margin-bottom: var(--space-4);">
+                        <input type="text" id="login-username" placeholder=" " autocomplete="username" required>
+                        <label for="login-username">اسم المستخدم</label>
+                    </div>
+                    
+                    <div class="form-floating" style="margin-bottom: var(--space-6);">
+                        <input type="password" id="login-password" placeholder=" " autocomplete="current-password" required>
+                        <label for="login-password">كلمة المرور</label>
+                    </div>
+                    
+                    <button type="button" class="btn btn-primary btn-full" id="login-submit-btn" onclick="QuranReview.handleLogin(event)">
+                        <span>🔐</span>
+                        دخول
+                    </button>
+                </form>
+                
+                <p style="text-align: center; margin-top: var(--space-6); padding-top: var(--space-4); border-top: 1px solid var(--color-border);">
+                    <span style="color: var(--color-text-secondary);">ليس لديك حساب؟ </span>
+                    <a href="#" onclick="QuranReview.showRegisterForm(event)" style="color: var(--color-primary); font-weight: 600;">سجل الآن</a>
+                </p>
+            </div>
+            
+            <!-- Register Form -->
+            <div id="auth-register-form" class="hidden">
+                <div style="text-align: center; margin-bottom: var(--space-6);">
+                    <div style="font-size: 3rem; margin-bottom: var(--space-2);">🕌</div>
+                    <h2 style="font-size: 1.5rem; font-weight: 700;">إنشاء حساب</h2>
+                    <p style="color: var(--color-text-secondary);">ابدأ رحلتك في حفظ القرآن</p>
+                </div>
+                
+                <form id="register-form">
+                    <div id="reg-error" class="hidden" style="background: rgba(239, 68, 68, 0.1); color: var(--color-danger); padding: var(--space-3); border-radius: var(--radius-lg); margin-bottom: var(--space-4); text-align: center;"></div>
+                    
+                    <div class="form-floating" style="margin-bottom: var(--space-4);">
+                        <input type="text" id="reg-username" placeholder=" " autocomplete="username" required>
+                        <label for="reg-username">اسم المستخدم</label>
+                    </div>
+                    
+                    <div class="form-floating" style="margin-bottom: var(--space-4);">
+                        <input type="text" id="reg-first-name" placeholder=" ">
+                        <label for="reg-first-name">الاسم الأول</label>
+                    </div>
+                    
+                    <div class="form-floating" style="margin-bottom: var(--space-4);">
+                        <input type="text" id="reg-last-name" placeholder=" ">
+                        <label for="reg-last-name">اسم العائلة</label>
+                    </div>
+                    
+                    <div class="form-floating" style="margin-bottom: var(--space-6);">
+                        <input type="password" id="reg-password" placeholder=" " autocomplete="new-password" required>
+                        <label for="reg-password">كلمة المرور</label>
+                    </div>
+                    
+                    <button type="button" class="btn btn-primary btn-full" id="reg-submit-btn" onclick="QuranReview.handleRegister(event)">
+                        <span>✨</span>
+                        إنشاء الحساب
+                    </button>
+                </form>
+                
+                <p style="text-align: center; margin-top: var(--space-6); padding-top: var(--space-4); border-top: 1px solid var(--color-border);">
+                    <span style="color: var(--color-text-secondary);">لديك حساب بالفعل؟ </span>
+                    <a href="#" onclick="QuranReview.showLoginForm(event)" style="color: var(--color-primary); font-weight: 600;">تسجيل الدخول</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audio Record Modal (Student task submission) -->
+    <div class="modal-overlay hidden" id="audio-record-modal">
+        <div class="modal-content" style="max-width: 480px; text-align: center;">
+            <div style="margin-bottom: var(--space-4);">
+                <div style="font-size: 2.5rem; margin-bottom: var(--space-2);">🎤</div>
+                <h2 style="font-size: 1.25rem; font-weight: 700;">تسجيل التلاوة</h2>
+                <p id="recording-task-name" style="color: var(--color-text-secondary); margin-top: var(--space-1);"></p>
+            </div>
+
+            <div style="font-size: 2rem; font-weight: 700; margin: var(--space-4) 0;" id="recording-timer">00:00</div>
+
+            <p id="recording-status" style="color: var(--color-text-secondary); margin-bottom: var(--space-4);">اضغط للتسجيل</p>
+
+            <button
+                id="recording-btn"
+                class="btn btn-primary"
+                style="width: 80px; height: 80px; border-radius: 50%; font-size: 1.5rem; margin-bottom: var(--space-6);"
+                onclick="QuranReview.toggleRecording()">
+                🎤
+            </button>
+
+            <audio id="recording-preview" controls class="hidden" style="width: 100%; margin-bottom: var(--space-4);"></audio>
+
+            <div style="display: flex; gap: var(--space-3); justify-content: center;">
+                <button type="button" class="btn btn-outline" onclick="QuranReview.stopRecording(true)">إلغاء</button>
+                <button
+                    type="button"
+                    id="recording-submit-btn"
+                    class="btn btn-primary hidden"
+                    onclick="QuranReview.submitRecording()">
+                    📤 إرسال التسجيل
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
+        // Register GSAP ScrollTrigger
+        gsap.registerPlugin(ScrollTrigger);
+        
+        // Loading Screen
+        function hideLoadingScreen() {
+            const loadingScreen = document.getElementById('loading-screen');
+            if (!loadingScreen) return;
+            
+            gsap.to(loadingScreen, {
+                opacity: 0,
+                duration: 0.4,
+                onComplete: () => {
+                    loadingScreen.classList.add('hidden');
+                    loadingScreen.style.display = 'none';
+                    initAnimations();
+                }
+            });
+        }
+        
+        window.addEventListener('load', () => {
+            const loadingScreen = document.getElementById('loading-screen');
+            
+            // Animate progress bar
+            gsap.to('#loading-progress', {
+                width: '100%',
+                duration: 1.0,
+                ease: 'power2.inOut',
+                onComplete: () => {
+                    // Small delay then hide
+                    setTimeout(hideLoadingScreen, 300);
+                }
+            });
+        });
+        
+        // Fallback: hide loading screen after 5 seconds max
+        setTimeout(() => {
+            const loadingScreen = document.getElementById('loading-screen');
+            if (loadingScreen && !loadingScreen.classList.contains('hidden')) {
+                console.warn('Loading screen timeout - forcing hide');
+                hideLoadingScreen();
+            }
+        }, 5000);
+        
+        // Show demo badge if in file:// mode
+        if (window.location.protocol === 'file:') {
+            const demoBadge = document.getElementById('demo-badge');
+            if (demoBadge) demoBadge.classList.remove('hidden');
+            console.log('🎮 Mode DÉMO détecté - Badge affiché');
+        }
+        
+        // Initialize Animations
+        function initAnimations() {
+            // Stagger animations for cards (home page uniquement)
+            // Les autres pages SPA ont leurs propres glass-cards qui ne doivent pas être bloquées à opacity:0
+            gsap.from('#home-page .glass-card', {
+                opacity: 0,
+                y: 50,
+                duration: 0.8,
+                stagger: 0.1,
+                ease: 'power3.out',
+                onComplete: function() {
+                    // S'assurer que toutes les glass-cards sont visibles après l'animation
+                    document.querySelectorAll('.glass-card').forEach(function(c) {
+                        c.style.opacity = '1';
+                        c.style.transform = '';
+                    });
+                }
+            });
+            
+            // Stats counter animation
+            animateCounters();
+            
+            // Scroll reveal
+            gsap.utils.toArray('.reveal').forEach(element => {
+                gsap.from(element, {
+                    scrollTrigger: {
+                        trigger: element,
+                        start: 'top 85%',
+                        toggleActions: 'play none none reverse'
+                    },
+                    opacity: 0,
+                    y: 30,
+                    duration: 0.8,
+                    ease: 'power2.out'
+                });
+            });
+        }
+        
+        // Counter Animation
+        function animateCounters() {
+            document.querySelectorAll('[data-count]').forEach(counter => {
+                const target = parseInt(counter.getAttribute('data-count'));
+                gsap.to(counter, {
+                    innerHTML: target,
+                    duration: 2,
+                    snap: { innerHTML: 1 },
+                    ease: 'power2.out',
+                    scrollTrigger: {
+                        trigger: counter,
+                        start: 'top 80%'
+                    }
+                });
+            });
+        }
+        
+        // Generate Particles (guard: element may not exist on all pages)
+        const particlesContainer = document.getElementById('particles');
+        if (particlesContainer) {
+            for (let i = 0; i < 30; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 20 + 's';
+                particle.style.animationDuration = (15 + Math.random() * 10) + 's';
+                particle.style.width = (3 + Math.random() * 6) + 'px';
+                particle.style.height = particle.style.width;
+                particlesContainer.appendChild(particle);
+            }
+        }
+        
+        // Navigation
+        function navigateTo(page) {
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            // Show target page
+            document.getElementById(page + '-page').classList.add('active');
+            
+            // Update nav links
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('data-page') === page) {
+                    link.classList.add('active');
+                }
+            });
+            
+            // Animate new page
+            gsap.from('#' + page + '-page', {
+                opacity: 0,
+                y: 20,
+                duration: 0.5,
+                ease: 'power2.out'
+            });
+            
+            window.scrollTo(0, 0);
+        }
+        
+        // Nav link click handlers
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const page = link.getAttribute('data-page');
+                navigateTo(page);
+            });
+        });
+        
+        // Theme Toggle
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+        let isDark = false;
+        
+        themeToggle.addEventListener('click', () => {
+            isDark = !isDark;
+            document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            themeIcon.textContent = isDark ? '☀️' : '🌙';
+        });
+        
+        // Auth Modal Functions (Fallback if QuranReview not loaded)
+        window.showAuthModal = function() {
+            if (window.QuranReview && QuranReview.showAuthModal) {
+                QuranReview.showAuthModal();
+            } else {
+                document.getElementById('auth-modal').classList.add('active');
+                // Show login form by default
+                document.getElementById('auth-login-form').classList.remove('hidden');
+                document.getElementById('auth-register-form').classList.add('hidden');
+            }
+        };
+        
+        window.hideAuthModal = function() {
+            if (window.QuranReview && QuranReview.hideAuthModal) {
+                QuranReview.hideAuthModal();
+            } else {
+                document.getElementById('auth-modal').classList.remove('active');
+            }
+        };
+        
+        document.getElementById('auth-modal').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) hideAuthModal();
+        });
+        
+        // Show/Hide Register Form
+        window.showRegisterForm = function(e) {
+            if (e) e.preventDefault();
+            if (window.QuranReview && QuranReview.showRegisterForm) {
+                QuranReview.showRegisterForm();
+            } else {
+                document.getElementById('auth-login-form').classList.add('hidden');
+                document.getElementById('auth-register-form').classList.remove('hidden');
+            }
+        };
+        
+        window.showLoginForm = function(e) {
+            if (e) e.preventDefault();
+            if (window.QuranReview && QuranReview.showLoginForm) {
+                QuranReview.showLoginForm();
+            } else {
+                document.getElementById('auth-register-form').classList.add('hidden');
+                document.getElementById('auth-login-form').classList.remove('hidden');
+            }
+        };
+        
+        // Audio Player Functions
+        let isPlaying = false;
+        
+        function togglePlay() {
+            isPlaying = !isPlaying;
+            document.getElementById('play-btn').textContent = isPlaying ? '⏸️' : '▶️';
+        }
+        
+        function previousAyah() {
+            gsap.from('#current-ayah', {
+                opacity: 0,
+                x: 50,
+                duration: 0.3,
+                ease: 'power2.out'
+            });
+        }
+        
+        function nextAyah() {
+            gsap.from('#current-ayah', {
+                opacity: 0,
+                x: -50,
+                duration: 0.3,
+                ease: 'power2.out'
+            });
+        }
+        
+        // Navigation with fallback
+        window.navigateTo = function(page) {
+            if (window.QuranReview && QuranReview.navigateTo) {
+                QuranReview.navigateTo(page);
+            } else {
+                // Manual page switching
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                const targetPage = document.getElementById(page + '-page') || document.getElementById('page-' + page);
+                if (targetPage) {
+                    targetPage.classList.add('active');
+                    window.scrollTo(0, 0);
+                }
+                
+                // Update nav links
+                document.querySelectorAll('.nav-link').forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('data-page') === page) {
+                        link.classList.add('active');
+                    }
+                });
+            }
+        };
+        
+        // Ripple Effect
+        document.querySelectorAll('.btn-ripple').forEach(button => {
+            button.addEventListener('click', function(e) {
+                const ripple = document.createElement('span');
+                ripple.className = 'ripple';
+                
+                const rect = this.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                
+                ripple.style.width = ripple.style.height = size + 'px';
+                ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+                ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+                
+                this.appendChild(ripple);
+                
+                setTimeout(() => ripple.remove(), 600);
+            });
+        });
+        
+        // Service Worker
+        if ('serviceWorker' in navigator && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+            navigator.serviceWorker.register('/sw.js')
+                .catch(err => console.log('SW registration failed'));
+        }
+    </script>
+    
+    <!-- Audio Configuration -->
+    <script src="audio-config.js"></script>
+    
+    <!-- Main Application Script -->
+    <script src="script.js"></script>
+
+    <!-- Alias patch: méthodes appelées depuis les onclick du HTML -->
+    <script>
+        // hifzManager → les méthodes hifz vivent dans competitionManager
+        QuranReview.hifzManager = QuranReview.competitionManager;
+
+        // Mémorisation : afficher/masquer le formulaire d'ajout
+        QuranReview.showAddMemorization = function() {
+            const el = document.getElementById('add-memorization-form-container');
+            if (el) el.style.display = 'block';
+        };
+        QuranReview.hideAddMemorization = function() {
+            const el = document.getElementById('add-memorization-form-container');
+            if (el) { el.style.display = 'none'; }
+            const form = document.getElementById('add-memorization-form');
+            if (form) form.reset();
+        };
+        QuranReview.handleAddMemorization = function(event) {
+            if (event) event.preventDefault();
+            QuranReview.addNewMemorization();
+            QuranReview.hideAddMemorization();
+        };
+
+        // Ward player : boutons de navigation et toggle play/pause
+        QuranReview.nextWardAyah     = function() { QuranReview.playNextWardAyah(); };
+        QuranReview.previousWardAyah = function() { QuranReview.playPreviousAyah(); };
+        QuranReview.toggleWardPlay   = function() {
+            if (QuranReview.state.wardPlayer && QuranReview.state.wardPlayer.isPlaying) {
+                QuranReview.stopWardPlayback();
+            } else {
+                QuranReview.playWard();
+            }
+        };
+
+        console.log('[PATCH] Alias methods injected:', typeof QuranReview.showAddMemorization);
+    </script>
+    
+    <!-- Pro Features & Fixes -->
+    <script>
+        // Update today's date
         document.addEventListener('DOMContentLoaded', () => {
             const todayElement = document.getElementById('today-date');
             if (todayElement) {
@@ -1037,7 +1512,130 @@
                 const options = { year: 'numeric', month: 'long', day: 'numeric' };
                 todayElement.textContent = today.toLocaleDateString('ar-SA', options);
             }
+            
+            // Global navigation helper (if QuranReview exists)
+            window.navigateTo = function(page) {
+                if (window.QuranReview && QuranReview.navigateTo) {
+                    QuranReview.navigateTo(page);
+                } else {
+                    // Fallback: manual page switching
+                    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                    const targetPage = document.getElementById(page + '-page');
+                    if (targetPage) {
+                        targetPage.classList.add('active');
+                        window.scrollTo(0, 0);
+                    }
+                    
+                    // Update nav links
+                    document.querySelectorAll('.nav-link').forEach(link => {
+                        link.classList.remove('active');
+                        if (link.getAttribute('data-page') === page) {
+                            link.classList.add('active');
+                        }
+                    });
+                }
+            };
+            
+            // Fix auth modal functions
+            window.showAuthModal = function() {
+                if (window.QuranReview && QuranReview.showAuthModal) {
+                    QuranReview.showAuthModal();
+                } else {
+                    document.getElementById('auth-modal').classList.add('active');
+                }
+            };
+            
+            window.hideAuthModal = function() {
+                if (window.QuranReview && QuranReview.hideAuthModal) {
+                    QuranReview.hideAuthModal();
+                } else {
+                    document.getElementById('auth-modal').classList.remove('active');
+                }
+            };
+            
+            // Handle login button click
+            const loginBtn = document.getElementById('login-submit-btn');
+            if (loginBtn) {
+                loginBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    if (window.QuranReview && QuranReview.handleLogin) {
+                        // Let QuranReview handle it
+                        return;
+                    }
+                    // Fallback animation
+                    this.classList.add('btn-loading');
+                    setTimeout(() => {
+                        this.classList.remove('btn-loading');
+                        hideAuthModal();
+                    }, 1500);
+                });
+            }
+            
+            // Define fallback functions for buttons
+            window.showAddSurahModal = function() {
+                if (window.QuranReview && QuranReview.showAddMemorization) {
+                    QuranReview.showAddMemorization();
+                } else {
+                    // Show simple alert or form
+                    navigateTo('memorization');
+                }
+            };
+            
+            window.playWard = function() {
+                if (window.QuranReview && QuranReview.playWard) {
+                    QuranReview.playWard();
+                } else {
+                    const playBtn = document.getElementById('play-btn');
+                    if (playBtn) {
+                        isPlaying = !isPlaying;
+                        playBtn.textContent = isPlaying ? '⏸️' : '▶️';
+                    }
+                }
+            };
+            
+            window.handleLogin = function() {
+                const btn = document.querySelector('#auth-modal .btn-primary');
+                if (btn) {
+                    btn.classList.add('btn-loading');
+                    setTimeout(() => {
+                        btn.classList.remove('btn-loading');
+                        hideAuthModal();
+                        showToast('تم تسجيل الدخول بنجاح', 'success');
+                    }, 1500);
+                }
+            };
         });
+    </script>
+    
+    <!-- Hidden Audio Element -->
+    <audio id="audio-element" style="display: none;"></audio>
+    
+    <!-- Hidden file input for import -->
+    <input type="file" id="import-file-input" accept=".json" style="display: none;" onchange="QuranReview.handleImportFile(event)">
+
+    <!-- Scroll reveal via IntersectionObserver (compatible avec .main comme scroller) -->
+    <script>
+        (function() {
+            const observer = new IntersectionObserver(function(entries) {
+                entries.forEach(function(entry) {
+                    if (!entry.isIntersecting) return;
+                    const el = entry.target;
+                    el.classList.add('revealed');
+                    if (el.classList.contains('stagger-children') && typeof gsap !== 'undefined') {
+                        gsap.fromTo(el.children,
+                            { opacity: 0, y: 20 },
+                            { opacity: 1, y: 0, duration: 0.5, stagger: 0.08, ease: 'power2.out' }
+                        );
+                    }
+                    observer.unobserve(el);
+                });
+            }, { threshold: 0.1, root: null });
+
+            document.querySelectorAll('.reveal, .stagger-children').forEach(function(el) {
+                if (el.classList.contains('stagger-children')) el.classList.add('js-animate');
+                observer.observe(el);
+            });
+        })();
     </script>
 </body>
 </html>

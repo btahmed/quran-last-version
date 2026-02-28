@@ -99,16 +99,134 @@ class ListUsersView(APIView):
     permission_classes = [IsSuperUser]
 
     def get(self, request):
-        # Optimization: Use values() to fetch only needed fields, skipping model instantiation overhead
-        users = User.objects.all().values(
-            'id', 'username', 'first_name', 'last_name',
-            'role', 'is_superuser', 'is_staff', 'date_joined'
-        ).order_by('username')
+        from django.db.models import Prefetch, F, Value, CharField
+        from django.db.models.functions import Coalesce, Concat
+        from django.contrib.auth.models import Group
+        
+        # Get all users with their groups and teacher information
+        users = User.objects.all().prefetch_related(
+            Prefetch('groups', queryset=Group.objects.select_related('extension__teacher'))
+        ).select_related('student_profile')
+        
+        # Build user list with class and teacher info
+        users_data = []
+        for user in users:
+            # Get the main class group (Classe_8h45 or Classe_10h45)
+            main_group = user.groups.filter(name__in=['Classe_8h45', 'Classe_10h45']).first()
+            
+            class_name = ''
+            teacher_name = ''
+            teacher_id = None
+            
+            if main_group:
+                class_name = main_group.name
+                try:
+                    extension = main_group.extension
+                    if extension.teacher:
+                        teacher_name = extension.teacher.get_full_name()
+                        teacher_id = extension.teacher.id
+                except:
+                    pass
+            
+            users_data.append({
+                'id': user.id,
+                'username': user.username,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'role': user.role,
+                'is_superuser': user.is_superuser,
+                'is_staff': user.is_staff,
+                'date_joined': user.date_joined,
+                'class_name': class_name,
+                'teacher_name': teacher_name,
+                'teacher_id': teacher_id,
+            })
+        
+        # Sort by: class name, then teacher name, then student name
+        users_data.sort(key=lambda u: (
+            u['class_name'] or 'zzz',  # Classes without name go to end
+            u['teacher_name'] or 'zzz',  # Students without teacher go to end
+            u['first_name'] or '',
+            u['last_name'] or ''
+        ))
 
         return Response({
-            'count': users.count(),
-            'users': list(users)
+            'count': len(users_data),
+            'users': users_data
         })
+
+
+# ===================================
+# ADMIN - CREATE STUDENT
+# ===================================
+
+class CreateStudentView(APIView):
+    """Superuser: create a student account."""
+    permission_classes = [IsSuperUser]
+
+    def post(self, request):
+        username = request.data.get('username', '').strip()
+        password = request.data.get('password', '')
+        first_name = request.data.get('first_name', '').strip()
+        last_name = request.data.get('last_name', '').strip()
+        email = request.data.get('email', '').strip()
+
+        # Validation
+        if not username:
+            return Response(
+                {'detail': 'اسم المستخدم مطلوب.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not password or len(password) < 6:
+            return Response(
+                {'detail': 'كلمة المرور مطلوبة (6 أحرف على الأقل).'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not first_name:
+            return Response(
+                {'detail': 'الاسم الأول مطلوب.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not last_name:
+            return Response(
+                {'detail': 'اسم العائلة مطلوب.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Check if username already exists
+        if User.objects.filter(username=username).exists():
+            return Response(
+                {'detail': 'اسم المستخدم مستخدم بالفعل.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Create student account
+        try:
+            user = User.objects.create_user(
+                username=username,
+                password=password,
+                first_name=first_name,
+                last_name=last_name,
+                email=email if email else '',
+                role='student',
+            )
+            return Response({
+                'id': user.id,
+                'username': user.username,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'email': user.email,
+                'role': user.role,
+                'action': 'created',
+            }, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response(
+                {'detail': f'خطأ في إنشاء الحساب: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
 
 # ===================================
@@ -574,11 +692,18 @@ class MyStudentsView(APIView):
             author=request.user
         ).values_list('assigned_users', flat=True).distinct()
 
+        # Filter out None values (tasks with no assigned users)
+        student_ids = [sid for sid in student_ids if sid is not None]
+
+        # If no students assigned yet, return empty list
+        if not student_ids:
+            return Response([])
+
         students = User.objects.filter(
             id__in=student_ids, role='student'
         ).annotate(
-            total_points=Sum('pointslog__delta'),
-            submissions_count=Count('submission', distinct=True),
+            total_points=Sum('points_logs__delta'),
+            submissions_count=Count('submissions', distinct=True),
         )
 
         data = []

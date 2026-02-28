@@ -3336,7 +3336,7 @@ const QuranReview = {
             });
             console.log('✅ DEBUG: Play Ward button event attached');
         } else {
-            console.error('❌ DEBUG: Play Ward button not found!');
+            console.info('ℹ️ DEBUG: Play Ward button not found on current view');
         }
         
         if (playSurahBtn) {
@@ -3346,7 +3346,7 @@ const QuranReview = {
             });
             console.log('✅ DEBUG: Play Surah button event attached');
         } else {
-            console.error('❌ DEBUG: Play Surah button not found!');
+            console.info('ℹ️ DEBUG: Play Surah button not found on current view');
         }
         
         // Stop button

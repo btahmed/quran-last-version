@@ -1,0 +1,2018 @@
+[
+  {
+    "username": "admin",
+    "first_name": "",
+    "last_name": "",
+    "email": "admin@example.com",
+    "role": "admin",
+    "is_superuser": 1,
+    "is_staff": 1
+  },
+  {
+    "username": "professeur",
+    "first_name": "Mohamed",
+    "last_name": "Professeur",
+    "email": "prof@quranreview.local",
+    "role": "teacher",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "administrateur",
+    "first_name": "Admin",
+    "last_name": "QuranReview",
+    "email": "admin@quranreview.local",
+    "role": "teacher",
+    "is_superuser": 1,
+    "is_staff": 1
+  },
+  {
+    "username": "salma_aneflous",
+    "first_name": "Salma",
+    "last_name": "ANEFLOUS",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "ferriel_azzeddine",
+    "first_name": "Ferriel",
+    "last_name": "AZZEDDINE",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "sarah_bennama",
+    "first_name": "Sarah",
+    "last_name": "BENNAMA",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "inaya_boulaabi",
+    "first_name": "Inaya",
+    "last_name": "BOULAABI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "jihene_hemissi",
+    "first_name": "Jihene",
+    "last_name": "HEMISSI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "assil_moughamir",
+    "first_name": "Assil",
+    "last_name": "MOUGHAMIR",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "lyne_saadouli",
+    "first_name": "Lyne",
+    "last_name": "SAADOULI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "kenza_ammar",
+    "first_name": "Kenza",
+    "last_name": "AMMAR",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "aya_amzel",
+    "first_name": "Aya",
+    "last_name": "AMZEL",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "hajer_ouadah",
+    "first_name": "Hajer",
+    "last_name": "OUADAH",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "assil_mandjam",
+    "first_name": "Assil",
+    "last_name": "MANDJAM",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "kawtar_chahid",
+    "first_name": "Kawtar",
+    "last_name": "CHAHID",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "halima_khiar",
+    "first_name": "Halima",
+    "last_name": "KHIAR",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "hayat_yakhni",
+    "first_name": "Hayat",
+    "last_name": "YAKHNI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "nour_asrih",
+    "first_name": "Nour",
+    "last_name": "ASRIH",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "alitasnime_ben",
+    "first_name": "ALI Tasnime",
+    "last_name": "BEN",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "inaya_benmoussa",
+    "first_name": "Inaya",
+    "last_name": "BENMOUSSA",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "hafsa_bouldjihad",
+    "first_name": "Hafsa",
+    "last_name": "BOULDJIHAD",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "alaa_chelghmia",
+    "first_name": "Alaa",
+    "last_name": "CHELGHMIA",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "smahen_dahbi",
+    "first_name": "Smahen",
+    "last_name": "DAHBI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "arwa_chelaghmia",
+    "first_name": "Arwa",
+    "last_name": "CHELAGHMIA",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "lina_maoudoud",
+    "first_name": "Lina",
+    "last_name": "MAOUDOUD",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "youssra_jalil",
+    "first_name": "Youssra",
+    "last_name": "JALIL",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "fatima_ilmi",
+    "first_name": "Fatima",
+    "last_name": "ILMI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "saja_boukhalfa",
+    "first_name": "Saja",
+    "last_name": "BOUKHALFA",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "khadija_bouamama",
+    "first_name": "Khadija",
+    "last_name": "BOUAMAMA",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "amira_jalil",
+    "first_name": "Amira",
+    "last_name": "JALIL",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "roufaida_kebtani",
+    "first_name": "Roufaida",
+    "last_name": "KEBTANI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "oumaima_margoum",
+    "first_name": "Oumaima",
+    "last_name": "MARGOUM",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "douaa_ouadah",
+    "first_name": "Douaa",
+    "last_name": "OUADAH",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "leila_rahmaoui",
+    "first_name": "Leïla",
+    "last_name": "RAHMAOUI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "mayssa_maazouz",
+    "first_name": "Mayssa",
+    "last_name": "MAAZOUZ",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "rayan_ammar",
+    "first_name": "Rayan",
+    "last_name": "AMMAR",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "sayane_toiybou",
+    "first_name": "Sayane",
+    "last_name": "TOIYBOU",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "souleymane_benmohamed",
+    "first_name": "Souleymane",
+    "last_name": "BENMOHAMED",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "adem_bennama",
+    "first_name": "Adem",
+    "last_name": "BENNAMA",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "omar_binchoula",
+    "first_name": "Omar",
+    "last_name": "BINCHOULA",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "miradj_butun",
+    "first_name": "Miradj",
+    "last_name": "BUTUN",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "sohane_dahbi",
+    "first_name": "Sohane",
+    "last_name": "DAHBI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "omar_kebtani",
+    "first_name": "Omar",
+    "last_name": "KEBTANI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "anis_kerioui",
+    "first_name": "Anis",
+    "last_name": "KERIOUI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "rayane_adnane",
+    "first_name": "Rayane",
+    "last_name": "ADNANE",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "iyad_benkirane",
+    "first_name": "Iyad",
+    "last_name": "BENKIRANE",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "kahil_bourazi",
+    "first_name": "Kahil",
+    "last_name": "BOURAZI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "yanis_bourazi",
+    "first_name": "Yanis",
+    "last_name": "BOURAZI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "chahine_dahbi",
+    "first_name": "Chahine",
+    "last_name": "DAHBI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "fahim_wahidouallah",
+    "first_name": "Fahim",
+    "last_name": "WAHIDOUALLAH",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "isaac_gonzil",
+    "first_name": "Isaac",
+    "last_name": "GONZIL",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "rayane_jemma",
+    "first_name": "Rayane",
+    "last_name": "JEMMA",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "iyad_ouachikh",
+    "first_name": "Iyad",
+    "last_name": "OUACHIKH",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "wael_loumbarkia",
+    "first_name": "Wael",
+    "last_name": "LOUMBARKIA",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "yanis_ezunke",
+    "first_name": "Yanis",
+    "last_name": "EZUNKE",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "imrane_maoudoud",
+    "first_name": "Imrane",
+    "last_name": "MAOUDOUD",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "salim_martins",
+    "first_name": "Salim",
+    "last_name": "MARTINS",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "owayss_moughamir",
+    "first_name": "Owayss",
+    "last_name": "MOUGHAMIR",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "zakaria_saadouli",
+    "first_name": "Zakaria",
+    "last_name": "SAADOULI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "akram_tazoult",
+    "first_name": "Akram",
+    "last_name": "TAZOULT",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "bilal_butun",
+    "first_name": "Bilal",
+    "last_name": "BUTUN",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "mohamed_camara",
+    "first_name": "Mohamed",
+    "last_name": "CAMARA",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "omar_fadhloui",
+    "first_name": "Omar",
+    "last_name": "FADHLOUI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "kamil_lamalem",
+    "first_name": "Kamil",
+    "last_name": "LAMALEM",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "omarmohamed_marjani",
+    "first_name": "Omar Mohamed",
+    "last_name": "MARJANI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "mohamed_ouadah",
+    "first_name": "Mohamed",
+    "last_name": "OUADAH",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "adem_rahmaoui",
+    "first_name": "Adem",
+    "last_name": "RAHMAOUI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "jalil_yassine",
+    "first_name": "JALIL",
+    "last_name": "YASSINE",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "hanane_athoumane",
+    "first_name": "Hanane",
+    "last_name": "ATHOUMANE",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "younes_athoumane",
+    "first_name": "Younes",
+    "last_name": "ATHOUMANE",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "ilyas_aneflous",
+    "first_name": "Ilyas",
+    "last_name": "ANEFLOUS",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "ilyas_chellah",
+    "first_name": "Ilyas",
+    "last_name": "CHELLAH",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "yaqine_benkirane",
+    "first_name": "Yaqine",
+    "last_name": "BENKIRANE",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "jabarkhail_wahidouallah",
+    "first_name": "Jabar khail",
+    "last_name": "WAHIDOUALLAH",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "mairick_gonzil",
+    "first_name": "Mairick",
+    "last_name": "GONZIL",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "badereddine_marjani",
+    "first_name": "Badereddine",
+    "last_name": "MARJANI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "yahya_saadouli",
+    "first_name": "Yahya",
+    "last_name": "SAADOULI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "baharetha_abdellah",
+    "first_name": "BA HARETHA",
+    "last_name": "ABDELLAH",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "ismael_assani",
+    "first_name": "Ismael",
+    "last_name": "ASSANI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "aliyoussef_ben",
+    "first_name": "ALI Youssef",
+    "last_name": "BEN",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "karim_bennamou",
+    "first_name": "karim",
+    "last_name": "BENNAMOU",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "mouad_binchoula",
+    "first_name": "Mouad",
+    "last_name": "BINCHOULA",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "dayane_alibaco",
+    "first_name": "Dayane",
+    "last_name": "ALIBACO",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "bilal_ouachikh",
+    "first_name": "Bilal",
+    "last_name": "OUACHIKH",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "yazid_ouachikh",
+    "first_name": "Yazid",
+    "last_name": "OUACHIKH",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "mohamed_boulaabi",
+    "first_name": "Mohamed",
+    "last_name": "BOULAABI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "ali_butun",
+    "first_name": "Ali",
+    "last_name": "BUTUN",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "mohamed_el_mehadji",
+    "first_name": "MEHADJI Mohamed",
+    "last_name": "EL",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "yanis_delhostal",
+    "first_name": "Yanis",
+    "last_name": "DELHOSTAL",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "ahmed_fatine",
+    "first_name": "Ahmed",
+    "last_name": "FATINE",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "jassim_ferdjouni",
+    "first_name": "Jassim",
+    "last_name": "FERDJOUNI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "younes_kerioui",
+    "first_name": "Younes",
+    "last_name": "KERIOUI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "driss_mandjam",
+    "first_name": "Driss",
+    "last_name": "MANDJAM",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "tesnime_asrih",
+    "first_name": "Tesnime",
+    "last_name": "ASRIH",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "ayma_attoumane",
+    "first_name": "Ayma",
+    "last_name": "ATTOUMANE",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "alitayssir_ben",
+    "first_name": "ALI Tayssir",
+    "last_name": "BEN",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "odia_camara",
+    "first_name": "Odia",
+    "last_name": "CAMARA",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "aya_dhib",
+    "first_name": "Aya",
+    "last_name": "DHIB",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "issra_dhib",
+    "first_name": "Issra",
+    "last_name": "DHIB",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "tasnime_hajili",
+    "first_name": "Tasnime",
+    "last_name": "HAJILI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "aicha_hamidi",
+    "first_name": "Aïcha",
+    "last_name": "HAMIDI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "nada_maghraoui",
+    "first_name": "Nada",
+    "last_name": "MAGHRAOUI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "marwa_tazoult",
+    "first_name": "Marwa",
+    "last_name": "TAZOULT",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "fatima_attoumane",
+    "first_name": "Fatima",
+    "last_name": "ATTOUMANE",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "soumaya_attoumane",
+    "first_name": "Soumaya",
+    "last_name": "ATTOUMANE",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "farah_azzeddine",
+    "first_name": "Farah",
+    "last_name": "AZZEDDINE",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "amina_bennama",
+    "first_name": "Amina",
+    "last_name": "BENNAMA",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "nihel_bennama",
+    "first_name": "Nihel",
+    "last_name": "BENNAMA",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "neila_boulaabi",
+    "first_name": "Neila",
+    "last_name": "BOULAABI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "maissa_bouldjihad",
+    "first_name": "Maissa",
+    "last_name": "BOULDJIHAD",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "wijdene_hemissi",
+    "first_name": "Wijdene",
+    "last_name": "HEMISSI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "malak_jalil",
+    "first_name": "Malak",
+    "last_name": "JALIL",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "najat_margoum",
+    "first_name": "Najat",
+    "last_name": "MARGOUM",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "prof_ibrahim",
+    "first_name": "Ibrahim",
+    "last_name": "nan",
+    "email": "",
+    "role": "teacher",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "prof_oum_wael",
+    "first_name": "Wael",
+    "last_name": "Oum",
+    "email": "",
+    "role": "teacher",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "prof_abou_mostafa",
+    "first_name": "Mostafa",
+    "last_name": "Abou",
+    "email": "",
+    "role": "teacher",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "prof_oum_amine",
+    "first_name": "Amine",
+    "last_name": "Oum",
+    "email": "",
+    "role": "teacher",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "prof_abou_abdellatif",
+    "first_name": "Abdellatif",
+    "last_name": "Abou",
+    "email": "",
+    "role": "teacher",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "prof_mohammadine",
+    "first_name": "Mohammadine",
+    "last_name": "nan",
+    "email": "",
+    "role": "teacher",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "prof_abdelhadi",
+    "first_name": "Abdelhadi",
+    "last_name": "nan",
+    "email": "",
+    "role": "teacher",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "prof_youssef",
+    "first_name": "Youssef",
+    "last_name": "nan",
+    "email": "",
+    "role": "teacher",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "prof_salahdine",
+    "first_name": "Salahdine",
+    "last_name": "nan",
+    "email": "",
+    "role": "teacher",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "prof_abou_fadi",
+    "first_name": "Fadi",
+    "last_name": "Abou",
+    "email": "",
+    "role": "teacher",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "prof_abdallah",
+    "first_name": "Abdallah",
+    "last_name": "nan",
+    "email": "",
+    "role": "teacher",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "prof_camilia",
+    "first_name": "Camilia",
+    "last_name": "nan",
+    "email": "",
+    "role": "teacher",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "prof_surat_al_kafiroun",
+    "first_name": "al kafiroun",
+    "last_name": "surat",
+    "email": "",
+    "role": "teacher",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "prof_ahmed_mahjoubi",
+    "first_name": "Mahjoubi",
+    "last_name": "Ahmed",
+    "email": "",
+    "role": "teacher",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "prof_ahmed",
+    "first_name": "Ahmed",
+    "last_name": "nan",
+    "email": "",
+    "role": "teacher",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "prof_nahila",
+    "first_name": "Nahila",
+    "last_name": "nan",
+    "email": "",
+    "role": "teacher",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "prof_najlaa",
+    "first_name": "Najlaa",
+    "last_name": "nan",
+    "email": "",
+    "role": "teacher",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "prof_salsabile",
+    "first_name": "Salsabile",
+    "last_name": "nan",
+    "email": "",
+    "role": "teacher",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "ines_adjtoutah",
+    "first_name": "Inés",
+    "last_name": "ADJTOUTAH",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "ranya_boussaf",
+    "first_name": "Ranya",
+    "last_name": "BOUSSAF",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "basma_hamada",
+    "first_name": "Basma",
+    "last_name": "HAMADA",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "maroua_jmila",
+    "first_name": "Maroua",
+    "last_name": "JMILA",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "heline_salmane",
+    "first_name": "Heline",
+    "last_name": "SALMANE",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "nahila_bennamou",
+    "first_name": "Nahila",
+    "last_name": "BENNAMOU",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "marwa_boukhalfa",
+    "first_name": "Marwa",
+    "last_name": "BOUKHALFA",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "tasnime_boukhalfa",
+    "first_name": "Tasnime",
+    "last_name": "BOUKHALFA",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "salsabile_boukhalfa",
+    "first_name": "Salsabile",
+    "last_name": "BOUKHALFA",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "nada_hamada",
+    "first_name": "Nada",
+    "last_name": "HAMADA",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "farah_zaidane",
+    "first_name": "Farah",
+    "last_name": "ZAIDANE",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "nahila_benathmane",
+    "first_name": "Nahila",
+    "last_name": "BENATHMANE",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "lilia_sahraoui",
+    "first_name": "Lilia",
+    "last_name": "SAHRAOUI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "soline_salmane",
+    "first_name": "Soline",
+    "last_name": "SALMANE",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "layla_beradjem",
+    "first_name": "Layla",
+    "last_name": "BERADJEM",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "assya_abi",
+    "first_name": "Assya",
+    "last_name": "ABI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "nevestasnime_ferrera",
+    "first_name": "NEVES Tasnime",
+    "last_name": "FERRERA",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "intissar_agnide",
+    "first_name": "Intissar",
+    "last_name": "AGNIDE",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "jihene_chettah",
+    "first_name": "Jihene",
+    "last_name": "CHETTAH",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "oussama_saoudi",
+    "first_name": "Oussama",
+    "last_name": "SAOUDI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "feradous_lahyene",
+    "first_name": "Feradous",
+    "last_name": "LAHYENE",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "aicha_benkhedra",
+    "first_name": "Aicha",
+    "last_name": "BENKHEDRA",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "enel_hadhy",
+    "first_name": "Enel",
+    "last_name": "HADHY",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "adem_loubane",
+    "first_name": "Adem",
+    "last_name": "LOUBANE",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "anas_salmane",
+    "first_name": "Anas",
+    "last_name": "SALMANE",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "mohamed_majberi",
+    "first_name": "Mohamed",
+    "last_name": "MAJBERI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "adem_bouattour",
+    "first_name": "Adem",
+    "last_name": "BOUATTOUR",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "iyed_hamada",
+    "first_name": "Iyed",
+    "last_name": "HAMADA",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "abdelbasset_kolli",
+    "first_name": "Abdelbasset",
+    "last_name": "KOLLI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "abderrahim_kolli",
+    "first_name": "Abderrahim",
+    "last_name": "KOLLI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "enes_hadhy",
+    "first_name": "Enes",
+    "last_name": "HADHY",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "mohamed_miled",
+    "first_name": "Mohamed",
+    "last_name": "MILED",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "kais_redradj",
+    "first_name": "Kaïs",
+    "last_name": "REDRADJ",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "zakaria_loubane",
+    "first_name": "Zakaria",
+    "last_name": "LOUBANE",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "anas_bennacer",
+    "first_name": "Anas",
+    "last_name": "BENNACER",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "islam_draibine",
+    "first_name": "Islam",
+    "last_name": "DRAIBINE",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "anas_adjtoutah",
+    "first_name": "Anas",
+    "last_name": "ADJTOUTAH",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "mouslime_abi",
+    "first_name": "Mouslime",
+    "last_name": "ABI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "leyth_aissaoui",
+    "first_name": "Leyth",
+    "last_name": "AISSAOUI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "abdullah_badi",
+    "first_name": "Abdullah",
+    "last_name": "BADI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "ayoub_badi",
+    "first_name": "Ayoub",
+    "last_name": "BADI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "ridha_saidi",
+    "first_name": "Ridha",
+    "last_name": "SAIDI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "ismael_saidina",
+    "first_name": "Ismael",
+    "last_name": "SAIDINA",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "mouhamed_abi",
+    "first_name": "Mouhamed",
+    "last_name": "ABI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "akram_boussaf",
+    "first_name": "Akram",
+    "last_name": "BOUSSAF",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "jihad_ennaji",
+    "first_name": "Jihad",
+    "last_name": "ENNAJI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "ismail_najmi",
+    "first_name": "Ismail",
+    "last_name": "NAJMI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "ibrahim_saidina",
+    "first_name": "Ibrahim",
+    "last_name": "SAIDINA",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "mostafa_salmane",
+    "first_name": "Mostafa",
+    "last_name": "SALMANE",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "hafidou_abi",
+    "first_name": "Hafidou",
+    "last_name": "ABI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "ilyes_aissaoui",
+    "first_name": "Ilyes",
+    "last_name": "AISSAOUI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "dounia_sahraoui",
+    "first_name": "Dounia",
+    "last_name": "SAHRAOUI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "inaya_sahraoui",
+    "first_name": "Inaya",
+    "last_name": "SAHRAOUI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "amira_tajani",
+    "first_name": "Amira",
+    "last_name": "TAJANI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "majd_tajani",
+    "first_name": "Majd",
+    "last_name": "TAJANI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "malak_tajani",
+    "first_name": "Malak",
+    "last_name": "TAJANI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "maria_zaidane",
+    "first_name": "Maria",
+    "last_name": "ZAIDANE",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "edine_hadhy",
+    "first_name": "Edine",
+    "last_name": "HADHY",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "ilyes_bouattour",
+    "first_name": "Ilyes",
+    "last_name": "BOUATTOUR",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "rayane_majberi",
+    "first_name": "Rayane",
+    "last_name": "MAJBERI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "adem_majberi",
+    "first_name": "Adem",
+    "last_name": "MAJBERI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "najih_agnide",
+    "first_name": "Najih",
+    "last_name": "AGNIDE",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "tasnime_wifaya",
+    "first_name": "Tasnime",
+    "last_name": "WIFAYA",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "idriss_najmi",
+    "first_name": "Idriss",
+    "last_name": "NAJMI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "mehdi_najmi",
+    "first_name": "Mehdi",
+    "last_name": "NAJMI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "ritaj_baida",
+    "first_name": "Ritaj",
+    "last_name": "BAIDA",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "yasmine_benathmane",
+    "first_name": "Yasmine",
+    "last_name": "BENATHMANE",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "nevesrokia_ferrera",
+    "first_name": "NEVES Rokia",
+    "last_name": "FERRERA",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "lina_miled",
+    "first_name": "Lina",
+    "last_name": "MILED",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "imene_abada",
+    "first_name": "Imene",
+    "last_name": "ABADA",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "janna_abada",
+    "first_name": "Janna",
+    "last_name": "ABADA",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "anais_redradj",
+    "first_name": "Anais",
+    "last_name": "REDRADJ",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "oumaima_soltani",
+    "first_name": "Oumaïma",
+    "last_name": "SOLTANI",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "prof_wassim",
+    "first_name": "Wassim",
+    "last_name": "",
+    "email": "",
+    "role": "teacher",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "amine_el_meski_mohamed",
+    "first_name": "Amine",
+    "last_name": "El Meski Mohamed",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "aymen_el_kabir",
+    "first_name": "Aymen",
+    "last_name": "El Kabir",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "ayoub_asrih_mohamed",
+    "first_name": "Ayoub",
+    "last_name": "Asrih Mohamed",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "daoud_ben_romdhane",
+    "first_name": "Daoud",
+    "last_name": "Ben Romdhane",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "ewan_ali_abdelghafour",
+    "first_name": "Ewan",
+    "last_name": "Ali Abdelghafour",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "heline_ali_abdelghafour",
+    "first_name": "Heline",
+    "last_name": "Ali Abdelghafour",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "ilyas_el_kabir",
+    "first_name": "Ilyas",
+    "last_name": "El Kabir",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "ismaïl_ben_romhdane",
+    "first_name": "Ismaïl",
+    "last_name": "Ben Romhdane",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "joumanah_el_mahadji",
+    "first_name": "Joumanah",
+    "last_name": "El Mahadji",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "karim_ali_ibrahimy",
+    "first_name": "Karim",
+    "last_name": "Ali Ibrahimy",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "kenza_ben_romdhane",
+    "first_name": "Kenza",
+    "last_name": "Ben Romdhane",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "malika_el_fekair",
+    "first_name": "Malika",
+    "last_name": "El Fekair",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "mariam_el_haimeur",
+    "first_name": "Mariam",
+    "last_name": "El Haimeur",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "mohamed_el_haimeur",
+    "first_name": "Mohamed",
+    "last_name": "El Haimeur",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "omar_el_qamari",
+    "first_name": "Omar",
+    "last_name": "El Qamari",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "yanis_lallam_mohamed",
+    "first_name": "Yanis",
+    "last_name": "Lallam Mohamed",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "zahra_jmila_fatima",
+    "first_name": "Zahra",
+    "last_name": "Jmila Fatima",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "zakaria_el_idrissi",
+    "first_name": "Zakaria",
+    "last_name": "El Idrissi",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  },
+  {
+    "username": "ziyad_el_kabir",
+    "first_name": "Ziyad",
+    "last_name": "El Kabir",
+    "email": "",
+    "role": "student",
+    "is_superuser": 0,
+    "is_staff": 0
+  }
+]
