@@ -12,7 +12,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-dev-key-change-in-production')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+
+# Vérification sécurité en production
+if not DEBUG and SECRET_KEY == 'django-insecure-dev-key-change-in-production':
+    raise RuntimeError("SECRET_KEY must be set to a secure value in production!")
 
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,backend,testserver').split(',')
 
@@ -126,12 +130,17 @@ SIMPLE_JWT = {
 }
 
 # CORS Settings
-# CORS - Autoriser tout en dÃ©veloppement
-CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_HEADERS = ['*', 'content-type', 'authorization', 'accept']
+if DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = True
+else:
+    CORS_ALLOW_ALL_ORIGINS = False
+    CORS_ALLOWED_ORIGINS = os.environ.get(
+        'CORS_ALLOWED_ORIGINS',
+        'https://quranreview.live,https://www.quranreview.live'
+    ).split(',')
 
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = ['content-type', 'authorization', 'accept']
 
 # Create data directory for SQLite
 os.makedirs(BASE_DIR / 'data', exist_ok=True)

@@ -33,4 +33,8 @@ urlpatterns = [
     path('my-students/', views.MyStudentsView.as_view(), name='my-students'),
     path('my-teacher/', views.MyTeacherView.as_view(), name='my-teacher'),
     path('students/<int:student_id>/progress/', views.StudentProgressView.as_view(), name='student-progress'),
+
+    # Admin
+    path('admin/tasks/delete-all/', views.AdminDeleteAllTasksView.as_view(), name='admin-delete-all-tasks'),
+    path('admin/create-teacher/', views.AdminCreateTeacherView.as_view(), name='admin-create-teacher'),
 ]

@@ -42,8 +42,8 @@ const Logger = {
         if (!this.debugMode) return;
         const e = this._push('LOG', category, message, data);
         const s = this._styles[category] || this._styles.LOG;
-        console.log(`%c[${e.ts}] [${category}] ${message}`, s);
-        if (data) console.log('  📝', data);
+        // console.log(`%c[${e.ts}] [${category}] ${message}`, s);
+        if (data) // console.log('  📝', data);
     },
 
     error(category, message, error = null) {
@@ -71,20 +71,20 @@ const Logger = {
         const text = (element.textContent || '').trim().slice(0, 40);
         const msg = `${tag}${id}${cls} → "${text}"`;
         this._push('CLICK', 'CLICK', msg, extra);
-        console.log(`%c[${new Date().toLocaleTimeString()}] [CLICK] 🖱️ ${msg}`, this._styles.CLICK);
+        // console.log(`%c[${new Date().toLocaleTimeString()}] [CLICK] 🖱️ ${msg}`, this._styles.CLICK);
     },
 
     // --- API TRACKER ---
     async api(method, url, options = {}) {
         const start = performance.now();
         this._push('LOG', 'API', `→ ${method} ${url}`);
-        console.log(`%c[${new Date().toLocaleTimeString()}] [API] → ${method} ${url}`, this._styles.API);
+        // console.log(`%c[${new Date().toLocaleTimeString()}] [API] → ${method} ${url}`, this._styles.API);
         try {
             const response = await fetch(url, { method, ...options });
             const duration = Math.round(performance.now() - start);
             const statusEmoji = response.ok ? '✅' : '❌';
             this._push(response.ok ? 'LOG' : 'ERROR', 'API', `← ${response.status} ${method} ${url} (${duration}ms)`);
-            console.log(`%c[${new Date().toLocaleTimeString()}] [API] ← ${statusEmoji} ${response.status} ${method} ${url} (${duration}ms)`, this._styles.API);
+            // console.log(`%c[${new Date().toLocaleTimeString()}] [API] ← ${statusEmoji} ${response.status} ${method} ${url} (${duration}ms)`, this._styles.API);
             return response;
         } catch (err) {
             const duration = Math.round(performance.now() - start);
@@ -98,28 +98,28 @@ const Logger = {
     nav(from, to) {
         if (!this.debugMode) return;
         this._push('LOG', 'NAV', `${from} → ${to}`);
-        console.log(`%c[${new Date().toLocaleTimeString()}] [NAV] 🧭 ${from} → ${to}`, this._styles.NAV);
+        // console.log(`%c[${new Date().toLocaleTimeString()}] [NAV] 🧭 ${from} → ${to}`, this._styles.NAV);
     },
 
     // --- AUDIO TRACKER ---
     audio(event, detail = '') {
         if (!this.debugMode) return;
         this._push('LOG', 'AUDIO', `${event} ${detail}`);
-        console.log(`%c[${new Date().toLocaleTimeString()}] [AUDIO] 🔊 ${event} ${detail}`, this._styles.AUDIO);
+        // console.log(`%c[${new Date().toLocaleTimeString()}] [AUDIO] 🔊 ${event} ${detail}`, this._styles.AUDIO);
     },
 
     // --- STATE TRACKER ---
     state(key, value) {
         if (!this.debugMode) return;
         this._push('LOG', 'STATE', `${key} changed`, value);
-        console.log(`%c[${new Date().toLocaleTimeString()}] [STATE] 📦 ${key} =`, this._styles.STATE, value);
+        // console.log(`%c[${new Date().toLocaleTimeString()}] [STATE] 📦 ${key} =`, this._styles.STATE, value);
     },
 
     // --- STORAGE TRACKER ---
     store(action, key) {
         if (!this.debugMode) return;
         this._push('LOG', 'STORE', `${action} → ${key}`);
-        console.log(`%c[${new Date().toLocaleTimeString()}] [STORE] 💾 ${action} → ${key}`, this._styles.STORE);
+        // console.log(`%c[${new Date().toLocaleTimeString()}] [STORE] 💾 ${action} → ${key}`, this._styles.STORE);
     },
 
     // --- CONSOLE HELPERS ---
@@ -144,12 +144,12 @@ const Logger = {
     apis() { return this.history('API'); },
 
     // Usage in F12: Logger.clear()
-    clear() { this._history = []; console.clear(); console.log('🧹 Logger history cleared'); },
+    clear() { this._history = []; console.clear(); // console.log('🧹 Logger history cleared'); },
 
     // Usage in F12: Logger.dump() — export as JSON
     dump() {
         const json = JSON.stringify(this._history, null, 2);
-        console.log(json);
+        // console.log(json);
         return json;
     }
 };
@@ -808,7 +808,7 @@ const QuranReview = {
         if (submitBtn) submitBtn.disabled = true;
 
         try {
-            const response = await fetch(`${this.config.apiBaseUrl}/api/register/`, {
+            const response = await fetch(`${this.config.apiBaseUrl}/api/auth/register/`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -1919,7 +1919,7 @@ const QuranReview = {
         // ===================================
 
         startHifzSession(surahId, fromAyah, toAyah) {
-            console.log(`Starting Hifz: ${surahId}:${fromAyah}-${toAyah}`);
+            // console.log(`Starting Hifz: ${surahId}:${fromAyah}-${toAyah}`);
 
             // Update state
             QuranReview.state.hifz.currentSession = {
@@ -2141,17 +2141,17 @@ const QuranReview = {
     },
     
     renderMemorizationPage() {
-        console.log('🔄 Rendering memorization page...');
+        // console.log('🔄 Rendering memorization page...');
         this.renderMemorizationTable();
         this.setupMemorizationActions();
-        console.log('✅ Memorization page rendered');
+        // console.log('✅ Memorization page rendered');
     },
     
     renderWardPage() {
-        console.log('🔄 Rendering ward page...');
+        // console.log('🔄 Rendering ward page...');
         this.setupWardControls();
         this.populateWardSurahSelect();
-        console.log('✅ Ward page rendered');
+        // console.log('✅ Ward page rendered');
     },
     
     renderProgressPage() {
@@ -2276,7 +2276,7 @@ const QuranReview = {
             });
         }
         
-        console.log('✅ Ward controls setup completed');
+        // console.log('✅ Ward controls setup completed');
     },
     
     populateWardSurahSelect() {
@@ -2302,7 +2302,7 @@ const QuranReview = {
         // Append the fragment to the select element in a single operation
         surahSelect.appendChild(fragment);
 
-        console.log('📋 Ward surah select populated with 114 surahs');
+        // console.log('📋 Ward surah select populated with 114 surahs');
     },
     
     updateWardAyahLimits() {
@@ -2334,7 +2334,7 @@ const QuranReview = {
             toAyahInput.value = '';
         }
         
-        console.log(`📊 Updated ward ayah limits for Surah ${surahId}: 1-${surah.ayahs}`);
+        // console.log(`📊 Updated ward ayah limits for Surah ${surahId}: 1-${surah.ayahs}`);
     },
     
     updateWardReciter() {
@@ -2343,7 +2343,7 @@ const QuranReview = {
         if (reciterSelector && window.QuranAudio) {
             const selectedReciter = reciterSelector.value;
             QuranAudio.setReciter(selectedReciter);
-            console.log('🎵 Ward reciter updated to:', selectedReciter);
+            // console.log('🎵 Ward reciter updated to:', selectedReciter);
             this.showNotification(`تم تغيير القارئ إلى: ${QuranAudio.getReciterName(selectedReciter)}`, 'success');
         }
     },
@@ -2366,7 +2366,7 @@ const QuranReview = {
             const source = audioSourceSelector.value;
             this.state.settings.audioSource = source;
             this.showNotification(`تم تغيير مصدر الصوت إلى: ${source === 'local' ? 'ملفات محلية' : 'عبر الإنترنت'}`, 'success');
-            console.log(`🎵 Audio source updated to: ${source}`);
+            // console.log(`🎵 Audio source updated to: ${source}`);
         }
     },
     
@@ -2387,7 +2387,7 @@ const QuranReview = {
             const delay = parseFloat(ayahDelaySelector.value);
             this.state.settings.ayahDelay = delay;
             this.showNotification(`تم تغيير مدة الآية إلى: ${delay} ثانية`, 'success');
-            console.log(`⏱️ Ayah delay updated to: ${delay} seconds`);
+            // console.log(`⏱️ Ayah delay updated to: ${delay} seconds`);
         }
     },
     
@@ -2398,7 +2398,7 @@ const QuranReview = {
             const autoPlayNext = autoPlayNextCheckbox.checked;
             this.state.settings.autoPlayNext = autoPlayNext;
             this.showNotification(`تم ${autoPlayNext ? 'تفعيل تشغيل الآية التالية' : 'إيقاف تشغيل الآية التالية'}`, 'success');
-            console.log(`🔄 Auto-play next: ${autoPlayNext}`);
+            // console.log(`🔄 Auto-play next: ${autoPlayNext}`);
         }
     },
     
@@ -2617,7 +2617,7 @@ const QuranReview = {
         // Play ayah audio
         if (window.QuranAudio) {
             const audioUrl = QuranAudio.getAyahAudioUrl(globalAyahNumber);
-            console.log('🎵 Playing ayah audio:', audioUrl);
+            // console.log('🎵 Playing ayah audio:', audioUrl);
             window.open(audioUrl, '_blank', 'noopener,noreferrer');
             this.showNotification('تم فتح الآية في نافذة جديدة', 'info');
         }
@@ -3240,13 +3240,13 @@ const QuranReview = {
     // ===================================
     
     initWardPlayer() {
-        console.log('🎧 Initializing Ward Player...');
+        // console.log('🎧 Initializing Ward Player...');
         
         const playWardBtn = document.getElementById('play-ward-btn');
         const playSurahBtn = document.getElementById('play-surah-btn');
         const stopWardBtn = document.getElementById('stop-ward-btn');
         
-        console.log('🔍 DEBUG: Elements found:', {
+        // console.log('🔍 DEBUG: Elements found:', {
             playWardBtn: !!playWardBtn,
             playSurahBtn: !!playSurahBtn,
             stopWardBtn: !!stopWardBtn
@@ -3254,20 +3254,20 @@ const QuranReview = {
         
         if (playWardBtn) {
             playWardBtn.addEventListener('click', () => {
-                console.log('🎵 DEBUG: Play Ward button clicked!');
+                // console.log('🎵 DEBUG: Play Ward button clicked!');
                 this.playWard();
             });
-            console.log('✅ DEBUG: Play Ward button event attached');
+            // console.log('✅ DEBUG: Play Ward button event attached');
         } else {
             console.error('❌ DEBUG: Play Ward button not found!');
         }
         
         if (playSurahBtn) {
             playSurahBtn.addEventListener('click', () => {
-                console.log('🎵 DEBUG: Play Surah button clicked!');
+                // console.log('🎵 DEBUG: Play Surah button clicked!');
                 this.playFullSurah();
             });
-            console.log('✅ DEBUG: Play Surah button event attached');
+            // console.log('✅ DEBUG: Play Surah button event attached');
         } else {
             console.error('❌ DEBUG: Play Surah button not found!');
         }
@@ -3278,7 +3278,7 @@ const QuranReview = {
             stopBtn.addEventListener('click', () => {
                 this.stopWardPlayback();
             });
-            console.log('✅ DEBUG: Stop Ward button event attached');
+            // console.log('✅ DEBUG: Stop Ward button event attached');
         }
         
         // Navigation buttons
@@ -3287,7 +3287,7 @@ const QuranReview = {
             prevBtn.addEventListener('click', () => {
                 this.playPreviousAyah();
             });
-            console.log('✅ DEBUG: Previous Ayah button event attached');
+            // console.log('✅ DEBUG: Previous Ayah button event attached');
         }
         
         const nextBtn = document.getElementById('next-ayah-btn');
@@ -3295,7 +3295,7 @@ const QuranReview = {
             nextBtn.addEventListener('click', () => {
                 this.playNextAyahManually();
             });
-            console.log('✅ DEBUG: Next Ayah button event attached');
+            // console.log('✅ DEBUG: Next Ayah button event attached');
         }
         
         // Initialize ward player state
@@ -3309,7 +3309,7 @@ const QuranReview = {
             toAyah: null
         };
         
-        console.log('✅ Ward player initialized successfully');
+        // console.log('✅ Ward player initialized successfully');
     },
     
     showWardPlayer() {
@@ -3327,7 +3327,7 @@ const QuranReview = {
     },
     
     playWard() {
-        console.log('🎵 Starting Ward playback - using AudioManager...');
+        // console.log('🎵 Starting Ward playback - using AudioManager...');
         
         const surahSelect = document.getElementById('ward-surah-select');
         const fromAyahInput = document.getElementById('ward-from-ayah');
@@ -3361,7 +3361,7 @@ const QuranReview = {
             return;
         }
         
-        console.log(`✅ Valid ayah range: ${fromAyah}-${toAyah} for surah ${surah.name}`);
+        // console.log(`✅ Valid ayah range: ${fromAyah}-${toAyah} for surah ${surah.name}`);
         
         // Setup ward player state for display
         this.state.wardPlayer = {
@@ -3381,11 +3381,11 @@ const QuranReview = {
         AudioManager.playWirdAyahSequence(surahId, fromAyah, toAyah);
         
         this.showNotification(`🎧 جاري تشغيل ورد ${surah.name} (${fromAyah}-${toAyah})`, 'success');
-        console.log('✅ Ward playback started successfully via AudioManager');
+        // console.log('✅ Ward playback started successfully via AudioManager');
     },
     
     playFullSurah() {
-        console.log('📖 Starting Full Surah playback - using CDN ayah by ayah for image sync...');
+        // console.log('📖 Starting Full Surah playback - using CDN ayah by ayah for image sync...');
         
         const surahSelect = document.getElementById('ward-surah-select');
         
@@ -3422,7 +3422,7 @@ const QuranReview = {
         AudioManager.playWirdAyahSequence(surahId, 1, surah.ayahs);
         
         this.showNotification(`📖 جاري تشغيل سورة ${surah.name} كاملة (مع مزامنة الصور)`, 'success');
-        console.log('✅ Full Surah playback started with CDN for image sync');
+        // console.log('✅ Full Surah playback started with CDN for image sync');
     },
     
     playLocalSurah(surahId, surah) {
@@ -3430,7 +3430,7 @@ const QuranReview = {
         const surahNumber = surahId.toString().padStart(3, '0');
         const audioUrl = `audio/${surahNumber}.mp3`;
         
-        console.log(`🎵 Playing local surah: ${audioUrl}`);
+        // console.log(`🎵 Playing local surah: ${audioUrl}`);
         
         // Setup ward player state for full surah
         this.state.wardPlayer = {
@@ -3447,7 +3447,7 @@ const QuranReview = {
         const audio = new Audio(audioUrl);
         
         audio.onended = () => {
-            console.log('✅ Full surah finished playing');
+            // console.log('✅ Full surah finished playing');
             this.stopWardPlayback();
             this.showNotification('تم الانتهاء من تشغيل السورة', 'success');
         };
@@ -3491,7 +3491,7 @@ const QuranReview = {
         this.playCurrentWardAyah();
         
         this.showNotification(`📖 جاري تشغيل سورة ${surah.name} كاملة (CDN)`, 'success');
-        console.log('✅ Full Surah playback started successfully');
+        // console.log('✅ Full Surah playback started successfully');
     },
     
     playCurrentWardAyah() {
@@ -3506,17 +3506,17 @@ const QuranReview = {
         const audioUrl = QuranAudio.getAyahAudioUrl(globalAyahNumber);
         const surah = this.config.surahs.find(s => s.id === surahId);
         
-        console.log(`🎵 Playing ayah ${currentAyah} of surah ${surahId} (${globalAyahNumber})`);
+        // console.log(`🎵 Playing ayah ${currentAyah} of surah ${surahId} (${globalAyahNumber})`);
         
         // Create audio element for this ayah
         const audio = new Audio(audioUrl);
         
         audio.onended = () => {
-            console.log(`✅ Ayah ${currentAyah} finished playing`);
+            // console.log(`✅ Ayah ${currentAyah} finished playing`);
             
             // Check if auto-play next is enabled
             if (this.state.settings.autoPlayNext && this.state.wardPlayer.isPlaying) {
-                console.log('🔄 Auto-playing next ayah...');
+                // console.log('🔄 Auto-playing next ayah...');
                 
                 // Add delay before playing next ayah
                 const delay = (this.state.settings.ayahDelay || 2.0) * 1000; // Convert to milliseconds
@@ -3524,7 +3524,7 @@ const QuranReview = {
                     this.playNextWardAyah();
                 }, delay);
             } else {
-                console.log('⏹️ Auto-play next is disabled or playback stopped');
+                // console.log('⏹️ Auto-play next is disabled or playback stopped');
                 this.playNextWardAyah();
             }
         };
@@ -3543,7 +3543,7 @@ const QuranReview = {
             this.playNextWardAyah();
         });
         
-        console.log(`🎵 Playing ayah ${currentAyah} of surah ${surahId}`);
+        // console.log(`🎵 Playing ayah ${currentAyah} of surah ${surahId}`);
     },
     
     playNextWardAyah() {
@@ -3561,7 +3561,7 @@ const QuranReview = {
     },
     
     stopWardPlayback() {
-        console.log('⏹️ Stopping Ward playback - using AudioManager...');
+        // console.log('⏹️ Stopping Ward playback - using AudioManager...');
         
         // Use AudioManager to stop everything
         AudioManager.stopAll();
@@ -3573,7 +3573,7 @@ const QuranReview = {
         this.updateWardDisplay();
         
         this.showNotification('⏹️ تم إيقاف التشغيل', 'info');
-        console.log('✅ Ward playback stopped via AudioManager');
+        // console.log('✅ Ward playback stopped via AudioManager');
     },
     
     playPreviousAyah() {
@@ -3699,7 +3699,7 @@ const QuranReview = {
                 this.showNotification('خطأ في تحميل الملف الصوتي', 'error');
             });
             
-            console.log('🎵 Audio player initialized');
+            // console.log('🎵 Audio player initialized');
         }
     },
     
@@ -3721,11 +3721,11 @@ const QuranReview = {
             const reciterName = QuranAudio.getReciterName();
             
             // Debug: log the URL
-            console.log('🎵 Generated URL:', audioUrl);
-            console.log('🎵 Surah Number:', surahNumber);
-            console.log('🎵 QuranAudio available:', !!window.QuranAudio);
-            console.log('🎵 Current reciter:', QuranAudio?.currentReciter);
-            console.log('🎵 Audio config loaded:', !!window.QuranAudio);
+            // console.log('🎵 Generated URL:', audioUrl);
+            // console.log('🎵 Surah Number:', surahNumber);
+            // console.log('🎵 QuranAudio available:', !!window.QuranAudio);
+            // console.log('🎵 Current reciter:', QuranAudio?.currentReciter);
+            // console.log('🎵 Audio config loaded:', !!window.QuranAudio);
             
             // Validate URL
             if (!audioUrl || !audioUrl.startsWith('https://')) {
@@ -3753,7 +3753,7 @@ const QuranReview = {
                 audioElement.play()
                     .then(() => {
                         this.showNotification(`جاري تشغيل ${surahName}`, 'success');
-                        console.log('🎵 Audio playing successfully');
+                        // console.log('🎵 Audio playing successfully');
                     })
                     .catch(error => {
                         console.error('❌ Error playing audio:', error);
@@ -3782,7 +3782,7 @@ const QuranReview = {
             // Update QuranAudio current reciter
             if (window.QuranAudio) {
                 QuranAudio.setReciter(selectedReciter);
-                console.log('🎵 Reciter updated to:', selectedReciter);
+                // console.log('🎵 Reciter updated to:', selectedReciter);
                 this.showNotification(`تم تغيير القارئ إلى: ${QuranAudio.getReciterName(selectedReciter)}`, 'success');
             }
         }
@@ -3838,7 +3838,7 @@ const QuranReview = {
             toAyahInput.value = '';
         }
         
-        console.log(`📊 Updated ayah limits for Surah ${surahId}: 1-${surah.ayahs}`);
+        // console.log(`📊 Updated ayah limits for Surah ${surahId}: 1-${surah.ayahs}`);
     },
     
     populateSurahSelect() {
@@ -3864,7 +3864,7 @@ const QuranReview = {
         // Append the fragment to the select element in a single operation
         surahSelect.appendChild(fragment);
 
-        console.log('📋 Surah select populated with 114 surahs');
+        // console.log('📋 Surah select populated with 114 surahs');
     },
     
     // ===================================
@@ -3872,7 +3872,7 @@ const QuranReview = {
     // ===================================
     
     openTarteel() {
-        console.log('🎧 Opening Tarteel app...');
+        // console.log('🎧 Opening Tarteel app...');
         
         // Try to open Tarteel app with smart link
         const tarteelSmartLink = 'https://tarteel.go.link/?adj_t=1d1pgcav&adj_engagement_type=fallback_click';
