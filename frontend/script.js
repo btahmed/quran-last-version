@@ -380,11 +380,20 @@ const AudioManager = {
 // APP STATE & CONFIGURATION
 // ===================================
 
-const API_BASE_URL = window.API_BASE_URL || (
-    window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-    ? 'http://127.0.0.1:8000'
-    : 'https://api.quranreview.live'
-);
+const API_BASE_URL = window.API_BASE_URL || (() => {
+    const port = window.location.port;
+    const host = window.location.hostname;
+    // Docker nginx sur port 80 → URL relative (nginx proxifie /api/)
+    if ((host === 'localhost' || host === '127.0.0.1') && (port === '' || port === '80')) {
+        return '';
+    }
+    // Dev local direct backend sur port 8080 ou 8000
+    if (host === 'localhost' || host === '127.0.0.1') {
+        return 'http://127.0.0.1:8000';
+    }
+    // Production
+    return 'https://api.quranreview.live';
+})();
 
 // Détecter le mode fichier local (file://)
 const IS_FILE_PROTOCOL = window.location.protocol === 'file:';
