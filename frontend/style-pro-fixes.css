@@ -1,0 +1,183 @@
+/* =============================================
+   QURANREVIEW PRO — FIXES DE CONTRASTE
+   Corrections dark/light mode + accessibilité
+   ============================================= */
+
+/* =============================================
+   1. FIXES LIGHT MODE
+   ============================================= */
+
+/* Texte sur fond clair — contraste renforcé */
+[data-theme="light"] body,
+:root body {
+    color: var(--color-text-primary, #171717);
+    background-color: var(--color-bg-primary, #ffffff);
+}
+
+/* Cards light mode — fond visible */
+[data-theme="light"] .card,
+[data-theme="light"] .glass-card {
+    background: rgba(255, 255, 255, 0.92);
+    color: #171717;
+}
+
+/* Inputs light mode */
+[data-theme="light"] input,
+[data-theme="light"] select,
+[data-theme="light"] textarea {
+    background: #ffffff;
+    color: #171717;
+    border-color: #d4d4d4;
+}
+
+[data-theme="light"] input::placeholder,
+[data-theme="light"] textarea::placeholder {
+    color: #737373;
+}
+
+/* Navigation light mode */
+[data-theme="light"] .nav-item,
+[data-theme="light"] .nav-link {
+    color: #404040;
+}
+
+[data-theme="light"] .nav-item.active,
+[data-theme="light"] .nav-link.active {
+    color: var(--color-primary, #2d5016);
+}
+
+/* =============================================
+   2. FIXES DARK MODE
+   ============================================= */
+
+/* Body dark mode */
+[data-theme="dark"] body {
+    background-color: #0a0a0a;
+    color: #f5f5f5;
+}
+
+/* Cards dark mode — contraste renforcé */
+[data-theme="dark"] .card,
+[data-theme="dark"] .glass-card {
+    background: rgba(30, 30, 30, 0.85);
+    color: #f5f5f5;
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Texte secondaire dark mode */
+[data-theme="dark"] .text-secondary,
+[data-theme="dark"] p,
+[data-theme="dark"] span:not(.badge) {
+    color: #d4d4d4;
+}
+
+/* Inputs dark mode */
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+    background: #262626;
+    color: #f5f5f5;
+    border-color: #404040;
+}
+
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder {
+    color: #737373;
+}
+
+/* Navigation dark mode */
+[data-theme="dark"] .nav-item,
+[data-theme="dark"] .nav-link {
+    color: #d4d4d4;
+}
+
+[data-theme="dark"] .nav-item.active,
+[data-theme="dark"] .nav-link.active {
+    color: var(--color-primary, #4ade80);
+}
+
+/* Header dark mode */
+[data-theme="dark"] header,
+[data-theme="dark"] .header {
+    background: rgba(10, 10, 10, 0.9);
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Tables dark mode */
+[data-theme="dark"] table {
+    color: #f5f5f5;
+}
+
+[data-theme="dark"] th {
+    background: #262626;
+    color: #d4d4d4;
+}
+
+[data-theme="dark"] td {
+    border-color: #404040;
+}
+
+[data-theme="dark"] tr:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+/* Modals dark mode */
+[data-theme="dark"] .modal,
+[data-theme="dark"] .modal-content,
+[data-theme="dark"] .modal-content-pro {
+    background: #171717;
+    color: #f5f5f5;
+}
+
+/* Badges & status dark mode */
+[data-theme="dark"] .badge-success { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+[data-theme="dark"] .badge-warning { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+[data-theme="dark"] .badge-danger  { background: rgba(239, 68, 68, 0.2);  color: #f87171; }
+[data-theme="dark"] .badge-info    { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+
+/* Sidebar dark mode */
+[data-theme="dark"] .sidebar,
+[data-theme="dark"] .side-nav {
+    background: #111111;
+    border-right-color: rgba(255, 255, 255, 0.06);
+}
+
+/* =============================================
+   3. FIXES ACCESSIBILITÉ (les deux modes)
+   ============================================= */
+
+/* Focus visible */
+*:focus-visible {
+    outline: 2px solid var(--color-primary, #2d5016);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+/* Boutons — ratio de contraste minimum WCAG AA */
+.btn-primary {
+    background-color: var(--color-primary, #2d5016);
+    color: #ffffff;
+}
+
+.btn-primary:hover {
+    background-color: var(--color-primary-dark, #1e3a0f);
+}
+
+[data-theme="dark"] .btn-primary {
+    background-color: var(--color-primary, #4ade80);
+    color: #0a0a0a;
+}
+
+/* Liens — underline pour accessibilité */
+a:not(.btn):not(.nav-link):not(.nav-item) {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+/* Texte arabe — taille minimum lisible */
+.arabic-text,
+[dir="rtl"] p,
+.ayah-text {
+    font-size: clamp(1.1rem, 3vw, 1.5rem);
+    line-height: 2;
+}

@@ -591,3 +591,58 @@ class TeacherTaskCreateView(APIView):
             created += 1
 
         return Response({'detail': f'{created} مهمة تم إنشاؤها بنجاح.', 'count': created})
+
+
+# ============ Admin Endpoints ============
+
+class AdminDeleteAllTasksView(APIView):
+    """
+    POST /api/admin/tasks/delete-all/
+    Supprime toutes les tâches — réservé aux admins.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        if request.user.role != 'admin' and not request.user.is_superuser:
+            return Response({'detail': 'Forbidden'}, status=403)
+        count, _ = Task.objects.all().delete()
+        return Response({'detail': f'{count} tâches supprimées.', 'count': count})
+
+
+class AdminCreateTeacherView(APIView):
+    """
+    POST /api/admin/create-teacher/
+    Crée un compte enseignant — réservé aux admins.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        if request.user.role != 'admin' and not request.user.is_superuser:
+            return Response({'detail': 'Forbidden'}, status=403)
+
+        username = request.data.get('username', '').strip()
+        password = request.data.get('password', '').strip()
+        first_name = request.data.get('first_name', '').strip()
+        last_name = request.data.get('last_name', '').strip()
+        email = request.data.get('email', '').strip()
+
+        if not username or not password:
+            return Response({'detail': 'username et password sont requis.'}, status=400)
+
+        if User.objects.filter(username=username).exists():
+            return Response({'detail': 'Ce nom d\'utilisateur existe déjà.'}, status=400)
+
+        teacher = User.objects.create_user(
+            username=username,
+            password=password,
+            first_name=first_name,
+            last_name=last_name,
+            email=email,
+            role='teacher',
+        )
+        return Response({
+            'id': teacher.id,
+            'username': teacher.username,
+            'role': teacher.role,
+            'detail': 'Enseignant créé avec succès.'
+        }, status=201)
