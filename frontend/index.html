@@ -889,7 +889,7 @@
                 <div class="container-pro">
                     <h2 class="section-title" style="text-align: center; margin-bottom: var(--space-8);">📋 لوحة المعلم</h2>
                     
-                    <div class="grid-pro grid-cols-2" style="margin-bottom: var(--space-8);">
+                    <div class="grid-pro grid-cols-3" style="margin-bottom: var(--space-8);">
                         <div class="card-stat-premium" style="text-align: center;">
                             <div class="stat-value" id="teacher-students-count">0</div>
                             <p style="color: var(--color-text-secondary);">عدد الطلاب</p>
@@ -898,11 +898,15 @@
                             <div class="stat-value" id="teacher-pending-count">0</div>
                             <p style="color: var(--color-text-secondary);">تسليمات معلقة</p>
                         </div>
+                        <div class="card-stat-premium" style="text-align: center;">
+                            <div class="stat-value" id="teacher-tasks-count">0</div>
+                            <p style="color: var(--color-text-secondary);">المهام الكلية</p>
+                        </div>
                     </div>
                     
                     <div class="card-glass-pro" style="margin-bottom: var(--space-6);">
                         <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">➕ إنشاء مهمة جديدة</h3>
-                        <form id="teacher-create-task-form" onsubmit="QuranReview.createTask(event)">
+                        <form id="teacher-create-task-form" onsubmit="QuranReview.handleCreateTask(event)">
                             <div class="form-floating" style="margin-bottom: var(--space-4);">
                                 <input type="text" id="task-title" placeholder=" " required>
                                 <label for="task-title">عنوان المهمة</label>
@@ -928,6 +932,27 @@
                             <div class="form-floating" style="margin-bottom: var(--space-4);">
                                 <input type="date" id="task-due-date" placeholder=" ">
                                 <label for="task-due-date">تاريخ التسليم</label>
+                            </div>
+                            <!-- Assignation des étudiants -->
+                            <div style="margin-bottom: var(--space-4);">
+                                <p style="font-size: 0.875rem; font-weight: 600; margin-bottom: var(--space-2);">👥 تعيين إلى</p>
+                                <div style="display: flex; gap: var(--space-4);">
+                                    <label style="display: flex; align-items: center; gap: var(--space-2); cursor: pointer;">
+                                        <input type="radio" name="assign-mode" value="all" checked
+                                            onchange="QuranReview.toggleAssignMode('all')">
+                                        <span>جميع الطلاب</span>
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: var(--space-2); cursor: pointer;">
+                                        <input type="radio" name="assign-mode" value="select"
+                                            onchange="QuranReview.toggleAssignMode('select')">
+                                        <span>طلاب محددون</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div id="student-select-container" class="hidden" style="margin-bottom: var(--space-4);">
+                                <div id="student-checkboxes" style="display: flex; flex-wrap: wrap; gap: var(--space-2); padding: var(--space-3); background: var(--glass-bg); border-radius: var(--radius-lg);">
+                                    <p class="empty-state">جاري تحميل الطلاب...</p>
+                                </div>
                             </div>
                             <button type="submit" class="btn btn-glow btn-full">إنشاء المهمة</button>
                         </form>
