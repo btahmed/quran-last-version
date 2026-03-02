@@ -4114,42 +4114,52 @@ const QuranReview = {
             } else {
                 tasksList.innerHTML = tasks.map(task => {
                     const sub = subByTask[task.id];
-                    let statusBadge = '<span class="status-badge status-new">لم يُسلَّم</span>';
+                    // dot coloré (utilise les classes CSS existantes .task-status-*)
+                    let dotClass = 'task-status-pending';
+                    let statusBadge = '<span class="badge badge-primary" style="background:rgba(59,130,246,0.15);color:#3b82f6;">لم يُسلَّم</span>';
                     let actionBtn = `<button class="btn btn-primary btn-sm" onclick="QuranReview.openRecordModal(${task.id}, '${task.title.replace(/'/g, "\\'")}')">🎤 تسجيل</button>`;
 
                     if (sub) {
                         if (sub.status === 'approved') {
-                            statusBadge = '<span class="status-badge status-approved">مقبول ✓</span>';
+                            dotClass = 'task-status-completed';
+                            statusBadge = '<span class="badge" style="background:rgba(16,185,129,0.15);color:#10b981;">مقبول ✓</span>';
                             actionBtn = '';
                         } else if (sub.status === 'rejected') {
-                            statusBadge = '<span class="status-badge status-rejected">مرفوض ✗</span>';
+                            dotClass = 'task-status-pending';
+                            statusBadge = '<span class="badge" style="background:rgba(239,68,68,0.15);color:#ef4444;">مرفوض ✗</span>';
                             actionBtn = `<button class="btn btn-primary btn-sm" onclick="QuranReview.openRecordModal(${task.id}, '${task.title.replace(/'/g, "\\'")}')">🎤 إعادة التسجيل</button>`;
                         } else {
-                            statusBadge = '<span class="status-badge status-pending">بانتظار التصحيح</span>';
+                            dotClass = 'task-status-submitted';
+                            statusBadge = '<span class="badge badge-warning" style="font-size:0.7rem;padding:2px 8px;">بانتظار التصحيح</span>';
                             actionBtn = '';
                         }
                     }
 
                     const typeLabel = task.type_display || (task.task_type === 'memorization' ? 'حفظ' : task.task_type === 'recitation' ? 'تلاوة' : 'أخرى');
                     const dueDate = task.due_date ? new Date(task.due_date).toLocaleDateString('ar-SA') : '';
-
-                    // data-status pour le filtre d'onglet (approved / pending / rejected / new)
                     const cardStatus = sub ? sub.status : 'new';
+
+                    // Structure utilisant les classes CSS existantes du projet
                     return `<div class="task-card" data-status="${cardStatus}">
-                        <div class="task-card-header">
-                            <h3 class="task-card-title">${task.title}</h3>
+                        <span class="task-status ${dotClass}"></span>
+                        <div style="flex:1;min-width:0;">
+                            <div style="font-weight:600;margin-bottom:var(--space-1);">${task.title}</div>
+                            <div style="font-size:0.875rem;color:var(--color-text-secondary);display:flex;flex-wrap:wrap;gap:var(--space-2);align-items:center;">
+                                <span class="badge badge-primary" style="font-size:0.7rem;">${typeLabel}</span>
+                                🏆 ${task.points} نقطة
+                                ${dueDate ? `<span>📅 ${dueDate}</span>` : ''}
+                            </div>
+                            ${task.description ? `<div style="font-size:0.8rem;color:var(--color-text-secondary);margin-top:var(--space-1);">${task.description}</div>` : ''}
+                            ${sub && sub.status === 'rejected' && sub.admin_feedback ? `<div style="font-size:0.8rem;color:#ef4444;margin-top:var(--space-1);">💬 ${sub.admin_feedback}</div>` : ''}
+                        </div>
+                        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:var(--space-2);flex-shrink:0;">
                             ${statusBadge}
+                            ${actionBtn}
                         </div>
-                        ${task.description ? `<p class="task-card-desc">${task.description}</p>` : ''}
-                        <div class="task-card-meta">
-                            <span class="task-type-badge">${typeLabel}</span>
-                            <span class="task-points-badge">🏆 ${task.points} نقطة</span>
-                            ${dueDate ? `<span class="task-due-date">📅 ${dueDate}</span>` : ''}
-                        </div>
-                        ${sub && sub.status === 'rejected' && sub.admin_feedback ? `<div class="task-feedback">💬 ${sub.admin_feedback}</div>` : ''}
-                        <div class="task-card-actions">${actionBtn}</div>
                     </div>`;
                 }).join('');
+                // Appliquer le filtre de l'onglet actif dès le chargement
+                this.switchTaskTab('pending');
             }
 
             // Submissions list
@@ -4158,28 +4168,29 @@ const QuranReview = {
                 subsList.innerHTML = '<p class="empty-state">لا توجد تسليمات بعد</p>';
             } else {
                 subsList.innerHTML = submissions.map(s => {
-                    const statusClass = s.status === 'approved' ? 'status-approved' : s.status === 'rejected' ? 'status-rejected' : 'status-pending';
+                    const statusStyle = s.status === 'approved'
+                        ? 'background:rgba(16,185,129,0.15);color:#10b981;'
+                        : s.status === 'rejected'
+                        ? 'background:rgba(239,68,68,0.15);color:#ef4444;'
+                        : 'background:rgba(245,158,11,0.15);color:#f59e0b;';
                     const statusText = s.status === 'approved' ? 'مقبول ✓' : s.status === 'rejected' ? 'مرفوض ✗' : 'بانتظار التصحيح';
                     const date = new Date(s.submitted_at).toLocaleDateString('ar-SA');
-                    return `<div class="submission-card">
-                        <div class="submission-card-header">
-                            <span>${s.task.title}</span>
-                            <span class="status-badge ${statusClass}">${statusText}</span>
+                    const audioSrc = s.audio_url
+                        ? (s.audio_url.startsWith('http') ? s.audio_url : this.config.apiBaseUrl + (s.audio_url.startsWith('/') ? s.audio_url : '/' + s.audio_url))
+                        : '';
+                    return `<div class="task-card" style="flex-wrap:wrap;">
+                        <span class="task-status ${s.status === 'approved' ? 'task-status-completed' : 'task-status-pending'}"></span>
+                        <div style="flex:1;min-width:0;">
+                            <div style="font-weight:600;">${s.task.title}</div>
+                            <div style="font-size:0.8rem;color:var(--color-text-secondary);">📅 ${date}</div>
+                            ${s.admin_feedback ? `<div style="font-size:0.8rem;color:#ef4444;margin-top:2px;">💬 ${s.admin_feedback}</div>` : ''}
+                            ${audioSrc ? `
+                                <audio controls preload="metadata" style="width:100%;margin-top:6px;"
+                                    onerror="this.outerHTML='<p style=\\'color:#999;font-size:0.85rem;\\'>الملف الصوتي غير متاح</p>'">
+                                    <source src="${audioSrc}" type="audio/webm">
+                                </audio>` : ''}
                         </div>
-                        <div class="submission-card-meta">📅 ${date}</div>
-                        ${s.admin_feedback ? `<div class="task-feedback">💬 ${s.admin_feedback}</div>` : ''}
-                        ${s.audio_url ? `
-                            <div class="audio-player-container">
-                                <audio controls preload="metadata" style="width:100%;margin-top:0.5rem;"
-                                    onerror="this.parentElement.innerHTML='<p style=\\'color:#999;font-size:0.85rem;\\'>الملف الصوتي غير متاح حاليا</p>'">
-                                    <source src="${s.audio_url.startsWith('http') ? s.audio_url : this.config.apiBaseUrl + (s.audio_url.startsWith('/') ? s.audio_url : '/' + s.audio_url)}" type="audio/webm">
-                                    المتصفح لا يدعم تشغيل الصوت
-                                </audio>
-                                <div style="font-size:0.8rem;color:#666;margin-top:0.25rem;">
-                                    📎 <a href="${s.audio_url.startsWith('http') ? s.audio_url : this.config.apiBaseUrl + (s.audio_url.startsWith('/') ? s.audio_url : '/' + s.audio_url)}" target="_blank" style="color:#007bff;">فتح الملف الصوتي</a>
-                                </div>
-                            </div>
-                        ` : ''}
+                        <span class="badge" style="${statusStyle}">${statusText}</span>
                     </div>`;
                 }).join('');
             }
