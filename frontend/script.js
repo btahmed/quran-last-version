@@ -4107,61 +4107,13 @@ const QuranReview = {
                 }).join('');
             }
 
-            // Tasks list
-            const tasksList = document.getElementById('student-tasks-list');
-            if (!tasks.length) {
-                tasksList.innerHTML = '<p class="empty-state">لا توجد مهام حالياً</p>';
-            } else {
-                tasksList.innerHTML = tasks.map(task => {
-                    const sub = subByTask[task.id];
-                    // dot coloré (utilise les classes CSS existantes .task-status-*)
-                    let dotClass = 'task-status-pending';
-                    let statusBadge = '<span class="badge badge-primary" style="background:rgba(59,130,246,0.15);color:#3b82f6;">لم يُسلَّم</span>';
-                    let actionBtn = `<button class="btn btn-primary btn-sm" onclick="QuranReview.openRecordModal(${task.id}, '${task.title.replace(/'/g, "\\'")}')">🎤 تسجيل</button>`;
+            // Stocker les données dans l'état pour le re-rendu par onglet
+            this._studentTasks = tasks;
+            this._studentSubByTask = subByTask;
 
-                    if (sub) {
-                        if (sub.status === 'approved') {
-                            dotClass = 'task-status-completed';
-                            statusBadge = '<span class="badge" style="background:rgba(16,185,129,0.15);color:#10b981;">مقبول ✓</span>';
-                            actionBtn = '';
-                        } else if (sub.status === 'rejected') {
-                            dotClass = 'task-status-pending';
-                            statusBadge = '<span class="badge" style="background:rgba(239,68,68,0.15);color:#ef4444;">مرفوض ✗</span>';
-                            actionBtn = `<button class="btn btn-primary btn-sm" onclick="QuranReview.openRecordModal(${task.id}, '${task.title.replace(/'/g, "\\'")}')">🎤 إعادة التسجيل</button>`;
-                        } else {
-                            dotClass = 'task-status-submitted';
-                            statusBadge = '<span class="badge badge-warning" style="font-size:0.7rem;padding:2px 8px;">بانتظار التصحيح</span>';
-                            actionBtn = '';
-                        }
-                    }
-
-                    const typeLabel = task.type_display || (task.task_type === 'memorization' ? 'حفظ' : task.task_type === 'recitation' ? 'تلاوة' : 'أخرى');
-                    const dueDate = task.due_date ? new Date(task.due_date).toLocaleDateString('ar-SA') : '';
-                    const cardStatus = sub ? sub.status : 'new';
-
-                    // Structure utilisant les classes CSS existantes du projet
-                    return `<div class="task-card" data-status="${cardStatus}">
-                        <span class="task-status ${dotClass}"></span>
-                        <div style="flex:1;min-width:0;">
-                            <div style="font-weight:600;margin-bottom:var(--space-1);">${task.title}</div>
-                            <div style="font-size:0.875rem;color:var(--color-text-secondary);display:flex;flex-wrap:wrap;gap:var(--space-2);align-items:center;">
-                                <span class="badge badge-primary" style="font-size:0.7rem;">${typeLabel}</span>
-                                🏆 ${task.points} نقطة
-                                ${dueDate ? `<span>📅 ${dueDate}</span>` : ''}
-                            </div>
-                            ${task.description ? `<div style="font-size:0.8rem;color:var(--color-text-secondary);margin-top:var(--space-1);">${task.description}</div>` : ''}
-                            ${sub && sub.status === 'rejected' && sub.admin_feedback ? `<div style="font-size:0.8rem;color:#ef4444;margin-top:var(--space-1);">💬 ${sub.admin_feedback}</div>` : ''}
-                        </div>
-                        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:var(--space-2);flex-shrink:0;">
-                            ${statusBadge}
-                            ${actionBtn}
-                        </div>
-                    </div>`;
-                }).join('');
-                // Détecter le bon onglet par défaut selon les statuts réels
-                const hasPending = tasks.some(t => { const s = subByTask[t.id]; return !s || s.status !== 'approved'; });
-                this.switchTaskTab(hasPending ? 'pending' : 'completed');
-            }
+            // Détecter le bon onglet initial selon les statuts réels
+            const hasPending = tasks.some(t => { const s = subByTask[t.id]; return !s || s.status !== 'approved'; });
+            this.switchTaskTab(hasPending ? 'pending' : 'completed');
 
             // Submissions list
             const subsList = document.getElementById('student-submissions-list');
@@ -4216,33 +4168,70 @@ const QuranReview = {
         const tasksList = document.getElementById('student-tasks-list');
         if (!tasksList) return;
 
-        // Supprimer l'ancien message vide s'il existe
-        const oldMsg = tasksList.querySelector('.empty-tab-msg');
-        if (oldMsg) oldMsg.remove();
+        const tasks = this._studentTasks || [];
+        const subByTask = this._studentSubByTask || {};
 
-        // Afficher/masquer avec display:flex (valeur native de .task-card) ou display:none
-        const taskCards = tasksList.querySelectorAll('.task-card');
-        let visibleCount = 0;
+        if (!tasks.length) {
+            tasksList.innerHTML = '<p class="empty-state">لا توجد مهام حالياً</p>';
+            return;
+        }
 
-        taskCards.forEach(card => {
-            const status = card.getAttribute('data-status');
-            const show = tabName === 'completed'
-                ? status === 'approved'
-                : status !== 'approved'; // pending = non-approuvé (new, submitted, rejected)
-
-            // Utilise la classe CSS tab-hidden avec !important pour éviter
-            // tout conflit de spécificité entre style.css et style-pro.css
-            card.classList.toggle('tab-hidden', !show);
-            if (show) visibleCount++;
+        // Filtrer les tâches selon l'onglet sélectionné
+        const filtered = tasks.filter(task => {
+            const sub = subByTask[task.id];
+            const status = sub ? sub.status : 'new';
+            return tabName === 'completed' ? status === 'approved' : status !== 'approved';
         });
 
-        // Message vide si aucune tâche visible
-        if (visibleCount === 0) {
-            const msg = document.createElement('p');
-            msg.className = 'empty-state empty-tab-msg';
-            msg.textContent = tabName === 'completed' ? 'لا توجد مهام مكتملة بعد' : 'لا توجد مهام قيد الانتظار';
-            tasksList.appendChild(msg);
+        if (!filtered.length) {
+            tasksList.innerHTML = `<p class="empty-state">${tabName === 'completed' ? 'لا توجد مهام مكتملة بعد' : 'لا توجد مهام قيد الانتظار'}</p>`;
+            return;
         }
+
+        // Re-rendre uniquement les tâches filtrées
+        tasksList.innerHTML = filtered.map(task => {
+            const sub = subByTask[task.id];
+            let dotClass = 'task-status-pending';
+            let statusBadge = '<span class="badge" style="background:rgba(59,130,246,0.15);color:#3b82f6;">لم يُسلَّم</span>';
+            let actionBtn = `<button class="btn btn-primary btn-sm" onclick="QuranReview.openRecordModal(${task.id}, '${task.title.replace(/'/g, "\\'")}')">🎤 تسجيل</button>`;
+
+            if (sub) {
+                if (sub.status === 'approved') {
+                    dotClass = 'task-status-completed';
+                    statusBadge = '<span class="badge" style="background:rgba(16,185,129,0.15);color:#10b981;">مقبول ✓</span>';
+                    actionBtn = '';
+                } else if (sub.status === 'rejected') {
+                    dotClass = 'task-status-pending';
+                    statusBadge = '<span class="badge" style="background:rgba(239,68,68,0.15);color:#ef4444;">مرفوض ✗</span>';
+                    actionBtn = `<button class="btn btn-primary btn-sm" onclick="QuranReview.openRecordModal(${task.id}, '${task.title.replace(/'/g, "\\'")}')">🎤 إعادة التسجيل</button>`;
+                } else {
+                    dotClass = 'task-status-submitted';
+                    statusBadge = '<span class="badge badge-warning" style="font-size:0.7rem;padding:2px 8px;">بانتظار التصحيح</span>';
+                    actionBtn = '';
+                }
+            }
+
+            const typeLabel = task.type_display || (task.task_type === 'memorization' ? 'حفظ' : task.task_type === 'recitation' ? 'تلاوة' : 'أخرى');
+            const dueDate = task.due_date ? new Date(task.due_date).toLocaleDateString('ar-SA') : '';
+
+            return `<div class="task-card">
+                <span class="task-status ${dotClass}"></span>
+                <div style="flex:1;min-width:0;">
+                    <div style="font-weight:600;margin-bottom:var(--space-1);">${task.title}</div>
+                    <div style="font-size:0.875rem;color:var(--color-text-secondary);display:flex;flex-wrap:wrap;gap:var(--space-2);align-items:center;">
+                        <span class="badge badge-primary" style="font-size:0.7rem;">${typeLabel}</span>
+                        🏆 ${task.points} نقطة
+                        ${dueDate ? `<span>📅 ${dueDate}</span>` : ''}
+                    </div>
+                    ${task.description ? `<div style="font-size:0.8rem;color:var(--color-text-secondary);margin-top:var(--space-1);">${task.description}</div>` : ''}
+                    ${sub && sub.status === 'rejected' && sub.admin_feedback ? `<div style="font-size:0.8rem;color:#ef4444;margin-top:var(--space-1);">💬 ${sub.admin_feedback}</div>` : ''}
+                </div>
+                <div style="display:flex;flex-direction:column;align-items:flex-end;gap:var(--space-2);flex-shrink:0;">
+                    ${statusBadge}
+                    ${actionBtn}
+                </div>
+            </div>`;
+        }).join('');
     },
 
     // ===================================
