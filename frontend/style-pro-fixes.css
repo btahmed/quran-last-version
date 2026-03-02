@@ -181,3 +181,10 @@ a:not(.btn):not(.nav-link):not(.nav-item) {
     font-size: clamp(1.1rem, 3vw, 1.5rem);
     line-height: 2;
 }
+
+/* =============================================
+   FILTRE ONGLETS TÂCHES ÉTUDIANT
+   ============================================= */
+.task-card.tab-hidden {
+    display: none !important;
+}

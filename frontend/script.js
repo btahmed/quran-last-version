@@ -4228,9 +4228,11 @@ const QuranReview = {
             const status = card.getAttribute('data-status');
             const show = tabName === 'completed'
                 ? status === 'approved'
-                : status !== 'approved'; // pending = non-approuvé (new, pending, rejected)
+                : status !== 'approved'; // pending = non-approuvé (new, submitted, rejected)
 
-            card.style.display = show ? 'flex' : 'none';
+            // Utilise la classe CSS tab-hidden avec !important pour éviter
+            // tout conflit de spécificité entre style.css et style-pro.css
+            card.classList.toggle('tab-hidden', !show);
             if (show) visibleCount++;
         });
 
