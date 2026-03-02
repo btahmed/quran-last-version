@@ -4158,8 +4158,9 @@ const QuranReview = {
                         </div>
                     </div>`;
                 }).join('');
-                // Appliquer le filtre de l'onglet actif dès le chargement
-                this.switchTaskTab('pending');
+                // Détecter le bon onglet par défaut selon les statuts réels
+                const hasPending = tasks.some(t => { const s = subByTask[t.id]; return !s || s.status !== 'approved'; });
+                this.switchTaskTab(hasPending ? 'pending' : 'completed');
             }
 
             // Submissions list
@@ -4212,24 +4213,29 @@ const QuranReview = {
         const activeBtn = document.querySelector(`#mytasks-page .tab[onclick*="${tabName}"]`);
         if (activeBtn) activeBtn.classList.add('active');
 
-        // Afficher/masquer les tâches selon leur statut
-        const taskCards = document.querySelectorAll('#student-tasks-list .task-card');
+        const tasksList = document.getElementById('student-tasks-list');
+        if (!tasksList) return;
+
+        // Supprimer l'ancien message vide s'il existe
+        const oldMsg = tasksList.querySelector('.empty-tab-msg');
+        if (oldMsg) oldMsg.remove();
+
+        // Afficher/masquer avec display:flex (valeur native de .task-card) ou display:none
+        const taskCards = tasksList.querySelectorAll('.task-card');
+        let visibleCount = 0;
+
         taskCards.forEach(card => {
             const status = card.getAttribute('data-status');
-            if (tabName === 'completed') {
-                card.style.display = status === 'approved' ? '' : 'none';
-            } else {
-                // "pending" = toutes les tâches non-approuvées
-                card.style.display = status !== 'approved' ? '' : 'none';
-            }
+            const show = tabName === 'completed'
+                ? status === 'approved'
+                : status !== 'approved'; // pending = non-approuvé (new, pending, rejected)
+
+            card.style.display = show ? 'flex' : 'none';
+            if (show) visibleCount++;
         });
 
-        // Message si liste vide
-        const tasksList = document.getElementById('student-tasks-list');
-        const visibleCards = tasksList ? tasksList.querySelectorAll('.task-card:not([style*="display: none"])') : [];
-        const emptyMsg = tasksList ? tasksList.querySelector('.empty-tab-msg') : null;
-        if (emptyMsg) emptyMsg.remove();
-        if (visibleCards.length === 0 && tasksList) {
+        // Message vide si aucune tâche visible
+        if (visibleCount === 0) {
             const msg = document.createElement('p');
             msg.className = 'empty-state empty-tab-msg';
             msg.textContent = tabName === 'completed' ? 'لا توجد مهام مكتملة بعد' : 'لا توجد مهام قيد الانتظار';
