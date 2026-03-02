@@ -4133,7 +4133,9 @@ const QuranReview = {
                     const typeLabel = task.type_display || (task.task_type === 'memorization' ? 'حفظ' : task.task_type === 'recitation' ? 'تلاوة' : 'أخرى');
                     const dueDate = task.due_date ? new Date(task.due_date).toLocaleDateString('ar-SA') : '';
 
-                    return `<div class="task-card">
+                    // data-status pour le filtre d'onglet (approved / pending / rejected / new)
+                    const cardStatus = sub ? sub.status : 'new';
+                    return `<div class="task-card" data-status="${cardStatus}">
                         <div class="task-card-header">
                             <h3 class="task-card-title">${task.title}</h3>
                             ${statusBadge}
@@ -4184,6 +4186,43 @@ const QuranReview = {
         } catch (error) {
             console.error('Failed to load student dashboard:', error);
             this.showNotification('خطأ في تحميل البيانات', 'error');
+        }
+    },
+
+    // ===================================
+    // STUDENT TASK TAB SWITCHER
+    // ===================================
+
+    switchTaskTab(tabName) {
+        // Mettre à jour les boutons onglet
+        document.querySelectorAll('#mytasks-page .tab').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        const activeBtn = document.querySelector(`#mytasks-page .tab[onclick*="${tabName}"]`);
+        if (activeBtn) activeBtn.classList.add('active');
+
+        // Afficher/masquer les tâches selon leur statut
+        const taskCards = document.querySelectorAll('#student-tasks-list .task-card');
+        taskCards.forEach(card => {
+            const status = card.getAttribute('data-status');
+            if (tabName === 'completed') {
+                card.style.display = status === 'approved' ? '' : 'none';
+            } else {
+                // "pending" = toutes les tâches non-approuvées
+                card.style.display = status !== 'approved' ? '' : 'none';
+            }
+        });
+
+        // Message si liste vide
+        const tasksList = document.getElementById('student-tasks-list');
+        const visibleCards = tasksList ? tasksList.querySelectorAll('.task-card:not([style*="display: none"])') : [];
+        const emptyMsg = tasksList ? tasksList.querySelector('.empty-tab-msg') : null;
+        if (emptyMsg) emptyMsg.remove();
+        if (visibleCards.length === 0 && tasksList) {
+            const msg = document.createElement('p');
+            msg.className = 'empty-state empty-tab-msg';
+            msg.textContent = tabName === 'completed' ? 'لا توجد مهام مكتملة بعد' : 'لا توجد مهام قيد الانتظار';
+            tasksList.appendChild(msg);
         }
     },
 
