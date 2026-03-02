@@ -4298,15 +4298,16 @@ const QuranReview = {
             // Load student checkboxes for task creation
             this.loadStudentCheckboxes(students);
 
-            // Stats
-            document.getElementById('teacher-total-students').textContent = students.length;
-            document.getElementById('teacher-pending').textContent = pending.length;
-            document.getElementById('teacher-tasks').textContent = tasks.length;
-            const approvedEl = document.getElementById('teacher-approved');
-            if (approvedEl) approvedEl.textContent = tasks.reduce((sum, t) => sum, 0);
+            // Stats — IDs corrects selon le HTML
+            const studentsCountEl = document.getElementById('teacher-students-count');
+            if (studentsCountEl) studentsCountEl.textContent = students.length;
+            const pendingCountEl = document.getElementById('teacher-pending-count');
+            if (pendingCountEl) pendingCountEl.textContent = pending.length;
+            const tasksCountEl = document.getElementById('teacher-tasks-count');
+            if (tasksCountEl) tasksCountEl.textContent = tasks.length;
 
             // Pending submissions
-            const pendingList = document.getElementById('teacher-pending-list');
+            const pendingList = document.getElementById('teacher-tasks-list');
             if (!pending.length) {
                 pendingList.innerHTML = '<p class="empty-state">لا توجد تسليمات بانتظار التصحيح 🎉</p>';
             } else {
