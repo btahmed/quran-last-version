@@ -4168,6 +4168,12 @@ const QuranReview = {
         const tasksList = document.getElementById('student-tasks-list');
         if (!tasksList) return;
 
+        // Tuer les tweens GSAP bloqués et forcer la visibilité
+        if (window.gsap) {
+            gsap.killTweensOf(tasksList);
+            gsap.set(tasksList, { clearProps: 'opacity,transform,translate,rotate,scale' });
+        }
+
         const tasks = this._studentTasks || [];
         const subByTask = this._studentSubByTask || {};
 

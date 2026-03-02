@@ -1140,12 +1140,14 @@
         // Initialize Animations
         function initAnimations() {
             // Stagger animations for cards
-            gsap.from('.card-glass-pro', {
+            // N'animer que les cartes de la page active (évite de bloquer les pages cachées)
+            gsap.from('.page.active .card-glass-pro', {
                 opacity: 0,
                 y: 50,
                 duration: 0.8,
                 stagger: 0.1,
-                ease: 'power3.out'
+                ease: 'power3.out',
+                clearProps: 'opacity,transform'
             });
             
             // Stats counter animation
