@@ -4926,7 +4926,9 @@ const QuranReview = {
         }
 
         document.getElementById('recording-submit-btn').classList.add('hidden');
-        document.getElementById('audio-record-modal').classList.remove('hidden');
+        const modal = document.getElementById('audio-record-modal');
+        modal.classList.remove('hidden');
+        modal.classList.add('active');
     },
 
     async toggleRecording() {
@@ -4986,7 +4988,9 @@ const QuranReview = {
         document.getElementById('recording-btn').classList.remove('recording-active');
 
         if (cancel) {
-            document.getElementById('audio-record-modal').classList.add('hidden');
+            const modal = document.getElementById('audio-record-modal');
+            modal.classList.remove('active');
+            modal.classList.add('hidden');
             this._recordBlob = null;
         }
     },
@@ -5033,7 +5037,9 @@ const QuranReview = {
             Logger.log('RECORDING', 'Submission successful', result);
 
             this.showNotification('تم إرسال التسجيل بنجاح!', 'success');
-            document.getElementById('audio-record-modal').classList.add('hidden');
+            const modal = document.getElementById('audio-record-modal');
+            modal.classList.remove('active');
+            modal.classList.add('hidden');
             this._recordBlob = null;
             this.loadStudentDashboard();
         } catch (error) {

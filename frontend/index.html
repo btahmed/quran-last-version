@@ -958,23 +958,71 @@
                         </form>
                     </div>
                     
-                    <div class="card-glass-pro">
+                    <!-- تسليمات الطلاب المعلقة -->
+                    <div class="card-glass-pro" style="margin-bottom: var(--space-6);">
                         <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">📥 تسليمات الطلاب</h3>
                         <div id="teacher-tasks-list">
-                            <div class="task-card">
-                                <span class="task-status task-status-submitted"></span>
-                                <div style="flex: 1;">
-                                    <div style="font-weight: 600;">أحمد - سورة البقرة</div>
-                                    <div style="font-size: 0.875rem; color: var(--color-text-secondary);">تم التسليم: اليوم</div>
-                                </div>
-                                <button class="btn btn-sm btn-glow">تصحيح</button>
-                            </div>
+                            <p class="empty-state">لا توجد تسليمات بانتظار التصحيح 🎉</p>
+                        </div>
+                    </div>
+
+                    <!-- قائمة الطلاب -->
+                    <div class="card-glass-pro" style="margin-bottom: var(--space-6);">
+                        <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">🎓 قائمة الطلاب</h3>
+                        <div id="teacher-students-list">
+                            <p class="empty-state">لا يوجد طلاب بعد</p>
+                        </div>
+                    </div>
+
+                    <!-- لوحة تفاصيل الطالب -->
+                    <div id="student-detail-panel" class="card-glass-pro hidden" style="margin-bottom: var(--space-6);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4);">
+                            <h3 id="student-detail-name" style="font-size: 1.125rem; font-weight: 600;">📊 تقدم الطالب</h3>
+                            <button class="btn btn-outline-glow btn-sm" onclick="document.getElementById('student-detail-panel').classList.add('hidden')">✕ إغلاق</button>
+                        </div>
+                        <div id="student-detail-content">
+                            <p class="empty-state">جاري التحميل...</p>
                         </div>
                     </div>
                 </div>
             </section>
         </div>
     </main>
+
+    <!-- Modal Enregistrement Audio (Étudiant) -->
+    <div class="modal-overlay-pro hidden" id="audio-record-modal">
+        <div class="modal-content-pro" style="max-width: 460px;">
+            <div style="text-align: center; margin-bottom: var(--space-6);">
+                <div style="font-size: 3rem; margin-bottom: var(--space-2);">🎤</div>
+                <h2 style="font-size: 1.5rem; font-weight: 700;">تسجيل المهمة</h2>
+                <p id="recording-task-name" style="color: var(--color-text-secondary); margin-top: var(--space-2); font-size: 0.95rem;"></p>
+            </div>
+
+            <!-- Timer et statut -->
+            <div style="text-align: center; margin-bottom: var(--space-6);">
+                <div id="recording-timer" style="font-size: 2.5rem; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--color-primary);">00:00</div>
+                <p id="recording-status" style="color: var(--color-text-secondary); margin-top: var(--space-2);">اضغط للتسجيل</p>
+            </div>
+
+            <!-- Bouton enregistrement -->
+            <div style="text-align: center; margin-bottom: var(--space-6);">
+                <button id="recording-btn"
+                    onclick="QuranReview.toggleRecording()"
+                    style="width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--color-primary); background: var(--glass-bg); font-size: 2rem; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center;">
+                    🎙️
+                </button>
+            </div>
+
+            <!-- Prévisualisation audio -->
+            <audio id="recording-preview" controls class="hidden" style="width: 100%; margin-bottom: var(--space-4);"></audio>
+
+            <!-- Actions -->
+            <div style="display: flex; gap: var(--space-3);">
+                <button class="btn btn-outline-glow" style="flex: 1;" onclick="QuranReview.stopRecording(true)">إلغاء</button>
+                <button id="recording-submit-btn" class="btn btn-glow hidden" style="flex: 1;" onclick="QuranReview.submitRecording()">✅ إرسال التسجيل</button>
+            </div>
+        </div>
+    </div>
 
     <!-- User Edit Modal (Admin) -->
     <div class="modal-overlay-pro hidden" id="user-edit-modal">
