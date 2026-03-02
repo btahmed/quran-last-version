@@ -809,7 +809,7 @@ const QuranReview = {
         }
         
         try {
-            const response = await fetch(`${this.config.apiBaseUrl}/api/token/`, {
+            const response = await fetch(`${this.config.apiBaseUrl}/api/auth/token/`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password }),
@@ -918,7 +918,7 @@ const QuranReview = {
 
         // Mode normal avec API
         try {
-            const response = await fetch(`${this.config.apiBaseUrl}/api/register/`, {
+            const response = await fetch(`${this.config.apiBaseUrl}/api/auth/register/`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -1052,7 +1052,7 @@ const QuranReview = {
         if (!token) return;
 
         try {
-            const response = await fetch(`${this.config.apiBaseUrl}/api/me/`, {
+            const response = await fetch(`${this.config.apiBaseUrl}/api/auth/me/`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
 
@@ -1078,7 +1078,7 @@ const QuranReview = {
         if (!refresh) return false;
 
         try {
-            const response = await fetch(`${this.config.apiBaseUrl}/api/token/refresh/`, {
+            const response = await fetch(`${this.config.apiBaseUrl}/api/auth/token/refresh/`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ refresh }),
