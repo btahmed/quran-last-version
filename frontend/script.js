@@ -1266,16 +1266,15 @@ const QuranReview = {
     navigateTo(pageName) {
         Logger.nav(this.state.currentPage, pageName);
         
-        // Update navigation
-        document.querySelectorAll('.nav-link').forEach(link => {
+        // Update navigation (supporte .nav-link et .nav-link-pro)
+        document.querySelectorAll('.nav-link, .nav-link-pro').forEach(link => {
             link.classList.remove('active');
         });
         const activeLink = document.querySelector(`[data-page="${pageName}"]`);
         if (activeLink) {
             activeLink.classList.add('active');
-        } else {
-            Logger.warn('NAV', `Navigation link not found: ${pageName}`);
         }
+        // Pas de warning pour les pages sans lien de nav (mytasks, teacher, admin — pages role-based)
         
         // Update pages
         document.querySelectorAll('.page').forEach(page => {
