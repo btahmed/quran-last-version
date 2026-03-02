@@ -813,7 +813,8 @@ const QuranReview = {
         }
         
         // Mode normal avec API
-        if (!this.config.apiBaseUrl) {
+        // Note: apiBaseUrl peut être '' (chaîne vide) pour les URLs relatives nginx — vérifier null/undefined uniquement
+        if (this.config.apiBaseUrl === null || this.config.apiBaseUrl === undefined) {
             throw new Error('لم يتم تكوين خادم API');
         }
         
@@ -1114,7 +1115,7 @@ const QuranReview = {
     },
 
     async loadTasksFromApi() {
-        if (!this.config.apiBaseUrl) return;
+        if (this.config.apiBaseUrl === null || this.config.apiBaseUrl === undefined) return;
 
         Logger.log('API', 'Loading tasks from API...');
 
