@@ -4130,7 +4130,7 @@ const QuranReview = {
                         }
                     }
 
-                    const typeLabel = task.task_type === 'memorization' ? 'حفظ' : task.task_type === 'recitation' ? 'تلاوة' : 'أخرى';
+                    const typeLabel = task.type_display || (task.task_type === 'memorization' ? 'حفظ' : task.task_type === 'recitation' ? 'تلاوة' : 'أخرى');
                     const dueDate = task.due_date ? new Date(task.due_date).toLocaleDateString('ar-SA') : '';
 
                     return `<div class="task-card">
@@ -4324,7 +4324,7 @@ const QuranReview = {
                 taskListEl.innerHTML = headerHtml + '<p class="empty-state">لا توجد مهام بعد</p>';
             } else {
                 taskListEl.innerHTML = headerHtml + tasks.map(task => {
-                    const typeLabel = task.task_type === 'memorization' ? 'حفظ' : task.task_type === 'recitation' ? 'تلاوة' : 'أخرى';
+                    const typeLabel = task.type_display || (task.task_type === 'memorization' ? 'حفظ' : task.task_type === 'recitation' ? 'تلاوة' : 'أخرى');
                     const dueDate = task.due_date ? new Date(task.due_date).toLocaleDateString('ar-SA') : '';
                     const date = new Date(task.created_at).toLocaleDateString('ar-SA');
                     return `<div class="task-card">
@@ -4379,7 +4379,7 @@ const QuranReview = {
             } else {
                 html += '<div class="student-tasks-progress">';
                 data.tasks.forEach(task => {
-                    const typeLabel = task.task_type === 'memorization' ? 'حفظ' : task.task_type === 'recitation' ? 'تلاوة' : 'أخرى';
+                    const typeLabel = task.type_display || (task.task_type === 'memorization' ? 'حفظ' : task.task_type === 'recitation' ? 'تلاوة' : 'أخرى');
                     let statusBadge = '';
                     if (task.submission_status === 'approved') {
                         statusBadge = '<span class="status-badge status-approved">مقبول ✓</span>';
