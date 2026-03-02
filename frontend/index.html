@@ -827,8 +827,15 @@
                 <div class="container-pro">
                     <h2 class="section-title" style="text-align: center; margin-bottom: var(--space-8);">📝 مهامي</h2>
                     
-                    <!-- Student Task Stats -->
-                    <div class="grid-pro grid-cols-3" style="margin-bottom: var(--space-6);">
+                    <!-- رسالة الترحيب -->
+                    <p id="student-welcome" style="text-align:center;color:var(--color-text-secondary);margin-bottom:var(--space-4);"></p>
+
+                    <!-- Student Task Stats — 4 cartes dont les points -->
+                    <div class="grid-pro grid-cols-4" style="margin-bottom: var(--space-6);">
+                        <div class="card-stat-premium" style="text-align: center;">
+                            <div class="stat-value" id="student-points">0</div>
+                            <p style="color: var(--color-text-secondary);">🏆 نقاطي</p>
+                        </div>
                         <div class="card-stat-premium" style="text-align: center;">
                             <div class="stat-value" id="student-tasks-done">0</div>
                             <p style="color: var(--color-text-secondary);">مكتملة</p>
@@ -842,20 +849,30 @@
                             <p style="color: var(--color-text-secondary);">مرفوضة</p>
                         </div>
                     </div>
-                    
-                    <div class="tabs">
+
+                    <!-- قائمة المهام -->
+                    <div class="tabs" style="margin-bottom: var(--space-4);">
                         <button class="tab active" onclick="QuranReview.switchTaskTab('pending')">قيد الانتظار</button>
                         <button class="tab" onclick="QuranReview.switchTaskTab('completed')">مكتملة</button>
                     </div>
-                    
-                    <div id="student-tasks-list" class="card-glass-pro">
-                        <div class="task-card">
-                            <span class="task-status task-status-pending"></span>
-                            <div style="flex: 1;">
-                                <div style="font-weight: 600;">حفظ سورة الفاتحة</div>
-                                <div style="font-size: 0.875rem; color: var(--color-text-secondary);">معلم: أحمد • تسليم: غداً</div>
-                            </div>
-                            <span class="badge badge-primary">10 نقاط</span>
+
+                    <div id="student-tasks-list" class="card-glass-pro" style="margin-bottom: var(--space-6);">
+                        <p class="empty-state">جاري التحميل...</p>
+                    </div>
+
+                    <!-- التسليمات -->
+                    <div class="card-glass-pro" style="margin-bottom: var(--space-6);">
+                        <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: var(--space-3);">📤 تسليماتي</h3>
+                        <div id="student-submissions-list">
+                            <p class="empty-state">لا توجد تسليمات بعد</p>
+                        </div>
+                    </div>
+
+                    <!-- سجل النقاط -->
+                    <div class="card-glass-pro">
+                        <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: var(--space-3);">📊 سجل النقاط</h3>
+                        <div id="student-points-log">
+                            <p class="empty-state">لا توجد نقاط بعد</p>
                         </div>
                     </div>
                 </div>
