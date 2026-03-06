@@ -1,0 +1,473 @@
+<!-- PAGES PRO - À intégrer dans index.html -->
+<!-- Ces pages remplacent les placeholders "قريباً" -->
+
+<!-- MEMORIZATION PAGE COMPLETE -->
+<div id="memorization-page" class="page">
+    <section class="section-pro">
+        <div class="container-pro">
+            <!-- Header -->
+            <div class="flex-pro" style="justify-content: space-between; align-items: center; margin-bottom: var(--space-8); flex-wrap: wrap; gap: var(--space-4);">
+                <h2 class="section-title" style="margin: 0;">📖 قائمة الحفظ</h2>
+                <button class="btn btn-glow" onclick="QuranReview.showAddMemorization()">
+                    <span>➕</span>
+                    إضافة حفظ جديد
+                </button>
+            </div>
+            
+            <!-- Add New Form -->
+            <div class="card-glass-pro" id="add-memorization-form-container" style="margin-bottom: var(--space-6); display: none;">
+                <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: var(--space-6);">➕ إضافة حفظ جديد</h3>
+                <form id="add-memorization-form" onsubmit="QuranReview.handleAddMemorization(event)">
+                    <div class="form-floating" style="margin-bottom: var(--space-4);">
+                        <select id="surah-select" required>
+                            <option value="">-- اختر السورة --</option>
+                            <option value="1">1. الفاتحة (7 آيات)</option>
+                            <option value="2">2. البقرة (286 آية)</option>
+                            <option value="3">3. آل عمران (200 آية)</option>
+                            <option value="4">4. النساء (176 آية)</option>
+                            <option value="5">5. المائدة (120 آية)</option>
+                            <option value="6">6. الأنعام (165 آية)</option>
+                            <option value="7">7. الأعراف (206 آيات)</option>
+                            <option value="8">8. الأنفال (75 آية)</option>
+                            <option value="9">9. التوبة (129 آية)</option>
+                            <option value="10">10. يونس (109 آيات)</option>
+                            <option value="11">11. هود (123 آية)</option>
+                            <option value="12">12. يوسف (111 آية)</option>
+                            <option value="13">13. الرعد (43 آية)</option>
+                            <option value="14">14. إبراهيم (52 آية)</option>
+                            <option value="15">15. الحجر (99 آية)</option>
+                            <option value="16">16. النحل (128 آية)</option>
+                            <option value="17">17. الإسراء (111 آية)</option>
+                            <option value="18">18. الكهف (110 آيات)</option>
+                            <option value="19">19. مريم (98 آية)</option>
+                            <option value="20">20. طه (135 آية)</option>
+                        </select>
+                        <label for="surah-select">السورة</label>
+                    </div>
+                    
+                    <div class="grid-pro grid-cols-2" style="margin-bottom: var(--space-4);">
+                        <div class="form-floating">
+                            <input type="number" id="from-ayah" min="1" placeholder=" " required>
+                            <label for="from-ayah">من الآية</label>
+                        </div>
+                        <div class="form-floating">
+                            <input type="number" id="to-ayah" min="1" placeholder=" " required>
+                            <label for="to-ayah">إلى الآية</label>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-pro" style="justify-content: flex-end; gap: var(--space-3);">
+                        <button type="button" class="btn btn-outline-glow" onclick="QuranReview.hideAddMemorization()">إلغاء</button>
+                        <button type="submit" class="btn btn-glow">إضافة</button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Memorization Table -->
+            <div class="card-glass-pro">
+                <div class="flex-pro" style="justify-content: space-between; align-items: center; margin-bottom: var(--space-6);">
+                    <h3 style="font-size: 1.125rem; font-weight: 600;">📋 جدول الحفظ</h3>
+                    <span class="badge badge-glass" id="memorization-count">0 سور</span>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="memorization-table" id="memorization-table">
+                        <thead>
+                            <tr>
+                                <th>السورة</th>
+                                <th>الآيات</th>
+                                <th>الحالة</th>
+                                <th>آخر مراجعة</th>
+                                <th>التالي</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="memorization-table-body">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div id="memorization-empty" style="text-align: center; padding: var(--space-10);">
+                    <div style="font-size: 4rem; margin-bottom: var(--space-4);">📚</div>
+                    <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: var(--space-2);">لا توجد سور محفوظة</h3>
+                    <p style="color: var(--color-text-secondary); margin-bottom: var(--space-4);">ابدأ رحلة الحفظ بإضافة سورة جديدة</p>
+                    <button class="btn btn-glow" onclick="QuranReview.showAddMemorization()">
+                        <span>➕</span>
+                        إضافة سورة
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Quick Audio Player -->
+            <div class="card-glass-pro" style="margin-top: var(--space-6);">
+                <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">🎵 استماع سريع</h3>
+                <div class="flex-pro" style="gap: var(--space-4); flex-wrap: wrap;">
+                    <div class="form-floating" style="flex: 1; min-width: 200px;">
+                        <select id="quick-reciter" class="select-modern">
+                            <option value="alafasy">مشاري بن راشد العفاسي</option>
+                        </select>
+                        <label>القارئ</label>
+                    </div>
+                    <button class="btn btn-outline-glow" onclick="QuranReview.playFullSurah()">
+                        <span>▶️</span>
+                        تشغيل السورة
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- PROGRESS PAGE COMPLETE -->
+<div id="progress-page" class="page">
+    <section class="section-pro">
+        <div class="container-pro">
+            <h2 class="section-title" style="text-align: center; margin-bottom: var(--space-8);">📈 تقدمك في الحفظ</h2>
+            
+            <!-- Progress Stats -->
+            <div class="grid-pro grid-cols-4" style="margin-bottom: var(--space-8);">
+                <div class="card-stat-premium" style="text-align: center;">
+                    <div class="stat-value" id="progress-total-surahs">0</div>
+                    <p style="color: var(--color-text-secondary); margin-top: var(--space-2);">سورة محفوظة</p>
+                </div>
+                <div class="card-stat-premium" style="text-align: center;">
+                    <div class="stat-value" id="progress-total-ayahs">0</div>
+                    <p style="color: var(--color-text-secondary); margin-top: var(--space-2);">آية محفوظة</p>
+                </div>
+                <div class="card-stat-premium" style="text-align: center;">
+                    <div class="stat-value" id="progress-completion">0%</div>
+                    <p style="color: var(--color-text-secondary); margin-top: var(--space-2);">نسبة الإنجاز</p>
+                </div>
+                <div class="card-stat-premium" style="text-align: center;">
+                    <div class="stat-value" id="progress-streak">0</div>
+                    <p style="color: var(--color-text-secondary); margin-top: var(--space-2);">يوم متتالي</p>
+                </div>
+            </div>
+            
+            <!-- Status Distribution -->
+            <div class="grid-pro grid-cols-2" style="margin-bottom: var(--space-8);">
+                <div class="card-glass-pro">
+                    <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">📊 توزيع الحالات</h3>
+                    <div style="display: flex; flex-direction: column; gap: var(--space-3);">
+                        <div class="flex-pro" style="justify-content: space-between;">
+                            <span class="flex-pro" style="gap: var(--space-2);">
+                                <span class="status-badge status-strong"></span>
+                                <span>متقن</span>
+                            </span>
+                            <span id="status-strong-count" style="font-weight: 600;">0</span>
+                        </div>
+                        <div class="flex-pro" style="justify-content: space-between;">
+                            <span class="flex-pro" style="gap: var(--space-2);">
+                                <span class="status-badge status-weak"></span>
+                                <span>ضعيف</span>
+                            </span>
+                            <span id="status-weak-count" style="font-weight: 600;">0</span>
+                        </div>
+                        <div class="flex-pro" style="justify-content: space-between;">
+                            <span class="flex-pro" style="gap: var(--space-2);">
+                                <span class="status-badge status-learning"></span>
+                                <span>في التعلم</span>
+                            </span>
+                            <span id="status-learning-count" style="font-weight: 600;">0</span>
+                        </div>
+                        <div class="flex-pro" style="justify-content: space-between;">
+                            <span class="flex-pro" style="gap: var(--space-2);">
+                                <span class="status-badge status-new"></span>
+                                <span>جديد</span>
+                            </span>
+                            <span id="status-new-count" style="font-weight: 600;">0</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-glass-pro">
+                    <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">📅 نشاط هذا الأسبوع</h3>
+                    <div class="grid-pro grid-cols-7" style="text-align: center; gap: var(--space-2);">
+                        <div class="card-glass-pro" style="padding: var(--space-3);">
+                            <div style="font-size: 0.75rem; color: var(--color-text-secondary);">سبت</div>
+                            <div style="font-weight: 600;" id="activity-sat">0</div>
+                        </div>
+                        <div class="card-glass-pro" style="padding: var(--space-3);">
+                            <div style="font-size: 0.75rem; color: var(--color-text-secondary);">أحد</div>
+                            <div style="font-weight: 600;" id="activity-sun">0</div>
+                        </div>
+                        <div class="card-glass-pro" style="padding: var(--space-3);">
+                            <div style="font-size: 0.75rem; color: var(--color-text-secondary);">اثن</div>
+                            <div style="font-weight: 600;" id="activity-mon">0</div>
+                        </div>
+                        <div class="card-glass-pro" style="padding: var(--space-3);">
+                            <div style="font-size: 0.75rem; color: var(--color-text-secondary);">ثلا</div>
+                            <div style="font-weight: 600;" id="activity-tue">0</div>
+                        </div>
+                        <div class="card-glass-pro" style="padding: var(--space-3);">
+                            <div style="font-size: 0.75rem; color: var(--color-text-secondary);">أرب</div>
+                            <div style="font-weight: 600;" id="activity-wed">0</div>
+                        </div>
+                        <div class="card-glass-pro" style="padding: var(--space-3);">
+                            <div style="font-size: 0.75rem; color: var(--color-text-secondary);">خمي</div>
+                            <div style="font-weight: 600;" id="activity-thu">0</div>
+                        </div>
+                        <div class="card-glass-pro" style="padding: var(--space-3);">
+                            <div style="font-size: 0.75rem; color: var(--color-text-secondary);">جمعة</div>
+                            <div style="font-weight: 600;" id="activity-fri">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Progress Chart Placeholder -->
+            <div class="card-glass-pro">
+                <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">📈 تطور الحفظ</h3>
+                <div style="height: 300px; background: rgba(45, 80, 22, 0.05); border-radius: var(--radius-xl); display: flex; align-items: center; justify-content: center; color: var(--color-text-secondary);">
+                    <div style="text-align: center;">
+                        <div style="font-size: 3rem; margin-bottom: var(--space-4);">📊</div>
+                        <p>الرسم البياني قريباً</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- COMPETITION PAGE COMPLETE -->
+<div id="competition-page" class="page">
+    <section class="section-pro">
+        <div class="container-pro">
+            <h2 class="section-title" style="text-align: center; margin-bottom: var(--space-8);">🏆 التحديات</h2>
+            
+            <!-- User Rank -->
+            <div class="card-gradient-border" style="margin-bottom: var(--space-8);">
+                <div class="card-gradient-border-inner" style="text-align: center; padding: var(--space-8);">
+                    <div style="font-size: 5rem; margin-bottom: var(--space-4);">🥇</div>
+                    <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: var(--space-2);">رتبتك: <span id="user-rank">ذهبي</span></h3>
+                    <p style="color: var(--color-text-secondary); margin-bottom: var(--space-4);">لديك <span id="user-points" style="font-weight: 600; color: var(--color-primary);">1,250</span> نقطة</p>
+                    <div class="progress-glass" style="max-width: 400px; margin: 0 auto;">
+                        <div class="fill" style="width: 65%;"></div>
+                    </div>
+                    <p style="font-size: 0.875rem; color: var(--color-text-secondary); margin-top: var(--space-2);">750 نقطة للوصول إلى البلاتينيوم</p>
+                </div>
+            </div>
+            
+            <!-- Game Modes -->
+            <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: var(--space-6);">🎮 اختر تحدياً</h3>
+            <div class="grid-pro grid-cols-3" style="margin-bottom: var(--space-8);">
+                <div class="card-glass-pro hover-lift" style="text-align: center;">
+                    <div style="font-size: 3rem; margin-bottom: var(--space-4);">⚡</div>
+                    <h4 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-2);">السباق</h4>
+                    <p style="color: var(--color-text-secondary); font-size: 0.875rem; margin-bottom: var(--space-4);">5 آيات في 5 دقائق</p>
+                    <button class="btn btn-glow" onclick="QuranReview.startGame('speed')">ابدأ</button>
+                </div>
+                <div class="card-glass-pro hover-lift" style="text-align: center;">
+                    <div style="font-size: 3rem; margin-bottom: var(--space-4);">🔍</div>
+                    <h4 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-2);">صيد الآية</h4>
+                    <p style="color: var(--color-text-secondary); font-size: 0.875rem; margin-bottom: var(--space-4);">حدد السورة من الآية</p>
+                    <button class="btn btn-glow" onclick="QuranReview.startGame('hunt')">ابدأ</button>
+                </div>
+                <div class="card-glass-pro hover-lift" style="text-align: center;">
+                    <div style="font-size: 3rem; margin-bottom: var(--space-4);">🎯</div>
+                    <h4 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-2);">سيد الدقة</h4>
+                    <p style="color: var(--color-text-secondary); font-size: 0.875rem; margin-bottom: var(--space-4);">اكتب الآية بشكل صحيح</p>
+                    <button class="btn btn-glow" onclick="QuranReview.startGame('precision')">ابدأ</button>
+                </div>
+            </div>
+            
+            <!-- Leaderboard -->
+            <div class="card-glass-pro">
+                <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">🏅 لوحة المتصدرين</h3>
+                <div id="leaderboard-list">
+                    <div class="memorization-item" style="background: rgba(212, 165, 116, 0.1); border-color: var(--color-gold);">
+                        <span style="font-size: 1.5rem; margin-left: var(--space-3);">🥇</span>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 600;">أحمد</div>
+                            <div style="font-size: 0.875rem; color: var(--color-text-secondary);">2,400 نقطة</div>
+                        </div>
+                        <span class="badge badge-gold">💎 ماسي</span>
+                    </div>
+                    <div class="memorization-item">
+                        <span style="font-size: 1.5rem; margin-left: var(--space-3);">🥈</span>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 600;">فاطمة</div>
+                            <div style="font-size: 0.875rem; color: var(--color-text-secondary);">1,800 نقطة</div>
+                        </div>
+                        <span class="badge badge-primary">🏆 بلاتينيوم</span>
+                    </div>
+                    <div class="memorization-item">
+                        <span style="font-size: 1.5rem; margin-left: var(--space-3);">🥉</span>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 600;">محمد</div>
+                            <div style="font-size: 0.875rem; color: var(--color-text-secondary);">1,250 نقطة</div>
+                        </div>
+                        <span class="badge badge-gold">🥇 ذهبي</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- HIFZ PAGE COMPLETE -->
+<div id="hifz-page" class="page">
+    <section class="section-pro">
+        <div class="container-pro" style="max-width: 900px;">
+            <h2 class="section-title" style="text-align: center; margin-bottom: var(--space-8);">🎭 وضع الحفظ</h2>
+            
+            <!-- Hifz Selection -->
+            <div class="card-glass-pro" style="margin-bottom: var(--space-6);">
+                <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">اختيار التمرين</h3>
+                
+                <div class="form-floating" style="margin-bottom: var(--space-4);">
+                    <select id="hifz-surah-select" onchange="QuranReview.loadHifzRange()">
+                        <option value="">اختر السورة</option>
+                        <option value="1">سورة الفاتحة</option>
+                        <option value="2">سورة البقرة</option>
+                        <option value="3">سورة آل عمران</option>
+                    </select>
+                    <label for="hifz-surah-select">السورة</label>
+                </div>
+                
+                <div class="grid-pro grid-cols-2" style="margin-bottom: var(--space-4);">
+                    <div class="form-floating">
+                        <input type="number" id="hifz-from-ayah" min="1" value="1" placeholder=" ">
+                        <label for="hifz-from-ayah">من الآية</label>
+                    </div>
+                    <div class="form-floating">
+                        <input type="number" id="hifz-to-ayah" min="1" value="7" placeholder=" ">
+                        <label for="hifz-to-ayah">إلى الآية</label>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: var(--space-6);">
+                    <label style="display: block; margin-bottom: var(--space-3); font-weight: 500;">مستوى الصعوبة</label>
+                    <div class="flex-pro" style="gap: var(--space-2); flex-wrap: wrap;">
+                        <button class="btn btn-sm" onclick="QuranReview.setHifzLevel(1)">⭐ سهل</button>
+                        <button class="btn btn-sm" onclick="QuranReview.setHifzLevel(2)">⭐⭐ متوسط</button>
+                        <button class="btn btn-sm btn-glow" onclick="QuranReview.setHifzLevel(3)">⭐⭐⭐ صعب</button>
+                        <button class="btn btn-sm" onclick="QuranReview.setHifzLevel(4)">⭐⭐⭐⭐ خبير</button>
+                        <button class="btn btn-sm" onclick="QuranReview.setHifzLevel(5)">⭐⭐⭐⭐⭐ سيد</button>
+                    </div>
+                </div>
+                
+                <button class="btn btn-glow btn-full" onclick="QuranReview.startHifz()">
+                    <span>🎮</span>
+                    ابدأ التمرين
+                </button>
+            </div>
+            
+            <!-- Hifz Game Display -->
+            <div class="card-glass-pro" id="hifz-game-display" style="display: none;">
+                <div class="flex-pro" style="justify-content: space-between; margin-bottom: var(--space-4);">
+                    <div>
+                        <span class="badge badge-primary" id="hifz-score">النقاط: 0</span>
+                        <span class="badge badge-glass" id="hifz-hints" style="margin-right: var(--space-2);">تلميحات: 3</span>
+                    </div>
+                    <span class="badge badge-gold" id="hifz-level">المستوى: ⭐⭐⭐</span>
+                </div>
+                
+                <div class="arabic-large" id="hifz-text" style="text-align: center; line-height: 2.5; margin: var(--space-6) 0; font-size: 1.75rem;">
+                    <!-- Hifz text populated by JS -->
+                    بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
+                </div>
+                
+                <div class="flex-pro" style="justify-content: center; gap: var(--space-3);">
+                    <button class="btn btn-outline-glow" onclick="QuranReview.useHint()">
+                        <span>💡</span>
+                        تلميح (-5 نقاط)
+                    </button>
+                    <button class="btn btn-glow" onclick="QuranReview.checkHifz()">
+                        <span>✓</span>
+                        تحقق
+                    </button>
+                    <button class="btn btn-outline-glow" onclick="QuranReview.nextHifz()">
+                        <span>⏭️</span>
+                        التالي
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- SETTINGS PAGE COMPLETE -->
+<div id="settings-page" class="page">
+    <section class="section-pro">
+        <div class="container-pro" style="max-width: 600px;">
+            <h2 class="section-title" style="text-align: center; margin-bottom: var(--space-8);">⚙️ الإعدادات</h2>
+            
+            <!-- Profile Settings -->
+            <div class="card-glass-pro" style="margin-bottom: var(--space-6);">
+                <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">👤 الملف الشخصي</h3>
+                <form id="settings-form" onsubmit="QuranReview.saveSettings(event)">
+                    <div class="form-floating" style="margin-bottom: var(--space-4);">
+                        <input type="text" id="settings-username" placeholder=" " value="">
+                        <label for="settings-username">اسمك</label>
+                    </div>
+                    
+                    <div class="form-floating" style="margin-bottom: var(--space-4);">
+                        <input type="email" id="settings-email" placeholder=" " value="">
+                        <label for="settings-email">البريد الإلكتروني</label>
+                    </div>
+                    
+                    <div class="form-floating" style="margin-bottom: var(--space-6);">
+                        <input type="number" id="settings-daily-goal" min="1" max="50" value="5" placeholder=" ">
+                        <label for="settings-daily-goal">الهدف اليومي (آيات)</label>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-glow btn-full">حفظ التغييرات</button>
+                </form>
+            </div>
+            
+            <!-- Appearance Settings -->
+            <div class="card-glass-pro" style="margin-bottom: var(--space-6);">
+                <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">🎨 المظهر</h3>
+                
+                <div style="margin-bottom: var(--space-4);">
+                    <label style="display: block; margin-bottom: var(--space-3); font-weight: 500;">الوضع</label>
+                    <div class="flex-pro" style="gap: var(--space-3);">
+                        <button type="button" class="btn btn-outline-glow" id="theme-light-btn" onclick="QuranReview.setTheme('light')">
+                            ☀️ فاتح
+                        </button>
+                        <button type="button" class="btn btn-outline-glow" id="theme-dark-btn" onclick="QuranReview.setTheme('dark')">
+                            🌙 داكن
+                        </button>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: var(--space-4);">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="settings-animations" checked>
+                        <span class="toggle-slider"></span>
+                        <span style="margin-right: var(--space-3);">الرسوم المتحركة</span>
+                    </label>
+                </div>
+                
+                <div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="settings-notifications" checked>
+                        <span class="toggle-slider"></span>
+                        <span style="margin-right: var(--space-3);">الإشعارات</span>
+                    </label>
+                </div>
+            </div>
+            
+            <!-- Data Management -->
+            <div class="card-glass-pro">
+                <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">💾 إدارة البيانات</h3>
+                <div style="display: flex; flex-direction: column; gap: var(--space-3);">
+                    <button class="btn btn-outline-glow" onclick="QuranReview.exportData()">
+                        <span>📤</span>
+                        تصدير البيانات
+                    </button>
+                    <button class="btn btn-outline-glow" onclick="QuranReview.importData()">
+                        <span>📥</span>
+                        استيراد البيانات
+                    </button>
+                    <button class="btn btn-outline-glow" onclick="QuranReview.resetData()" style="color: var(--color-danger);">
+                        <span>🗑️</span>
+                        إعادة تعيين جميع البيانات
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>

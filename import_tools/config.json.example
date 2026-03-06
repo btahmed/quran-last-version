@@ -1,0 +1,73 @@
+{
+  "_comment": "Configuration file for Excel Student Import Tool",
+  "_usage": "Copy this file to config.json and customize the values",
+  
+  "api": {
+    "_comment": "Django API configuration",
+    "base_url": "http://127.0.0.1:8000",
+    "_base_url_help": "URL of the Django backend API. Change if backend is on a different host/port",
+    
+    "admin_username": "admin",
+    "_admin_username_help": "Admin username for authentication. Must have superuser privileges",
+    
+    "admin_password": "admin123",
+    "_admin_password_help": "Admin password. Consider using environment variables for security",
+    
+    "timeout": 30,
+    "_timeout_help": "Request timeout in seconds. Increase for slow networks",
+    
+    "max_retries": 3,
+    "_max_retries_help": "Maximum number of retry attempts for failed API calls (500 errors, timeouts)",
+    
+    "retry_delay": 2
+    "_retry_delay_help": "Delay in seconds between retry attempts"
+  },
+  
+  "password": {
+    "_comment": "Password generation configuration",
+    "strategy": "auto",
+    "_strategy_help": "Password generation strategy: 'auto' (random 8 chars) or 'name_year' (firstname.lastname2026)",
+    
+    "length": 8,
+    "_length_help": "Password length for 'auto' strategy. Minimum 6 characters"
+  },
+  
+  "output": {
+    "_comment": "Output file configuration",
+    "format": "excel",
+    "_format_help": "Output format: 'excel' (.xlsx), 'csv' (.csv), or 'pdf' (.pdf)",
+    
+    "directory": "./output",
+    "_directory_help": "Directory where output files will be saved. Created if doesn't exist",
+    
+    "filename_pattern": "credentials_{date}.xlsx",
+    "_filename_pattern_help": "Output filename pattern. {date} is replaced with current date (YYYY-MM-DD)"
+  },
+  
+  "validation": {
+    "_comment": "Data validation rules",
+    "allow_empty_email": true,
+    "_allow_empty_email_help": "Allow students without email addresses",
+    
+    "allow_empty_class": true,
+    "_allow_empty_class_help": "Allow students without class assignment",
+    
+    "min_username_length": 3,
+    "_min_username_length_help": "Minimum username length in characters",
+    
+    "max_username_length": 150,
+    "_max_username_length_help": "Maximum username length in characters"
+  },
+  
+  "logging": {
+    "_comment": "Logging configuration",
+    "level": "INFO",
+    "_level_help": "Log level: DEBUG, INFO, WARNING, ERROR, CRITICAL",
+    
+    "file": "import.log",
+    "_file_help": "Log file name (saved in output directory)",
+    
+    "console": true,
+    "_console_help": "Display logs in console (true/false)"
+  }
+}

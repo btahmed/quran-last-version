@@ -1,3 +1,7 @@
+# Dossiers de sortie générés (credentials, exports)
+output/
+import_tools/output/
+
 # Dependencies
 node_modules/
 venv/

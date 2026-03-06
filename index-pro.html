@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>مراجعة القرآن - Pro Edition</title>
+    <meta name="description" content="تطبيق احترافي لحفظ ومراجعة القرآن الكريم">
+    
+    <!-- PWA -->
+    <meta name="theme-color" content="#2d5016">
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- GSAP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="style-pro.css">
+    
+    <style>
+        /* Additional custom styles */
+        .hero-title {
+            font-size: clamp(2.5rem, 8vw, 4rem);
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 1rem;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.25rem;
+            color: var(--color-text-secondary);
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+        
+        .feature-icon-pro {
+            width: 64px;
+            height: 64px;
+            border-radius: var(--radius-2xl);
+            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-gold) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin-bottom: var(--space-4);
+            box-shadow: 0 8px 20px rgba(45, 80, 22, 0.3);
+        }
+        
+        .ayah-display {
+            font-family: var(--font-arabic);
+            font-size: 2rem;
+            line-height: 2.5;
+            text-align: center;
+            padding: var(--space-8);
+            background: linear-gradient(135deg, rgba(45, 80, 22, 0.05) 0%, rgba(212, 165, 116, 0.05) 100%);
+            border-radius: var(--radius-3xl);
+            border: 1px solid rgba(45, 80, 22, 0.1);
+        }
+        
+        .memorization-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+            padding: var(--space-4);
+            background: var(--color-surface);
+            border-radius: var(--radius-xl);
+            margin-bottom: var(--space-3);
+            transition: all var(--transition-base);
+            border: 1px solid var(--color-border);
+        }
+        
+        .memorization-item:hover {
+            transform: translateX(-4px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--color-primary);
+        }
+        
+        .status-badge {
+            width: 12px;
+            height: 12px;
+            border-radius: var(--radius-full);
+            flex-shrink: 0;
+        }
+        
+        .status-strong { background: var(--color-success); box-shadow: 0 0 10px rgba(16, 185, 129, 0.5); }
+        .status-weak { background: var(--color-warning); box-shadow: 0 0 10px rgba(245, 158, 11, 0.5); }
+        .status-new { background: var(--color-info); box-shadow: 0 0 10px rgba(59, 130, 246, 0.5); }
+        
+        .page {
+            display: none;
+        }
+        
+        .page.active {
+            display: block;
+        }
+        
+        /* Loading Screen */
+        .loading-screen {
+            position: fixed;
+            inset: 0;
+            background: var(--color-bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        
+        .loading-logo {
+            font-size: 4rem;
+            margin-bottom: var(--space-4);
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        .loading-bar {
+            width: 200px;
+            height: 4px;
+            background: var(--color-gray-200);
+            border-radius: var(--radius-full);
+            overflow: hidden;
+        }
+        
+        .loading-progress {
+            height: 100%;
+            background: linear-gradient(90deg, var(--color-primary), var(--color-gold));
+            width: 0%;
+            border-radius: var(--radius-full);
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loading-screen">
+        <div class="loading-logo">🕌</div>
+        <div class="loading-bar">
+            <div class="loading-progress" id="loading-progress"></div>
+        </div>
+    </div>
+
+    <!-- Aurora Background -->
+    <div class="aurora-bg"></div>
+    
+    <!-- Particles -->
+    <div class="particles-container" id="particles"></div>
+
+    <!-- Header -->
+    <header class="header-pro header-glass">
+        <div class="container-pro">
+            <div class="flex-pro" style="justify-content: space-between;">
+                <div class="flex-pro">
+                    <h1 class="gradient-text" style="font-size: 1.5rem; font-weight: 700;">🕌 مراجعة القرآن</h1>
+                </div>
+                <nav class="flex-pro" style="gap: var(--space-2);">
+                    <a href="#" class="nav-link-pro active" data-page="home">الرئيسية</a>
+                    <a href="#" class="nav-link-pro" data-page="memorization">الحفظ</a>
+                    <a href="#" class="nav-link-pro" data-page="ward">الورد</a>
+                    <a href="#" class="nav-link-pro" data-page="progress">التقدم</a>
+                    <a href="#" class="nav-link-pro" data-page="competition">🏆</a>
+                    <a href="#" class="nav-link-pro" data-page="hifz">🎭</a>
+                    <button id="theme-toggle" class="btn btn-icon" style="margin-right: var(--space-4);">
+                        <span id="theme-icon">🌙</span>
+                    </button>
+                    <button class="btn btn-glow btn-sm" onclick="showAuthModal()">
+                        <span>👤</span>
+                        دخول
+                    </button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <!-- HOME PAGE -->
+        <div id="home-page" class="page active">
+            <!-- Hero Section -->
+            <section class="section-pro" style="text-align: center; padding-top: var(--space-16);">
+                <div class="container-pro">
+                    <h1 class="hero-title gradient-text animate-fade-in-up">
+                        حفظ القرآن<br>بطريقة عصرية
+                    </h1>
+                    <p class="hero-subtitle animate-fade-in-up" style="animation-delay: 0.1s;">
+                        تطبيق احترافي يجمع بين التقنية الحديثة والطريقة النبوية في حفظ ومراجعة القرآن الكريم
+                    </p>
+                    <div class="flex-pro" style="justify-content: center; gap: var(--space-4); animation-delay: 0.2s;" class="animate-fade-in-up">
+                        <button class="btn btn-glow btn-ripple" onclick="navigateTo('memorization')">
+                            <span>📖</span>
+                            ابدأ الحفظ
+                        </button>
+                        <button class="btn btn-outline-glow" onclick="navigateTo('ward')">
+                            <span>🎧</span>
+                            استمع للورد
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Daily Motivation -->
+            <section class="section-pro">
+                <div class="container-pro">
+                    <div class="card-glass-pro shimmer" style="text-align: center; max-width: 800px; margin: 0 auto;">
+                        <span class="badge badge-gold" style="margin-bottom: var(--space-4);">✨ حكمة اليوم</span>
+                        <div class="arabic-large" style="margin: var(--space-6) 0; font-size: 2rem;">
+                            خَيْرُكُمْ مَنْ تَعَلَّمَ الْقُرْآنَ وَعَلَّمَهُ
+                        </div>
+                        <p style="color: var(--color-text-secondary);">رواه البخاري</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Stats Section -->
+            <section class="section-pro">
+                <div class="container-pro">
+                    <h2 class="section-title" style="text-align: center; margin-bottom: var(--space-8);">📊 إحصائياتك</h2>
+                    <div class="grid-pro grid-cols-4 stagger-children">
+                        <div class="card-stat-premium" style="text-align: center;">
+                            <div class="stat-value" data-count="12">0</div>
+                            <p style="color: var(--color-text-secondary); margin-top: var(--space-2);">سورة محفوظة</p>
+                        </div>
+                        <div class="card-stat-premium" style="text-align: center;">
+                            <div class="stat-value" data-count="245">0</div>
+                            <p style="color: var(--color-text-secondary); margin-top: var(--space-2);">آية محفوظة</p>
+                        </div>
+                        <div class="card-stat-premium" style="text-align: center;">
+                            <div class="stat-value" data-count="15">0</div>
+                            <p style="color: var(--color-text-secondary); margin-top: var(--space-2);">يوم متتالي</p>
+                        </div>
+                        <div class="card-stat-premium" style="text-align: center;">
+                            <div class="stat-value" data-count="1250">0</div>
+                            <p style="color: var(--color-text-secondary); margin-top: var(--space-2);">نقطة</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Features Grid -->
+            <section class="section-pro">
+                <div class="container-pro">
+                    <h2 class="section-title" style="text-align: center; margin-bottom: var(--space-8);">✨ المميزات</h2>
+                    <div class="grid-pro grid-cols-3 stagger-children">
+                        <div class="card-glass-pro hover-lift" style="text-align: center;">
+                            <div class="feature-icon-pro">📖</div>
+                            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: var(--space-2);">قراءة وتلاوة</h3>
+                            <p style="color: var(--color-text-secondary);">استماع للقراءات بأصوات مختلفة مع عرض المصحف</p>
+                        </div>
+                        <div class="card-glass-pro hover-lift" style="text-align: center;">
+                            <div class="feature-icon-pro">🧠</div>
+                            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: var(--space-2);">تتبع ذكي</h3>
+                            <p style="color: var(--color-text-secondary);">نظام تكرار متباعد لضمان الحفظ القوي</p>
+                        </div>
+                        <div class="card-glass-pro hover-lift" style="text-align: center;">
+                            <div class="feature-icon-pro">🎯</div>
+                            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: var(--space-2);">وضع الحفظ</h3>
+                            <p style="color: var(--color-text-secondary);">تمارين تفاعلية لاختبار الحفظ بمستويات مختلفة</p>
+                        </div>
+                        <div class="card-glass-pro hover-lift" style="text-align: center;">
+                            <div class="feature-icon-pro">🏆</div>
+                            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: var(--space-2);">تحديات</h3>
+                            <p style="color: var(--color-text-secondary);">تنافس مع الأصدقاء واكسب النقاط</p>
+                        </div>
+                        <div class="card-glass-pro hover-lift" style="text-align: center;">
+                            <div class="feature-icon-pro">📈</div>
+                            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: var(--space-2);">إحصائيات</h3>
+                            <p style="color: var(--color-text-secondary);">تتبع تقدمك يومياً وأسبوعياً وشهرياً</p>
+                        </div>
+                        <div class="card-glass-pro hover-lift" style="text-align: center;">
+                            <div class="feature-icon-pro">👨‍🏫</div>
+                            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: var(--space-2);">معلمك</h3>
+                            <p style="color: var(--color-text-secondary);">تواصل مع معلميك واستلم المهام</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- MEMORIZATION PAGE -->
+        <div id="memorization-page" class="page">
+            <section class="section-pro">
+                <div class="container-pro">
+                    <h2 class="section-title" style="margin-bottom: var(--space-8);">📖 قائمة الحفظ</h2>
+                    
+                    <div class="card-glass-pro" style="margin-bottom: var(--space-6);">
+                        <div class="flex-pro" style="justify-content: space-between; margin-bottom: var(--space-6);">
+                            <h3 style="font-size: 1.25rem; font-weight: 700;">سورك المحفوظة</h3>
+                            <button class="btn btn-glow" onclick="showAddSurahModal()">
+                                <span>➕</span>
+                                إضافة سورة
+                            </button>
+                        </div>
+                        
+                        <div id="memorization-list">
+                            <div class="memorization-item reveal">
+                                <span class="status-badge status-strong"></span>
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 600;">سورة الفاتحة</div>
+                                    <div style="font-size: 0.875rem; color: var(--color-text-secondary);">آية 1-7 • متقن</div>
+                                </div>
+                                <button class="btn btn-icon btn-sm" style="background: rgba(45, 80, 22, 0.1); color: var(--color-primary);">
+                                    ▶️
+                                </button>
+                            </div>
+                            <div class="memorization-item reveal">
+                                <span class="status-badge status-weak"></span>
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 600;">سورة البقرة</div>
+                                    <div style="font-size: 0.875rem; color: var(--color-text-secondary);">آية 1-50 • يحتاج مراجعة</div>
+                                </div>
+                                <button class="btn btn-icon btn-sm" style="background: rgba(45, 80, 22, 0.1); color: var(--color-primary);">
+                                    ▶️
+                                </button>
+                            </div>
+                            <div class="memorization-item reveal">
+                                <span class="status-badge status-new"></span>
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 600;">سورة آل عمران</div>
+                                    <div style="font-size: 0.875rem; color: var(--color-text-secondary);">آية 1-20 • جديد</div>
+                                </div>
+                                <button class="btn btn-icon btn-sm" style="background: rgba(45, 80, 22, 0.1); color: var(--color-primary);">
+                                    ▶️
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- WARD PAGE -->
+        <div id="ward-page" class="page">
+            <section class="section-pro">
+                <div class="container-pro" style="max-width: 800px;">
+                    <h2 class="section-title" style="text-align: center; margin-bottom: var(--space-8);">🎧 الورد اليومي</h2>
+                    
+                    <div class="card-glass-pro" style="margin-bottom: var(--space-6);">
+                        <div class="form-floating" style="margin-bottom: var(--space-4);">
+                            <select id="ward-surah" class="select-modern">
+                                <option value="">اختر السورة</option>
+                                <option value="1">سورة الفاتحة</option>
+                                <option value="2">سورة البقرة</option>
+                                <option value="3">سورة آل عمران</option>
+                            </select>
+                            <label for="ward-surah">السورة</label>
+                        </div>
+                        
+                        <div class="grid-pro grid-cols-2" style="margin-bottom: var(--space-6);">
+                            <div class="form-floating">
+                                <input type="number" id="ward-from" placeholder=" " min="1" value="1">
+                                <label for="ward-from">من الآية</label>
+                            </div>
+                            <div class="form-floating">
+                                <input type="number" id="ward-to" placeholder=" " min="1" value="7">
+                                <label for="ward-to">إلى الآية</label>
+                            </div>
+                        </div>
+                        
+                        <button class="btn btn-glow btn-full" onclick="playWard()">
+                            <span>▶️</span>
+                            تشغيل الورد
+                        </button>
+                    </div>
+                    
+                    <!-- Audio Player -->
+                    <div class="player-glass">
+                        <div class="ayah-display" id="current-ayah">
+                            بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
+                        </div>
+                        
+                        <div class="progress-glass" style="margin: var(--space-6) 0;">
+                            <div class="fill" style="width: 35%;"></div>
+                        </div>
+                        
+                        <div class="flex-pro" style="justify-content: space-between; color: var(--color-text-secondary); font-size: 0.875rem;">
+                            <span>1:23</span>
+                            <span>3:45</span>
+                        </div>
+                        
+                        <div class="player-controls">
+                            <button class="player-btn player-btn-secondary" onclick="previousAyah()">
+                                ⏮️
+                            </button>
+                            <button class="player-btn player-btn-lg" onclick="togglePlay()" id="play-btn">
+                                ⏸️
+                            </button>
+                            <button class="player-btn player-btn-secondary" onclick="nextAyah()">
+                                ⏭️
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- PLACEHOLDER PAGES -->
+        <div id="progress-page" class="page">
+            <section class="section-pro">
+                <div class="container-pro" style="text-align: center;">
+                    <h2 class="section-title">📈 التقدم</h2>
+                    <div class="card-glass-pro">
+                        <p style="font-size: 1.25rem; color: var(--color-text-secondary);">قريباً...</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <div id="competition-page" class="page">
+            <section class="section-pro">
+                <div class="container-pro" style="text-align: center;">
+                    <h2 class="section-title">🏆 التحديات</h2>
+                    <div class="card-glass-pro">
+                        <p style="font-size: 1.25rem; color: var(--color-text-secondary);">قريباً...</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <div id="hifz-page" class="page">
+            <section class="section-pro">
+                <div class="container-pro" style="text-align: center;">
+                    <h2 class="section-title">🎭 وضع الحفظ</h2>
+                    <div class="card-glass-pro">
+                        <p style="font-size: 1.25rem; color: var(--color-text-secondary);">قريباً...</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Auth Modal -->
+    <div class="modal-overlay-pro" id="auth-modal">
+        <div class="modal-content-pro">
+            <div style="text-align: center; margin-bottom: var(--space-6);">
+                <h2 style="font-size: 1.5rem; font-weight: 700;">تسجيل الدخول</h2>
+                <p style="color: var(--color-text-secondary);">أهلاً بك مجدداً</p>
+            </div>
+            
+            <div class="form-floating" style="margin-bottom: var(--space-4);">
+                <input type="text" id="login-username" placeholder=" " autocomplete="username">
+                <label for="login-username">اسم المستخدم</label>
+            </div>
+            
+            <div class="form-floating" style="margin-bottom: var(--space-6);">
+                <input type="password" id="login-password" placeholder=" " autocomplete="current-password">
+                <label for="login-password">كلمة المرور</label>
+            </div>
+            
+            <button class="btn btn-glow btn-full" onclick="handleLogin()">
+                دخول
+            </button>
+            
+            <p style="text-align: center; margin-top: var(--space-4); color: var(--color-text-secondary);">
+                ليس لديك حساب؟ <a href="#" style="color: var(--color-primary); font-weight: 600;">سجل الآن</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Register GSAP ScrollTrigger
+        gsap.registerPlugin(ScrollTrigger);
+        
+        // Loading Screen
+        window.addEventListener('load', () => {
+            const tl = gsap.timeline();
+            
+            tl.to('#loading-progress', {
+                width: '100%',
+                duration: 1.5,
+                ease: 'power2.inOut'
+            })
+            .to('#loading-screen', {
+                opacity: 0,
+                duration: 0.5,
+                onComplete: () => {
+                    document.getElementById('loading-screen').style.display = 'none';
+                    initAnimations();
+                }
+            });
+        });
+        
+        // Initialize Animations
+        function initAnimations() {
+            // Stagger animations for cards
+            gsap.from('.card-glass-pro', {
+                opacity: 0,
+                y: 50,
+                duration: 0.8,
+                stagger: 0.1,
+                ease: 'power3.out'
+            });
+            
+            // Stats counter animation
+            animateCounters();
+            
+            // Scroll reveal
+            gsap.utils.toArray('.reveal').forEach(element => {
+                gsap.from(element, {
+                    scrollTrigger: {
+                        trigger: element,
+                        start: 'top 85%',
+                        toggleActions: 'play none none reverse'
+                    },
+                    opacity: 0,
+                    y: 30,
+                    duration: 0.8,
+                    ease: 'power2.out'
+                });
+            });
+        }
+        
+        // Counter Animation
+        function animateCounters() {
+            document.querySelectorAll('[data-count]').forEach(counter => {
+                const target = parseInt(counter.getAttribute('data-count'));
+                gsap.to(counter, {
+                    innerHTML: target,
+                    duration: 2,
+                    snap: { innerHTML: 1 },
+                    ease: 'power2.out',
+                    scrollTrigger: {
+                        trigger: counter,
+                        start: 'top 80%'
+                    }
+                });
+            });
+        }
+        
+        // Generate Particles
+        const particlesContainer = document.getElementById('particles');
+        for (let i = 0; i < 30; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.animationDelay = Math.random() * 20 + 's';
+            particle.style.animationDuration = (15 + Math.random() * 10) + 's';
+            particle.style.width = (3 + Math.random() * 6) + 'px';
+            particle.style.height = particle.style.width;
+            particlesContainer.appendChild(particle);
+        }
+        
+        // Navigation
+        function navigateTo(page) {
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            // Show target page
+            document.getElementById(page + '-page').classList.add('active');
+            
+            // Update nav links
+            document.querySelectorAll('.nav-link-pro').forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('data-page') === page) {
+                    link.classList.add('active');
+                }
+            });
+            
+            // Animate new page
+            gsap.from('#' + page + '-page', {
+                opacity: 0,
+                y: 20,
+                duration: 0.5,
+                ease: 'power2.out'
+            });
+            
+            window.scrollTo(0, 0);
+        }
+        
+        // Nav link click handlers
+        document.querySelectorAll('.nav-link-pro').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const page = link.getAttribute('data-page');
+                navigateTo(page);
+            });
+        });
+        
+        // Theme Toggle
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+        let isDark = false;
+        
+        themeToggle.addEventListener('click', () => {
+            isDark = !isDark;
+            document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            themeIcon.textContent = isDark ? '☀️' : '🌙';
+        });
+        
+        // Auth Modal
+        function showAuthModal() {
+            document.getElementById('auth-modal').classList.add('active');
+        }
+        
+        function hideAuthModal() {
+            document.getElementById('auth-modal').classList.remove('active');
+        }
+        
+        document.getElementById('auth-modal').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) hideAuthModal();
+        });
+        
+        function handleLogin() {
+            const btn = document.querySelector('#auth-modal .btn-glow');
+            btn.classList.add('btn-loading');
+            
+            setTimeout(() => {
+                btn.classList.remove('btn-loading');
+                hideAuthModal();
+                // Show success message
+                gsap.to(btn, {
+                    backgroundColor: '#10b981',
+                    duration: 0.3,
+                    yoyo: true,
+                    repeat: 1
+                });
+            }, 1500);
+        }
+        
+        // Audio Player Functions
+        let isPlaying = false;
+        
+        function togglePlay() {
+            isPlaying = !isPlaying;
+            document.getElementById('play-btn').textContent = isPlaying ? '⏸️' : '▶️';
+        }
+        
+        function previousAyah() {
+            gsap.from('#current-ayah', {
+                opacity: 0,
+                x: 50,
+                duration: 0.3,
+                ease: 'power2.out'
+            });
+        }
+        
+        function nextAyah() {
+            gsap.from('#current-ayah', {
+                opacity: 0,
+                x: -50,
+                duration: 0.3,
+                ease: 'power2.out'
+            });
+        }
+        
+        function playWard() {
+            navigateTo('ward');
+            setTimeout(() => {
+                togglePlay();
+            }, 500);
+        }
+        
+        // Ripple Effect
+        document.querySelectorAll('.btn-ripple').forEach(button => {
+            button.addEventListener('click', function(e) {
+                const ripple = document.createElement('span');
+                ripple.className = 'ripple';
+                
+                const rect = this.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                
+                ripple.style.width = ripple.style.height = size + 'px';
+                ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+                ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+                
+                this.appendChild(ripple);
+                
+                setTimeout(() => ripple.remove(), 600);
+            });
+        });
+        
+        // Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js')
+                .catch(err => console.log('SW registration failed'));
+        }
+    </script>
+</body>
+</html>
