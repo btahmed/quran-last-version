@@ -646,3 +646,17 @@ class AdminCreateTeacherView(APIView):
             'role': teacher.role,
             'detail': 'Enseignant créé avec succès.'
         }, status=201)
+
+
+# ============ Health Check ============
+
+class HealthCheckView(APIView):
+    """
+    GET /api/health/
+    Endpoint utilisé par le healthcheck Docker.
+    """
+    permission_classes = []
+    authentication_classes = []
+
+    def get(self, request):
+        return Response({'status': 'ok'})

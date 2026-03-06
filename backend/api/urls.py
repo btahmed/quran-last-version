@@ -37,4 +37,7 @@ urlpatterns = [
     # Admin
     path('admin/tasks/delete-all/', views.AdminDeleteAllTasksView.as_view(), name='admin-delete-all-tasks'),
     path('admin/create-teacher/', views.AdminCreateTeacherView.as_view(), name='admin-create-teacher'),
+
+    # Health check
+    path('health/', views.HealthCheckView.as_view(), name='health'),
 ]

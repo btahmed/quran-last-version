@@ -4168,6 +4168,12 @@ const QuranReview = {
         const tasksList = document.getElementById('student-tasks-list');
         if (!tasksList) return;
 
+        // Tuer les tweens GSAP bloqués et forcer la visibilité
+        if (window.gsap) {
+            gsap.killTweensOf(tasksList);
+            gsap.set(tasksList, { clearProps: 'opacity,transform,translate,rotate,scale' });
+        }
+
         const tasks = this._studentTasks || [];
         const subByTask = this._studentSubByTask || {};
 
@@ -4292,15 +4298,16 @@ const QuranReview = {
             // Load student checkboxes for task creation
             this.loadStudentCheckboxes(students);
 
-            // Stats
-            document.getElementById('teacher-total-students').textContent = students.length;
-            document.getElementById('teacher-pending').textContent = pending.length;
-            document.getElementById('teacher-tasks').textContent = tasks.length;
-            const approvedEl = document.getElementById('teacher-approved');
-            if (approvedEl) approvedEl.textContent = tasks.reduce((sum, t) => sum, 0);
+            // Stats — IDs corrects selon le HTML
+            const studentsCountEl = document.getElementById('teacher-students-count');
+            if (studentsCountEl) studentsCountEl.textContent = students.length;
+            const pendingCountEl = document.getElementById('teacher-pending-count');
+            if (pendingCountEl) pendingCountEl.textContent = pending.length;
+            const tasksCountEl = document.getElementById('teacher-tasks-count');
+            if (tasksCountEl) tasksCountEl.textContent = tasks.length;
 
             // Pending submissions
-            const pendingList = document.getElementById('teacher-pending-list');
+            const pendingList = document.getElementById('teacher-tasks-list');
             if (!pending.length) {
                 pendingList.innerHTML = '<p class="empty-state">لا توجد تسليمات بانتظار التصحيح 🎉</p>';
             } else {
@@ -4354,8 +4361,8 @@ const QuranReview = {
                 }).join('');
             }
 
-            // Tasks list
-            const taskListEl = document.getElementById('teacher-tasks-list');
+            // Tasks list — div séparé pour ne pas écraser les soumissions
+            const taskListEl = document.getElementById('teacher-assigned-tasks-list');
 
             // Add Delete All button header
             const headerHtml = `
@@ -4370,8 +4377,20 @@ const QuranReview = {
             if (!tasks.length) {
                 taskListEl.innerHTML = headerHtml + '<p class="empty-state">لا توجد مهام بعد</p>';
             } else {
-                taskListEl.innerHTML = headerHtml + tasks.map(task => {
-                    const typeLabel = task.type_display || (task.task_type === 'memorization' ? 'حفظ' : task.task_type === 'recitation' ? 'تلاوة' : 'أخرى');
+                // Grouper les tâches par batch (title + type + due_date + jour de création)
+                // car le prof crée 1 tâche par étudiant → on affiche 1 seule carte par batch
+                const batches = new Map();
+                tasks.forEach(task => {
+                    const day = task.created_at ? task.created_at.substring(0, 10) : '';
+                    const key = `${task.title}||${task.type}||${task.due_date || ''}||${day}`;
+                    if (!batches.has(key)) {
+                        batches.set(key, { task, count: 0 });
+                    }
+                    batches.get(key).count++;
+                });
+
+                taskListEl.innerHTML = headerHtml + Array.from(batches.values()).map(({ task, count }) => {
+                    const typeLabel = task.type_display || task.type || '';
                     const dueDate = task.due_date ? new Date(task.due_date).toLocaleDateString('ar-SA') : '';
                     const date = new Date(task.created_at).toLocaleDateString('ar-SA');
                     return `<div class="task-card">
@@ -4382,6 +4401,7 @@ const QuranReview = {
                         ${task.description ? `<p class="task-card-desc">${task.description}</p>` : ''}
                         <div class="task-card-meta">
                             <span>🏆 ${task.points} نقطة</span>
+                            <span>👥 ${count} طالب</span>
                             <span>📅 أُنشئت: ${date}</span>
                             ${dueDate ? `<span>⏰ تسليم: ${dueDate}</span>` : ''}
                         </div>
@@ -4919,7 +4939,9 @@ const QuranReview = {
         }
 
         document.getElementById('recording-submit-btn').classList.add('hidden');
-        document.getElementById('audio-record-modal').classList.remove('hidden');
+        const modal = document.getElementById('audio-record-modal');
+        modal.classList.remove('hidden');
+        modal.classList.add('active');
     },
 
     async toggleRecording() {
@@ -4979,7 +5001,9 @@ const QuranReview = {
         document.getElementById('recording-btn').classList.remove('recording-active');
 
         if (cancel) {
-            document.getElementById('audio-record-modal').classList.add('hidden');
+            const modal = document.getElementById('audio-record-modal');
+            modal.classList.remove('active');
+            modal.classList.add('hidden');
             this._recordBlob = null;
         }
     },
@@ -5026,7 +5050,9 @@ const QuranReview = {
             Logger.log('RECORDING', 'Submission successful', result);
 
             this.showNotification('تم إرسال التسجيل بنجاح!', 'success');
-            document.getElementById('audio-record-modal').classList.add('hidden');
+            const modal = document.getElementById('audio-record-modal');
+            modal.classList.remove('active');
+            modal.classList.add('hidden');
             this._recordBlob = null;
             this.loadStudentDashboard();
         } catch (error) {
