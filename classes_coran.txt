@@ -1,0 +1,269 @@
+CLASSE 10h45 {
+  Prof Nahila {
+    salma_aneflous
+    ferriel_azzeddine
+    sarah_bennama
+    inaya_boulaabi
+    jihene_hemissi
+    assil_moughamir
+    lyne_saadouli
+  }
+  Prof Camilia {
+    kenza_ammar
+    aya_amzel
+    hajer_ouadah
+    assil_mandjam
+    kawtar_chahid
+    halima_khiar
+    hayat_yakhni
+    nour_asrih
+  }
+  Prof Abdallah {
+    tasnime_ben_ali
+    inaya_benmoussa
+    hafsa_bouldjihad
+    alaa_chelghmia
+    smahen_dahbi
+    arwa_chelaghmia
+    lina_maoudoud
+    youssra_jalil
+    fatima_ilmi
+    saja_boukhalfa
+    khadija_bouamama
+    amira_jalil
+    roufaida_kebtani
+    oumaima_margoum
+    douaa_ouadah
+    leïla_rahmaoui
+    mayssa_maazouz
+  }
+  Prof Youssef {
+    wael_loumbarkia
+    ilyas_el_kabir
+    ziyad_el_kabir
+    yanis_ezunke
+    imrane_maoudoud
+    salim_martins
+    owayss_moughamir
+    zakaria_saadouli
+    akram_tazoult
+  }
+  Prof Ahmed Mahjoubi {
+    rayan_ammar
+    sayane_toiybou
+    souleymane_benmohamed
+    adem_bennama
+    omar_binchoula
+    miradj_butun
+    sohane_dahbi
+    omar_kebtani
+    anis_kerioui
+  }
+  Prof Abdelhadi {
+    rayane_adnane
+    iyad_benkirane
+    kahil_bourazi
+    yanis_bourazi
+    chahine_dahbi
+    fahim_wahidouallah
+    isaac_gonzil
+    rayane_jemma
+    iyad_ouachikh
+    sayane_toiybou
+  }
+  Prof Ahmed {
+    bilal_butun
+    mohamed_camara
+    mohamed_el_haimeur
+    omar_fadhloui
+    kamil_lamalem
+    mohamed_marjani_omar
+    mohamed_ouadah
+    adem_rahmaoui
+    jalil_yassine
+  }
+  Prof Mohammadine {
+    ayoub_asrih_mohamed
+    hanane_athoumane
+    younes_athoumane
+    ilyas_aneflous
+    ilyas_chellah
+    omar_el_qamari
+    yaqine_benkirane
+    khail_wahidouallah_jabar
+    mairick_gonzil
+    badereddine_marjani
+    yahya_saadouli
+  }
+  Prof Abou Fadi {
+    haretha_abdellah_ba
+    ismael_assani
+    youssef_ben_ali
+    karim_bennamou
+    amine_el_meski_mohamed
+    yanis_lallam_mohamed
+    aymen_el_kabir
+    mouad_binchoula
+    dayane_alibaco
+    bilal_ouachikh
+    yazid_ouachikh
+  }
+  Prof Ibrahim {
+    mohamed_boulaabi
+    ali_butun
+    mohamed_el_mehadji
+    yanis_delhostal
+    ahmed_fatine
+    jassim_ferdjouni
+    younes_kerioui
+    driss_mandjam
+  }
+  Prof Najlaa {
+    tesnime_asrih
+    ayma_attoumane
+    tayssir_ben_ali
+    odia_camara
+    aya_dhib
+    issra_dhib
+    mariam_el_haimeur
+    tasnime_hajili
+    aïcha_hamidi
+    nada_maghraoui
+    marwa_tazoult
+  }
+  Prof Salsabile {
+    fatima_attoumane
+    soumaya_attoumane
+    farah_azzeddine
+    amina_bennama
+    nihel_bennama
+    neila_boulaabi
+    maissa_bouldjihad
+    joumanah_el_mahadji
+    wijdene_hemissi
+    malak_jalil
+    najat_margoum
+  }
+}
+
+CLASSE 8h45 {
+  Prof Oum Wael {
+    inés_adjtoutah
+    ranya_boussaf
+    basma_hamada
+    maroua_jmila
+    heline_salmane
+    nahila_bennamou
+    marwa_boukhalfa
+    tasnime_boukhalfa
+    salsabile_boukhalfa
+    nada_hamada
+    farah_zaidane
+    kenza_ben_romdhane
+    nahila_benathmane
+    lilia_sahraoui
+    soline_salmane
+  }
+  Prof Oum Amine {
+    inés_adjtoutah
+    ranya_boussaf
+    basma_hamada
+    maroua_jmila
+    heline_salmane
+    nahila_bennamou
+    marwa_boukhalfa
+    tasnime_boukhalfa
+    salsabile_boukhalfa
+    nada_hamada
+    farah_zaidane
+    kenza_ben_romdhane
+    nahila_benathmane
+    lilia_sahraoui
+    soline_salmane
+  }
+  Prof Salahdine {
+    layla_beradjem
+    assya_abi
+    tasnime_ferrera_neves
+    intissar_agnide
+    jihene_chettah
+    oussama_saoudi
+    feradous_lahyene
+    aicha_benkhedra
+    daoud_ben_romdhane
+    enel_hadhy
+  }
+  Prof Youssef {
+    adem_loubane
+    anas_salmane
+    mohamed_majberi
+    adem_bouattour
+    iyed_hamada
+    abdelbasset_kolli
+    abderrahim_kolli
+    enes_hadhy
+    mohamed_miled
+  }
+  Prof Abou Abdellatif {
+    mouslime_abi
+    leyth_aissaoui
+    abdullah_badi
+    ayoub_badi
+    ridha_saidi
+    ismael_saidina
+  }
+  Prof Abou Mostafa {
+    mouhamed_abi
+    ewan_ali_abdelghafour
+    karim_ali_ibrahimy
+    akram_boussaf
+    jihad_ennaji
+    ismail_najmi
+    ibrahim_saidina
+    mostafa_salmane
+  }
+  Prof Abdelhadi {
+    zakaria_el_idrissi
+    edine_hadhy
+    ilyes_bouattour
+    wael_loumbarkia
+    rayane_majberi
+    adem_majberi
+    adem_bouattour
+    najih_agnide
+    tasnime_wifaya
+    zahra_jmila_fatima
+    idriss_najmi
+    mehdi_najmi
+  }
+  Prof Ibrahim {
+    kaïs_redradj
+    zakaria_loubane
+    anas_bennacer
+    islam_draibine
+    anas_adjtoutah
+  }
+  Prof Mohammadine {
+    hafidou_abi
+    ilyes_aissaoui
+    dounia_sahraoui
+    inaya_sahraoui
+    amira_tajani
+    majd_tajani
+    malak_tajani
+    maria_zaidane
+    ismaïl_ben_romhdane
+  }
+  Prof Wassim {
+    heline_ali_abdelghafour
+    ritaj_baida
+    yasmine_benathmane
+    rokia_ferrera_neves
+    malika_el_fekair
+    lina_miled
+    imene_abada
+    janna_abada
+    anais_redradj
+    oumaïma_soltani
+  }
+}

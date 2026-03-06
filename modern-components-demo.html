@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern UI Components - QuranReview</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style-modern.css">
+    <style>
+        .demo-section {
+            padding: 3rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .demo-title {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--accent-green);
+        }
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .demo-item {
+            padding: 1rem;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <!-- Aurora Background -->
+    <div class="aurora-bg"></div>
+    
+    <!-- Floating Particles -->
+    <div class="particles-container" id="particles"></div>
+
+    <div class="container">
+        <!-- Header -->
+        <header class="demo-section">
+            <h1 class="gradient-text" style="font-size: 3rem; text-align: center; margin-bottom: 1rem;">
+                🕌 Composants Modernes
+            </h1>
+            <p style="text-align: center; color: var(--text-secondary);">
+                Glassmorphism, Animations & Premium Effects
+            </p>
+        </header>
+
+        <!-- 1. Glass Cards -->
+        <section class="demo-section">
+            <h2 class="demo-title">🪟 Glass Cards (Verre Dépoli)</h2>
+            <div class="demo-grid">
+                <div class="glass-card">
+                    <h3>✨ Carte Glass</h3>
+                    <p>Effet backdrop-filter blur avec bordures subtiles</p>
+                    <button class="btn-glow">Action</button>
+                </div>
+                <div class="glass-card">
+                    <h3>🎨 Hover Effect</h3>
+                    <p>Survolez pour voir l'animation de levitation</p>
+                    <span class="badge-gradient">Premium</span>
+                </div>
+                <div class="glass-card">
+                    <h3>🌙 Dark Mode</h3>
+                    <p>S'adapte automatiquement au thème sombre</p>
+                    <span class="badge-glass">Adaptatif</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. Buttons -->
+        <section class="demo-section">
+            <h2 class="demo-title">🔘 Boutons Modernes</h2>
+            <div class="demo-grid">
+                <div class="demo-item">
+                    <button class="btn-glow btn-ripple">Glow + Ripple</button>
+                    <p style="margin-top: 1rem; font-size: 0.9rem;">Effet glow et ripple au clic</p>
+                </div>
+                <div class="demo-item">
+                    <button class="btn-gradient">Gradient Animé</button>
+                    <p style="margin-top: 1rem; font-size: 0.9rem;">Dégradé qui bouge au hover</p>
+                </div>
+                <div class="demo-item">
+                    <button class="btn-outline-glow">Outline Glow</button>
+                    <p style="margin-top: 1rem; font-size: 0.9rem;">Bordure avec effet de lueur</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. Neumorphic & 3D Cards -->
+        <section class="demo-section">
+            <h2 class="demo-title">🎴 Cards Premium</h2>
+            <div class="demo-grid">
+                <div class="card-neumorphic">
+                    <h3>🔲 Neumorphic</h3>
+                    <p>Ombres douces intérieures et extérieures</p>
+                </div>
+                <div class="card-3d">
+                    <h3>🧊 3D Card</h3>
+                    <p>Survolez pour l'effet 3D perspective</p>
+                </div>
+                <div class="stat-card-premium">
+                    <h3>📊 Stats Premium</h3>
+                    <div style="font-size: 2.5rem; font-weight: bold; color: var(--accent-green);">1,250</div>
+                    <p>Points accumulés</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. Badges -->
+        <section class="demo-section">
+            <h2 class="demo-title">🏷️ Badges</h2>
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
+                <span class="badge-gradient">Gradient Badge</span>
+                <span class="badge-glass">Glass Badge</span>
+                <span class="badge-gradient">⭐ Premium</span>
+                <span class="badge-glass">🌟 New</span>
+            </div>
+        </section>
+
+        <!-- 5. Progress Bars -->
+        <section class="demo-section">
+            <h2 class="demo-title">📈 Progress Bars Animées</h2>
+            <div style="max-width: 500px; margin: 0 auto;">
+                <div style="margin-bottom: 1.5rem;">
+                    <label>Progression Hifz</label>
+                    <div class="progress-bar-animated">
+                        <div class="fill" style="width: 75%;"></div>
+                    </div>
+                </div>
+                <div style="margin-bottom: 1.5rem;">
+                    <label>Surahs Memorized</label>
+                    <div class="progress-bar-animated">
+                        <div class="fill" style="width: 45%;"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Circular Progress -->
+            <div style="display: flex; justify-content: center; gap: 2rem; margin-top: 2rem;">
+                <div class="progress-circle">
+                    <svg width="120" height="120">
+                        <defs>
+                            <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" style="stop-color:var(--accent-green)" />
+                                <stop offset="100%" style="stop-color:var(--accent-gold)" />
+                            </linearGradient>
+                        </defs>
+                        <circle class="bg" cx="60" cy="60" r="54"></circle>
+                        <circle class="progress" cx="60" cy="60" r="54" style="stroke-dashoffset: 84.8;"></circle>
+                    </svg>
+                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
+                        <div style="font-size: 1.5rem; font-weight: bold;">75%</div>
+                        <div style="font-size: 0.8rem;">Complete</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. Form Elements -->
+        <section class="demo-section">
+            <h2 class="demo-title">📝 Formulaires Modernes</h2>
+            <div style="max-width: 400px; margin: 0 auto;">
+                <div class="form-floating" style="margin-bottom: 1.5rem;">
+                    <input type="text" id="floating-name" placeholder=" " class="input-modern">
+                    <label for="floating-name">اسم المستخدم</label>
+                </div>
+                <div class="form-floating" style="margin-bottom: 1.5rem;">
+                    <input type="email" id="floating-email" placeholder=" " class="input-modern">
+                    <label for="floating-email">البريد الإلكتروني</label>
+                </div>
+            </div>
+        </section>
+
+        <!-- 7. Loading States -->
+        <section class="demo-section">
+            <h2 class="demo-title">⏳ Loading States</h2>
+            <div class="demo-grid">
+                <div class="demo-item">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 1rem;">Spinner</p>
+                </div>
+                <div class="demo-item">
+                    <div class="pulse-dot"></div>
+                    <p style="margin-top: 1rem;">Pulse Dot</p>
+                </div>
+                <div class="demo-item">
+                    <div class="skeleton" style="width: 200px; height: 20px; margin-bottom: 0.5rem;"></div>
+                    <div class="skeleton" style="width: 150px; height: 20px;"></div>
+                    <p style="margin-top: 1rem;">Skeleton</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 8. Gradient Border -->
+        <section class="demo-section">
+            <h2 class="demo-title">🌈 Gradient Border</h2>
+            <div style="display: flex; justify-content: center;">
+                <div class="gradient-border" style="padding: 2rem;">
+                    <h3>Contenu avec bordure animée</h3>
+                    <p>La bordure tourne en continu</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 9. Animations -->
+        <section class="demo-section">
+            <h2 class="demo-title">✨ Animations d'Entrée</h2>
+            <div class="stagger-children demo-grid">
+                <div class="glass-card animate-fade-in-up">
+                    <h3>Fade In Up</h3>
+                    <p>Apparition avec translation</p>
+                </div>
+                <div class="glass-card animate-fade-in-scale">
+                    <h3>Fade In Scale</h3>
+                    <p>Apparition avec zoom</p>
+                </div>
+                <div class="glass-card animate-slide-in">
+                    <h3>Slide In</h3>
+                    <p>Apparition latérale</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 10. Tooltips -->
+        <section class="demo-section">
+            <h2 class="demo-title">💬 Tooltips</h2>
+            <div style="display: flex; justify-content: center; gap: 2rem; margin-top: 2rem;">
+                <button class="btn-glow tooltip" data-tooltip="معلومات إضافية">
+                    Survolez-moi
+                </button>
+                <button class="btn-gradient tooltip" data-tooltip="نص توضيحي">
+                    Tooltip 2
+                </button>
+            </div>
+        </section>
+
+        <!-- 11. Shimmer Effect -->
+        <section class="demo-section">
+            <h2 class="demo-title">✨ Shimmer Effect</h2>
+            <div class="glass-card shimmer" style="padding: 2rem;">
+                <h3>Effet Shimmer</h3>
+                <p>Animation de lumière qui traverse</p>
+            </div>
+        </section>
+
+        <!-- Dark Mode Toggle -->
+        <section class="demo-section" style="text-align: center;">
+            <h2 class="demo-title">🌙 Test Dark Mode</h2>
+            <button id="theme-toggle-demo" class="btn-gradient">
+                Basculer Dark/Light Mode
+            </button>
+        </section>
+    </div>
+
+    <script>
+        // Generate particles
+        const particlesContainer = document.getElementById('particles');
+        for (let i = 0; i < 20; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.animationDelay = Math.random() * 15 + 's';
+            particle.style.animationDuration = (15 + Math.random() * 10) + 's';
+            particle.style.width = (5 + Math.random() * 10) + 'px';
+            particle.style.height = particle.style.width;
+            particlesContainer.appendChild(particle);
+        }
+
+        // Theme toggle
+        document.getElementById('theme-toggle-demo').addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+        });
+
+        // Animate progress bars on load
+        window.addEventListener('load', () => {
+            document.querySelectorAll('.progress-bar-animated .fill').forEach(fill => {
+                const width = fill.style.width;
+                fill.style.width = '0';
+                setTimeout(() => {
+                    fill.style.width = width;
+                }, 300);
+            });
+        });
+    </script>
+</body>
+</html>
