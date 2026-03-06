@@ -1,0 +1,15 @@
+{
+  "allowedTools": [
+    "Bash(git *)",
+    "Bash(gh *)",
+    "Bash(docker *)",
+    "Bash(docker-compose *)",
+    "Bash(npm *)",
+    "Bash(python *)",
+    "Bash(ls *)",
+    "Bash(cat *)",
+    "Bash(grep *)",
+    "Bash(sed *)",
+    "Bash(echo *)"
+  ]
+}

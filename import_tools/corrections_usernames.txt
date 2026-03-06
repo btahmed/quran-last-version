@@ -1,0 +1,88 @@
+CORRECTIONS DE USERNAMES
+======================================================================
+
+Fichier: aïcha_hamidi
+Suggestions:
+  - aicha_hamidi
+
+Fichier: haretha_abdellah_ba
+Suggestions:
+  - baharetha_abdellah
+
+Fichier: inés_adjtoutah
+Suggestions:
+  - ines_adjtoutah
+  - anas_adjtoutah
+
+Fichier: kaïs_redradj
+Suggestions:
+  - kais_redradj
+  - anais_redradj
+
+Fichier: khail_wahidouallah_jabar
+Suggestions:
+  - jabarkhail_wahidouallah
+  - fahim_wahidouallah
+
+Fichier: leïla_rahmaoui
+Suggestions:
+  - leila_rahmaoui
+  - lilia_sahraoui
+  - adem_rahmaoui
+
+Fichier: mohamed_el_mehadji
+Suggestions:
+  - mohamed_majberi
+
+Fichier: mohamed_marjani_omar
+Suggestions:
+  - omarmohamed_marjani
+  - mohamed_camara
+
+Fichier: oumaïma_soltani
+Suggestions:
+  - oumaima_soltani
+
+Fichier: rokia_ferrera_neves
+Suggestions:
+  - nevesrokia_ferrera
+
+Fichier: tasnime_ben_ali
+Suggestions:
+  - tasnime_hajili
+  - alitasnime_ben
+
+Fichier: tasnime_ferrera_neves
+Suggestions:
+  - nevestasnime_ferrera
+
+Fichier: tayssir_ben_ali
+Suggestions:
+  - alitayssir_ben
+
+Fichier: youssef_ben_ali
+Suggestions:
+  - aliyoussef_ben
+
+
+VRAIMENT MANQUANTS:
+----------------------------------------------------------------------
+  - amine_el_meski_mohamed
+  - aymen_el_kabir
+  - ayoub_asrih_mohamed
+  - daoud_ben_romdhane
+  - ewan_ali_abdelghafour
+  - heline_ali_abdelghafour
+  - ilyas_el_kabir
+  - ismaïl_ben_romhdane
+  - joumanah_el_mahadji
+  - karim_ali_ibrahimy
+  - kenza_ben_romdhane
+  - malika_el_fekair
+  - mariam_el_haimeur
+  - mohamed_el_haimeur
+  - omar_el_qamari
+  - yanis_lallam_mohamed
+  - zahra_jmila_fatima
+  - zakaria_el_idrissi
+  - ziyad_el_kabir

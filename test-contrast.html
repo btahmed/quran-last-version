@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Contraste - QuranReview Pro</title>
+    <link rel="stylesheet" href="style-pro.css">
+    <link rel="stylesheet" href="style-pro-fixes.css">
+    <style>
+        body { padding: 2rem; }
+        .test-section { margin-bottom: 3rem; }
+        .test-title { font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem; }
+        
+        /* Toggle button */
+        .theme-toggle-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            background: var(--color-primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle-btn" onclick="toggleTheme()">🌙 Basculer Thème</button>
+    
+    <h1 style="text-align: center; margin-bottom: 3rem;">🎨 Test de Contraste</h1>
+    
+    <!-- Test 1: Cards -->
+    <div class="test-section">
+        <div class="test-title">1. Cartes Glass</div>
+        <div class="grid-pro grid-cols-3">
+            <div class="card-glass-pro">
+                <h3>Titre de carte</h3>
+                <p style="color: var(--color-text-secondary);">Texte secondaire pour vérifier le contraste.</p>
+                <button class="btn btn-glow">Bouton</button>
+            </div>
+            <div class="card-stat-premium" style="text-align: center;">
+                <div class="stat-value">1250</div>
+                <p>Statistique</p>
+            </div>
+            <div class="card-gradient-border">
+                <div class="card-gradient-border-inner">
+                    <h3>Carte Gradient</h3>
+                    <p>Texte de test</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Test 2: Forms -->
+    <div class="test-section">
+        <div class="test-title">2. Formulaires</div>
+        <div class="card-glass-pro" style="max-width: 500px;">
+            <div class="form-floating" style="margin-bottom: 1rem;">
+                <input type="text" placeholder=" " value="Test value">
+                <label>Nom d'utilisateur</label>
+            </div>
+            <div class="form-floating" style="margin-bottom: 1rem;">
+                <input type="password" placeholder=" " value="password123">
+                <label>Mot de passe</label>
+            </div>
+            <div class="form-floating">
+                <select>
+                    <option>Option 1</option>
+                    <option>Option 2</option>
+                </select>
+                <label>Sélection</label>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Test 3: Badges -->
+    <div class="test-section">
+        <div class="test-title">3. Badges</div>
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+            <span class="badge badge-primary">Primary</span>
+            <span class="badge badge-gold">Gold</span>
+            <span class="badge badge-glass">Glass</span>
+        </div>
+    </div>
+    
+    <!-- Test 4: Table -->
+    <div class="test-section">
+        <div class="test-title">4. Tableau</div>
+        <div class="card-glass-pro">
+            <table class="memorization-table">
+                <thead>
+                    <tr>
+                        <th>السورة</th>
+                        <th>الحالة</th>
+                        <th>التقدم</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>سورة الفاتحة</td>
+                        <td><span class="status-badge-table status-strong">متقن</span></td>
+                        <td>100%</td>
+                    </tr>
+                    <tr>
+                        <td>سورة البقرة</td>
+                        <td><span class="status-badge-table status-weak">ضعيف</span></td>
+                        <td>45%</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Test 5: Text Styles -->
+    <div class="test-section">
+        <div class="test-title">5. Styles de Texte</div>
+        <div class="card-glass-pro">
+            <h1 class="gradient-text">Titre Gradient</h1>
+            <h2>Titre Normal</h2>
+            <p class="arabic-large">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</p>
+            <p style="color: var(--color-text-secondary);">Texte secondaire - Lorem ipsum dolor sit amet.</p>
+        </div>
+    </div>
+    
+    <!-- Test 6: Modal -->
+    <div class="test-section">
+        <div class="test-title">6. Modal</div>
+        <button class="btn btn-glow" onclick="showModal()">Ouvrir Modal</button>
+    </div>
+    
+    <!-- Modal -->
+    <div class="modal-overlay-pro" id="test-modal" style="display: none;" onclick="hideModal(event)">
+        <div class="modal-content-pro" style="max-width: 400px;">
+            <h2 style="margin-bottom: 1rem;">Titre du Modal</h2>
+            <p style="color: var(--color-text-secondary); margin-bottom: 1.5rem;">
+                Ceci est un test de modal pour vérifier la lisibilité du texte sur le fond glass.
+            </p>
+            <button class="btn btn-glow btn-full" onclick="hideModal()">Fermer</button>
+        </div>
+    </div>
+    
+    <script>
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            document.querySelector('.theme-toggle-btn').textContent = 
+                next === 'dark' ? '☀️ Mode Clair' : '🌙 Mode Sombre';
+        }
+        
+        function showModal() {
+            document.getElementById('test-modal').style.display = 'flex';
+        }
+        
+        function hideModal(event) {
+            if (!event || event.target.id === 'test-modal') {
+                document.getElementById('test-modal').style.display = 'none';
+            }
+        }
+        
+        // Check current theme
+        const savedTheme = localStorage.getItem('quranreview_theme');
+        if (savedTheme) {
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        }
+    </script>
+</body>
+</html>

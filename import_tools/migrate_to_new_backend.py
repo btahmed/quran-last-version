@@ -52,8 +52,15 @@ def export_from_old_db():
     return users
 
 
-def import_to_new_backend(users, default_password='QuranReview2026'):
+def import_to_new_backend(users, default_password=None):
     """Importe les users dans le nouveau backend."""
+    if default_password is None:
+        default_password = os.environ.get('IMPORT_DEFAULT_PASSWORD')
+        if not default_password:
+            raise ValueError(
+                "Mot de passe requis. Passez-le en argument ou via "
+                "la variable d'environnement IMPORT_DEFAULT_PASSWORD"
+            )
     created = skipped = 0
 
     for u in users:
