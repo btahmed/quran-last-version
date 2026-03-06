@@ -18,7 +18,7 @@ class ImportConfig:
     excel_file_path: str = ""
     api_base_url: str = "http://127.0.0.1:8000"
     admin_username: str = "admin"
-    admin_password: str = "admin123"
+    admin_password: str = ""
     password_strategy: str = "auto"
     output_format: str = "excel"
     output_directory: str = "./output"

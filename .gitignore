@@ -2,6 +2,16 @@
 output/
 import_tools/output/
 
+# Données personnelles — ne jamais committer
+import_tools/*.xlsx
+import_tools/users_export.json
+import_tools/corrections_usernames.txt
+import_tools/RESUME_ASSIGNATIONS.txt
+
+# Fichiers .env de tous les sous-projets
+ancien\ django/**/.env
+ancien\ django/**/.env.*
+
 # Dependencies
 node_modules/
 venv/
