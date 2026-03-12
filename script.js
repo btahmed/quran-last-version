@@ -42,8 +42,8 @@ const Logger = {
         if (!this.debugMode) return;
         const e = this._push('LOG', category, message, data);
         const s = this._styles[category] || this._styles.LOG;
-        // console.log(`%c[${e.ts}] [${category}] ${message}`, s);
-        if (data) // console.log('  📝', data);
+        console.log(`%c[${e.ts}] [${category}] ${message}`, s);
+        if (data) console.log('  📝', data);
     },
 
     error(category, message, error = null) {
@@ -71,20 +71,20 @@ const Logger = {
         const text = (element.textContent || '').trim().slice(0, 40);
         const msg = `${tag}${id}${cls} → "${text}"`;
         this._push('CLICK', 'CLICK', msg, extra);
-        // console.log(`%c[${new Date().toLocaleTimeString()}] [CLICK] 🖱️ ${msg}`, this._styles.CLICK);
+        console.log(`%c[${new Date().toLocaleTimeString()}] [CLICK] 🖱️ ${msg}`, this._styles.CLICK);
     },
 
     // --- API TRACKER ---
     async api(method, url, options = {}) {
         const start = performance.now();
         this._push('LOG', 'API', `→ ${method} ${url}`);
-        // console.log(`%c[${new Date().toLocaleTimeString()}] [API] → ${method} ${url}`, this._styles.API);
+        console.log(`%c[${new Date().toLocaleTimeString()}] [API] → ${method} ${url}`, this._styles.API);
         try {
             const response = await fetch(url, { method, ...options });
             const duration = Math.round(performance.now() - start);
             const statusEmoji = response.ok ? '✅' : '❌';
             this._push(response.ok ? 'LOG' : 'ERROR', 'API', `← ${response.status} ${method} ${url} (${duration}ms)`);
-            // console.log(`%c[${new Date().toLocaleTimeString()}] [API] ← ${statusEmoji} ${response.status} ${method} ${url} (${duration}ms)`, this._styles.API);
+            console.log(`%c[${new Date().toLocaleTimeString()}] [API] ← ${statusEmoji} ${response.status} ${method} ${url} (${duration}ms)`, this._styles.API);
             return response;
         } catch (err) {
             const duration = Math.round(performance.now() - start);
@@ -98,28 +98,28 @@ const Logger = {
     nav(from, to) {
         if (!this.debugMode) return;
         this._push('LOG', 'NAV', `${from} → ${to}`);
-        // console.log(`%c[${new Date().toLocaleTimeString()}] [NAV] 🧭 ${from} → ${to}`, this._styles.NAV);
+        console.log(`%c[${new Date().toLocaleTimeString()}] [NAV] 🧭 ${from} → ${to}`, this._styles.NAV);
     },
 
     // --- AUDIO TRACKER ---
     audio(event, detail = '') {
         if (!this.debugMode) return;
         this._push('LOG', 'AUDIO', `${event} ${detail}`);
-        // console.log(`%c[${new Date().toLocaleTimeString()}] [AUDIO] 🔊 ${event} ${detail}`, this._styles.AUDIO);
+        console.log(`%c[${new Date().toLocaleTimeString()}] [AUDIO] 🔊 ${event} ${detail}`, this._styles.AUDIO);
     },
 
     // --- STATE TRACKER ---
     state(key, value) {
         if (!this.debugMode) return;
         this._push('LOG', 'STATE', `${key} changed`, value);
-        // console.log(`%c[${new Date().toLocaleTimeString()}] [STATE] 📦 ${key} =`, this._styles.STATE, value);
+        console.log(`%c[${new Date().toLocaleTimeString()}] [STATE] 📦 ${key} =`, this._styles.STATE, value);
     },
 
     // --- STORAGE TRACKER ---
     store(action, key) {
         if (!this.debugMode) return;
         this._push('LOG', 'STORE', `${action} → ${key}`);
-        // console.log(`%c[${new Date().toLocaleTimeString()}] [STORE] 💾 ${action} → ${key}`, this._styles.STORE);
+        console.log(`%c[${new Date().toLocaleTimeString()}] [STORE] 💾 ${action} → ${key}`, this._styles.STORE);
     },
 
     // --- CONSOLE HELPERS ---
@@ -144,12 +144,12 @@ const Logger = {
     apis() { return this.history('API'); },
 
     // Usage in F12: Logger.clear()
-    clear() { this._history = []; console.clear(); // console.log('🧹 Logger history cleared'); },
+    clear() { this._history = []; console.clear(); console.log('🧹 Logger history cleared'); },
 
     // Usage in F12: Logger.dump() — export as JSON
     dump() {
         const json = JSON.stringify(this._history, null, 2);
-        // console.log(json);
+        console.log(json);
         return json;
     }
 };
@@ -704,25 +704,21 @@ const QuranReview = {
         const usernameEl = document.getElementById('auth-username');
         const teacherLinks = document.querySelectorAll('.nav-teacher-only');
         const studentLinks = document.querySelectorAll('.nav-student-only');
-        const adminLinks = document.querySelectorAll('.nav-admin-only');
 
         if (loggedIn && this.state.user) {
             loginBtn?.classList.add('hidden');
             userInfo?.classList.remove('hidden');
-            const isAdmin = this.state.user.role === 'admin' || this.state.user.is_superuser;
-            const isTeacher = this.state.user.role === 'teacher';
             if (usernameEl) {
-                const roleLabel = isAdmin ? '🛡️' : isTeacher ? '👨‍🏫' : '🎓';
+                const roleLabel = this.state.user.role === 'teacher' ? '👨‍🏫' : '🎓';
                 usernameEl.textContent = `${roleLabel} ${this.state.user.first_name || this.state.user.username}`;
             }
             // Show/hide role-specific nav links
-            adminLinks.forEach(el => el.style.display = isAdmin ? 'inline-block' : 'none');
-            teacherLinks.forEach(el => el.style.display = isTeacher && !isAdmin ? 'inline-block' : 'none');
-            studentLinks.forEach(el => el.style.display = !isAdmin && !isTeacher ? 'inline-block' : 'none');
+            const isTeacher = this.state.user.role === 'teacher';
+            teacherLinks.forEach(el => el.style.display = isTeacher ? 'inline-block' : 'none');
+            studentLinks.forEach(el => el.style.display = isTeacher ? 'none' : 'inline-block');
         } else {
             loginBtn?.classList.remove('hidden');
             userInfo?.classList.add('hidden');
-            adminLinks.forEach(el => el.style.display = 'none');
             teacherLinks.forEach(el => el.style.display = 'none');
             studentLinks.forEach(el => el.style.display = 'none');
         }
@@ -755,7 +751,7 @@ const QuranReview = {
     async performLogin(username, password) {
         Logger.log('AUTH', `Attempting login for user: ${username}`);
         try {
-            const response = await fetch(`${this.config.apiBaseUrl}/api/auth/token/`, {
+            const response = await fetch(`${this.config.apiBaseUrl}/api/token/`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password }),
@@ -780,9 +776,7 @@ const QuranReview = {
             // Auto-redirect based on role
             if (this.state.user) {
                 Logger.log('AUTH', `Redirecting user role: ${this.state.user.role}`);
-                if (this.state.user.role === 'admin' || this.state.user.is_superuser) {
-                    this.navigateTo('admin');
-                } else if (this.state.user.role === 'teacher') {
+                if (this.state.user.role === 'teacher') {
                     this.navigateTo('teacher');
                 } else {
                     this.navigateTo('mytasks');
@@ -808,7 +802,7 @@ const QuranReview = {
         if (submitBtn) submitBtn.disabled = true;
 
         try {
-            const response = await fetch(`${this.config.apiBaseUrl}/api/auth/register/`, {
+            const response = await fetch(`${this.config.apiBaseUrl}/api/register/`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -878,65 +872,6 @@ const QuranReview = {
         document.getElementById(`teacher-tab-${tabName}`)?.classList.add('active');
     },
 
-    // Student task tab switching (pending / completed)
-    switchTaskTab(tabName) {
-        // Mettre à jour le bouton actif
-        document.querySelectorAll('.tabs .tab').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.tab === tabName);
-        });
-        // Afficher/masquer les cartes selon data-tab
-        const cards = document.querySelectorAll('#student-tasks-list .task-card');
-        if (!cards.length) return;
-        cards.forEach(card => {
-            card.style.display = card.dataset.tab === tabName ? '' : 'none';
-        });
-    },
-
-    // Création de tâche par l'enseignant (appelée depuis le form teacher-create-task-form)
-    async createTask(event) {
-        event.preventDefault();
-        const token = localStorage.getItem(this.config.apiTokenKey);
-        if (!token) return;
-
-        const title = document.getElementById('task-title').value.trim();
-        if (!title) { this.showNotification('عنوان المهمة مطلوب', 'error'); return; }
-
-        const body = {
-            title,
-            description: document.getElementById('task-description').value.trim(),
-            task_type: document.getElementById('task-type').value,
-            points: parseInt(document.getElementById('task-points').value) || 0,
-            due_date: document.getElementById('task-due-date').value || null,
-            assign_all: true,
-            student_ids: [],
-        };
-
-        const submitBtn = event.target.querySelector('button[type="submit"]');
-        if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'جارٍ الإنشاء...'; }
-
-        try {
-            const response = await fetch(`${this.config.apiBaseUrl}/api/tasks/create/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify(body),
-            });
-
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.detail || 'خطأ في إنشاء المهمة');
-
-            this.showNotification(data.detail || 'تم إنشاء المهمة بنجاح!', 'success');
-            document.getElementById('teacher-create-task-form').reset();
-            this.loadTeacherDashboard();
-        } catch (error) {
-            this.showNotification(error.message, 'error');
-        } finally {
-            if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'إنشاء المهمة'; }
-        }
-    },
-
     toggleAssignMode(mode) {
         const container = document.getElementById('student-select-container');
         if (mode === 'select') {
@@ -978,7 +913,7 @@ const QuranReview = {
         if (!token) return;
 
         try {
-            const response = await fetch(`${this.config.apiBaseUrl}/api/auth/me/`, {
+            const response = await fetch(`${this.config.apiBaseUrl}/api/me/`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
 
@@ -1004,7 +939,7 @@ const QuranReview = {
         if (!refresh) return false;
 
         try {
-            const response = await fetch(`${this.config.apiBaseUrl}/api/auth/token/refresh/`, {
+            const response = await fetch(`${this.config.apiBaseUrl}/api/token/refresh/`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ refresh }),
@@ -1247,9 +1182,6 @@ const QuranReview = {
                 break;
             case 'teacher':
                 this.loadTeacherDashboard();
-                break;
-            case 'admin':
-                this.loadAdminDashboard();
                 break;
         }
     },
@@ -1919,7 +1851,7 @@ const QuranReview = {
         // ===================================
 
         startHifzSession(surahId, fromAyah, toAyah) {
-            // console.log(`Starting Hifz: ${surahId}:${fromAyah}-${toAyah}`);
+            console.log(`Starting Hifz: ${surahId}:${fromAyah}-${toAyah}`);
 
             // Update state
             QuranReview.state.hifz.currentSession = {
@@ -2141,17 +2073,17 @@ const QuranReview = {
     },
     
     renderMemorizationPage() {
-        // console.log('🔄 Rendering memorization page...');
+        console.log('🔄 Rendering memorization page...');
         this.renderMemorizationTable();
         this.setupMemorizationActions();
-        // console.log('✅ Memorization page rendered');
+        console.log('✅ Memorization page rendered');
     },
     
     renderWardPage() {
-        // console.log('🔄 Rendering ward page...');
+        console.log('🔄 Rendering ward page...');
         this.setupWardControls();
         this.populateWardSurahSelect();
-        // console.log('✅ Ward page rendered');
+        console.log('✅ Ward page rendered');
     },
     
     renderProgressPage() {
@@ -2276,7 +2208,7 @@ const QuranReview = {
             });
         }
         
-        // console.log('✅ Ward controls setup completed');
+        console.log('✅ Ward controls setup completed');
     },
     
     populateWardSurahSelect() {
@@ -2302,7 +2234,7 @@ const QuranReview = {
         // Append the fragment to the select element in a single operation
         surahSelect.appendChild(fragment);
 
-        // console.log('📋 Ward surah select populated with 114 surahs');
+        console.log('📋 Ward surah select populated with 114 surahs');
     },
     
     updateWardAyahLimits() {
@@ -2334,7 +2266,7 @@ const QuranReview = {
             toAyahInput.value = '';
         }
         
-        // console.log(`📊 Updated ward ayah limits for Surah ${surahId}: 1-${surah.ayahs}`);
+        console.log(`📊 Updated ward ayah limits for Surah ${surahId}: 1-${surah.ayahs}`);
     },
     
     updateWardReciter() {
@@ -2343,7 +2275,7 @@ const QuranReview = {
         if (reciterSelector && window.QuranAudio) {
             const selectedReciter = reciterSelector.value;
             QuranAudio.setReciter(selectedReciter);
-            // console.log('🎵 Ward reciter updated to:', selectedReciter);
+            console.log('🎵 Ward reciter updated to:', selectedReciter);
             this.showNotification(`تم تغيير القارئ إلى: ${QuranAudio.getReciterName(selectedReciter)}`, 'success');
         }
     },
@@ -2366,7 +2298,7 @@ const QuranReview = {
             const source = audioSourceSelector.value;
             this.state.settings.audioSource = source;
             this.showNotification(`تم تغيير مصدر الصوت إلى: ${source === 'local' ? 'ملفات محلية' : 'عبر الإنترنت'}`, 'success');
-            // console.log(`🎵 Audio source updated to: ${source}`);
+            console.log(`🎵 Audio source updated to: ${source}`);
         }
     },
     
@@ -2387,7 +2319,7 @@ const QuranReview = {
             const delay = parseFloat(ayahDelaySelector.value);
             this.state.settings.ayahDelay = delay;
             this.showNotification(`تم تغيير مدة الآية إلى: ${delay} ثانية`, 'success');
-            // console.log(`⏱️ Ayah delay updated to: ${delay} seconds`);
+            console.log(`⏱️ Ayah delay updated to: ${delay} seconds`);
         }
     },
     
@@ -2398,7 +2330,7 @@ const QuranReview = {
             const autoPlayNext = autoPlayNextCheckbox.checked;
             this.state.settings.autoPlayNext = autoPlayNext;
             this.showNotification(`تم ${autoPlayNext ? 'تفعيل تشغيل الآية التالية' : 'إيقاف تشغيل الآية التالية'}`, 'success');
-            // console.log(`🔄 Auto-play next: ${autoPlayNext}`);
+            console.log(`🔄 Auto-play next: ${autoPlayNext}`);
         }
     },
     
@@ -2617,7 +2549,7 @@ const QuranReview = {
         // Play ayah audio
         if (window.QuranAudio) {
             const audioUrl = QuranAudio.getAyahAudioUrl(globalAyahNumber);
-            // console.log('🎵 Playing ayah audio:', audioUrl);
+            console.log('🎵 Playing ayah audio:', audioUrl);
             window.open(audioUrl, '_blank', 'noopener,noreferrer');
             this.showNotification('تم فتح الآية في نافذة جديدة', 'info');
         }
@@ -3240,13 +3172,13 @@ const QuranReview = {
     // ===================================
     
     initWardPlayer() {
-        // console.log('🎧 Initializing Ward Player...');
+        console.log('🎧 Initializing Ward Player...');
         
         const playWardBtn = document.getElementById('play-ward-btn');
         const playSurahBtn = document.getElementById('play-surah-btn');
         const stopWardBtn = document.getElementById('stop-ward-btn');
         
-        // console.log('🔍 DEBUG: Elements found:', {
+        console.log('🔍 DEBUG: Elements found:', {
             playWardBtn: !!playWardBtn,
             playSurahBtn: !!playSurahBtn,
             stopWardBtn: !!stopWardBtn
@@ -3254,20 +3186,20 @@ const QuranReview = {
         
         if (playWardBtn) {
             playWardBtn.addEventListener('click', () => {
-                // console.log('🎵 DEBUG: Play Ward button clicked!');
+                console.log('🎵 DEBUG: Play Ward button clicked!');
                 this.playWard();
             });
-            // console.log('✅ DEBUG: Play Ward button event attached');
+            console.log('✅ DEBUG: Play Ward button event attached');
         } else {
             console.error('❌ DEBUG: Play Ward button not found!');
         }
         
         if (playSurahBtn) {
             playSurahBtn.addEventListener('click', () => {
-                // console.log('🎵 DEBUG: Play Surah button clicked!');
+                console.log('🎵 DEBUG: Play Surah button clicked!');
                 this.playFullSurah();
             });
-            // console.log('✅ DEBUG: Play Surah button event attached');
+            console.log('✅ DEBUG: Play Surah button event attached');
         } else {
             console.error('❌ DEBUG: Play Surah button not found!');
         }
@@ -3278,7 +3210,7 @@ const QuranReview = {
             stopBtn.addEventListener('click', () => {
                 this.stopWardPlayback();
             });
-            // console.log('✅ DEBUG: Stop Ward button event attached');
+            console.log('✅ DEBUG: Stop Ward button event attached');
         }
         
         // Navigation buttons
@@ -3287,7 +3219,7 @@ const QuranReview = {
             prevBtn.addEventListener('click', () => {
                 this.playPreviousAyah();
             });
-            // console.log('✅ DEBUG: Previous Ayah button event attached');
+            console.log('✅ DEBUG: Previous Ayah button event attached');
         }
         
         const nextBtn = document.getElementById('next-ayah-btn');
@@ -3295,7 +3227,7 @@ const QuranReview = {
             nextBtn.addEventListener('click', () => {
                 this.playNextAyahManually();
             });
-            // console.log('✅ DEBUG: Next Ayah button event attached');
+            console.log('✅ DEBUG: Next Ayah button event attached');
         }
         
         // Initialize ward player state
@@ -3309,7 +3241,7 @@ const QuranReview = {
             toAyah: null
         };
         
-        // console.log('✅ Ward player initialized successfully');
+        console.log('✅ Ward player initialized successfully');
     },
     
     showWardPlayer() {
@@ -3327,7 +3259,7 @@ const QuranReview = {
     },
     
     playWard() {
-        // console.log('🎵 Starting Ward playback - using AudioManager...');
+        console.log('🎵 Starting Ward playback - using AudioManager...');
         
         const surahSelect = document.getElementById('ward-surah-select');
         const fromAyahInput = document.getElementById('ward-from-ayah');
@@ -3361,7 +3293,7 @@ const QuranReview = {
             return;
         }
         
-        // console.log(`✅ Valid ayah range: ${fromAyah}-${toAyah} for surah ${surah.name}`);
+        console.log(`✅ Valid ayah range: ${fromAyah}-${toAyah} for surah ${surah.name}`);
         
         // Setup ward player state for display
         this.state.wardPlayer = {
@@ -3381,11 +3313,11 @@ const QuranReview = {
         AudioManager.playWirdAyahSequence(surahId, fromAyah, toAyah);
         
         this.showNotification(`🎧 جاري تشغيل ورد ${surah.name} (${fromAyah}-${toAyah})`, 'success');
-        // console.log('✅ Ward playback started successfully via AudioManager');
+        console.log('✅ Ward playback started successfully via AudioManager');
     },
     
     playFullSurah() {
-        // console.log('📖 Starting Full Surah playback - using CDN ayah by ayah for image sync...');
+        console.log('📖 Starting Full Surah playback - using CDN ayah by ayah for image sync...');
         
         const surahSelect = document.getElementById('ward-surah-select');
         
@@ -3422,7 +3354,7 @@ const QuranReview = {
         AudioManager.playWirdAyahSequence(surahId, 1, surah.ayahs);
         
         this.showNotification(`📖 جاري تشغيل سورة ${surah.name} كاملة (مع مزامنة الصور)`, 'success');
-        // console.log('✅ Full Surah playback started with CDN for image sync');
+        console.log('✅ Full Surah playback started with CDN for image sync');
     },
     
     playLocalSurah(surahId, surah) {
@@ -3430,7 +3362,7 @@ const QuranReview = {
         const surahNumber = surahId.toString().padStart(3, '0');
         const audioUrl = `audio/${surahNumber}.mp3`;
         
-        // console.log(`🎵 Playing local surah: ${audioUrl}`);
+        console.log(`🎵 Playing local surah: ${audioUrl}`);
         
         // Setup ward player state for full surah
         this.state.wardPlayer = {
@@ -3447,7 +3379,7 @@ const QuranReview = {
         const audio = new Audio(audioUrl);
         
         audio.onended = () => {
-            // console.log('✅ Full surah finished playing');
+            console.log('✅ Full surah finished playing');
             this.stopWardPlayback();
             this.showNotification('تم الانتهاء من تشغيل السورة', 'success');
         };
@@ -3491,7 +3423,7 @@ const QuranReview = {
         this.playCurrentWardAyah();
         
         this.showNotification(`📖 جاري تشغيل سورة ${surah.name} كاملة (CDN)`, 'success');
-        // console.log('✅ Full Surah playback started successfully');
+        console.log('✅ Full Surah playback started successfully');
     },
     
     playCurrentWardAyah() {
@@ -3506,17 +3438,17 @@ const QuranReview = {
         const audioUrl = QuranAudio.getAyahAudioUrl(globalAyahNumber);
         const surah = this.config.surahs.find(s => s.id === surahId);
         
-        // console.log(`🎵 Playing ayah ${currentAyah} of surah ${surahId} (${globalAyahNumber})`);
+        console.log(`🎵 Playing ayah ${currentAyah} of surah ${surahId} (${globalAyahNumber})`);
         
         // Create audio element for this ayah
         const audio = new Audio(audioUrl);
         
         audio.onended = () => {
-            // console.log(`✅ Ayah ${currentAyah} finished playing`);
+            console.log(`✅ Ayah ${currentAyah} finished playing`);
             
             // Check if auto-play next is enabled
             if (this.state.settings.autoPlayNext && this.state.wardPlayer.isPlaying) {
-                // console.log('🔄 Auto-playing next ayah...');
+                console.log('🔄 Auto-playing next ayah...');
                 
                 // Add delay before playing next ayah
                 const delay = (this.state.settings.ayahDelay || 2.0) * 1000; // Convert to milliseconds
@@ -3524,7 +3456,7 @@ const QuranReview = {
                     this.playNextWardAyah();
                 }, delay);
             } else {
-                // console.log('⏹️ Auto-play next is disabled or playback stopped');
+                console.log('⏹️ Auto-play next is disabled or playback stopped');
                 this.playNextWardAyah();
             }
         };
@@ -3543,7 +3475,7 @@ const QuranReview = {
             this.playNextWardAyah();
         });
         
-        // console.log(`🎵 Playing ayah ${currentAyah} of surah ${surahId}`);
+        console.log(`🎵 Playing ayah ${currentAyah} of surah ${surahId}`);
     },
     
     playNextWardAyah() {
@@ -3561,7 +3493,7 @@ const QuranReview = {
     },
     
     stopWardPlayback() {
-        // console.log('⏹️ Stopping Ward playback - using AudioManager...');
+        console.log('⏹️ Stopping Ward playback - using AudioManager...');
         
         // Use AudioManager to stop everything
         AudioManager.stopAll();
@@ -3573,7 +3505,7 @@ const QuranReview = {
         this.updateWardDisplay();
         
         this.showNotification('⏹️ تم إيقاف التشغيل', 'info');
-        // console.log('✅ Ward playback stopped via AudioManager');
+        console.log('✅ Ward playback stopped via AudioManager');
     },
     
     playPreviousAyah() {
@@ -3699,7 +3631,7 @@ const QuranReview = {
                 this.showNotification('خطأ في تحميل الملف الصوتي', 'error');
             });
             
-            // console.log('🎵 Audio player initialized');
+            console.log('🎵 Audio player initialized');
         }
     },
     
@@ -3721,11 +3653,11 @@ const QuranReview = {
             const reciterName = QuranAudio.getReciterName();
             
             // Debug: log the URL
-            // console.log('🎵 Generated URL:', audioUrl);
-            // console.log('🎵 Surah Number:', surahNumber);
-            // console.log('🎵 QuranAudio available:', !!window.QuranAudio);
-            // console.log('🎵 Current reciter:', QuranAudio?.currentReciter);
-            // console.log('🎵 Audio config loaded:', !!window.QuranAudio);
+            console.log('🎵 Generated URL:', audioUrl);
+            console.log('🎵 Surah Number:', surahNumber);
+            console.log('🎵 QuranAudio available:', !!window.QuranAudio);
+            console.log('🎵 Current reciter:', QuranAudio?.currentReciter);
+            console.log('🎵 Audio config loaded:', !!window.QuranAudio);
             
             // Validate URL
             if (!audioUrl || !audioUrl.startsWith('https://')) {
@@ -3753,7 +3685,7 @@ const QuranReview = {
                 audioElement.play()
                     .then(() => {
                         this.showNotification(`جاري تشغيل ${surahName}`, 'success');
-                        // console.log('🎵 Audio playing successfully');
+                        console.log('🎵 Audio playing successfully');
                     })
                     .catch(error => {
                         console.error('❌ Error playing audio:', error);
@@ -3782,7 +3714,7 @@ const QuranReview = {
             // Update QuranAudio current reciter
             if (window.QuranAudio) {
                 QuranAudio.setReciter(selectedReciter);
-                // console.log('🎵 Reciter updated to:', selectedReciter);
+                console.log('🎵 Reciter updated to:', selectedReciter);
                 this.showNotification(`تم تغيير القارئ إلى: ${QuranAudio.getReciterName(selectedReciter)}`, 'success');
             }
         }
@@ -3838,7 +3770,7 @@ const QuranReview = {
             toAyahInput.value = '';
         }
         
-        // console.log(`📊 Updated ayah limits for Surah ${surahId}: 1-${surah.ayahs}`);
+        console.log(`📊 Updated ayah limits for Surah ${surahId}: 1-${surah.ayahs}`);
     },
     
     populateSurahSelect() {
@@ -3864,7 +3796,7 @@ const QuranReview = {
         // Append the fragment to the select element in a single operation
         surahSelect.appendChild(fragment);
 
-        // console.log('📋 Surah select populated with 114 surahs');
+        console.log('📋 Surah select populated with 114 surahs');
     },
     
     // ===================================
@@ -3872,7 +3804,7 @@ const QuranReview = {
     // ===================================
     
     openTarteel() {
-        // console.log('🎧 Opening Tarteel app...');
+        console.log('🎧 Opening Tarteel app...');
         
         // Try to open Tarteel app with smart link
         const tarteelSmartLink = 'https://tarteel.go.link/?adj_t=1d1pgcav&adj_engagement_type=fallback_click';
@@ -3978,20 +3910,6 @@ const QuranReview = {
             if (el) el.textContent = `مرحباً ${this.state.user.first_name || this.state.user.username}`;
         }
 
-        // Charger le nom du professeur assigné
-        fetch(`${this.config.apiBaseUrl}/api/my-teacher/`, { headers })
-            .then(r => r.ok ? r.json() : null)
-            .then(data => {
-                const el = document.getElementById('student-teacher-info');
-                if (!el) return;
-                if (data && data.teacher_name) {
-                    el.innerHTML = `👨‍🏫 أستاذك: <strong>${data.teacher_name}</strong> &nbsp;|&nbsp; 🕐 فوج ${data.classe_name || ''}`;
-                } else {
-                    el.textContent = '';
-                }
-            })
-            .catch(() => {});
-
         try {
             const [tasksRes, subsRes, pointsRes] = await Promise.all([
                 fetch(`${this.config.apiBaseUrl}/api/tasks/`, { headers }),
@@ -4005,9 +3923,7 @@ const QuranReview = {
 
             // Build submission lookup by task id
             const subByTask = {};
-            submissions.forEach(s => {
-                if (s && s.task) { subByTask[s.task.id] = s; }
-            });
+            submissions.forEach(s => { subByTask[s.task.id] = s; });
 
             const done = submissions.filter(s => s.status === 'approved').length;
             const rejected = submissions.filter(s => s.status === 'rejected').length;
@@ -4060,11 +3976,10 @@ const QuranReview = {
                         }
                     }
 
-                    const typeLabel = task.task_type === 'memorization' ? 'حفظ' : task.task_type === 'recitation' ? 'تلاوة' : task.type === 'hifz' ? 'حفظ' : task.type === 'muraja' ? 'مراجعة' : 'أخرى';
+                    const typeLabel = task.task_type === 'memorization' ? 'حفظ' : task.task_type === 'recitation' ? 'تلاوة' : 'أخرى';
                     const dueDate = task.due_date ? new Date(task.due_date).toLocaleDateString('ar-SA') : '';
-                    const tabStatus = (sub && sub.status === 'approved') ? 'completed' : 'pending';
 
-                    return `<div class="task-card" data-tab="${tabStatus}">
+                    return `<div class="task-card">
                         <div class="task-card-header">
                             <h3 class="task-card-title">${task.title}</h3>
                             ${statusBadge}
@@ -4225,13 +4140,11 @@ const QuranReview = {
                 studentsList.innerHTML = '<p class="empty-state">لا يوجد طلاب بعد</p>';
             } else {
                 studentsList.innerHTML = students.map(s => {
-                    const pts = s.total_points !== undefined ? s.total_points : 0;
-                    const subs = s.submissions_count !== undefined ? s.submissions_count : 0;
                     return `<div class="student-card clickable" onclick="QuranReview.viewStudentProgress(${s.id}, '${(s.first_name || s.username).replace(/'/g, "\\'")}')">
                         <div class="student-card-name">🎓 ${s.first_name || s.username}</div>
                         <div class="student-card-stats">
-                            <span>🏆 ${pts} نقطة</span>
-                            <span>📝 ${subs} تسليم</span>
+                            <span>🏆 ${s.total_points} نقطة</span>
+                            <span>📝 ${s.submissions_count} تسليم</span>
                         </div>
                         <span class="student-card-arrow">←</span>
                     </div>`;
@@ -4241,37 +4154,27 @@ const QuranReview = {
             // Tasks list
             const taskListEl = document.getElementById('teacher-tasks-list');
 
-            const typeMap = { hifz: 'حفظ', muraja: 'مراجعة', tilawa: 'تلاوة', memorization: 'حفظ', review: 'مراجعة', tajweed: 'تلاوة' };
+            // Add Delete All button header
+            const headerHtml = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h3>📋 قائمة المهام</h3>
+                    <button class="btn btn-danger btn-sm" onclick="QuranReview.handleDeleteAllTasks()" style="background-color: #dc3545;">
+                        🗑️ حذف جميع المهام
+                    </button>
+                </div>
+            `;
 
             if (!tasks.length) {
-                taskListEl.innerHTML = '<p class="empty-state">لا توجد مهام بعد</p>';
+                taskListEl.innerHTML = headerHtml + '<p class="empty-state">لا توجد مهام بعد</p>';
             } else {
-                // Regrouper les tâches par titre+type (une tâche = N copies, une par élève)
-                const taskGroups = {};
-                tasks.forEach(t => {
-                    const key = t.title + '|' + (t.type || t.task_type);
-                    if (!taskGroups[key]) {
-                        taskGroups[key] = { ...t, studentCount: 0, allIds: [] };
-                    }
-                    taskGroups[key].studentCount++;
-                    taskGroups[key].allIds.push(t.id);
-                });
-                taskListEl.innerHTML = Object.values(taskGroups).map(task => {
-                    const typeLabel = typeMap[task.type] || typeMap[task.task_type] || 'أخرى';
+                taskListEl.innerHTML = headerHtml + tasks.map(task => {
+                    const typeLabel = task.task_type === 'memorization' ? 'حفظ' : task.task_type === 'recitation' ? 'تلاوة' : 'أخرى';
                     const dueDate = task.due_date ? new Date(task.due_date).toLocaleDateString('ar-SA') : '';
                     const date = new Date(task.created_at).toLocaleDateString('ar-SA');
-                    const idsStr = task.allIds.join(',');
-                    return `<div class="task-card" style="margin-bottom: var(--space-3);">
-                        <div class="task-card-header" style="display:flex;justify-content:space-between;align-items:flex-start;">
-                            <div>
-                                <h3 class="task-card-title">${task.title}</h3>
-                                <span class="task-type-badge">${typeLabel}</span>
-                                <span style="font-size:0.8rem;color:#999;margin-right:0.5rem;">👤 ${task.studentCount} طالب</span>
-                            </div>
-                            <button class="btn btn-danger btn-sm" style="flex-shrink:0;margin-right:0.5rem;"
-                                onclick="QuranReview.deleteTask('${idsStr}', '${task.title.replace(/'/g, "\\'")}')">
-                                🗑️
-                            </button>
+                    return `<div class="task-card">
+                        <div class="task-card-header">
+                            <h3 class="task-card-title">${task.title}</h3>
+                            <span class="task-type-badge">${typeLabel}</span>
                         </div>
                         ${task.description ? `<p class="task-card-desc">${task.description}</p>` : ''}
                         <div class="task-card-meta">
@@ -4287,38 +4190,6 @@ const QuranReview = {
             this.showNotification('خطأ في تحميل البيانات', 'error');
         } finally {
             this.hideLoading();
-            // Force les glass-cards du dashboard prof à être visibles
-            // (les animations scroll-triggered bloquent à opacity:0 sur chargement dynamique)
-            document.querySelectorAll('#teacher-page .glass-card').forEach(card => {
-                card.style.opacity = '1';
-                card.style.transform = 'none';
-                card.style.transition = 'none';
-            });
-        }
-    },
-
-    async deleteTask(taskIds, taskTitle) {
-        if (!confirm(`هل تريد حذف المهمة "${taskTitle}"؟\nسيتم حذفها لجميع الطلاب.`)) return;
-        const token = localStorage.getItem(this.config.apiTokenKey);
-        if (!token) return;
-        try {
-            // taskIds peut être un seul ID ou une liste séparée par des virgules
-            const ids = String(taskIds).split(',').map(id => id.trim()).filter(Boolean);
-            const results = await Promise.all(ids.map(id =>
-                fetch(`${this.config.apiBaseUrl}/api/tasks/${id}/`, {
-                    method: 'DELETE',
-                    headers: { Authorization: `Bearer ${token}` },
-                })
-            ));
-            const allOk = results.every(r => r.ok || r.status === 204);
-            if (allOk) {
-                this.showNotification('تم حذف المهمة بنجاح', 'success');
-                this.loadTeacherDashboard();
-            } else {
-                this.showNotification('خطأ في حذف المهمة', 'error');
-            }
-        } catch (err) {
-            this.showNotification('خطأ في الاتصال', 'error');
         }
     },
 
@@ -4352,8 +4223,7 @@ const QuranReview = {
             } else {
                 html += '<div class="student-tasks-progress">';
                 data.tasks.forEach(task => {
-                    const typeLabelMap = { hifz: 'حفظ', muraja: 'مراجعة', tilawa: 'تلاوة', memorization: 'حفظ', recitation: 'تلاوة', review: 'مراجعة' };
-                    const typeLabel = typeLabelMap[task.task_type] || 'أخرى';
+                    const typeLabel = task.task_type === 'memorization' ? 'حفظ' : task.task_type === 'recitation' ? 'تلاوة' : 'أخرى';
                     let statusBadge = '';
                     if (task.submission_status === 'approved') {
                         statusBadge = '<span class="status-badge status-approved">مقبول ✓</span>';
@@ -4541,46 +4411,6 @@ const QuranReview = {
     },
 
     // ===================================
-    // ADMIN - DASHBOARD (page #admin-page)
-    // ===================================
-
-    async loadAdminDashboard() {
-        const token = localStorage.getItem(this.config.apiTokenKey);
-        try {
-            const res = await fetch(`${this.config.apiBaseUrl}/api/auth/admin/users/`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            if (!res.ok) throw new Error('Erreur chargement users');
-            const users = await res.json();
-            const el = id => document.getElementById(id);
-            if (el('admin-total-users')) el('admin-total-users').textContent = users.length;
-            if (el('admin-total-students')) el('admin-total-students').textContent = users.filter(u => u.role === 'student').length;
-            if (el('admin-total-teachers')) el('admin-total-teachers').textContent = users.filter(u => u.role === 'teacher').length;
-            if (el('admin-total-admins')) el('admin-total-admins').textContent = users.filter(u => u.role === 'admin' || u.is_superuser).length;
-            const roleColors = { student: 'badge-primary', teacher: 'badge-success', admin: 'badge-warning' };
-            const roleLabels = { student: 'طالب', teacher: 'معلم', admin: 'مدير' };
-            const rows = users.map(u => `
-                <div class="task-card" style="display:flex;align-items:center;gap:var(--space-3);padding:var(--space-3);">
-                    <div style="flex:1;">
-                        <div style="font-weight:600;">${u.first_name || ''} ${u.last_name || ''} <span style="color:var(--color-text-secondary);font-size:0.85rem;">(${u.username})</span></div>
-                        <div style="font-size:0.8rem;color:var(--color-text-secondary);">${u.email || ''}</div>
-                    </div>
-                    <span class="badge ${roleColors[u.role] || 'badge-primary'}">${roleLabels[u.role] || u.role}</span>
-                    ${u.is_superuser ? '<span class="badge badge-warning">Super</span>' : ''}
-                    <button class="btn btn-sm" onclick="QuranReview.openUserEditModal(${u.id}, '${(u.username || '').replace(/'/g, "\\'")}', '${(u.first_name || '').replace(/'/g, "\\'")}', '${(u.last_name || '').replace(/'/g, "\\'")}', '${u.role || ''}', ${!!u.is_superuser})">✏️</button>
-                    <button class="btn btn-sm" style="color:var(--color-error);" onclick="QuranReview.deleteUser(${u.id}, '${u.username.replace(/'/g, "\\'")}')">🗑️</button>
-                </div>`).join('');
-            if (el('admin-users-list')) el('admin-users-list').innerHTML = rows || '<p style="text-align:center;padding:var(--space-4);">لا يوجد مستخدمون</p>';
-        } catch (e) {
-            this.showNotification('خطأ في تحميل المستخدمين: ' + e.message, 'error');
-        }
-    },
-
-    refreshAdminUsers() {
-        this.loadAdminDashboard();
-    },
-
-    // ===================================
     // ADMIN - LOAD USERS LIST
     // ===================================
 
@@ -4589,7 +4419,7 @@ const QuranReview = {
         if (!token) return;
 
         try {
-            const response = await fetch(`${this.config.apiBaseUrl}/api/auth/admin/users/`, {
+            const response = await fetch(`${this.config.apiBaseUrl}/api/admin/users/`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                 },
@@ -4687,7 +4517,7 @@ const QuranReview = {
         successEl?.classList.add('hidden');
 
         try {
-            const response = await fetch(`${this.config.apiBaseUrl}/api/auth/admin/users/${userId}/update/`, {
+            const response = await fetch(`${this.config.apiBaseUrl}/api/admin/users/${userId}/update/`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -4737,7 +4567,7 @@ const QuranReview = {
         const token = localStorage.getItem(this.config.apiTokenKey);
 
         try {
-            const response = await fetch(`${this.config.apiBaseUrl}/api/auth/admin/users/${userId}/delete/`, {
+            const response = await fetch(`${this.config.apiBaseUrl}/api/admin/users/${userId}/delete/`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`,
