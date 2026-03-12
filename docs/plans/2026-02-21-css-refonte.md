@@ -1,0 +1,1470 @@
+# CSS Refonte — Implementation Plan
+
+> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
+
+**Goal:** Fusionner 4 fichiers CSS (4239 lignes, conflits multiples) en un seul `style.css` propre (~1100 lignes) avec glassmorphism + neumorphisme hybride, palette modernisée, dark mode complet et GSAP.
+
+**Architecture:** Un seul `style.css` structuré en 10 sections. Glassmorphism sur les cartes/header/modals. Neumorphisme sur boutons/inputs. Dark mode via `[data-theme="dark"]` sur `<html>`. GSAP conservé pour les animations au scroll.
+
+**Tech Stack:** CSS3 custom properties, backdrop-filter, GSAP 3.12 + ScrollTrigger (CDN), Amiri + Noto Naskh Arabic (Google Fonts)
+
+---
+
+## Fichiers impactés
+
+| Fichier | Action |
+|---------|--------|
+| `style.css` | Réécriture complète |
+| `style-pro.css` | Supprimé |
+| `style-pro-fixes.css` | Supprimé |
+| `style-modern.css` | Supprimé (jamais chargé) |
+| `index.html` | Retirer les `<link>` vers CSS supprimés |
+
+---
+
+### Task 1 : Sauvegarder les anciens CSS + nettoyer index.html
+
+**Files:**
+- Modify: `index.html` (lignes 22-27)
+- Delete: `style-pro.css`, `style-pro-fixes.css`, `style-modern.css`
+
+**Step 1 : Créer un backup des 4 CSS actuels**
+
+```bash
+cd C:/Users/ahmad/quran.reviewer/QuranReviewLocal
+mkdir -p docs/css-backup
+cp style.css docs/css-backup/style.css.bak
+cp style-pro.css docs/css-backup/style-pro.css.bak
+cp style-pro-fixes.css docs/css-backup/style-pro-fixes.css.bak
+cp style-modern.css docs/css-backup/style-modern.css.bak
+```
+
+**Step 2 : Retirer les liens CSS supprimés de index.html**
+
+Dans `index.html`, remplacer :
+```html
+    <!-- Base Styles -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Pro Styles -->
+    <link rel="stylesheet" href="style-pro.css">
+    <link rel="stylesheet" href="style-pro-fixes.css">
+```
+Par :
+```html
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css">
+```
+
+**Step 3 : Supprimer les anciens fichiers CSS**
+
+```bash
+rm style-pro.css style-pro-fixes.css style-modern.css
+```
+
+**Step 4 : Commit**
+
+```bash
+git add -A
+git commit -m "chore: suppression CSS redondants, nettoyage index.html"
+```
+
+---
+
+### Task 2 : Section 1 — Tokens & Variables CSS
+
+**Files:**
+- Modify: `style.css` — remplacer tout le contenu par la Section 1
+
+**Step 1 : Écrire les variables CSS (début du fichier)**
+
+Remplacer le contenu de `style.css` par :
+
+```css
+/* =============================================
+   QURAN REVIEW — DESIGN SYSTEM
+   Version 2.0 — Glassmorphism + Neumorphisme
+   ============================================= */
+
+/* =============================================
+   1. TOKENS & VARIABLES CSS
+   ============================================= */
+
+:root {
+    /* === Couleurs principales === */
+    --color-primary:       #1a7a4a;
+    --color-primary-light: #2a9a5f;
+    --color-primary-dark:  #125235;
+    --color-gold:          #c9922a;
+    --color-gold-light:    #e0ac47;
+    --color-danger:        #b83d3d;
+    --color-warning:       #c98917;
+    --color-success:       #1a7a4a;
+    --color-info:          #2f76b7;
+
+    /* === Arrière-plans === */
+    --bg:                  #f7f3ee;
+    --bg-surface:          #ffffff;
+    --bg-elevated:         #fdfaf6;
+
+    /* === Texte === */
+    --text:                #1a1a1a;
+    --text-secondary:      #5a5a5a;
+    --text-muted:          #9a9a9a;
+    --text-inverse:        #ffffff;
+
+    /* === Bordures === */
+    --border:              rgba(26, 122, 74, 0.15);
+    --border-light:        rgba(26, 122, 74, 0.08);
+
+    /* === Glassmorphism === */
+    --glass-bg:            rgba(255, 255, 255, 0.55);
+    --glass-bg-strong:     rgba(255, 255, 255, 0.80);
+    --glass-border:        rgba(255, 255, 255, 0.35);
+    --glass-blur:          blur(24px);
+    --glass-shadow:        0 8px 32px rgba(0, 0, 0, 0.10);
+
+    /* === Neumorphisme === */
+    --neu-bg:              #f7f3ee;
+    --neu-light:           #ffffff;
+    --neu-dark:            #d1cbc3;
+    --neu-shadow:          6px 6px 14px #d1cbc3, -6px -6px 14px #ffffff;
+    --neu-shadow-inset:    inset 4px 4px 10px #d1cbc3, inset -4px -4px 10px #ffffff;
+    --neu-shadow-sm:       3px 3px 8px #d1cbc3, -3px -3px 8px #ffffff;
+
+    /* === Typographie === */
+    --font-arabic:         'Amiri', 'Noto Naskh Arabic', serif;
+    --font-ui:             'Segoe UI', system-ui, -apple-system, sans-serif;
+    --font-size-base:      1rem;
+    --font-size-sm:        0.875rem;
+    --font-size-lg:        1.125rem;
+    --font-size-xl:        1.25rem;
+    --font-size-2xl:       1.5rem;
+    --font-size-arabic:    clamp(1.1rem, 4vw, 1.6rem);
+    --font-size-arabic-lg: clamp(1.5rem, 5vw, 2.2rem);
+
+    /* === Espacement === */
+    --space-1:   0.25rem;
+    --space-2:   0.5rem;
+    --space-3:   0.75rem;
+    --space-4:   1rem;
+    --space-6:   1.5rem;
+    --space-8:   2rem;
+    --space-12:  3rem;
+    --space-16:  4rem;
+
+    /* === Radius === */
+    --radius-sm:   0.375rem;
+    --radius-md:   0.75rem;
+    --radius-lg:   1rem;
+    --radius-xl:   1.5rem;
+    --radius-2xl:  2rem;
+    --radius-full: 9999px;
+
+    /* === Transitions === */
+    --transition-fast:   150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-base:   250ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow:   400ms cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* === Ombres === */
+    --shadow-sm:  0 1px 3px rgba(0, 0, 0, 0.08);
+    --shadow-md:  0 4px 12px rgba(0, 0, 0, 0.10);
+    --shadow-lg:  0 10px 30px rgba(0, 0, 0, 0.12);
+    --shadow-xl:  0 20px 60px rgba(0, 0, 0, 0.15);
+
+    /* === Z-index === */
+    --z-base:    1;
+    --z-dropdown: 100;
+    --z-sticky:  200;
+    --z-modal:   300;
+    --z-toast:   400;
+}
+
+/* === Dark Mode === */
+[data-theme="dark"] {
+    --color-primary:       #2a9a5f;
+    --color-primary-light: #3ab875;
+    --color-primary-dark:  #1a7a4a;
+    --color-gold:          #e0ac47;
+    --color-gold-light:    #f0c060;
+
+    --bg:                  #0f1a13;
+    --bg-surface:          #1a2d1f;
+    --bg-elevated:         #1f3526;
+
+    --text:                #e8e0d4;
+    --text-secondary:      #9a9a8a;
+    --text-muted:          #6a6a5a;
+
+    --border:              rgba(42, 154, 95, 0.20);
+    --border-light:        rgba(42, 154, 95, 0.10);
+
+    --glass-bg:            rgba(15, 26, 19, 0.60);
+    --glass-bg-strong:     rgba(26, 45, 31, 0.85);
+    --glass-border:        rgba(255, 255, 255, 0.08);
+    --glass-shadow:        0 8px 32px rgba(0, 0, 0, 0.40);
+
+    --neu-bg:              #1a2d1f;
+    --neu-light:           #1f3526;
+    --neu-dark:            #0a1209;
+    --neu-shadow:          6px 6px 14px #0a1209, -6px -6px 14px #1f3526;
+    --neu-shadow-inset:    inset 4px 4px 10px #0a1209, inset -4px -4px 10px #1f3526;
+    --neu-shadow-sm:       3px 3px 8px #0a1209, -3px -3px 8px #1f3526;
+
+    --shadow-sm:  0 1px 3px rgba(0, 0, 0, 0.30);
+    --shadow-md:  0 4px 12px rgba(0, 0, 0, 0.40);
+    --shadow-lg:  0 10px 30px rgba(0, 0, 0, 0.50);
+    --shadow-xl:  0 20px 60px rgba(0, 0, 0, 0.60);
+}
+```
+
+**Step 2 : Vérifier dans le navigateur**
+
+Ouvrir `index.html` dans le navigateur. La page doit s'afficher (même basiquement) sans erreur console CSS.
+
+**Step 3 : Commit**
+
+```bash
+git add style.css
+git commit -m "feat(css): section 1 - tokens et variables CSS light/dark"
+```
+
+---
+
+### Task 3 : Section 2 — Reset & Base + Typographie
+
+**Files:**
+- Modify: `style.css` — ajouter après la section 1
+
+**Step 1 : Ajouter Reset, Base et Typographie**
+
+```css
+/* =============================================
+   2. RESET & BASE
+   ============================================= */
+
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: var(--font-ui);
+    font-size: var(--font-size-base);
+    line-height: 1.6;
+    min-height: 100vh;
+    transition: background-color var(--transition-slow), color var(--transition-slow);
+    overflow-x: hidden;
+}
+
+/* Fond dégradé subtil sur le body */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+        radial-gradient(ellipse at 20% 20%, rgba(26, 122, 74, 0.06) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(201, 146, 42, 0.05) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: -1;
+}
+
+a { color: var(--color-primary); text-decoration: none; }
+a:hover { color: var(--color-primary-light); }
+
+img { max-width: 100%; height: auto; display: block; }
+
+ul, ol { list-style: none; }
+
+button { cursor: pointer; border: none; background: none; font-family: inherit; }
+
+input, textarea, select {
+    font-family: inherit;
+    font-size: inherit;
+    color: inherit;
+}
+
+.hidden { display: none !important; }
+.sr-only {
+    position: absolute;
+    width: 1px; height: 1px;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    white-space: nowrap;
+}
+
+/* =============================================
+   3. TYPOGRAPHIE ARABE
+   ============================================= */
+
+.arabic, .arabic-text, [lang="ar"] {
+    font-family: var(--font-arabic);
+    direction: rtl;
+    text-align: right;
+}
+
+.arabic-sm  { font-size: clamp(1rem, 3vw, 1.3rem);   line-height: 2.2; }
+.arabic-md  { font-size: var(--font-size-arabic);      line-height: 2.4; }
+.arabic-lg  { font-size: var(--font-size-arabic-lg);   line-height: 2.6; }
+.arabic-xl  { font-size: clamp(2rem, 6vw, 3rem);       line-height: 2.8; }
+
+/* Texte gradient vert/or */
+.gradient-text {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-gold) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+```
+
+**Step 2 : Vérifier**
+
+Ouvrir le navigateur. Le fond crème doit s'afficher, le texte doit être lisible.
+
+**Step 3 : Commit**
+
+```bash
+git add style.css
+git commit -m "feat(css): section 2-3 - reset base et typographie arabe"
+```
+
+---
+
+### Task 4 : Section 4 — Layout (Header, Nav, Main, Pages)
+
+**Files:**
+- Modify: `style.css` — ajouter après section 3
+
+**Step 1 : Ajouter le Layout**
+
+```css
+/* =============================================
+   4. LAYOUT
+   ============================================= */
+
+/* Container */
+.container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--space-4);
+}
+
+/* Header glassmorphism */
+.header {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-sticky);
+    background: var(--glass-bg-strong);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-bottom: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-sm);
+    transition: background var(--transition-slow);
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-3) var(--space-4);
+    gap: var(--space-4);
+}
+
+.header h1 {
+    font-size: var(--font-size-xl);
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.header-subtitle {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    display: none;
+}
+
+/* Navigation */
+.nav {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    flex-wrap: wrap;
+}
+
+.nav-link {
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    color: var(--text-secondary);
+    transition: all var(--transition-fast);
+    white-space: nowrap;
+    position: relative;
+}
+
+.nav-link:hover {
+    color: var(--color-primary);
+    background: rgba(26, 122, 74, 0.08);
+}
+
+.nav-link.active {
+    color: var(--color-primary);
+    background: rgba(26, 122, 74, 0.12);
+    font-weight: 600;
+}
+
+.nav-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20px;
+    height: 2px;
+    background: var(--color-primary);
+    border-radius: var(--radius-full);
+}
+
+/* Auth nav */
+.auth-nav { display: flex; align-items: center; gap: var(--space-2); }
+.auth-user-info { display: flex; align-items: center; gap: var(--space-2); }
+
+/* Theme toggle */
+.theme-toggle {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    box-shadow: var(--neu-shadow-sm);
+    background: var(--neu-bg);
+    transition: all var(--transition-fast);
+}
+
+.theme-toggle:hover { transform: scale(1.1); }
+.theme-toggle:active { box-shadow: var(--neu-shadow-inset); transform: scale(0.95); }
+
+/* Main */
+.main {
+    min-height: calc(100vh - 64px);
+    padding: var(--space-8) var(--space-4);
+}
+
+/* Pages */
+.page { display: none; }
+.page.active { display: block; }
+```
+
+**Step 2 : Vérifier**
+
+Header doit être visible et sticky. Les onglets de navigation doivent être cliquables et changer de page.
+
+**Step 3 : Commit**
+
+```bash
+git add style.css
+git commit -m "feat(css): section 4 - layout header nav main pages"
+```
+
+---
+
+### Task 5 : Section 5 — Composants Glassmorphism
+
+**Files:**
+- Modify: `style.css` — ajouter après section 4
+
+**Step 1 : Ajouter les composants glassmorphism**
+
+```css
+/* =============================================
+   5. COMPOSANTS GLASSMORPHISM
+   ============================================= */
+
+/* Card verre */
+.glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--glass-shadow);
+    padding: var(--space-6);
+    transition: all var(--transition-base);
+    position: relative;
+    overflow: hidden;
+}
+
+.glass-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+}
+
+.glass-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: rgba(26, 122, 74, 0.2);
+}
+
+/* Card solide (fallback sans backdrop-filter) */
+.card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-sm);
+    padding: var(--space-6);
+    transition: all var(--transition-base);
+}
+
+.card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+    border-color: var(--color-primary);
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-4);
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--border-light);
+}
+
+.card-title {
+    font-size: var(--font-size-lg);
+    font-weight: 700;
+    color: var(--text);
+}
+
+/* Modal glassmorphism */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: var(--z-modal);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-4);
+}
+
+.modal-content {
+    background: var(--glass-bg-strong);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-2xl);
+    box-shadow: var(--shadow-xl);
+    padding: var(--space-8);
+    width: 100%;
+    max-width: 480px;
+    position: relative;
+    animation: slideInUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.modal-close {
+    position: absolute;
+    top: var(--space-4);
+    left: var(--space-4);
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    color: var(--text-secondary);
+    background: rgba(0,0,0,0.06);
+    transition: all var(--transition-fast);
+}
+
+.modal-close:hover {
+    background: rgba(184, 61, 61, 0.1);
+    color: var(--color-danger);
+}
+
+.modal-title {
+    font-size: var(--font-size-2xl);
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: var(--space-6);
+    color: var(--text);
+}
+
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: var(--space-4);
+}
+
+.stat-card {
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4);
+    text-align: center;
+    transition: all var(--transition-base);
+}
+
+.stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+
+.stat-value {
+    font-size: var(--font-size-2xl);
+    font-weight: 800;
+    color: var(--color-primary);
+    line-height: 1.2;
+}
+
+.stat-label {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    margin-top: var(--space-1);
+}
+```
+
+**Step 2 : Vérifier**
+
+Les cards doivent avoir l'effet glassmorphism visible. La modal doit s'animer à l'ouverture.
+
+**Step 3 : Commit**
+
+```bash
+git add style.css
+git commit -m "feat(css): section 5 - composants glassmorphism"
+```
+
+---
+
+### Task 6 : Section 6 — Composants Neumorphisme
+
+**Files:**
+- Modify: `style.css` — ajouter après section 5
+
+**Step 1 : Ajouter les composants neumorphisme**
+
+```css
+/* =============================================
+   6. COMPOSANTS NEUMORPHISME
+   ============================================= */
+
+/* Boutons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-6);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    font-family: inherit;
+    transition: all var(--transition-fast);
+    cursor: pointer;
+    border: none;
+    white-space: nowrap;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Bouton primaire — neumorphisme + gradient */
+.btn-primary {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+    color: white;
+    box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255,255,255,0.15);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-primary) 100%);
+    box-shadow: var(--shadow-lg), inset 0 1px 0 rgba(255,255,255,0.2);
+    transform: translateY(-2px);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Bouton secondaire — neumorphisme flat */
+.btn-secondary {
+    background: var(--neu-bg);
+    color: var(--text);
+    box-shadow: var(--neu-shadow-sm);
+}
+
+.btn-secondary:hover {
+    box-shadow: var(--neu-shadow);
+    color: var(--color-primary);
+}
+
+.btn-secondary:active { box-shadow: var(--neu-shadow-inset); }
+
+/* Bouton danger */
+.btn-danger {
+    background: linear-gradient(135deg, var(--color-danger) 0%, #d44d4d 100%);
+    color: white;
+    box-shadow: var(--shadow-md);
+}
+
+.btn-danger:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+
+/* Bouton outline */
+.btn-outline {
+    background: transparent;
+    color: var(--color-primary);
+    border: 2px solid var(--color-primary);
+}
+
+.btn-outline:hover {
+    background: rgba(26, 122, 74, 0.08);
+    transform: translateY(-1px);
+}
+
+/* Tailles */
+.btn-sm { padding: var(--space-2) var(--space-4); font-size: var(--font-size-sm); }
+.btn-lg { padding: var(--space-4) var(--space-8); font-size: var(--font-size-lg); }
+.btn-full { width: 100%; }
+.btn-icon { width: 40px; height: 40px; padding: 0; border-radius: var(--radius-full); }
+
+/* Auth buttons */
+.btn-auth {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+    color: white;
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    box-shadow: var(--shadow-sm);
+    transition: all var(--transition-fast);
+}
+
+.btn-auth:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+
+.btn-auth-logout {
+    background: rgba(184, 61, 61, 0.1);
+    color: var(--color-danger);
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    transition: all var(--transition-fast);
+}
+
+.btn-auth-logout:hover { background: rgba(184, 61, 61, 0.2); }
+
+/* Inputs neumorphisme */
+.neu-input, .form-input {
+    width: 100%;
+    padding: var(--space-3) var(--space-4);
+    background: var(--neu-bg);
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    box-shadow: var(--neu-shadow-inset);
+    color: var(--text);
+    font-size: var(--font-size-base);
+    font-family: inherit;
+    transition: all var(--transition-fast);
+    outline: none;
+}
+
+.neu-input:focus, .form-input:focus {
+    border-color: var(--color-primary);
+    box-shadow: var(--neu-shadow-inset), 0 0 0 3px rgba(26, 122, 74, 0.15);
+}
+
+.neu-input::placeholder, .form-input::placeholder { color: var(--text-muted); }
+
+/* Form groups */
+.form-group { margin-bottom: var(--space-4); }
+.form-label {
+    display: block;
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-2);
+}
+
+/* Badges */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-full);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.badge-primary { background: rgba(26, 122, 74, 0.12); color: var(--color-primary); }
+.badge-gold    { background: rgba(201, 146, 42, 0.12); color: var(--color-gold); }
+.badge-danger  { background: rgba(184, 61, 61, 0.12); color: var(--color-danger); }
+.badge-success { background: rgba(26, 122, 74, 0.12); color: var(--color-success); }
+.badge-glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--glass-border);
+    color: var(--text);
+}
+
+/* Status badges */
+.status-badge {
+    width: 10px; height: 10px;
+    border-radius: var(--radius-full);
+    display: inline-block;
+}
+.status-strong { background: var(--color-success); box-shadow: 0 0 8px rgba(26,122,74,0.5); }
+.status-weak   { background: var(--color-warning); box-shadow: 0 0 8px rgba(201,146,42,0.5); }
+.status-new    { background: var(--color-info);    box-shadow: 0 0 8px rgba(47,118,183,0.5); }
+
+/* Progress bar */
+.progress-bar-container {
+    background: var(--neu-shadow-inset);
+    background: var(--bg);
+    box-shadow: var(--neu-shadow-inset);
+    border-radius: var(--radius-full);
+    height: 10px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--color-primary), var(--color-gold));
+    border-radius: var(--radius-full);
+    transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Table */
+table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+th {
+    background: rgba(26, 122, 74, 0.06);
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    padding: var(--space-3) var(--space-4);
+    text-align: right;
+    border-bottom: 2px solid var(--border);
+}
+
+td {
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--border-light);
+    color: var(--text);
+    font-size: var(--font-size-sm);
+}
+
+tr:hover td { background: rgba(26, 122, 74, 0.04); }
+tr:last-child td { border-bottom: none; }
+
+.memorization-table { width: 100%; }
+
+/* Auth error */
+.auth-error {
+    background: rgba(184, 61, 61, 0.08);
+    border: 1px solid rgba(184, 61, 61, 0.2);
+    border-radius: var(--radius-md);
+    padding: var(--space-3) var(--space-4);
+    color: var(--color-danger);
+    font-size: var(--font-size-sm);
+    margin-bottom: var(--space-4);
+}
+
+.auth-hint {
+    text-align: center;
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    margin-top: var(--space-4);
+}
+```
+
+**Step 2 : Vérifier**
+
+Les boutons doivent avoir l'effet neumorphisme. Les inputs doivent avoir l'ombre inset et le focus vert.
+
+**Step 3 : Commit**
+
+```bash
+git add style.css
+git commit -m "feat(css): section 6 - composants neumorphisme btns inputs badges"
+```
+
+---
+
+### Task 7 : Section 7 — Pages Métier
+
+**Files:**
+- Modify: `style.css` — ajouter après section 6
+
+**Step 1 : Ajouter les styles des pages métier**
+
+```css
+/* =============================================
+   7. PAGES MÉTIER
+   ============================================= */
+
+/* --- HOME PAGE --- */
+.home-hero {
+    text-align: center;
+    padding: var(--space-16) var(--space-4);
+}
+
+.home-hero h2 {
+    font-size: clamp(2rem, 6vw, 3.5rem);
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: var(--space-4);
+}
+
+/* --- MEMORIZATION PAGE --- */
+.memorization-filters {
+    display: flex;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+    margin-bottom: var(--space-6);
+}
+
+/* --- WARD PAGE --- */
+.ward-selection {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: var(--space-4);
+    margin-bottom: var(--space-6);
+}
+
+.ward-player {
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-6);
+    text-align: center;
+}
+
+.ward-player h3 {
+    font-size: var(--font-size-xl);
+    font-weight: 700;
+    margin-bottom: var(--space-4);
+    color: var(--text);
+}
+
+.ward-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--space-3);
+    margin: var(--space-4) 0;
+}
+
+.ward-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+    flex-wrap: wrap;
+}
+
+.ward-progress-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    margin-bottom: var(--space-2);
+}
+
+.ward-display {
+    margin-top: var(--space-6);
+}
+
+.ward-ayah-text {
+    font-family: var(--font-arabic);
+    font-size: var(--font-size-arabic-lg);
+    line-height: 2.8;
+    text-align: center;
+    direction: rtl;
+    padding: var(--space-8);
+    background: var(--glass-bg);
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--glass-border);
+}
+
+/* --- HIFZ PAGE --- */
+.hifz-container {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.hifz-header {
+    text-align: center;
+    margin-bottom: var(--space-8);
+}
+
+.hifz-display {
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-2xl);
+    padding: var(--space-8);
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ayah-line {
+    display: block;
+    font-family: var(--font-arabic);
+    font-size: var(--font-size-arabic-lg);
+    line-height: 2.8;
+    text-align: center;
+    direction: rtl;
+    margin: var(--space-2) 0;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.word {
+    display: inline;
+    padding: 0 var(--space-1);
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+    cursor: pointer;
+}
+
+.word:hover { background: rgba(26, 122, 74, 0.1); }
+
+.word.hidden {
+    background: var(--color-primary);
+    color: transparent;
+    border-radius: var(--radius-sm);
+    user-select: none;
+}
+
+.word.hidden:hover { background: var(--color-primary-light); }
+
+.hifz-feedback {
+    text-align: center;
+    padding: var(--space-4);
+    border-radius: var(--radius-xl);
+    font-size: var(--font-size-lg);
+    font-weight: 700;
+    margin-top: var(--space-4);
+}
+
+.hifz-feedback.correct {
+    background: rgba(26, 122, 74, 0.1);
+    color: var(--color-success);
+}
+
+.hifz-feedback.incorrect {
+    background: rgba(184, 61, 61, 0.1);
+    color: var(--color-danger);
+}
+
+/* Difficulty buttons */
+.diff-btn {
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    background: var(--neu-bg);
+    box-shadow: var(--neu-shadow-sm);
+    color: var(--text-secondary);
+    transition: all var(--transition-fast);
+}
+
+.diff-btn.active, .diff-btn:hover {
+    color: var(--color-primary);
+    box-shadow: var(--neu-shadow-inset);
+}
+
+/* --- COMPETITION PAGE --- */
+.competition-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--space-4);
+}
+
+/* --- TASK CARDS --- */
+.task-card {
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-4) var(--space-6);
+    margin-bottom: var(--space-3);
+    transition: all var(--transition-base);
+}
+
+.task-card:hover {
+    transform: translateX(-4px);
+    border-color: rgba(26, 122, 74, 0.25);
+    box-shadow: var(--shadow-md);
+}
+
+/* --- AUDIO PLAYER --- */
+.audio-player-container {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-xl);
+    margin-top: var(--space-4);
+}
+
+/* --- MOTIVATION TEXT --- */
+.motivation-text {
+    text-align: center;
+    font-size: var(--font-size-lg);
+    color: var(--text-secondary);
+    font-style: italic;
+    margin: var(--space-4) 0;
+}
+
+/* Force affichage pages compétition et hifz */
+#competition-page.active,
+#hifz-page.active { display: block !important; }
+
+/* User role badges */
+.role-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.role-teacher { background: rgba(201,146,42,0.15); color: var(--color-gold); }
+.role-student { background: rgba(26,122,74,0.12); color: var(--color-primary); }
+```
+
+**Step 2 : Vérifier**
+
+Naviguer vers chaque page. Les sections ward, hifz, competition doivent s'afficher correctement.
+
+**Step 3 : Commit**
+
+```bash
+git add style.css
+git commit -m "feat(css): section 7 - styles pages metier"
+```
+
+---
+
+### Task 8 : Section 8 — Animations CSS
+
+**Files:**
+- Modify: `style.css` — ajouter après section 7
+
+**Step 1 : Ajouter les animations**
+
+```css
+/* =============================================
+   8. ANIMATIONS CSS
+   ============================================= */
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInScale {
+    from { opacity: 0; transform: scale(0.95); }
+    to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideInUp {
+    from { opacity: 0; transform: translateY(40px) scale(0.96); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes slideInRight {
+    from { opacity: 0; transform: translateX(30px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: 0.7; transform: scale(1.05); }
+}
+
+@keyframes shimmer {
+    from { background-position: -200% 0; }
+    to   { background-position: 200% 0; }
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes progressFill {
+    from { width: 0; }
+}
+
+/* Utilitaires d'animation */
+.animate-fade-up    { animation: fadeInUp    0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+.animate-fade-scale { animation: fadeInScale 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+.animate-pulse      { animation: pulse       2s ease-in-out infinite; }
+
+/* Stagger enfants (pour GSAP override) */
+.stagger-children > * { opacity: 0; }
+.stagger-children.revealed > * { opacity: 1; }
+
+/* Skeleton loading */
+.skeleton {
+    background: linear-gradient(
+        90deg,
+        var(--bg) 25%,
+        rgba(26, 122, 74, 0.06) 50%,
+        var(--bg) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: var(--radius-md);
+}
+
+/* Révélation au scroll (classe ajoutée par GSAP/IntersectionObserver) */
+.reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.reveal.revealed {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+```
+
+**Step 2 : Vérifier**
+
+Ajouter temporairement `class="animate-fade-up"` à un élément dans l'HTML et vérifier l'animation.
+
+**Step 3 : Commit**
+
+```bash
+git add style.css
+git commit -m "feat(css): section 8 - animations CSS et keyframes"
+```
+
+---
+
+### Task 9 : Section 9 — Responsive Mobile-First
+
+**Files:**
+- Modify: `style.css` — ajouter après section 8
+
+**Step 1 : Ajouter le responsive**
+
+```css
+/* =============================================
+   9. RESPONSIVE — MOBILE FIRST
+   ============================================= */
+
+/* Base : < 480px (mobile) */
+.header-content {
+    padding: var(--space-2) var(--space-3);
+}
+
+.header-subtitle { display: none; }
+
+.nav {
+    gap: 0;
+}
+
+.nav-link {
+    padding: var(--space-1) var(--space-2);
+    font-size: 0.75rem;
+}
+
+.main {
+    padding: var(--space-4) var(--space-3);
+}
+
+.glass-card, .card {
+    padding: var(--space-4);
+}
+
+.stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.ward-selection {
+    grid-template-columns: 1fr;
+}
+
+.ward-ayah-text {
+    font-size: clamp(1.2rem, 5vw, 1.8rem);
+    padding: var(--space-4);
+}
+
+/* sm : 480px+ */
+@media (min-width: 480px) {
+    .stats-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    }
+
+    .nav-link {
+        font-size: var(--font-size-sm);
+        padding: var(--space-2) var(--space-3);
+    }
+}
+
+/* md : 768px+ */
+@media (min-width: 768px) {
+    .header-content {
+        padding: var(--space-3) var(--space-6);
+    }
+
+    .header-subtitle { display: block; }
+
+    .main {
+        padding: var(--space-8) var(--space-6);
+    }
+
+    .glass-card, .card {
+        padding: var(--space-6);
+    }
+
+    .ward-selection {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    }
+
+    .competition-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .modal-content {
+        padding: var(--space-12);
+    }
+}
+
+/* lg : 1024px+ */
+@media (min-width: 1024px) {
+    .container {
+        padding: 0 var(--space-8);
+    }
+
+    .competition-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .home-hero {
+        padding: var(--space-16) var(--space-8);
+    }
+}
+
+/* xl : 1280px+ */
+@media (min-width: 1280px) {
+    .main {
+        padding: var(--space-12) var(--space-8);
+    }
+}
+```
+
+**Step 2 : Vérifier**
+
+Tester en redimensionnant la fenêtre. À 375px (mobile), la nav doit rester lisible, les cards empilées.
+
+**Step 3 : Commit**
+
+```bash
+git add style.css
+git commit -m "feat(css): section 9 - responsive mobile-first 4 breakpoints"
+```
+
+---
+
+### Task 10 : Vérification finale et nettoyage
+
+**Files:**
+- Modify: `index.html` — vérifier les classes utilisées
+
+**Step 1 : Vérifier que toutes les classes utilisées dans index.html existent dans style.css**
+
+```bash
+cd C:/Users/ahmad/quran.reviewer/QuranReviewLocal
+
+# Extraire toutes les classes utilisées dans index.html
+grep -o 'class="[^"]*"' index.html | grep -o '[a-zA-Z][a-zA-Z0-9_-]*' | sort -u > /tmp/classes_html.txt
+
+# Extraire toutes les classes définies dans style.css
+grep -o '\.[a-zA-Z][a-zA-Z0-9_-]*' style.css | sed 's/^\.//' | sort -u > /tmp/classes_css.txt
+
+# Classes dans HTML mais pas dans CSS (à surveiller)
+comm -23 /tmp/classes_html.txt /tmp/classes_css.txt | head -30
+```
+
+**Step 2 : Tester le dark mode**
+
+Dans le navigateur, ouvrir la console et taper :
+```js
+document.documentElement.setAttribute('data-theme', 'dark')
+```
+Vérifier que le fond devient vert sombre, le texte crème, les cards glass adaptées.
+
+**Step 3 : Supprimer le backup si tout est OK**
+
+```bash
+rm -rf docs/css-backup/
+```
+
+**Step 4 : Commit final**
+
+```bash
+git add -A
+git commit -m "feat(css): refonte complete - 4 fichiers fusionnes en 1 style.css"
+```
+
+---
+
+## Résultat attendu
+
+```
+Avant : 4 fichiers CSS, 4239 lignes, conflits multiples
+Après : 1 fichier style.css, ~1100 lignes, zéro conflit
+Gain  : -74% de CSS
+
+Light mode : fond crème #f7f3ee, vert émeraude, or raffiné
+Dark mode  : fond #0f1a13, texte crème, glass adapté
+Style      : glassmorphism (cards/header/modal) + neumorphisme (btns/inputs)
+GSAP       : conservé pour scroll animations
+```
