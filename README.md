@@ -1,51 +1,67 @@
 # QuranReview 🕌
 
-## Description
-A comprehensive Quran review and memorization application designed to help users effectively review, memorize, and understand the Holy Quran.
+Application professionnelle pour la mémorisation et révision du Coran — PWA avec backend Django.
 
-## Features
-- 📖 Quran Reading & Review
-- 🧠 Memorization Tracking
-- 📊 Progress Analytics
-- 🎯 Review Scheduling
-- 📱 Mobile Responsive
-- 🌍 Multi-language Support
+## Déploiements
 
-## Technology Stack
-- HTML5, CSS3, JavaScript
-- Progressive Web App (PWA)
-- Local Storage for Data Persistence
-- Responsive Design
+| | URL | Stack |
+|-|-----|-------|
+| **Site live** | https://quranreview.ma | GitHub Pages (PWA statique) |
+| **API** | https://api.quranreview.live | Django + DRF (Render.com) |
 
-## Getting Started
-1. Clone this repository
-2. Open `index.html` in your browser
-3. Start using the application
+## Stack technique
 
-## Project Structure
+- **Frontend** : Vanilla JS, ES Modules natifs, CSS, PWA
+- **Backend** : Django 4.x + Django REST Framework
+- **Base de données** : PostgreSQL
+- **Infra** : Docker Compose (développement), Render.com + GitHub Pages (production)
+
+## Fonctionnalités
+
+- 📖 **Mémorisation** — suivi avec répétition espacée
+- 🎵 **Ward** — lecteur audio de récitation quotidienne
+- 🏋️ **Hifz** — exercices 5 niveaux de difficulté (masquage de mots)
+- 🏆 **Compétition** — défis et classements
+- 👨‍🏫 **Espace enseignant** — gestion tâches et soumissions audio des étudiants
+- 📊 **Progression** — analytics et historique
+- 🌙 **Thème** — clair/sombre
+- 📱 **PWA** — mode hors-ligne, installable
+
+## Démarrage en développement
+
+```bash
+# Application complète (frontend + backend + DB)
+docker-compose up --build
+
+# Frontend seul (test rapide)
+cd frontend && python -m http.server 3000
 ```
-QuranReview/
-├── index.html          # Main application file
-├── css/                # Stylesheets
-├── js/                 # JavaScript files
-├── assets/             # Images and resources
-└── README.md           # This file
+
+## Structure du projet
+
+```
+quran-last-version/
+├── frontend/              # App Docker (ES Modules)
+│   ├── index.html         # Shell principal
+│   └── src/
+│       ├── main.js        # Point d'entrée
+│       ├── core/          # logger, config, state, router, ui
+│       ├── components/    # AudioPlayer, AuthModal, ...
+│       ├── services/      # auth, tasks, competition, hifz
+│       └── pages/         # 9 pages de l'application
+├── backend/               # Django API
+├── index.html             # Version GitHub Pages (site live quranreview.ma)
+├── script.js              # JS version GitHub Pages
+├── docker-compose.yml
+└── docs/                  # Documentation technique
 ```
 
-## Recent Updates (Fixes & Optimizations)
-- **Performance:** Optimized Admin Dashboard loading speed by resolving N+1 queries and improving user list fetching. Added loading indicators.
-- **Audio:** Fixed "Audio not available" errors by adjusting API permissions (`AllowAny`) and preventing 404 errors for missing files on ephemeral storage.
-- **Features:** Added "Delete All Tasks" button for teachers to easily reset data.
-- **Bug Fixes:** Resolved 500 Internal Server Error on points endpoint and fixed serialization issues.
+## Documentation
 
-## Contributing
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## License
-This project is open source and available under the [MIT License](LICENSE).
-
-## Contact
-For any questions or suggestions, please open an issue in this repository.
+- `CLAUDE.md` — guide pour Claude Code (architecture, commandes, gotchas)
+- `docs/deployment.md` — guide de déploiement complet
+- `docs/audio-setup.md` — configuration audio (CDN / local)
+- `docs/plans/` — plans de développement
 
 ---
 *Made with ❤️ for Quran learners*
