@@ -330,8 +330,9 @@ class SubmissionCreateView(APIView):
             defaults={'audio_file': audio}
         )
         if not created:
-            if sub.status != 'submitted':
-                return Response({'detail': 'Soumission deja traitee'}, status=400)
+            if sub.status == 'approved':
+                return Response({'detail': 'Soumission deja approuvee'}, status=400)
+            # Permet la re-soumission si rejected ou submitted
             sub.audio_file = audio
             sub.status = 'submitted'
             sub.save()
