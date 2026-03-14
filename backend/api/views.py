@@ -327,9 +327,9 @@ class SubmissionCreateView(APIView):
         if not task_id or not audio:
             return Response({'detail': 'task_id et audio_file requis'}, status=400)
         try:
-            task = Task.objects.get(pk=task_id)
+            task = Task.objects.get(pk=task_id, user=request.user)
         except Task.DoesNotExist:
-            return Response({'detail': 'Tache introuvable'}, status=404)
+            return Response({'detail': 'Tache introuvable ou non assignée à cet utilisateur'}, status=404)
         sub, created = Submission.objects.get_or_create(
             task=task, student=request.user,
             defaults={'audio_file': audio}
@@ -427,11 +427,21 @@ class SubmissionRejectView(ClassePermissionMixin, APIView):
             my_students = self.get_users_for_class(request.user).filter(role='student')
             if not my_students.filter(pk=sub.student.pk).exists():
                 return Response({'detail': 'Forbidden'}, status=403)
-        sub.status = 'rejected'
-        sub.admin_feedback = request.data.get('feedback', '')
-        sub.validated_at = timezone.now()
-        sub.validated_by = request.user
-        sub.save()
+        with transaction.atomic():
+            # Inverser les points si la soumission avait été approuvée
+            if sub.status == 'approved' and sub.awarded_points:
+                PointsLog.objects.create(
+                    student=sub.student,
+                    delta=-sub.awarded_points,
+                    reason=f"Annulation approbation: {sub.task.title}",
+                    submission=sub
+                )
+            sub.status = 'rejected'
+            sub.admin_feedback = request.data.get('feedback', '')
+            sub.validated_at = timezone.now()
+            sub.validated_by = request.user
+            sub.awarded_points = 0
+            sub.save()
         return Response({'status': 'rejected'})
 
 
@@ -575,7 +585,10 @@ class TeacherTaskCreateView(APIView):
         description = request.data.get('description', '')
         task_type_raw = request.data.get('task_type', 'hifz')
         task_type = self.TASK_TYPE_MAP.get(task_type_raw, 'hifz')
-        points = int(request.data.get('points', 0) or 0)
+        try:
+            points = int(request.data.get('points', 0) or 0)
+        except (ValueError, TypeError):
+            return Response({'detail': 'points doit être un entier valide.'}, status=400)
         due_date = request.data.get('due_date') or None
         assign_all = request.data.get('assign_all', True)
         student_ids = request.data.get('student_ids', [])

@@ -75,7 +75,8 @@ class AdminUsersListView(APIView):
         if not (request.user.is_staff or request.user.role == 'admin'):
             return Response({'detail': 'Forbidden'}, status=403)
         users = User.objects.all().order_by('role', 'username')
-        return Response(UserSerializer(users, many=True).data)
+        # Retourner { users: [...] } — attendu par le frontend
+        return Response({'users': UserSerializer(users, many=True).data})
 
 
 class AdminUserUpdateView(APIView):
@@ -88,15 +89,14 @@ class AdminUserUpdateView(APIView):
             user = User.objects.get(pk=pk)
         except User.DoesNotExist:
             return Response({'detail': 'Not found'}, status=404)
-        allowed = ['first_name', 'last_name', 'role']
-        for field in allowed:
-            if field in request.data:
-                setattr(user, field, request.data[field])
-        # is_superuser ne peut être modifié que par un superutilisateur
+        # Filtrer les champs autorisés et valider via le serializer
+        payload = {k: v for k, v in request.data.items() if k in ['first_name', 'last_name', 'role']}
         if 'is_superuser' in request.data and request.user.is_superuser:
-            user.is_superuser = request.data['is_superuser']
-        user.save()
-        return Response(UserSerializer(user).data)
+            payload['is_superuser'] = request.data['is_superuser']
+        serializer = UserSerializer(user, data=payload, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
 
 
 class AdminUserDeleteView(APIView):

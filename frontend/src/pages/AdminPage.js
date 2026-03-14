@@ -2,6 +2,16 @@
 import { config } from '../core/config.js';
 import { Logger } from '../core/logger.js';
 
+// ─── UTILS ───────────────────────────────────────────────────────────────────
+function escapeHtml(str) {
+    return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 // ─── LOCAL STATE ─────────────────────────────────────────────────────────────
 let allUsers = [];
 let searchQuery = '';
@@ -133,7 +143,8 @@ async function loadUsers() {
             headers: { Authorization: `Bearer ${token}` }
         });
         if (!res.ok) throw new Error('Erreur chargement users');
-        allUsers = await res.json();
+        const data = await res.json();
+        allUsers = data.users || [];
         const el = document.getElementById('admin-total-users');
         if (el) el.textContent = allUsers.length;
         renderUsersList();
@@ -192,12 +203,12 @@ function renderUsersList() {
             onmouseenter="this.style.background='var(--color-surface)'"
             onmouseleave="this.style.background='transparent'">
             <div style="width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,var(--color-primary),var(--color-gold)); display:flex; align-items:center; justify-content:center; font-size:1rem; flex-shrink:0; color:white; font-weight:700;">
-                ${(u.first_name || u.username || '?')[0].toUpperCase()}
+                ${escapeHtml((u.first_name || u.username || '?')[0].toUpperCase())}
             </div>
             <div style="flex:1; min-width:0;">
                 <div style="font-weight:600; font-size:0.9rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                    ${u.first_name || ''} ${u.last_name || ''}
-                    <span style="color:var(--color-text-secondary); font-weight:400; font-size:0.8rem;">@${u.username}</span>
+                    ${escapeHtml(u.first_name || '')} ${escapeHtml(u.last_name || '')}
+                    <span style="color:var(--color-text-secondary); font-weight:400; font-size:0.8rem;">@${escapeHtml(u.username)}</span>
                 </div>
                 <div style="margin-top:2px; display:flex; align-items:center; gap:4px;">
                     ${roleBadge[u.role] || `<span>${u.role}</span>`}
@@ -243,11 +254,11 @@ function renderTeacherStats(teachers) {
         <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(220px,1fr)); gap:var(--space-3);">
             ${teachers.map(t => `
                 <div style="padding:var(--space-3); background:var(--color-surface); border-radius:var(--radius-xl); border:1px solid var(--color-border);">
-                    <div style="font-weight:600; margin-bottom:2px;">👨‍🏫 ${t.first_name || ''} ${t.last_name || ''}</div>
-                    <div style="font-size:0.8rem; color:var(--color-text-secondary); margin-bottom:var(--space-2);">@${t.username}</div>
+                    <div style="font-weight:600; margin-bottom:2px;">👨‍🏫 ${escapeHtml(t.first_name || '')} ${escapeHtml(t.last_name || '')}</div>
+                    <div style="font-size:0.8rem; color:var(--color-text-secondary); margin-bottom:var(--space-2);">@${escapeHtml(t.username)}</div>
                     <div style="display:flex; gap:var(--space-2); flex-wrap:wrap;">
-                        <span style="font-size:0.8rem; background:rgba(59,130,246,0.1); color:#3b82f6; padding:2px 8px; border-radius:99px;">${t.assigned_tasks} مهمة</span>
-                        ${t.pending_submissions > 0 ? `<span style="font-size:0.8rem; background:rgba(245,158,11,0.1); color:#f59e0b; padding:2px 8px; border-radius:99px;">${t.pending_submissions} انتظار</span>` : ''}
+                        <span style="font-size:0.8rem; background:rgba(59,130,246,0.1); color:#3b82f6; padding:2px 8px; border-radius:99px;">${parseInt(t.assigned_tasks, 10) || 0} مهمة</span>
+                        ${t.pending_submissions > 0 ? `<span style="font-size:0.8rem; background:rgba(245,158,11,0.1); color:#f59e0b; padding:2px 8px; border-radius:99px;">${parseInt(t.pending_submissions, 10)} انتظار</span>` : ''}
                     </div>
                 </div>
             `).join('')}
@@ -268,11 +279,11 @@ function renderAllTasks(tasks) {
     el.innerHTML = tasks.slice(0, 50).map(t => `
         <div style="display:flex; align-items:center; gap:var(--space-2); padding:var(--space-2) 0; border-bottom:1px solid var(--color-border);">
             <span style="flex-shrink:0; color:${statusColor[t.status] || '#999'};">${statusLabel[t.status] || ''}</span>
-            <div style="flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:0.875rem;">${t.title}</div>
+            <div style="flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:0.875rem;">${escapeHtml(t.title)}</div>
             <div style="font-size:0.75rem; color:var(--color-text-secondary); white-space:nowrap; flex-shrink:0;">
-                ${t.teacher ? '@' + t.teacher.username : ''} → ${t.student ? (t.student.first_name || t.student.username) : ''}
+                ${t.teacher ? '@' + escapeHtml(t.teacher.username) : ''} → ${t.student ? escapeHtml(t.student.first_name || t.student.username) : ''}
             </div>
-            ${t.points ? `<span style="font-size:0.75rem; color:var(--color-gold); flex-shrink:0;">+${t.points}</span>` : ''}
+            ${t.points ? `<span style="font-size:0.75rem; color:var(--color-gold); flex-shrink:0;">+${parseInt(t.points, 10)}</span>` : ''}
         </div>
     `).join('');
 
@@ -322,7 +333,11 @@ async function openUserProfile(userId) {
         content.innerHTML = `
             <!-- Bouton Éditer -->
             <div style="margin-bottom:16px; display:flex; gap:8px; justify-content:flex-end;">
-                <button onclick="window._adminToggleEdit(${u.id}, '${u.first_name || ''}', '${u.last_name || ''}', '${u.role}')"
+                <button data-edit-id="${u.id}"
+                    data-edit-first="${escapeHtml(u.first_name || '')}"
+                    data-edit-last="${escapeHtml(u.last_name || '')}"
+                    data-edit-role="${escapeHtml(u.role)}"
+                    onclick="window._adminToggleEdit(parseInt(this.dataset.editId), this.dataset.editFirst, this.dataset.editLast, this.dataset.editRole)"
                     style="font-size:0.8rem; padding:6px 14px; background:#f3f4f6; border:1px solid #d1d5db; border-radius:8px; cursor:pointer; color:#374151;">
                     ✏️ تعديل
                 </button>
@@ -454,7 +469,8 @@ async function openUserProfile(userId) {
 
             <!-- Bouton Supprimer -->
             <div style="margin-top:20px; padding-top:16px; border-top:1px solid #fee2e2;">
-                <button onclick="window._adminDelete(${u.id}, '${(u.first_name || u.username).replace(/'/g, '')}')"
+                <button data-delete-id="${u.id}" data-delete-name="${escapeHtml(u.first_name || u.username)}"
+                    onclick="window._adminDelete(parseInt(this.dataset.deleteId), this.dataset.deleteName)"
                     style="width:100%; padding:10px; background:#fff; border:1px solid #ef4444; border-radius:10px; color:#ef4444; font-size:0.85rem; font-weight:600; cursor:pointer; transition:background 0.15s;"
                     onmouseenter="this.style.background='#fef2f2'"
                     onmouseleave="this.style.background='#fff'">
