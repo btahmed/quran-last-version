@@ -1,16 +1,24 @@
 from rest_framework import generics, status, filters
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.utils import timezone
+from django.contrib.auth import get_user_model
+from django.db import transaction
+from django.db.models import Sum
+from django.db.models.functions import Coalesce
 from datetime import datetime, timedelta
 
-from .models import Task, Progress, ReviewSchedule, Achievement, Competition, CompetitionScore
+from .models import Task, Progress, ReviewSchedule, Achievement, Competition, CompetitionScore, Submission, PointsLog
 from .serializers import (
     TaskSerializer, ProgressSerializer, ReviewScheduleSerializer,
     AchievementSerializer, CompetitionSerializer, CompetitionScoreSerializer
 )
+from .middleware import ClassePermissionMixin
+
+User = get_user_model()
 
 
 # ============ Tasks ============
@@ -20,19 +28,22 @@ class TaskListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
     filter_backends = [filters.OrderingFilter]
     ordering_fields = ['due_date', 'priority', 'created_at']
-    
+
     def get_queryset(self):
-        queryset = Task.objects.filter(user=self.request.user)
+        user = self.request.user
+        # Les enseignants voient les tâches qu'ils ont créées pour leurs élèves
+        if getattr(user, 'role', None) == 'teacher' or user.is_staff:
+            queryset = Task.objects.filter(assigned_by=user)
+        else:
+            queryset = Task.objects.filter(user=user)
         status_filter = self.request.query_params.get('status')
         type_filter = self.request.query_params.get('type')
-        
         if status_filter:
             queryset = queryset.filter(status=status_filter)
         if type_filter:
             queryset = queryset.filter(type=type_filter)
-        
         return queryset
-    
+
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
@@ -40,9 +51,13 @@ class TaskListCreateView(generics.ListCreateAPIView):
 class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = TaskSerializer
     permission_classes = [IsAuthenticated]
-    
+
     def get_queryset(self):
-        return Task.objects.filter(user=self.request.user)
+        user = self.request.user
+        # Les profs peuvent accéder aux tâches qu'ils ont créées pour leurs élèves
+        if getattr(user, 'role', None) == 'teacher' or user.is_staff:
+            return Task.objects.filter(assigned_by=user)
+        return Task.objects.filter(user=user)
 
 
 # ============ Progress ============
@@ -206,6 +221,78 @@ def submit_competition_score(request, pk):
         )
 
 
+# ============ Compatibility Endpoints ============
+
+class MySubmissionsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        subs = Submission.objects.filter(student=request.user).select_related('task')
+        data = [{
+            'id': s.id,
+            'task': {
+                'id': s.task.id,
+                'title': s.task.title,
+                'points': getattr(s.task, 'points', 0),
+            },
+            'status': s.status,
+            'submitted_at': s.submitted_at,
+            'admin_feedback': s.admin_feedback,
+            'awarded_points': s.awarded_points,
+            'audio_url': (request.build_absolute_uri(s.audio_file.url)
+                          if s.audio_file else None),
+        } for s in subs]
+        return Response(data)
+
+
+class PointsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        total = PointsLog.get_total_points(request.user)
+        logs = PointsLog.objects.filter(student=request.user)[:20]
+        data = {
+            'total': total,
+            'total_points': total,  # alias attendu par MyTasksPage.js
+            'logs': [{'delta': log.delta, 'reason': log.reason, 'created_at': log.created_at} for log in logs]
+        }
+        return Response(data)
+
+
+class LeaderboardView(APIView):
+    """
+    Compatibility endpoint used by competition UI.
+    GET returns aggregated leaderboard.
+    POST is accepted for compatibility and returns the refreshed board.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def _build_leaderboard(self):
+        rows = (
+            User.objects
+            .annotate(
+                total_points=Coalesce(Sum('competition_scores__score'), 0),
+                submissions_count=Coalesce(Sum('competition_scores__ayah_count'), 0),
+            )
+            .order_by('-total_points', 'username')[:20]
+        )
+        return [
+            {
+                'username': u.username,
+                'total_points': u.total_points,
+                'score': u.total_points,
+                'submissions_count': u.submissions_count,
+            }
+            for u in rows
+        ]
+
+    def get(self, request):
+        return Response({'leaderboard': self._build_leaderboard()})
+
+    def post(self, request):
+        return Response({'leaderboard': self._build_leaderboard()})
+
+
 # ============ Helper Functions ============
 
 def calculate_streak(user):
@@ -228,3 +315,537 @@ def calculate_streak(user):
             break
     
     return streak
+
+
+class SubmissionCreateView(APIView):
+    parser_classes = [MultiPartParser, FormParser]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        task_id = request.data.get('task_id')
+        audio = request.FILES.get('audio_file')
+        if not task_id or not audio:
+            return Response({'detail': 'task_id et audio_file requis'}, status=400)
+        try:
+            task = Task.objects.get(pk=task_id, user=request.user)
+        except Task.DoesNotExist:
+            return Response({'detail': 'Tache introuvable ou non assignée à cet utilisateur'}, status=404)
+        sub, created = Submission.objects.get_or_create(
+            task=task, student=request.user,
+            defaults={'audio_file': audio}
+        )
+        if not created:
+            if sub.status == 'approved':
+                return Response({'detail': 'Soumission deja approuvee'}, status=400)
+            # Permet la re-soumission si rejected ou submitted
+            sub.audio_file = audio
+            sub.status = 'submitted'
+            sub.save()
+        return Response({'id': sub.id, 'status': sub.status}, status=201 if created else 200)
+
+
+class PendingSubmissionsView(ClassePermissionMixin, APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if request.user.role not in ['teacher', 'admin'] and not request.user.is_superuser:
+            return Response({'detail': 'Forbidden'}, status=403)
+        # Filtrer uniquement les élèves de la classe du prof
+        my_students = self.get_users_for_class(request.user).filter(role='student')
+        subs = Submission.objects.filter(
+            status='submitted',
+            student__in=my_students
+        ).select_related('task', 'student')
+        data = [{
+            'id': s.id,
+            'student': s.student.username,
+            'student_name': (f"{s.student.first_name} {s.student.last_name}".strip()
+                             or s.student.username),
+            'task': {
+                'id': s.task.id,
+                'title': s.task.title,
+                'points': getattr(s.task, 'points', 0),
+            },
+            'submitted_at': s.submitted_at,
+            'audio_url': (request.build_absolute_uri(s.audio_file.url)
+                          if s.audio_file else None),
+        } for s in subs]
+        return Response(data)
+
+
+class SubmissionApproveView(ClassePermissionMixin, APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, submission_id):
+        if request.user.role not in ['teacher', 'admin'] and not request.user.is_superuser:
+            return Response({'detail': 'Forbidden'}, status=403)
+        try:
+            sub = Submission.objects.get(pk=submission_id)
+        except Submission.DoesNotExist:
+            return Response({'detail': 'Not found'}, status=404)
+        # Vérifier que l'élève appartient à la classe du prof
+        if not request.user.is_superuser and request.user.role != 'admin':
+            my_students = self.get_users_for_class(request.user).filter(role='student')
+            if not my_students.filter(pk=sub.student.pk).exists():
+                return Response({'detail': 'Forbidden'}, status=403)
+        # Éviter double-approbation
+        if sub.status == 'approved':
+            return Response({'detail': 'Soumission déjà approuvée', 'status': 'approved',
+                             'points_awarded': sub.awarded_points or 0})
+        feedback = request.data.get('feedback', '')
+        points = getattr(sub.task, 'points', 0) or 0
+        with transaction.atomic():
+            sub.status = 'approved'
+            sub.validated_at = timezone.now()
+            sub.validated_by = request.user
+            sub.awarded_points = points
+            if feedback:
+                sub.admin_feedback = feedback
+            sub.save()
+            if points and not PointsLog.objects.filter(submission=sub, delta=points).exists():
+                PointsLog.objects.create(
+                    student=sub.student,
+                    delta=points,
+                    reason=f"تمت الموافقة على: {sub.task.title}",
+                    submission=sub
+                )
+        return Response({'status': 'approved', 'points_awarded': points})
+
+
+class SubmissionRejectView(ClassePermissionMixin, APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, submission_id):
+        if request.user.role not in ['teacher', 'admin'] and not request.user.is_superuser:
+            return Response({'detail': 'Forbidden'}, status=403)
+        try:
+            sub = Submission.objects.get(pk=submission_id)
+        except Submission.DoesNotExist:
+            return Response({'detail': 'Not found'}, status=404)
+        # Vérifier que l'élève appartient à la classe du prof
+        if not request.user.is_superuser and request.user.role != 'admin':
+            my_students = self.get_users_for_class(request.user).filter(role='student')
+            if not my_students.filter(pk=sub.student.pk).exists():
+                return Response({'detail': 'Forbidden'}, status=403)
+        with transaction.atomic():
+            # Inverser les points si la soumission avait été approuvée
+            if sub.status == 'approved' and sub.awarded_points:
+                PointsLog.objects.create(
+                    student=sub.student,
+                    delta=-sub.awarded_points,
+                    reason=f"Annulation approbation: {sub.task.title}",
+                    submission=sub
+                )
+            sub.status = 'rejected'
+            sub.admin_feedback = request.data.get('feedback', '')
+            sub.validated_at = timezone.now()
+            sub.validated_by = request.user
+            sub.awarded_points = 0
+            sub.save()
+        return Response({'status': 'rejected'})
+
+
+class MyStudentsView(ClassePermissionMixin, APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if request.user.role not in ['teacher', 'admin'] and not request.user.is_superuser:
+            return Response({'detail': 'Forbidden'}, status=403)
+        students = self.get_users_for_class(request.user).filter(role='student')
+        data = []
+        for u in students:
+            total_pts = PointsLog.get_total_points(u)
+            subs_count = u.submissions.count()
+            data.append({
+                'id': u.id,
+                'username': u.username,
+                'first_name': u.first_name,
+                'last_name': u.last_name,
+                'email': u.email,
+                'role': u.role,
+                'total_points': total_pts,
+                'submissions_count': subs_count,
+            })
+        return Response(data)
+
+
+class StudentProgressView(ClassePermissionMixin, APIView):
+    """
+    GET /api/students/<student_id>/progress/
+    Retourne le détail des tâches et soumissions d'un élève (pour le prof).
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, student_id):
+        if request.user.role not in ['teacher', 'admin'] and not request.user.is_superuser:
+            return Response({'detail': 'Forbidden'}, status=403)
+        # Vérifier que l'élève appartient à la classe du prof
+        my_students = self.get_users_for_class(request.user).filter(role='student')
+        try:
+            student = my_students.get(pk=student_id)
+        except User.DoesNotExist:
+            return Response({'detail': 'Not found'}, status=404)
+
+        # Tâches assignées par ce prof à cet élève
+        tasks = Task.objects.filter(user=student, assigned_by=request.user).prefetch_related('submissions')
+        task_data = []
+        for t in tasks:
+            sub = t.submissions.filter(student=student).first()
+            task_data.append({
+                'id': t.id,
+                'title': t.title,
+                'task_type': t.type,          # JS attend task_type
+                'points': getattr(t, 'points', 0),
+                'due_date': t.due_date,
+                'submission_status': sub.status if sub else 'not_submitted',  # JS attend submission_status
+                'submitted_at': sub.submitted_at if sub else None,
+                'audio_url': (request.build_absolute_uri(sub.audio_file.url)
+                              if sub and sub.audio_file else None),
+                'admin_feedback': sub.admin_feedback if sub else '',
+                'awarded_points': sub.awarded_points if sub else 0,
+            })
+
+        total_points = PointsLog.get_total_points(student)
+        return Response({
+            'student': {                      # JS attend data.student.total_points
+                'id': student.id,
+                'username': student.username,
+                'first_name': student.first_name,
+                'last_name': student.last_name,
+                'total_points': total_points,
+            },
+            'tasks': task_data,
+        })
+
+
+class MyTeacherView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        # Chercher les groupes de l'étudiant au format Classe_*_Prof_*
+        student_groups = user.groups.filter(name__startswith='Classe_', name__contains='_Prof_')
+
+        if not student_groups.exists():
+            return Response({'teacher_name': None})
+
+        # Prendre le premier groupe trouvé
+        group = student_groups.first()
+        group_name = group.name  # ex: Classe_8h45_Prof_Oum_Wael
+
+        # Extraire le nom de classe depuis le nom du groupe
+        # Format : Classe_{classe_name}_Prof_{prof_name}
+        parts = group_name.split('_Prof_')
+        classe_name = parts[0].replace('Classe_', '', 1) if len(parts) >= 2 else None
+        prof_part = parts[1] if len(parts) >= 2 else None
+
+        # Trouver le teacher membre de ce groupe avec role='teacher'
+        teacher = User.objects.filter(groups=group, role='teacher').first()
+
+        if not teacher:
+            return Response({'teacher_name': None})
+
+        # Ignorer les valeurs "nan" issues de l'import pandas
+        fn = teacher.first_name if teacher.first_name and teacher.first_name.lower() != 'nan' else ''
+        ln = teacher.last_name if teacher.last_name and teacher.last_name.lower() != 'nan' else ''
+        display_name = f"{fn} {ln}".strip() or teacher.username
+
+        return Response({
+            'teacher_name': display_name,
+            'teacher_username': teacher.username,
+            'classe_name': classe_name,
+        })
+
+
+class TeacherTaskCreateView(APIView):
+    """
+    POST /api/tasks/create/
+    Crée une tâche pour tous les élèves du groupe de l'enseignant connecté.
+    """
+    permission_classes = [IsAuthenticated]
+
+    TASK_TYPE_MAP = {
+        'memorization': 'hifz',
+        'review': 'muraja',
+        'tajweed': 'tilawa',
+        'hifz': 'hifz',
+        'muraja': 'muraja',
+        'tilawa': 'tilawa',
+    }
+
+    def post(self, request):
+        user = request.user
+        if getattr(user, 'role', None) != 'teacher' and not user.is_staff:
+            return Response({'detail': 'Accès réservé aux enseignants.'}, status=403)
+
+        title = request.data.get('title', '').strip()
+        if not title:
+            return Response({'detail': 'Le titre est obligatoire.'}, status=400)
+
+        description = request.data.get('description', '')
+        task_type_raw = request.data.get('task_type', 'hifz')
+        task_type = self.TASK_TYPE_MAP.get(task_type_raw, 'hifz')
+        try:
+            points = int(request.data.get('points', 0) or 0)
+        except (ValueError, TypeError):
+            return Response({'detail': 'points doit être un entier valide.'}, status=400)
+        due_date = request.data.get('due_date') or None
+        assign_all = request.data.get('assign_all', True)
+        student_ids = request.data.get('student_ids', [])
+
+        # Récupérer les élèves du groupe de l'enseignant
+        teacher_groups = user.groups.filter(name__startswith='Classe_')
+        students = User.objects.filter(groups__in=teacher_groups, role='student').distinct()
+
+        if not assign_all and student_ids:
+            students = students.filter(id__in=student_ids)
+
+        if not students.exists():
+            return Response({'detail': 'Aucun élève trouvé dans votre groupe.'}, status=400)
+
+        # Créer une tâche pour chaque élève
+        created = 0
+        for student in students:
+            Task.objects.create(
+                user=student,
+                assigned_by=user,
+                title=title,
+                description=description,
+                type=task_type,
+                points=points,
+                due_date=due_date,
+            )
+            created += 1
+
+        return Response({'detail': f'{created} مهمة تم إنشاؤها بنجاح.', 'count': created})
+
+
+# ============ Admin Endpoints ============
+
+class AdminDeleteAllTasksView(APIView):
+    """
+    POST /api/admin/tasks/delete-all/
+    Supprime toutes les tâches — réservé aux admins.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        # Réservé aux admins uniquement — pas aux teachers
+        if request.user.role != 'admin' and not request.user.is_superuser:
+            return Response({'detail': 'Forbidden'}, status=403)
+        count, _ = Task.objects.all().delete()
+        return Response({'detail': f'{count} tâches supprimées.', 'count': count})
+
+
+class AdminCreateTeacherView(APIView):
+    """
+    POST /api/admin/create-teacher/
+    Crée un compte enseignant — réservé aux admins.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        if request.user.role != 'admin' and not request.user.is_superuser:
+            return Response({'detail': 'Forbidden'}, status=403)
+
+        username = request.data.get('username', '').strip()
+        promote = request.data.get('promote', False)
+
+        if not username:
+            return Response({'detail': 'username est requis.'}, status=400)
+
+        # Mode promotion : passer un utilisateur existant en enseignant
+        if promote:
+            try:
+                user = User.objects.get(username=username)
+            except User.DoesNotExist:
+                return Response({'detail': 'Utilisateur introuvable.'}, status=404)
+            user.role = 'teacher'
+            user.save()
+            return Response({
+                'id': user.id,
+                'username': user.username,
+                'role': user.role,
+                'detail': 'Utilisateur promu enseignant avec succès.'
+            })
+
+        # Mode création : créer un nouveau compte enseignant
+        password = request.data.get('password', '').strip()
+        first_name = request.data.get('first_name', '').strip()
+        last_name = request.data.get('last_name', '').strip()
+        email = request.data.get('email', '').strip()
+
+        if not password:
+            return Response({'detail': 'password est requis pour créer un compte.'}, status=400)
+
+        if User.objects.filter(username=username).exists():
+            return Response({'detail': 'Ce nom d\'utilisateur existe déjà.'}, status=400)
+
+        teacher = User.objects.create_user(
+            username=username,
+            password=password,
+            first_name=first_name,
+            last_name=last_name,
+            email=email,
+            role='teacher',
+        )
+        return Response({
+            'id': teacher.id,
+            'username': teacher.username,
+            'role': teacher.role,
+            'detail': 'Enseignant créé avec succès.'
+        }, status=201)
+
+
+class AdminOverviewView(APIView):
+    """
+    GET /api/admin/overview/
+    Retourne toutes les tâches, soumissions et stats élèves — réservé aux admins.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if request.user.role != 'admin' and not request.user.is_superuser:
+            return Response({'detail': 'Forbidden'}, status=403)
+
+        # Toutes les tâches avec prof et élève
+        tasks = Task.objects.select_related('user', 'assigned_by').order_by('-created_at')
+        tasks_data = []
+        for t in tasks:
+            tasks_data.append({
+                'id': t.id,
+                'title': t.title,
+                'status': t.status,
+                'points': getattr(t, 'points', 0) or 0,
+                'due_date': str(t.due_date) if t.due_date else None,
+                'student': {'id': t.user.id, 'username': t.user.username, 'first_name': t.user.first_name, 'last_name': t.user.last_name} if t.user else None,
+                'teacher': {'id': t.assigned_by.id, 'username': t.assigned_by.username, 'first_name': t.assigned_by.first_name} if t.assigned_by else None,
+            })
+
+        # Toutes les soumissions
+        subs = Submission.objects.select_related('task', 'task__user', 'task__assigned_by').order_by('-submitted_at')
+        subs_data = []
+        for s in subs:
+            subs_data.append({
+                'id': s.id,
+                'status': s.status,
+                'awarded_points': s.awarded_points or 0,
+                'submitted_at': str(s.submitted_at) if s.submitted_at else None,
+                'task_title': s.task.title if s.task else '',
+                'student': {'id': s.task.user.id, 'username': s.task.user.username, 'first_name': s.task.user.first_name} if s.task and s.task.user else None,
+                'teacher': {'username': s.task.assigned_by.username} if s.task and s.task.assigned_by else None,
+            })
+
+        # Stats par prof
+        teachers = User.objects.filter(role='teacher')
+        teacher_stats = []
+        for t in teachers:
+            assigned = Task.objects.filter(assigned_by=t).count()
+            pending_subs = Submission.objects.filter(task__assigned_by=t, status='submitted').count()
+            teacher_stats.append({
+                'id': t.id, 'username': t.username,
+                'first_name': t.first_name, 'last_name': t.last_name,
+                'assigned_tasks': assigned, 'pending_submissions': pending_subs,
+            })
+
+        return Response({
+            'tasks': tasks_data,
+            'submissions': subs_data,
+            'teacher_stats': teacher_stats,
+            'totals': {
+                'tasks': len(tasks_data),
+                'submissions': len(subs_data),
+                'pending_submissions': sum(1 for s in subs_data if s['status'] == 'submitted'),
+                'approved_submissions': sum(1 for s in subs_data if s['status'] == 'approved'),
+            }
+        })
+
+
+class AdminUserProfileView(APIView):
+    """
+    GET /api/admin/users/<pk>/profile/
+    Retourne le profil complet d'un utilisateur — réservé aux admins.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        if request.user.role != 'admin' and not request.user.is_superuser:
+            return Response({'detail': 'Forbidden'}, status=403)
+        try:
+            user = User.objects.get(pk=pk)
+        except User.DoesNotExist:
+            return Response({'detail': 'Not found'}, status=404)
+
+        subs = Submission.objects.filter(task__user=user).select_related('task')
+        total_points = PointsLog.get_total_points(user)
+
+        # Pour les profs : tâches qu'ils ont assignées à leurs élèves
+        is_teacher = user.role == 'teacher' or user.is_staff
+        assigned_tasks_qs = Task.objects.filter(assigned_by=user).select_related('user') if is_teacher else []
+        assigned_tasks_count = Task.objects.filter(assigned_by=user).count() if is_teacher else 0
+
+        # Tâches avec effective_status (basé sur la soumission, pas Task.status)
+        tasks_qs = Task.objects.filter(user=user).select_related('assigned_by').prefetch_related('submissions')
+        task_list = []
+        for t in tasks_qs[:30]:
+            sub = t.submissions.filter(student=user).first()
+            eff = sub.status if sub else 'pending'
+            task_list.append({
+                'id': t.id,
+                'title': t.title,
+                'status': eff,
+                'points': getattr(t, 'points', 0) or 0,
+                'teacher': t.assigned_by.username if t.assigned_by else None,
+            })
+
+        # Classe et prof de l'élève (groupes Django format Classe_*_Prof_*)
+        classe_info = None
+        student_groups = user.groups.filter(name__startswith='Classe_')
+        if student_groups.exists():
+            group = student_groups.first()
+            parts = group.name.split('_Prof_')
+            classe_name = parts[0].replace('Classe_', '', 1) if len(parts) >= 2 else group.name
+            teacher = User.objects.filter(groups=group, role='teacher').first()
+            teacher_name = None
+            if teacher:
+                fn = teacher.first_name if teacher.first_name and teacher.first_name.lower() != 'nan' else ''
+                ln = teacher.last_name if teacher.last_name and teacher.last_name.lower() != 'nan' else ''
+                teacher_name = f"{fn} {ln}".strip() or teacher.username
+            classe_info = {
+                'name': classe_name,
+                'teacher': teacher_name,
+                'teacher_username': teacher.username if teacher else None,
+            }
+
+        return Response({
+            'id': user.id,
+            'username': user.username,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'email': user.email,
+            'role': user.role,
+            'is_superuser': user.is_superuser,
+            'date_joined': str(user.date_joined) if user.date_joined else None,
+            'total_points': total_points,
+            'tasks_count': tasks_qs.count(),
+            'tasks': task_list,
+            'submissions': [{'id': s.id, 'status': s.status, 'awarded_points': s.awarded_points or 0, 'task_title': s.task.title if s.task else ''} for s in subs[:20]],
+            'classe_info': classe_info,
+            # Données spécifiques aux profs
+            'assigned_tasks_count': assigned_tasks_count,
+            'assigned_tasks': [{'id': t.id, 'title': t.title, 'status': t.status, 'points': getattr(t, 'points', 0) or 0, 'student': t.user.username if t.user else None, 'student_name': t.user.first_name if t.user else None} for t in assigned_tasks_qs[:30]],
+        })
+
+
+# ============ Health Check ============
+
+class HealthCheckView(APIView):
+    """
+    GET /api/health/
+    Endpoint utilisé par le healthcheck Docker.
+    """
+    permission_classes = []
+    authentication_classes = []
+
+    def get(self, request):
+        return Response({'status': 'ok'})

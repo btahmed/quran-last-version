@@ -4,7 +4,28 @@ import { state } from '../core/state.js';
 import { config } from '../core/config.js';
 import { showNotification } from '../core/ui.js';
 import { Logger } from '../core/logger.js';
-import { showAuthModal } from '../services/auth.js';
+import { showAuthModal, refreshToken } from '../services/auth.js';
+
+// Wrapper fetch avec auto-refresh du token JWT (401)
+async function authFetch(url, options = {}) {
+    let token = localStorage.getItem(config.apiTokenKey);
+    const makeReq = (t) => fetch(url, {
+        ...options,
+        headers: { ...options.headers, Authorization: `Bearer ${t}` },
+    });
+    let res = await makeReq(token);
+    if (res.status === 401) {
+        const refreshed = await refreshToken();
+        if (refreshed) {
+            token = localStorage.getItem(config.apiTokenKey);
+            res = await makeReq(token);
+        } else {
+            showAuthModal();
+            throw new Error('انتهت صلاحية الجلسة، يرجى تسجيل الدخول مجدداً');
+        }
+    }
+    return res;
+}
 
 // Injection CSS
 if (!document.querySelector('link[href*="TeacherPage.css"]')) {
@@ -18,8 +39,57 @@ if (!document.querySelector('link[href*="TeacherPage.css"]')) {
 // RENDER — structure HTML de la page
 // ===================================
 
+const GRADE_LABELS = {
+    1: { emoji: '😟', text: 'ضعيف' },
+    2: { emoji: '😐', text: 'مقبول' },
+    3: { emoji: '🙂', text: 'جيد' },
+    4: { emoji: '😊', text: 'جيد جداً' },
+    5: { emoji: '🌟', text: 'ممتاز' },
+};
+
+let _pendingGradeSubmissionId = null;
+let _selectedGrade = null;
+let _pendingRejectSubmissionId = null;
+
 export function render() {
     return `
+        <!-- Modal notation emoji -->
+        <div id="grade-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:2000;align-items:center;justify-content:center;">
+            <div class="card-glass-pro" style="max-width:420px;width:90%;padding:2rem;text-align:center;border-radius:1rem;">
+                <h3 style="font-size:1.2rem;font-weight:700;margin-bottom:0.5rem;">⭐ تقييم التسليم</h3>
+                <p id="grade-modal-subtitle" style="color:var(--color-text-secondary);margin-bottom:1.5rem;font-size:0.9rem;"></p>
+                <div style="display:flex;justify-content:center;gap:0.75rem;margin-bottom:1rem;">
+                    ${[1,2,3,4,5].map(g => `
+                        <button onclick="QuranReview.selectGrade(${g})" data-grade="${g}"
+                            style="font-size:2rem;background:none;border:2px solid transparent;border-radius:12px;padding:8px;cursor:pointer;transition:all 0.2s;line-height:1;"
+                            title="${GRADE_LABELS[g].text}">
+                            ${GRADE_LABELS[g].emoji}
+                        </button>
+                    `).join('')}
+                </div>
+                <div id="grade-label" style="font-size:1rem;font-weight:600;min-height:1.5em;margin-bottom:1.5rem;color:var(--color-primary);"></div>
+                <div style="display:flex;gap:1rem;justify-content:center;">
+                    <button class="btn btn-outline-glow btn-sm" onclick="QuranReview.closeGradeModal()">إلغاء</button>
+                    <button class="btn btn-glow btn-sm" id="grade-confirm-btn" disabled onclick="QuranReview.confirmGrade()">✓ قبول</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal rejet -->
+        <div id="reject-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:2000;align-items:center;justify-content:center;">
+            <div class="card-glass-pro" style="max-width:420px;width:90%;padding:2rem;border-radius:1rem;">
+                <h3 style="font-size:1.1rem;font-weight:700;margin-bottom:0.75rem;">✗ رفض التسليم</h3>
+                <p id="reject-modal-subtitle" style="color:var(--color-text-secondary);margin-bottom:1rem;font-size:0.9rem;"></p>
+                <textarea id="reject-feedback" placeholder="سبب الرفض (اختياري)..."
+                    dir="rtl"
+                    style="width:100%;min-height:80px;border-radius:8px;padding:10px;border:1px solid var(--color-border);background:var(--glass-bg);color:var(--color-text);resize:vertical;font-family:inherit;font-size:0.95rem;"></textarea>
+                <div style="display:flex;gap:1rem;justify-content:center;margin-top:1rem;">
+                    <button class="btn btn-outline-glow btn-sm" onclick="QuranReview.closeRejectModal()">إلغاء</button>
+                    <button class="btn btn-danger btn-sm" onclick="QuranReview.confirmReject()">✗ تأكيد الرفض</button>
+                </div>
+            </div>
+        </div>
+
         <div id="teacher-page" class="page active">
             <section class="section-pro">
                 <div class="container-pro">
@@ -260,8 +330,8 @@ async function loadTeacherDashboard() {
                         </div>
                     ` : '<p class="empty-state">لا يوجد ملف صوتي</p>'}
                     <div class="pending-card-actions">
-                        <button class="btn btn-success btn-sm" onclick="QuranReview.approveSubmission(${s.id})">✓ قبول</button>
-                        <button class="btn btn-danger btn-sm" onclick="QuranReview.rejectSubmissionPrompt(${s.id})">✗ رفض</button>
+                        <button class="btn btn-success btn-sm" onclick="QuranReview.openGradeModal(${s.id}, '${escapeHtml(s.student_name).replace(/'/g, "\\'")}', '${escapeHtml(s.task ? s.task.title : '').replace(/'/g, "\\'")}')">⭐ قبول وتقييم</button>
+                        <button class="btn btn-danger btn-sm" onclick="QuranReview.openRejectModal(${s.id}, '${escapeHtml(s.student_name).replace(/'/g, "\\'")}')">✗ رفض</button>
                     </div>
                 </div>`;
             }).join('');
@@ -308,19 +378,29 @@ async function loadTeacherDashboard() {
                 const day = task.created_at ? task.created_at.substring(0, 10) : '';
                 const key = `${task.title}||${task.type}||${task.due_date || ''}||${day}`;
                 if (!batches.has(key)) {
-                    batches.set(key, { task, count: 0 });
+                    batches.set(key, { task, count: 0, ids: [] });
                 }
                 batches.get(key).count++;
+                batches.get(key).ids.push(task.id);
             });
 
-            taskListEl.innerHTML = headerHtml + Array.from(batches.values()).map(({ task, count }) => {
+            taskListEl.innerHTML = headerHtml + Array.from(batches.values()).map(({ task, count, ids }) => {
                 const typeLabel = task.type_display || task.type || '';
                 const dueDate = task.due_date ? new Date(task.due_date).toLocaleDateString('ar-SA') : '';
                 const date = new Date(task.created_at).toLocaleDateString('ar-SA');
-                return `<div class="task-card">
+                const idsJson = JSON.stringify(ids);
+                const safeTitle = task.title.replace(/'/g, "\\'");
+                return `<div class="task-card" style="position:relative;">
                     <div class="task-card-header">
                         <h3 class="task-card-title">${task.title}</h3>
-                        <span class="task-type-badge">${typeLabel}</span>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span class="task-type-badge">${typeLabel}</span>
+                            <button onclick="QuranReview.handleDeleteBatch(${idsJson}, '${safeTitle}', ${count})"
+                                style="padding:4px 10px; background:#fff; border:1px solid #ef4444; border-radius:6px; color:#ef4444; font-size:0.78rem; cursor:pointer; flex-shrink:0;"
+                                title="حذف هذه المهمة">
+                                🗑️ حذف
+                            </button>
+                        </div>
                     </div>
                     ${task.description ? `<p class="task-card-desc">${task.description}</p>` : ''}
                     <div class="task-card-meta">
@@ -440,6 +520,16 @@ export function toggleAssignMode(mode) {
     }
 }
 
+export async function handleDeleteBatch(ids, title, count) {
+    if (!confirm(`حذف "${title}" لـ ${count} طالب؟\nلا يمكن التراجع عن هذا الإجراء.`)) return;
+    const results = await Promise.allSettled(
+        ids.map(id => authFetch(`${config.apiBaseUrl}/api/tasks/${id}/`, { method: 'DELETE' }))
+    );
+    const deleted = results.filter(r => r.status === 'fulfilled' && (r.value.ok || r.value.status === 204)).length;
+    showNotification(`تم حذف ${deleted} مهمة`, deleted === ids.length ? 'success' : 'error');
+    loadTeacherDashboard();
+}
+
 export async function handleDeleteAllTasks() {
     if (!confirm('⚠️ تحذير خطير!\nهل أنت متأكد تماماً أنك تريد حذف جميع المهام؟\nهذا الإجراء سيحذف كل المهام وكل التسليمات المرتبطة بها ولا يمكن التراجع عنه.')) {
         return;
@@ -449,11 +539,8 @@ export async function handleDeleteAllTasks() {
     if (!token) return;
 
     try {
-        const response = await fetch(`${config.apiBaseUrl}/api/admin/tasks/delete-all/`, {
-            method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-            },
+        const response = await authFetch(`${config.apiBaseUrl}/api/admin/tasks/delete-all/`, {
+            method: 'POST',
         });
 
         if (!response.ok) {
@@ -514,31 +601,129 @@ export async function handleCreateTask(event) {
         showNotification('تم إنشاء المهمة بنجاح!', 'success');
         document.getElementById('teacher-create-task-form').reset();
         document.getElementById('student-select-container')?.classList.add('hidden');
-        window.QuranReview && window.QuranReview.switchTeacherTab('pending');
         loadTeacherDashboard();
-        // Forcer le refresh de la liste des tâches
-        _teacherTasks = null;
     } catch (error) {
         showNotification(error.message, 'error');
     }
 }
 
-export async function approveSubmission(submissionId) {
+// ===================================
+// GRADE MODAL (approbation avec emoji)
+// ===================================
+
+export function openGradeModal(submissionId, studentName, taskTitle) {
+    _pendingGradeSubmissionId = submissionId;
+    _selectedGrade = null;
+
+    const subtitle = document.getElementById('grade-modal-subtitle');
+    if (subtitle) subtitle.textContent = `${studentName} — ${taskTitle}`;
+
+    const label = document.getElementById('grade-label');
+    if (label) label.textContent = '';
+
+    const confirmBtn = document.getElementById('grade-confirm-btn');
+    if (confirmBtn) confirmBtn.disabled = true;
+
+    // Réinitialiser les boutons emoji
+    document.querySelectorAll('[data-grade]').forEach(btn => {
+        btn.style.border = '2px solid transparent';
+        btn.style.transform = 'scale(1)';
+    });
+
+    const modal = document.getElementById('grade-modal');
+    if (modal) { modal.style.display = 'flex'; }
+}
+
+export function closeGradeModal() {
+    const modal = document.getElementById('grade-modal');
+    if (modal) modal.style.display = 'none';
+    _pendingGradeSubmissionId = null;
+    _selectedGrade = null;
+}
+
+export function selectGrade(grade) {
+    _selectedGrade = grade;
+
+    // Mettre en surbrillance le bouton sélectionné
+    document.querySelectorAll('[data-grade]').forEach(btn => {
+        const g = parseInt(btn.dataset.grade);
+        if (g === grade) {
+            btn.style.border = '2px solid var(--color-primary, #6366f1)';
+            btn.style.transform = 'scale(1.2)';
+        } else {
+            btn.style.border = '2px solid transparent';
+            btn.style.transform = 'scale(1)';
+        }
+    });
+
+    const info = GRADE_LABELS[grade];
+    const label = document.getElementById('grade-label');
+    if (label) label.textContent = `${info.emoji} ${info.text}`;
+
+    const confirmBtn = document.getElementById('grade-confirm-btn');
+    if (confirmBtn) confirmBtn.disabled = false;
+}
+
+export async function confirmGrade() {
+    if (!_pendingGradeSubmissionId || !_selectedGrade) return;
+    const submissionId = _pendingGradeSubmissionId;
+    const grade = _selectedGrade;
+    closeGradeModal();
+    await approveSubmission(submissionId, grade);
+}
+
+export async function approveSubmission(submissionId, grade) {
     const token = localStorage.getItem(config.apiTokenKey);
     if (!token) return;
 
+    const gradeInfo = grade ? GRADE_LABELS[grade] : null;
+    const feedback = gradeInfo ? `${gradeInfo.emoji} ${gradeInfo.text} (${grade}/5)` : '';
+
     try {
-        const response = await fetch(`${config.apiBaseUrl}/api/submissions/${submissionId}/approve/`, {
+        const response = await authFetch(`${config.apiBaseUrl}/api/submissions/${submissionId}/approve/`, {
             method: 'POST',
-            headers: { Authorization: `Bearer ${token}` },
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ feedback }),
         });
 
         if (!response.ok) throw new Error('فشل القبول');
-        showNotification('تم قبول التسليم!', 'success');
+        const gradeText = gradeInfo ? ` — ${gradeInfo.emoji} ${gradeInfo.text}` : '';
+        showNotification(`تم قبول التسليم!${gradeText}`, 'success');
         loadTeacherDashboard();
     } catch (error) {
         showNotification(error.message, 'error');
     }
+}
+
+// ===================================
+// REJECT MODAL
+// ===================================
+
+export function openRejectModal(submissionId, studentName) {
+    _pendingRejectSubmissionId = submissionId;
+
+    const subtitle = document.getElementById('reject-modal-subtitle');
+    if (subtitle) subtitle.textContent = `رفض تسليم الطالب: ${studentName}`;
+
+    const textarea = document.getElementById('reject-feedback');
+    if (textarea) textarea.value = '';
+
+    const modal = document.getElementById('reject-modal');
+    if (modal) modal.style.display = 'flex';
+}
+
+export function closeRejectModal() {
+    const modal = document.getElementById('reject-modal');
+    if (modal) modal.style.display = 'none';
+    _pendingRejectSubmissionId = null;
+}
+
+export async function confirmReject() {
+    if (!_pendingRejectSubmissionId) return;
+    const submissionId = _pendingRejectSubmissionId;
+    const feedback = document.getElementById('reject-feedback')?.value?.trim() || '';
+    closeRejectModal();
+    await rejectSubmission(submissionId, feedback);
 }
 
 export async function rejectSubmission(submissionId, feedback) {
@@ -546,13 +731,10 @@ export async function rejectSubmission(submissionId, feedback) {
     if (!token) return;
 
     try {
-        const response = await fetch(`${config.apiBaseUrl}/api/submissions/${submissionId}/reject/`, {
+        const response = await authFetch(`${config.apiBaseUrl}/api/submissions/${submissionId}/reject/`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({ admin_feedback: feedback || '' }),
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ feedback: feedback || '' }),
         });
 
         if (!response.ok) throw new Error('فشل الرفض');

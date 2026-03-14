@@ -6,6 +6,15 @@ import { showNotification } from '../core/ui.js';
 import { Logger } from '../core/logger.js';
 import { showAuthModal } from '../services/auth.js';
 
+function escapeHtml(str) {
+    return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 // Injection CSS
 if (!document.querySelector('link[href*="MyTasksPage.css"]')) {
     const link = document.createElement('link');
@@ -142,7 +151,7 @@ async function loadStudentDashboard() {
         document.getElementById('student-tasks-pending').textContent = pending > 0 ? pending : 0;
         document.getElementById('student-tasks-rejected').textContent = rejected;
 
-        // Sجل النقاط
+        // سجل النقاط
         const pointsLogEl = document.getElementById('student-points-log');
         const logs = pointsData.logs || [];
         if (!logs.length) {
@@ -151,11 +160,20 @@ async function loadStudentDashboard() {
             pointsLogEl.innerHTML = logs.slice(0, 10).map(log => {
                 const date = new Date(log.created_at).toLocaleDateString('ar-SA');
                 const sign = log.delta > 0 ? '+' : '';
-                const cls = log.delta > 0 ? 'points-positive' : 'points-negative';
-                return `<div class="points-log-item">
-                    <span class="points-log-reason">${log.reason}</span>
-                    <span class="points-log-delta ${cls}">${sign}${log.delta}</span>
-                    <span class="points-log-date">${date}</span>
+                const isPositive = log.delta > 0;
+                // Normaliser les anciens textes français en arabe
+                const reason = log.reason
+                    .replace(/^Tache approuvee:\s*/i, 'تمت الموافقة على: ')
+                    .replace(/^Tache rejetee:\s*/i, 'تم رفض: ');
+                return `<div class="points-log-item" style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--color-border, rgba(255,255,255,0.08));gap:8px;">
+                    <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;">
+                        <span style="font-size:1.1rem;">${isPositive ? '🏆' : '📉'}</span>
+                        <span style="font-size:0.85rem;color:var(--color-text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(reason)}</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+                        <span style="font-weight:700;font-size:0.95rem;color:${isPositive ? '#10b981' : '#ef4444'};">${sign}${log.delta}</span>
+                        <span style="font-size:0.75rem;color:var(--color-text-secondary);">${date}</span>
+                    </div>
                 </div>`;
             }).join('');
         }
@@ -174,29 +192,47 @@ async function loadStudentDashboard() {
             subsList.innerHTML = '<p class="empty-state">لا توجد تسليمات بعد</p>';
         } else {
             subsList.innerHTML = submissions.map(s => {
-                const statusStyle = s.status === 'approved'
-                    ? 'background:rgba(16,185,129,0.15);color:#10b981;'
-                    : s.status === 'rejected'
-                    ? 'background:rgba(239,68,68,0.15);color:#ef4444;'
-                    : 'background:rgba(245,158,11,0.15);color:#f59e0b;';
-                const statusText = s.status === 'approved' ? 'مقبول ✓' : s.status === 'rejected' ? 'مرفوض ✗' : 'بانتظار التصحيح';
+                const isApproved = s.status === 'approved';
+                const isRejected = s.status === 'rejected';
                 const date = new Date(s.submitted_at).toLocaleDateString('ar-SA');
                 const audioSrc = s.audio_url
                     ? (s.audio_url.startsWith('http') ? s.audio_url : config.apiBaseUrl + (s.audio_url.startsWith('/') ? s.audio_url : '/' + s.audio_url))
                     : '';
-                return `<div class="task-card" style="flex-wrap:wrap;">
-                    <span class="task-status ${s.status === 'approved' ? 'task-status-completed' : 'task-status-pending'}"></span>
+
+                // Affichage du feedback selon statut
+                let feedbackHtml = '';
+                if (s.admin_feedback) {
+                    if (isApproved) {
+                        // Note emoji → affiché en vert, gros et visible
+                        feedbackHtml = `<div style="display:inline-flex;align-items:center;gap:6px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);border-radius:8px;padding:4px 10px;margin-top:6px;font-size:1rem;font-weight:600;color:#10b981;">
+                            ⭐ ${escapeHtml(s.admin_feedback)}
+                        </div>`;
+                    } else if (isRejected) {
+                        // Motif de refus → affiché en rouge
+                        feedbackHtml = `<div style="font-size:0.82rem;color:#ef4444;margin-top:4px;">💬 ${escapeHtml(s.admin_feedback)}</div>`;
+                    }
+                }
+
+                const statusStyle = isApproved
+                    ? 'background:rgba(16,185,129,0.15);color:#10b981;border:1px solid rgba(16,185,129,0.3);'
+                    : isRejected
+                    ? 'background:rgba(239,68,68,0.15);color:#ef4444;border:1px solid rgba(239,68,68,0.3);'
+                    : 'background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.3);';
+                const statusText = isApproved ? 'مقبول ✓' : isRejected ? 'مرفوض ✗' : '⏳ بانتظار التصحيح';
+
+                return `<div class="task-card" style="flex-wrap:wrap;gap:8px;">
+                    <span class="task-status ${isApproved ? 'task-status-completed' : 'task-status-pending'}"></span>
                     <div style="flex:1;min-width:0;">
-                        <div style="font-weight:600;">${s.task.title}</div>
-                        <div style="font-size:0.8rem;color:var(--color-text-secondary);">📅 ${date}</div>
-                        ${s.admin_feedback ? `<div style="font-size:0.8rem;color:#ef4444;margin-top:2px;">💬 ${s.admin_feedback}</div>` : ''}
+                        <div style="font-weight:600;margin-bottom:2px;">${escapeHtml(s.task.title)}</div>
+                        <div style="font-size:0.8rem;color:var(--color-text-secondary);">📅 ${date}${s.awarded_points ? ` &nbsp;🏆 +${s.awarded_points} نقطة` : ''}</div>
+                        ${feedbackHtml}
                         ${audioSrc ? `
                             <audio controls preload="metadata" style="width:100%;margin-top:6px;"
                                 onerror="this.outerHTML='<p style=\\'color:#999;font-size:0.85rem;\\'>الملف الصوتي غير متاح</p>'">
                                 <source src="${audioSrc}" type="audio/webm">
                             </audio>` : ''}
                     </div>
-                    <span class="badge" style="${statusStyle}">${statusText}</span>
+                    <span class="badge" style="${statusStyle};font-size:0.78rem;padding:4px 10px;border-radius:6px;">${statusText}</span>
                 </div>`;
             }).join('');
         }
@@ -257,33 +293,43 @@ export function switchTaskTab(tabName) {
         if (sub) {
             if (sub.status === 'approved') {
                 dotClass = 'task-status-completed';
-                statusBadge = '<span class="badge" style="background:rgba(16,185,129,0.15);color:#10b981;">مقبول ✓</span>';
+                statusBadge = '<span class="badge" style="background:rgba(16,185,129,0.15);color:#10b981;border:1px solid rgba(16,185,129,0.3);">مقبول ✓</span>';
                 actionBtn = '';
             } else if (sub.status === 'rejected') {
                 dotClass = 'task-status-pending';
-                statusBadge = '<span class="badge" style="background:rgba(239,68,68,0.15);color:#ef4444;">مرفوض ✗</span>';
+                statusBadge = '<span class="badge" style="background:rgba(239,68,68,0.15);color:#ef4444;border:1px solid rgba(239,68,68,0.3);">مرفوض ✗</span>';
                 actionBtn = `<button class="btn btn-primary btn-sm" onclick="QuranReview.openRecordModal(${task.id}, '${task.title.replace(/'/g, "\\'")}')">🎤 إعادة التسجيل</button>`;
             } else {
                 dotClass = 'task-status-submitted';
-                statusBadge = '<span class="badge badge-warning" style="font-size:0.7rem;padding:2px 8px;">بانتظار التصحيح</span>';
+                statusBadge = '<span class="badge" style="background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.3);font-size:0.7rem;padding:2px 8px;">⏳ بانتظار التصحيح</span>';
                 actionBtn = '';
             }
         }
 
-        const typeLabel = task.type_display || (task.task_type === 'memorization' ? 'حفظ' : task.task_type === 'recitation' ? 'تلاوة' : 'أخرى');
+        const typeLabel = task.type_display || task.type || 'مهمة';
         const dueDate = task.due_date ? new Date(task.due_date).toLocaleDateString('ar-SA') : '';
+
+        // Feedback: note emoji pour approved, motif pour rejected
+        let feedbackInTaskHtml = '';
+        if (sub && sub.admin_feedback) {
+            if (sub.status === 'approved') {
+                feedbackInTaskHtml = `<div style="display:inline-flex;align-items:center;gap:5px;background:rgba(16,185,129,0.1);border-radius:6px;padding:3px 8px;margin-top:4px;font-size:0.9rem;font-weight:600;color:#10b981;">⭐ ${escapeHtml(sub.admin_feedback)}</div>`;
+            } else if (sub.status === 'rejected') {
+                feedbackInTaskHtml = `<div style="font-size:0.8rem;color:#ef4444;margin-top:4px;">💬 ${escapeHtml(sub.admin_feedback)}</div>`;
+            }
+        }
 
         return `<div class="task-card">
             <span class="task-status ${dotClass}"></span>
             <div style="flex:1;min-width:0;">
-                <div style="font-weight:600;margin-bottom:var(--space-1);">${task.title}</div>
+                <div style="font-weight:600;margin-bottom:var(--space-1);">${escapeHtml(task.title)}</div>
                 <div style="font-size:0.875rem;color:var(--color-text-secondary);display:flex;flex-wrap:wrap;gap:var(--space-2);align-items:center;">
                     <span class="badge badge-primary" style="font-size:0.7rem;">${typeLabel}</span>
                     🏆 ${task.points} نقطة
                     ${dueDate ? `<span>📅 ${dueDate}</span>` : ''}
                 </div>
-                ${task.description ? `<div style="font-size:0.8rem;color:var(--color-text-secondary);margin-top:var(--space-1);">${task.description}</div>` : ''}
-                ${sub && sub.status === 'rejected' && sub.admin_feedback ? `<div style="font-size:0.8rem;color:#ef4444;margin-top:var(--space-1);">💬 ${sub.admin_feedback}</div>` : ''}
+                ${task.description ? `<div style="font-size:0.8rem;color:var(--color-text-secondary);margin-top:var(--space-1);">${escapeHtml(task.description)}</div>` : ''}
+                ${feedbackInTaskHtml}
             </div>
             <div style="display:flex;flex-direction:column;align-items:flex-end;gap:var(--space-2);flex-shrink:0;">
                 ${statusBadge}

@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth import get_user_model
 
 from .serializers import RegisterSerializer, CustomTokenObtainPairSerializer, UserSerializer
@@ -59,3 +59,57 @@ class LogoutView(APIView):
             return Response({'message': 'تم تسجيل الخروج بنجاح'})
         except Exception:
             return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class MeView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        return Response(UserSerializer(request.user).data)
+
+
+class AdminUsersListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if not (request.user.is_staff or request.user.role == 'admin'):
+            return Response({'detail': 'Forbidden'}, status=403)
+        users = User.objects.all().order_by('role', 'username')
+        # Retourner { users: [...] } — attendu par le frontend
+        return Response({'users': UserSerializer(users, many=True).data})
+
+
+class AdminUserUpdateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request, pk):
+        if not (request.user.is_staff or request.user.role == 'admin'):
+            return Response({'detail': 'Forbidden'}, status=403)
+        try:
+            user = User.objects.get(pk=pk)
+        except User.DoesNotExist:
+            return Response({'detail': 'Not found'}, status=404)
+        # Filtrer les champs autorisés et valider via le serializer
+        payload = {k: v for k, v in request.data.items() if k in ['first_name', 'last_name', 'role']}
+        if 'is_superuser' in request.data and request.user.is_superuser:
+            payload['is_superuser'] = request.data['is_superuser']
+        serializer = UserSerializer(user, data=payload, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+
+class AdminUserDeleteView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, pk):
+        if not (request.user.is_staff or request.user.role == 'admin'):
+            return Response({'detail': 'Forbidden'}, status=403)
+        if request.user.pk == pk:
+            return Response({'detail': 'Cannot delete yourself'}, status=400)
+        try:
+            user = User.objects.get(pk=pk)
+            user.delete()
+            return Response({'detail': 'Utilisateur supprimé avec succès.'}, status=200)
+        except User.DoesNotExist:
+            return Response({'detail': 'Not found'}, status=404)

@@ -135,10 +135,20 @@ window.QuranReview = {
     // TeacherPage
     handleCreateTask: TeacherPage.handleCreateTask,
     handleDeleteAllTasks: TeacherPage.handleDeleteAllTasks,
+    handleDeleteBatch: TeacherPage.handleDeleteBatch,
     toggleAssignMode: TeacherPage.toggleAssignMode,
     viewStudentProgress: TeacherPage.viewStudentProgress,
     approveSubmission: TeacherPage.approveSubmission,
     rejectSubmission: TeacherPage.rejectSubmission,
+    // Grade modal (approbation emoji)
+    openGradeModal: TeacherPage.openGradeModal,
+    closeGradeModal: TeacherPage.closeGradeModal,
+    selectGrade: TeacherPage.selectGrade,
+    confirmGrade: TeacherPage.confirmGrade,
+    // Reject modal
+    openRejectModal: TeacherPage.openRejectModal,
+    closeRejectModal: TeacherPage.closeRejectModal,
+    confirmReject: TeacherPage.confirmReject,
     handleUpdateUser: TeacherPage.handleUpdateUser,
     deleteUser: TeacherPage.deleteUser,
     handleCreateTeacher: TeacherPage.handleCreateTeacher,

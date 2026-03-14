@@ -64,6 +64,8 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'quranreview.wsgi.application'
 
+AUTH_USER_MODEL = 'authentication.User'
+
 # Database
 DATABASES = {
     'default': {

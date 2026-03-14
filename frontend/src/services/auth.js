@@ -32,13 +32,15 @@ export function updateAuthUI(loggedIn) {
         loginBtn?.classList.add('hidden');
         userInfo?.classList.remove('hidden');
         if (usernameEl) {
-            const roleLabel = state.user.role === 'teacher' ? '👨‍🏫' : '🎓';
+            const roleLabel = state.user.role === 'admin' || state.user.is_superuser ? '⚙️' : state.user.role === 'teacher' ? '👨‍🏫' : '🎓';
             usernameEl.textContent = `${roleLabel} ${state.user.first_name || state.user.username}`;
         }
         // Show/hide role-specific nav links
+        const isAdmin = state.user.role === 'admin' || state.user.is_superuser;
         const isTeacher = state.user.role === 'teacher';
         teacherLinks.forEach(el => el.style.display = isTeacher ? 'inline-block' : 'none');
-        studentLinks.forEach(el => el.style.display = isTeacher ? 'none' : 'inline-block');
+        studentLinks.forEach(el => el.style.display = (!isTeacher && !isAdmin) ? 'inline-block' : 'none');
+        document.querySelectorAll('.nav-admin-only').forEach(el => el.style.display = isAdmin ? 'inline-block' : 'none');
     } else {
         loginBtn?.classList.remove('hidden');
         userInfo?.classList.add('hidden');
@@ -165,7 +167,9 @@ export async function performLogin(username, password) {
 
         if (state.user) {
             Logger.log('AUTH', `Redirecting user role: ${state.user.role}`);
-            if (state.user.role === 'teacher') {
+            if (state.user.role === 'admin' || state.user.is_superuser) {
+                window.QuranReview.navigateTo('admin');
+            } else if (state.user.role === 'teacher') {
                 window.QuranReview.navigateTo('teacher');
             } else {
                 window.QuranReview.navigateTo('mytasks');
