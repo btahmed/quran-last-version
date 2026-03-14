@@ -2,6 +2,7 @@
 Django settings for quranreview project.
 """
 import os
+import dj_database_url
 from pathlib import Path
 from datetime import timedelta
 
@@ -15,6 +16,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-dev-key-change-in-pro
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,backend').split(',')
+ALLOWED_HOSTS += ['.vercel.app']
 
 # Application definition
 INSTALLED_APPS = [
@@ -28,6 +30,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
+    'cloudinary_storage',
+    'cloudinary',
     # Local
     'authentication',
     'api',
@@ -36,6 +40,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -66,13 +71,20 @@ WSGI_APPLICATION = 'quranreview.wsgi.application'
 
 AUTH_USER_MODEL = 'authentication.User'
 
-# Database
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'data' / 'db.sqlite3',
+# Database — Supabase PostgreSQL en prod, SQLite en dev
+DATABASE_URL = os.environ.get('DATABASE_URL')
+if DATABASE_URL:
+    DATABASES = {
+        'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)
     }
-}
+else:
+    os.makedirs(BASE_DIR / 'data', exist_ok=True)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'data' / 'db.sqlite3',
+        }
+    }
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -99,10 +111,16 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Media files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# Cloudinary storage pour les fichiers audio (si CLOUDINARY_URL défini)
+CLOUDINARY_URL = os.environ.get('CLOUDINARY_URL')
+if CLOUDINARY_URL:
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -131,9 +149,21 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:8000",
     "http://frontend",
     "https://votrenom.github.io",  # Pour GitHub Pages
+    "https://quranreview.vercel.app",
+    "https://quranreview.ma",
+]
+
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://quranreview.*\.vercel\.app$",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
 
-# Create data directory for SQLite
-os.makedirs(BASE_DIR / 'data', exist_ok=True)
+CSRF_TRUSTED_ORIGINS = [
+    "https://quranreview.vercel.app",
+    "https://quranreview-api.vercel.app",
+    "https://quranreview.ma",
+]
+
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')

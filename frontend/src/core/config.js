@@ -11,8 +11,8 @@ export const API_BASE_URL = window.API_BASE_URL || (() => {
     if (host === 'localhost' || host === '127.0.0.1') {
         return 'http://127.0.0.1:8000';
     }
-    // Production
-    return 'https://api.quranreview.live';
+    // Production (Vercel)
+    return 'https://quranreview-api.vercel.app';
 })();
 
 export const IS_FILE_PROTOCOL = window.location.protocol === 'file:';
