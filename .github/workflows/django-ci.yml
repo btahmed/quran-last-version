@@ -2,14 +2,14 @@ name: Django CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'claude/**']
     paths:
-      - 'ancien django/**'
+      - 'backend/**'
       - '.github/workflows/django-ci.yml'
   pull_request:
     branches: [main]
     paths:
-      - 'ancien django/**'
+      - 'backend/**'
       - '.github/workflows/django-ci.yml'
 
 jobs:
@@ -18,7 +18,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: ancien django/MYSITEE/MYSITEE
+        working-directory: backend
 
     steps:
       - uses: actions/checkout@v4
@@ -33,13 +33,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Collect static files
-        run: python manage.py collectstatic --noinput
-        env:
-          SECRET_KEY: test-secret-key-for-ci
-          DEBUG: 'False'
-          ALLOWED_HOSTS: localhost,127.0.0.1
-
       - name: Run Django system checks
         run: python manage.py check
         env:
@@ -47,11 +40,13 @@ jobs:
           DEBUG: 'False'
           ALLOWED_HOSTS: localhost,127.0.0.1
           SECURE_SSL_REDIRECT: 'False'
+          DATABASE_URL: sqlite:///db.sqlite3
 
       - name: Run tests
-        run: python manage.py test submissions
+        run: python manage.py test
         env:
           SECRET_KEY: test-secret-key-for-ci
           DEBUG: 'False'
           ALLOWED_HOSTS: localhost,127.0.0.1
           SECURE_SSL_REDIRECT: 'False'
+          DATABASE_URL: sqlite:///db.sqlite3
