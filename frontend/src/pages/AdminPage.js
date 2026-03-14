@@ -125,6 +125,16 @@ export async function init() {
     window._adminCloseProfile = closeProfile;
     window._adminSaveEdit = saveUserEdit;
     window._adminDelete = deleteUser;
+    window._adminToggleEdit = _adminToggleEditFn;
+
+    // Listener délégué pour les lignes utilisateur (évite les onclick inline avec u.id)
+    document.getElementById('admin-users-list')?.addEventListener('click', (e) => {
+        const row = e.target.closest('.admin-user-row');
+        if (!row) return;
+        const id = Number(row.dataset.userId);
+        if (!Number.isInteger(id) || id <= 0) return;
+        openUserProfile(id);
+    });
 
     await loadAll();
 }
@@ -199,7 +209,8 @@ function renderUsersList() {
 
     el.innerHTML = users.map(u => `
         <div style="display:flex; align-items:center; gap:var(--space-3); padding:var(--space-3) var(--space-2); border-bottom:1px solid var(--color-border); cursor:pointer; transition:background 0.15s; border-radius:var(--radius-lg);"
-            onclick="window._adminOpenProfile(${u.id})"
+            data-user-id="${Number.isInteger(Number(u.id)) ? Number(u.id) : ''}"
+            class="admin-user-row"
             onmouseenter="this.style.background='var(--color-surface)'"
             onmouseleave="this.style.background='transparent'">
             <div style="width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,var(--color-primary),var(--color-gold)); display:flex; align-items:center; justify-content:center; font-size:1rem; flex-shrink:0; color:white; font-weight:700;">
@@ -211,7 +222,7 @@ function renderUsersList() {
                     <span style="color:var(--color-text-secondary); font-weight:400; font-size:0.8rem;">@${escapeHtml(u.username)}</span>
                 </div>
                 <div style="margin-top:2px; display:flex; align-items:center; gap:4px;">
-                    ${roleBadge[u.role] || `<span>${u.role}</span>`}
+                    ${roleBadge[u.role] || `<span>${escapeHtml(u.role || '')}</span>`}
                     ${u.is_superuser ? superBadge : ''}
                 </div>
             </div>
@@ -379,7 +390,7 @@ async function openUserProfile(userId) {
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px;">
                 <div style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:10px; padding:12px;">
                     <div style="font-size:0.72rem; color:#6b7280; margin-bottom:4px;">الدور</div>
-                    <div style="font-weight:600; color:#111827;">${roleLabel[u.role] || u.role}${u.is_superuser ? ' ★' : ''}</div>
+                    <div style="font-weight:600; color:#111827;">${roleLabel[u.role] || escapeHtml(u.role || '')}${u.is_superuser ? ' ★' : ''}</div>
                 </div>
                 <div style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:10px; padding:12px;">
                     <div style="font-size:0.72rem; color:#6b7280; margin-bottom:4px;">${isTeacher ? 'الواجبات المعطاة' : 'النقاط'}</div>
@@ -387,7 +398,7 @@ async function openUserProfile(userId) {
                 </div>
                 <div style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:10px; padding:12px;">
                     <div style="font-size:0.72rem; color:#6b7280; margin-bottom:4px;">البريد</div>
-                    <div style="font-size:0.82rem; color:#374151; word-break:break-all;">${u.email || '—'}</div>
+                    <div style="font-size:0.82rem; color:#374151; word-break:break-all;">${escapeHtml(u.email || '—')}</div>
                 </div>
                 <div style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:10px; padding:12px;">
                     <div style="font-size:0.72rem; color:#6b7280; margin-bottom:4px;">تاريخ الانضمام</div>
@@ -396,11 +407,11 @@ async function openUserProfile(userId) {
                 ${!isTeacher ? `
                 <div style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:10px; padding:12px;">
                     <div style="font-size:0.72rem; color:#6b7280; margin-bottom:4px;">الفصل</div>
-                    <div style="font-weight:600; color:#111827;">${u.classe_info?.name || '—'}</div>
+                    <div style="font-weight:600; color:#111827;">${escapeHtml(u.classe_info?.name || '—')}</div>
                 </div>
                 <div style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:10px; padding:12px;">
                     <div style="font-size:0.72rem; color:#6b7280; margin-bottom:4px;">المعلم</div>
-                    <div style="font-weight:600; color:#111827;">${u.classe_info?.teacher || '—'}</div>
+                    <div style="font-weight:600; color:#111827;">${escapeHtml(u.classe_info?.teacher || '—')}</div>
                 </div>
                 ` : ''}
             </div>
@@ -412,8 +423,8 @@ async function openUserProfile(userId) {
                         ${u.assigned_tasks.map(t => `
                             <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #f3f4f6; font-size:0.83rem; color:#374151;">
                                 <div>
-                                    <span>${statusLabel[t.status] || ''} ${t.title}</span>
-                                    ${t.student_name || t.student ? `<span style="color:#9ca3af; font-size:0.75rem; margin-right:6px;">← ${t.student_name || t.student}</span>` : ''}
+                                    <span>${statusLabel[t.status] || ''} ${escapeHtml(t.title || '')}</span>
+                                    ${t.student_name || t.student ? `<span style="color:#9ca3af; font-size:0.75rem; margin-right:6px;">← ${escapeHtml(t.student_name || t.student || '')}</span>` : ''}
                                 </div>
                                 <span style="color:#d97706; flex-shrink:0; font-weight:600;">${t.points > 0 ? '+' + t.points : ''}</span>
                             </div>
@@ -433,7 +444,7 @@ async function openUserProfile(userId) {
                             <div style="margin-bottom:14px;">
                                 ${accepted.map(t => `
                                     <div style="display:flex; justify-content:space-between; align-items:center; padding:7px 0; border-bottom:1px solid #f0fdf4; font-size:0.83rem; color:#374151;">
-                                        <span>${t.title}</span>
+                                        <span>${escapeHtml(t.title || '')}</span>
                                         <span style="color:#10b981; flex-shrink:0; font-weight:700; background:#f0fdf4; padding:2px 8px; border-radius:99px;">${t.points > 0 ? '+' + t.points : '✓'}</span>
                                     </div>
                                 `).join('')}
@@ -445,7 +456,7 @@ async function openUserProfile(userId) {
                             <div style="margin-bottom:14px;">
                                 ${submitted.map(t => `
                                     <div style="display:flex; justify-content:space-between; align-items:center; padding:7px 0; border-bottom:1px solid #eff6ff; font-size:0.83rem; color:#374151;">
-                                        <span>${t.title}</span>
+                                        <span>${escapeHtml(t.title || '')}</span>
                                         <span style="color:#3b82f6; font-size:0.75rem;">انتظار</span>
                                     </div>
                                 `).join('')}
@@ -457,7 +468,7 @@ async function openUserProfile(userId) {
                             <div style="margin-bottom:14px;">
                                 ${notDone.map(t => `
                                     <div style="display:flex; justify-content:space-between; align-items:center; padding:7px 0; border-bottom:1px solid #fef9c3; font-size:0.83rem; color:#6b7280;">
-                                        <span>${t.title}</span>
+                                        <span>${escapeHtml(t.title || '')}</span>
                                         ${t.status === 'rejected' ? '<span style="color:#ef4444; font-size:0.75rem;">مرفوض</span>' : ''}
                                     </div>
                                 `).join('')}
@@ -489,14 +500,14 @@ function closeProfile() {
 }
 
 // ─── ÉDITION UTILISATEUR ──────────────────────────────────────────────────────
-window._adminToggleEdit = function(userId, firstName, lastName, role) {
+function _adminToggleEditFn(userId, firstName, lastName, role) {
     const form = document.getElementById('admin-edit-form');
     if (!form) return;
     document.getElementById('edit-first-name').value = firstName;
     document.getElementById('edit-last-name').value = lastName;
     document.getElementById('edit-role').value = role;
     form.style.display = form.style.display === 'none' ? 'block' : 'none';
-};
+}
 
 async function saveUserEdit(userId) {
     const token = localStorage.getItem(config.apiTokenKey);

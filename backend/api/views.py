@@ -254,7 +254,7 @@ class PointsView(APIView):
         data = {
             'total': total,
             'total_points': total,  # alias attendu par MyTasksPage.js
-            'logs': [{'delta': l.delta, 'reason': l.reason, 'created_at': l.created_at} for l in logs]
+            'logs': [{'delta': log.delta, 'reason': log.reason, 'created_at': log.created_at} for log in logs]
         }
         return Response(data)
 
@@ -649,13 +649,34 @@ class AdminCreateTeacherView(APIView):
             return Response({'detail': 'Forbidden'}, status=403)
 
         username = request.data.get('username', '').strip()
+        promote = request.data.get('promote', False)
+
+        if not username:
+            return Response({'detail': 'username est requis.'}, status=400)
+
+        # Mode promotion : passer un utilisateur existant en enseignant
+        if promote:
+            try:
+                user = User.objects.get(username=username)
+            except User.DoesNotExist:
+                return Response({'detail': 'Utilisateur introuvable.'}, status=404)
+            user.role = 'teacher'
+            user.save()
+            return Response({
+                'id': user.id,
+                'username': user.username,
+                'role': user.role,
+                'detail': 'Utilisateur promu enseignant avec succès.'
+            })
+
+        # Mode création : créer un nouveau compte enseignant
         password = request.data.get('password', '').strip()
         first_name = request.data.get('first_name', '').strip()
         last_name = request.data.get('last_name', '').strip()
         email = request.data.get('email', '').strip()
 
-        if not username or not password:
-            return Response({'detail': 'username et password sont requis.'}, status=400)
+        if not password:
+            return Response({'detail': 'password est requis pour créer un compte.'}, status=400)
 
         if User.objects.filter(username=username).exists():
             return Response({'detail': 'Ce nom d\'utilisateur existe déjà.'}, status=400)

@@ -522,15 +522,10 @@ export function toggleAssignMode(mode) {
 
 export async function handleDeleteBatch(ids, title, count) {
     if (!confirm(`حذف "${title}" لـ ${count} طالب؟\nلا يمكن التراجع عن هذا الإجراء.`)) return;
-    let deleted = 0;
-    for (const id of ids) {
-        try {
-            const res = await authFetch(`${config.apiBaseUrl}/api/tasks/${id}/`, {
-                method: 'DELETE',
-            });
-            if (res.ok || res.status === 204) deleted++;
-        } catch (_) {}
-    }
+    const results = await Promise.allSettled(
+        ids.map(id => authFetch(`${config.apiBaseUrl}/api/tasks/${id}/`, { method: 'DELETE' }))
+    );
+    const deleted = results.filter(r => r.status === 'fulfilled' && (r.value.ok || r.value.status === 204)).length;
     showNotification(`تم حذف ${deleted} مهمة`, deleted === ids.length ? 'success' : 'error');
     loadTeacherDashboard();
 }
