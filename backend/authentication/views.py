@@ -88,10 +88,13 @@ class AdminUserUpdateView(APIView):
             user = User.objects.get(pk=pk)
         except User.DoesNotExist:
             return Response({'detail': 'Not found'}, status=404)
-        allowed = ['first_name', 'last_name', 'role', 'is_superuser']
+        allowed = ['first_name', 'last_name', 'role']
         for field in allowed:
             if field in request.data:
                 setattr(user, field, request.data[field])
+        # is_superuser ne peut être modifié que par un superutilisateur
+        if 'is_superuser' in request.data and request.user.is_superuser:
+            user.is_superuser = request.data['is_superuser']
         user.save()
         return Response(UserSerializer(user).data)
 
@@ -107,6 +110,6 @@ class AdminUserDeleteView(APIView):
         try:
             user = User.objects.get(pk=pk)
             user.delete()
-            return Response(status=204)
+            return Response({'detail': 'Utilisateur supprimé avec succès.'}, status=200)
         except User.DoesNotExist:
             return Response({'detail': 'Not found'}, status=404)

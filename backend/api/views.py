@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.utils import timezone
 from django.contrib.auth import get_user_model
+from django.db import transaction
 from django.db.models import Sum
 from django.db.models.functions import Coalesce
 from datetime import datetime, timedelta
@@ -237,6 +238,9 @@ class MySubmissionsView(APIView):
             'status': s.status,
             'submitted_at': s.submitted_at,
             'admin_feedback': s.admin_feedback,
+            'awarded_points': s.awarded_points,
+            'audio_url': (request.build_absolute_uri(s.audio_file.url)
+                          if s.audio_file else None),
         } for s in subs]
         return Response(data)
 
@@ -249,6 +253,7 @@ class PointsView(APIView):
         logs = PointsLog.objects.filter(student=request.user)[:20]
         data = {
             'total': total,
+            'total_points': total,  # alias attendu par MyTasksPage.js
             'logs': [{'delta': l.delta, 'reason': l.reason, 'created_at': l.created_at} for l in logs]
         }
         return Response(data)
@@ -383,23 +388,27 @@ class SubmissionApproveView(ClassePermissionMixin, APIView):
             my_students = self.get_users_for_class(request.user).filter(role='student')
             if not my_students.filter(pk=sub.student.pk).exists():
                 return Response({'detail': 'Forbidden'}, status=403)
-        sub.status = 'approved'
-        sub.validated_at = timezone.now()
-        sub.validated_by = request.user
-        points = getattr(sub.task, 'points', 0) or 0
-        sub.awarded_points = points
-        # Sauvegarder la note emoji si fournie
+        # Éviter double-approbation
+        if sub.status == 'approved':
+            return Response({'detail': 'Soumission déjà approuvée', 'status': 'approved',
+                             'points_awarded': sub.awarded_points or 0})
         feedback = request.data.get('feedback', '')
-        if feedback:
-            sub.admin_feedback = feedback
-        sub.save()
-        if points:
-            PointsLog.objects.create(
-                student=sub.student,
-                delta=points,
-                reason=f"تمت الموافقة على: {sub.task.title}",
-                submission=sub
-            )
+        points = getattr(sub.task, 'points', 0) or 0
+        with transaction.atomic():
+            sub.status = 'approved'
+            sub.validated_at = timezone.now()
+            sub.validated_by = request.user
+            sub.awarded_points = points
+            if feedback:
+                sub.admin_feedback = feedback
+            sub.save()
+            if points and not PointsLog.objects.filter(submission=sub, delta=points).exists():
+                PointsLog.objects.create(
+                    student=sub.student,
+                    delta=points,
+                    reason=f"تمت الموافقة على: {sub.task.title}",
+                    submission=sub
+                )
         return Response({'status': 'approved', 'points_awarded': points})
 
 
@@ -608,7 +617,8 @@ class AdminDeleteAllTasksView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        if request.user.role not in ('admin', 'teacher') and not request.user.is_superuser:
+        # Réservé aux admins uniquement — pas aux teachers
+        if request.user.role != 'admin' and not request.user.is_superuser:
             return Response({'detail': 'Forbidden'}, status=403)
         count, _ = Task.objects.all().delete()
         return Response({'detail': f'{count} tâches supprimées.', 'count': count})
@@ -697,7 +707,7 @@ class AdminOverviewView(APIView):
         teacher_stats = []
         for t in teachers:
             assigned = Task.objects.filter(assigned_by=t).count()
-            pending_subs = Submission.objects.filter(task__assigned_by=t, status='pending').count()
+            pending_subs = Submission.objects.filter(task__assigned_by=t, status='submitted').count()
             teacher_stats.append({
                 'id': t.id, 'username': t.username,
                 'first_name': t.first_name, 'last_name': t.last_name,
@@ -711,7 +721,7 @@ class AdminOverviewView(APIView):
             'totals': {
                 'tasks': len(tasks_data),
                 'submissions': len(subs_data),
-                'pending_submissions': sum(1 for s in subs_data if s['status'] == 'pending'),
+                'pending_submissions': sum(1 for s in subs_data if s['status'] == 'submitted'),
                 'approved_submissions': sum(1 for s in subs_data if s['status'] == 'approved'),
             }
         })
