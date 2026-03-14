@@ -12,6 +12,7 @@ import * as CompetitionPage from '../pages/CompetitionPage.js';
 import * as HifzPage from '../pages/HifzPage.js';
 import * as MyTasksPage from '../pages/MyTasksPage.js';
 import * as TeacherPage from '../pages/TeacherPage.js';
+import * as AdminPage from '../pages/AdminPage.js';
 
 const pages = {
     home: HomePage,
@@ -23,6 +24,7 @@ const pages = {
     hifz: HifzPage,
     mytasks: MyTasksPage,
     teacher: TeacherPage,
+    admin: AdminPage,
 };
 
 export function navigateTo(pageName) {
