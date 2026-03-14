@@ -42,6 +42,15 @@ jobs:
           SECURE_SSL_REDIRECT: 'False'
           DATABASE_URL: sqlite:///db.sqlite3
 
+      - name: Vérifier les migrations manquantes
+        run: python manage.py makemigrations --check --dry-run
+        env:
+          SECRET_KEY: test-secret-key-for-ci
+          DEBUG: 'False'
+          ALLOWED_HOSTS: localhost,127.0.0.1
+          SECURE_SSL_REDIRECT: 'False'
+          DATABASE_URL: sqlite:///db.sqlite3
+
       - name: Run tests
         run: python manage.py test
         env:

@@ -494,13 +494,16 @@ async function saveUserEdit(userId) {
             headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({ first_name, last_name, role }),
         });
-        if (!res.ok) throw new Error('Erreur');
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.detail || errData.error || `خطأ ${res.status}`);
+        }
         document.getElementById('admin-edit-form').style.display = 'none';
         await loadUsers();
         await openUserProfile(userId);
     } catch (err) {
         Logger.error('ADMIN', 'saveUserEdit error', err);
-        alert('فشل حفظ التعديلات');
+        alert(`فشل حفظ التعديلات: ${err.message || 'خطأ غير معروف'}`);
     }
 }
 

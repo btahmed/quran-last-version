@@ -522,13 +522,11 @@ export function toggleAssignMode(mode) {
 
 export async function handleDeleteBatch(ids, title, count) {
     if (!confirm(`حذف "${title}" لـ ${count} طالب؟\nلا يمكن التراجع عن هذا الإجراء.`)) return;
-    const token = localStorage.getItem(config.apiTokenKey);
     let deleted = 0;
     for (const id of ids) {
         try {
-            const res = await fetch(`${config.apiBaseUrl}/api/tasks/${id}/`, {
+            const res = await authFetch(`${config.apiBaseUrl}/api/tasks/${id}/`, {
                 method: 'DELETE',
-                headers: { Authorization: `Bearer ${token}` },
             });
             if (res.ok || res.status === 204) deleted++;
         } catch (_) {}

@@ -258,7 +258,9 @@ class AuditLog(models.Model):
 def submission_audio_path(instance, filename):
     """Chemin d'upload : submissions/<task_id>/<student_id>/<uuid>_<filename>"""
     unique_filename = f"{uuid.uuid4().hex}_{filename}"
-    return f"submissions/{instance.task_id}/{instance.student_id}/{unique_filename}"
+    task_id = instance.task_id or 'unknown_task'
+    student_id = instance.student_id or 'unknown_student'
+    return f"submissions/{task_id}/{student_id}/{unique_filename}"
 
 
 def validate_audio_file(file):
