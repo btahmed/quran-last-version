@@ -61,7 +61,7 @@ DATABASE_URL=postgresql://...        # Supabase Transaction Pooler
 CLOUDINARY_URL=cloudinary://...      # Stockage audio
 SECRET_KEY=...                       # Django secret key
 DEBUG=False
-ALLOWED_HOSTS=.vercel.app
+ALLOWED_HOSTS=quranreview-api.vercel.app
 ```
 
 ## Structure du projet
