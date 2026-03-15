@@ -2,33 +2,32 @@
 
 ## Architecture du projet
 
-Ce repo a **deux déploiements distincts** :
-
-| Déploiement | Fichiers | URL | Usage |
-|-------------|----------|-----|-------|
-| **GitHub Pages** (statique) | `index.html`, `script.js`, `style.css`, `sw.js`, `manifest.json` à la racine | https://quranreview.ma | Site live pour les utilisateurs |
-| **App Docker** (ES modules) | `frontend/src/` + `backend/` + `docker-compose.yml` | localhost:80 (dev) | Version moderne en développement |
-
-> ⚠️ Les deux coexistent. Le site live utilise les fichiers **racine**. Le développement actif se fait sur `frontend/`.
+| Déploiement | URL | Usage |
+|-------------|-----|-------|
+| **Frontend Vercel** | https://quranreview-frontend.vercel.app | Site live (ES Modules statiques) |
+| **Backend Vercel** | https://quranreview-api.vercel.app | API Django serverless (production) |
+| **Dev local** | localhost:80 / localhost:8000 | Docker Compose (nginx + Django + PostgreSQL) |
 
 ---
 
 ## Stack technique
 
-- **Frontend GitHub Pages** : Vanilla JS monolithique (`script.js` 4871 lignes), CSS, PWA
-- **Frontend Docker** : ES Modules natifs, organisé en `core/`, `services/`, `pages/`, `components/`
-- **Backend** : Django 4.x + DRF, PostgreSQL (via Docker)
-- **Auth** : JWT (SimpleJWT)
-- **Infra** : Docker Compose (nginx + Django + PostgreSQL)
+- **Frontend** : ES Modules natifs, organisé en `core/`, `services/`, `pages/`, `components/` — déployé sur Vercel
+- **Backend** : Django 4.x + DRF — déployé en serverless Vercel via `api/index.py` (WSGI)
+- **Auth** : JWT (SimpleJWT) — `/api/auth/token/` (pas `/api/auth/login/`)
+- **Base de données** : PostgreSQL Supabase — Transaction Pooler `aws-1-eu-west-1.pooler.supabase.com:6543`
+- **Stockage audio** : Cloudinary via `django-cloudinary-storage` — upload auto sur POST `/api/submissions/`
+- **Dev local** : Docker Compose (nginx + Django + PostgreSQL)
 
 ---
 
 ## Lancer l'application
 
-### GitHub Pages (site live)
+### Production Vercel
 ```bash
-# Déployé automatiquement sur push vers main
-# Via .github/workflows/deploy.yml → quranreview.ma
+# Déploiement automatique sur push vers main
+# Frontend : https://quranreview-frontend.vercel.app
+# Backend  : https://quranreview-api.vercel.app
 ```
 
 ### App Docker (développement)
@@ -58,7 +57,8 @@ frontend/
 │   ├── components/     # AudioPlayer, AuthModal, AudioRecordModal, UserEditModal
 │   ├── services/       # auth, tasks, competition, hifz
 │   └── pages/          # HomePage, WardPage, MemorizationPage, ProgressPage,
-│                       # SettingsPage, CompetitionPage, HifzPage, MyTasksPage, TeacherPage
+│                       # SettingsPage, CompetitionPage, HifzPage, MyTasksPage,
+│                       # TeacherPage, AdminPage
 └── Dockerfile
 ```
 
@@ -91,36 +91,41 @@ Les fichiers MP3 (~1.6 GB, 114 sourates) ne sont pas dans le repo (limite GitHub
 ## API Backend clés
 
 ```
-POST /api/auth/login/          → JWT token
-POST /api/auth/register/
+POST /api/auth/token/          → JWT login (NE PAS utiliser /api/auth/login/ → 404)
+POST /api/auth/token/refresh/  → refresh token
 GET  /api/tasks/               → liste des tâches
-POST /api/tasks/               → créer tâche
+POST /api/tasks/               → créer tâche (teacher)
+POST /api/submissions/         → soumettre audio (student) — stocké sur Cloudinary
 GET  /api/competition/         → données compétition
 GET  /api/hifz/                → progression hifz
-POST /api/audio/submissions/   → soumettre audio
+GET  /api/admin/users/         → liste utilisateurs (admin)
 ```
 
 ---
 
-## Déploiement Backend (Render.com)
+## Déploiement (Vercel)
 
-```yaml
-# render.yaml à la racine
-rootDir: backend
-buildCommand: pip install -r requirements.txt && python manage.py migrate
-startCommand: gunicorn quranreview.wsgi:application
+```bash
+# Frontend : projet Vercel séparé → frontend/vercel.json (rewrites SPA)
+# Backend  : projet Vercel séparé → backend/vercel.json (rewrites → api/index.py)
+# Build command backend : pip install -r requirements.txt && python manage.py collectstatic --noinput
+# ⚠️ Ne PAS mettre de clé "builds" dans vercel.json → supprime le build command → collectstatic ne tourne pas
 ```
 
-URL API prod : https://api.quranreview.live (si configuré)
+Variables d'env Vercel (backend) : `DATABASE_URL`, `CLOUDINARY_URL`, `SECRET_KEY`, `DEBUG=False`
 
 ---
 
 ## Gotchas
 
-- Le `deploy.yml` ne tourne que sur push vers `main` (plus de trigger PR)
 - `window.QuranReview` doit être défini avant tout `onclick` inline → `main.js` doit charger en premier
 - GSAP loading screen : animation inline dans `<head>` de `frontend/index.html`, timeout fallback 5s
 - PostgreSQL : variables d'env dans `.env` à la racine (non commité)
+- Supabase : utiliser le **Transaction Pooler** (`port 6543`) — la connexion directe est IPv6-only (incompatible Vercel)
+- `dj-database-url.parse()` : NE PAS passer `ssl_require=True` → crash en CI avec `DATABASE_URL=sqlite://`
+- Façade `window.QuranReview` : toute nouvelle fonction de page doit être exportée ET ajoutée à la façade dans `main.js`
+- Login endpoint : `/api/auth/token/` (POST) — ne pas tester avec `/api/auth/login/` (retourne 404)
+- Vercel serverless : pas de filesystem persistant → les fichiers uploadés doivent aller sur Cloudinary
 
 ---
 
