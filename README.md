@@ -80,12 +80,12 @@ quran-last-version/
 │                              # ProgressPage, SettingsPage, CompetitionPage,
 │                              # HifzPage, MyTasksPage, TeacherPage, AdminPage
 ├── backend/                   # Django API (déployé sur Vercel)
-│   ├── api/
-│   │   └── index.py           # WSGI entry point Vercel
+│   ├── api/                   # WSGI entry point + Views DRF
+│   │   ├── index.py           # Entry point WSGI Vercel
+│   │   └── views.py           # Endpoints (tasks, submissions, competition...)
 │   ├── vercel.json            # Config Vercel backend
 │   ├── quranreview/           # Settings, URLs, WSGI
-│   ├── authentication/        # Modèle User personnalisé + JWT
-│   └── api/                   # Views DRF (tasks, submissions, competition...)
+│   └── authentication/        # Modèle User personnalisé + JWT
 ├── .coderabbit.yaml           # Config CodeRabbit AI review
 ├── docker-compose.yml         # Dev local
 └── docs/                      # Documentation technique

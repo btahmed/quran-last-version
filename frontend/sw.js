@@ -56,6 +56,21 @@ self.addEventListener('fetch', (event) => {
     // Ne pas intercepter les ressources externes (CDN audio, etc.)
     if (url.origin !== self.location.origin) return;
 
+    // Stratégie : Network First pour les navigations (HTML toujours frais)
+    if (request.mode === 'navigate') {
+        event.respondWith(
+            fetch(request)
+                .then((res) => {
+                    if (!res || res.status !== 200) return res;
+                    const clone = res.clone();
+                    caches.open(CACHE_NAME).then((c) => c.put(request, clone));
+                    return res;
+                })
+                .catch(() => caches.match('/index.html'))
+        );
+        return;
+    }
+
     // Stratégie : Network First pour les modules JS (évite le cache obsolète)
     if (url.pathname.startsWith('/src/') || url.pathname.endsWith('.js')) {
         event.respondWith(
@@ -68,9 +83,10 @@ self.addEventListener('fetch', (event) => {
                 })
                 .catch(() => caches.match(request))
         );
+        return;
     }
 
-    // Stratégie : Cache First pour les autres assets statiques
+    // Stratégie : Cache First pour les autres assets statiques (images, fonts, etc.)
     event.respondWith(
         caches.match(request).then((cached) => {
             if (cached) return cached;
@@ -80,9 +96,6 @@ self.addEventListener('fetch', (event) => {
                 caches.open(CACHE_NAME).then((c) => c.put(request, clone));
                 return res;
             });
-        }).catch(() => {
-            // Fallback SPA : retourner index.html pour la navigation offline
-            if (request.mode === 'navigate') return caches.match('/index.html');
         })
     );
 });
