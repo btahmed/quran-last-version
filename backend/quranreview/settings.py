@@ -115,7 +115,11 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Media files
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+# Sur Vercel, le filesystem est read-only sauf /tmp — utiliser /tmp/media en prod
+if DEBUG:
+    MEDIA_ROOT = BASE_DIR / 'media'
+else:
+    MEDIA_ROOT = '/tmp/media'
 
 # Cloudinary storage pour les fichiers audio (si CLOUDINARY_URL défini)
 CLOUDINARY_URL = os.environ.get('CLOUDINARY_URL')

@@ -1,3 +1,4 @@
+import logging
 from rest_framework import generics, status, filters
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.decorators import api_view, permission_classes
@@ -10,6 +11,8 @@ from django.db import transaction
 from django.db.models import Sum
 from django.db.models.functions import Coalesce
 from datetime import datetime, timedelta
+
+logger = logging.getLogger(__name__)
 
 from .models import Task, Progress, ReviewSchedule, Achievement, Competition, CompetitionScore, Submission, PointsLog
 from .serializers import (
@@ -330,17 +333,21 @@ class SubmissionCreateView(APIView):
             task = Task.objects.get(pk=task_id, user=request.user)
         except Task.DoesNotExist:
             return Response({'detail': 'Tache introuvable ou non assignée à cet utilisateur'}, status=404)
-        sub, created = Submission.objects.get_or_create(
-            task=task, student=request.user,
-            defaults={'audio_file': audio}
-        )
-        if not created:
-            if sub.status == 'approved':
-                return Response({'detail': 'Soumission deja approuvee'}, status=400)
-            # Permet la re-soumission si rejected ou submitted
-            sub.audio_file = audio
-            sub.status = 'submitted'
-            sub.save()
+        try:
+            sub, created = Submission.objects.get_or_create(
+                task=task, student=request.user,
+                defaults={'audio_file': audio}
+            )
+            if not created:
+                if sub.status == 'approved':
+                    return Response({'detail': 'Soumission deja approuvee'}, status=400)
+                # Permet la re-soumission si rejected ou submitted
+                sub.audio_file = audio
+                sub.status = 'submitted'
+                sub.save()
+        except Exception as e:
+            logger.error('Erreur sauvegarde soumission audio: %s', str(e), exc_info=True)
+            return Response({'detail': f'Erreur lors de la sauvegarde: {str(e)}'}, status=500)
         return Response({'id': sub.id, 'status': sub.status}, status=201 if created else 200)
 
 
