@@ -77,10 +77,16 @@ function buildBottomBar(role) {
     if (role === 'visitor') {
         bar.style.display = 'none';
         document.body.classList.remove('has-bottom-bar');
+        delete bar.dataset.currentRole; // réinitialiser pour la prochaine connexion
         return;
     }
 
-    if (bar.dataset.currentRole === role) return; // déjà construit pour ce rôle
+    if (bar.dataset.currentRole === role) {
+        // Rôle identique — s'assurer que la barre est bien visible (cas logout/re-login)
+        bar.style.display = 'flex';
+        document.body.classList.add('has-bottom-bar');
+        return;
+    }
     bar.dataset.currentRole = role;
 
     const tabs = NAV_CONFIG[role] || [];

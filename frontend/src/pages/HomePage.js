@@ -252,11 +252,11 @@ function renderTeacherDashboard() {
         <section class="dashboard-section">
             <div class="quick-actions">
                 <button class="quick-btn quick-btn--primary"
-                        onclick="QuranReview.navigateTo('teacher')">
+                        onclick="QuranReview.navigateTo('devoirs')">
                     + واجب جديد
                 </button>
                 <button class="quick-btn"
-                        onclick="QuranReview.navigateTo('teacher')">
+                        onclick="QuranReview.navigateTo('soumissions')">
                     📋 كل التسليمات
                 </button>
             </div>
@@ -351,6 +351,8 @@ async function initDashboard(role) {
             renderTeacherSubmissions(pending);
             const el = document.getElementById('t-pending');
             if (el) el.textContent = pending.length;
+        } else {
+            renderTeacherSubmissions([]); // fallback : vider le placeholder
         }
     }
 
@@ -363,6 +365,9 @@ async function initDashboard(role) {
             setText('a-teachers',        data.total_teachers || 0);
             setText('a-students',        data.total_students || 0);
             setText('a-today',           data.submissions_today || 0);
+        } else {
+            // Fallback : remplacer les — par 0 pour signaler l'échec de chargement
+            ['a-users', 'a-teachers', 'a-students', 'a-today'].forEach(id => setText(id, '—'));
         }
     }
 }

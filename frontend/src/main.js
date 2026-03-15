@@ -188,7 +188,9 @@ window.QuranReview = {
     submitRecording,
 
     // ProfilPage
-    switchProfilTab: ProfilPage.switchProfilTab,
+    renderProfilPage: ProfilPage.render,
+    initProfilPage:   ProfilPage.init,
+    switchProfilTab:  ProfilPage.switchProfilTab,
 };
 
 // Globals directs pour onclick HTML qui n'utilisent pas QuranReview.xxx

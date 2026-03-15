@@ -175,8 +175,6 @@ a.nav-link-pro,
     .modal-pro {
         max-height: 90vh;
         border-radius: 1rem 1rem 0 0;
-        border-bottom-left-radius: 0;
-        border-bottom-right-radius: 0;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
     }
