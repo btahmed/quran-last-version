@@ -104,7 +104,7 @@ export async function init() {
 let _studentTasks = [];
 let _studentSubByTask = {};
 
-async function loadStudentDashboard() {
+export async function loadStudentDashboard() {
     const token = localStorage.getItem(config.apiTokenKey);
     if (!token) {
         showAuthModal();

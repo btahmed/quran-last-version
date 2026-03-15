@@ -129,6 +129,7 @@ window.QuranReview = {
 
     // MyTasksPage
     switchTaskTab: MyTasksPage.switchTaskTab,
+    loadStudentDashboard: MyTasksPage.loadStudentDashboard,
     openAudioModal: openRecordModal,
     openRecordModal: openRecordModal,
 
