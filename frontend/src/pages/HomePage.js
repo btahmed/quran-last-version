@@ -1,176 +1,431 @@
 // frontend/src/pages/HomePage.js
+// Page d'accueil intelligente : landing visiteur OU dashboard selon le rôle
 import { state } from '../core/state.js';
+import { config } from '../core/config.js';
 
-// Injection CSS co-localisé
-if (!document.querySelector('link[href*="HomePage.css"]')) {
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = '/src/pages/HomePage.css';
-    document.head.appendChild(link);
-}
+// ══════════════════════════════════════════════════════════════
+// Point d'entrée principal — détection visiteur / rôle connecté
+// ══════════════════════════════════════════════════════════════
 
 export function render() {
-    return `<div id="home-page" class="page active">
-            <!-- Hero Section -->
-            <section class="section-pro" style="text-align: center; padding-top: var(--space-16);">
-                <div class="container-pro">
-                    <h1 class="hero-title gradient-text animate-fade-in-up">
-                        حفظ القرآن<br>بطريقة عصرية
-                    </h1>
-                    <p class="hero-subtitle animate-fade-in-up" style="animation-delay: 0.1s;">
-                        تطبيق احترافي يجمع بين التقنية الحديثة والطريقة النبوية في حفظ ومراجعة القرآن الكريم
-                    </p>
-                    <div class="flex-pro" style="justify-content: center; gap: var(--space-4); animation-delay: 0.2s;" class="animate-fade-in-up">
-                        <button class="btn btn-glow btn-ripple" onclick="navigateTo('memorization')">
-                            <span>📖</span>
-                            ابدأ الحفظ
-                        </button>
-                        <button class="btn btn-outline-glow" onclick="navigateTo('ward')">
-                            <span>🎧</span>
-                            استمع للورد
-                        </button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Daily Motivation -->
-            <section class="section-pro">
-                <div class="container-pro">
-                    <div class="card-glass-pro shimmer" style="text-align: center; max-width: 800px; margin: 0 auto;">
-                        <span class="badge badge-gold" style="margin-bottom: var(--space-4);">✨ حكمة اليوم</span>
-                        <div class="arabic-large motivation-text" id="motivation-text" style="margin: var(--space-6) 0; font-size: 2rem;">
-                            خَيْرُكُمْ مَنْ تَعَلَّمَ الْقُرْآنَ وَعَلَّمَهُ
-                        </div>
-                        <p class="motivation-source" id="motivation-source" style="color: var(--color-text-secondary);">رواه البخاري</p>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Stats Section -->
-            <section class="section-pro">
-                <div class="container-pro">
-                    <h2 class="section-title" style="text-align: center; margin-bottom: var(--space-8);">📊 إحصائياتك <span style="font-size: 0.875rem; color: var(--color-text-secondary); font-weight: 400;">يوم <span id="today-date"></span></span></h2>
-                    <div class="grid-pro grid-cols-4 stagger-children" id="home-stats">
-                        <div class="card-stat-premium" style="text-align: center;">
-                            <div class="stat-value stat-number" id="home-total-surahs">0</div>
-                            <p style="color: var(--color-text-secondary); margin-top: var(--space-2);">إجمالي السور</p>
-                        </div>
-                        <div class="card-stat-premium" style="text-align: center;">
-                            <div class="stat-value stat-number" id="home-mastered">0</div>
-                            <p style="color: var(--color-text-secondary); margin-top: var(--space-2);">متقنة</p>
-                        </div>
-                        <div class="card-stat-premium" style="text-align: center;">
-                            <div class="stat-value stat-number" id="home-weak">0</div>
-                            <p style="color: var(--color-text-secondary); margin-top: var(--space-2);">ضعيفة</p>
-                        </div>
-                        <div class="card-stat-premium" style="text-align: center;">
-                            <div class="stat-value stat-number" id="home-new">0</div>
-                            <p style="color: var(--color-text-secondary); margin-top: var(--space-2);">جديدة</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Features Grid -->
-            <section class="section-pro">
-                <div class="container-pro">
-                    <h2 class="section-title" style="text-align: center; margin-bottom: var(--space-8);">✨ المميزات</h2>
-                    <div class="grid-pro grid-cols-3 stagger-children">
-                        <div class="card-glass-pro hover-lift" style="text-align: center;">
-                            <div class="feature-icon-pro">📖</div>
-                            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: var(--space-2);">قراءة وتلاوة</h3>
-                            <p style="color: var(--color-text-secondary);">استماع للقراءات بأصوات مختلفة مع عرض المصحف</p>
-                        </div>
-                        <div class="card-glass-pro hover-lift" style="text-align: center;">
-                            <div class="feature-icon-pro">🧠</div>
-                            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: var(--space-2);">تتبع ذكي</h3>
-                            <p style="color: var(--color-text-secondary);">نظام تكرار متباعد لضمان الحفظ القوي</p>
-                        </div>
-                        <div class="card-glass-pro hover-lift" style="text-align: center;">
-                            <div class="feature-icon-pro">🎯</div>
-                            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: var(--space-2);">وضع الحفظ</h3>
-                            <p style="color: var(--color-text-secondary);">تمارين تفاعلية لاختبار الحفظ بمستويات مختلفة</p>
-                        </div>
-                        <div class="card-glass-pro hover-lift" style="text-align: center;">
-                            <div class="feature-icon-pro">🏆</div>
-                            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: var(--space-2);">تحديات</h3>
-                            <p style="color: var(--color-text-secondary);">تنافس مع الأصدقاء واكسب النقاط</p>
-                        </div>
-                        <div class="card-glass-pro hover-lift" style="text-align: center;">
-                            <div class="feature-icon-pro">📈</div>
-                            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: var(--space-2);">إحصائيات</h3>
-                            <p style="color: var(--color-text-secondary);">تتبع تقدمك يومياً وأسبوعياً وشهرياً</p>
-                        </div>
-                        <div class="card-glass-pro hover-lift" style="text-align: center;">
-                            <div class="feature-icon-pro">👨‍🏫</div>
-                            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: var(--space-2);">معلمك</h3>
-                            <p style="color: var(--color-text-secondary);">تواصل مع معلميك واستلم المهام</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </div>`;
-}
-
-export function init() {
-    updateDailyMotivation();
-    updateHomeStats();
-    updateTodayDate();
-}
-
-function updateDailyMotivation() {
-    const motivations = [
-        { text: 'خَيْرُكُمْ مَنْ تَعَلَّمَ الْقُرْآنَ وَعَلَّمَهُ', source: 'رواه البخاري' },
-        { text: 'الْقُرْآنُ كَلامُ اللهِ، مَنْ قَرَأَهُ فَقَدْ تَكَلَّمَ مَعَ اللهِ', source: 'حديث قدسي' },
-        { text: 'مَثَلُ الْمُؤْمِنِ الَّذِي يَقْرَأُ الْقُرْآنَ كَمَثَلِ الْأُتْرُجَّةِ، رِيحُهَا طَيِّبٌ وَطَعْمُهَا طَيِّبٌ', source: 'رواه البخاري' },
-        { text: 'سَيَأْتِي عَلَى النَّاسِ زَمَانٌ يَتَعَلَّمُونَ فِيهِ الْقُرْآنَ، ثُمَّ يَقْرَؤُونَهُ', source: 'رواه البخاري' }
-    ];
-
-    const today = new Date().getDate();
-    const motivation = motivations[today % motivations.length];
-
-    const textElement = document.getElementById('motivation-text');
-    const sourceElement = document.getElementById('motivation-source');
-
-    if (textElement) textElement.textContent = motivation.text;
-    if (sourceElement) sourceElement.textContent = motivation.source;
-}
-
-function updateHomeStats() {
-    const stats = calculateStats();
-
-    const totalSurahsElement = document.getElementById('home-total-surahs');
-    const masteredElement = document.getElementById('home-mastered');
-    const weakElement = document.getElementById('home-weak');
-    const newElement = document.getElementById('home-new');
-
-    if (totalSurahsElement) totalSurahsElement.textContent = stats.total;
-    if (masteredElement) masteredElement.textContent = stats.mastered;
-    if (weakElement) weakElement.textContent = stats.weak;
-    if (newElement) newElement.textContent = stats.new;
-}
-
-function updateTodayDate() {
-    const todayDateElement = document.getElementById('today-date');
-    if (todayDateElement) {
-        const today = new Date();
-        const options = {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        };
-        todayDateElement.textContent = today.toLocaleDateString('ar-SA', options);
+    if (!state.user) return renderLanding();
+    switch (state.user.role) {
+        case 'student': return renderDashboard('student');
+        case 'teacher': return renderDashboard('teacher');
+        case 'admin':   return renderDashboard('admin');
+        default:        return renderLanding(); // fallback rôle inconnu
     }
 }
 
-// Calcul des stats à partir du state central
-function calculateStats() {
-    const data = state.memorizationData || [];
-    return {
-        total: data.length,
-        mastered: data.filter(s => s.level >= 4).length,
-        weak: data.filter(s => s.level <= 1 && s.level >= 0).length,
-        new: data.filter(s => s.level === 0 || s.level === undefined).length
+export function init() {
+    if (!state.user) return initLanding();
+    switch (state.user.role) {
+        case 'student': return initDashboard('student');
+        case 'teacher': return initDashboard('teacher');
+        case 'admin':   return initDashboard('admin');
+        default:        return initLanding();
+    }
+}
+
+// ══════════════════════════════════════════════════════════════
+// LANDING PAGE — visiteur non connecté
+// ══════════════════════════════════════════════════════════════
+
+function renderLanding() {
+    return `
+    <div class="landing-page" dir="rtl">
+
+        <!-- HERO -->
+        <section class="landing-hero">
+            <div class="hero-content">
+                <div class="hero-logo">🕌</div>
+                <h1 class="hero-title">مراجعة القرآن</h1>
+                <p class="hero-subtitle">
+                    منصة لإدارة حلقات تحفيظ القرآن ومراجعة الحفظ من المنزل
+                </p>
+                <div class="hero-actions">
+                    <button class="btn btn-glow btn-lg"
+                            onclick="showAuthModal()">
+                        تسجيل الدخول
+                    </button>
+                    <button class="btn btn-outline-glow btn-lg"
+                            onclick="QuranReview.showRegisterForm()">
+                        إنشاء حساب
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- FEATURES — verbes d'action -->
+        <section class="landing-features">
+            <div class="features-grid">
+                <div class="feature-card">
+                    <span class="feature-icon">📖</span>
+                    <h3>تعلّم سورة جديدة</h3>
+                    <p>احفظ سوراً جديدة مع نظام متتابع يساعدك على التقدم خطوة بخطوة</p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">🔁</span>
+                    <h3>راجع محفوظاتك</h3>
+                    <p>نظام مراجعة ذكي يضمن تثبيت الحفظ وعدم النسيان بمرور الوقت</p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">🎧</span>
+                    <h3>أرسل تلاوتك للمعلم</h3>
+                    <p>سجّل تلاوتك وأرسلها مباشرة للمعلم لتلقي التصحيح والتقييم</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- STATS LIVE — format honnête "+N" -->
+        <section class="landing-stats">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-number" data-target="224">+224</span>
+                    <span class="stat-label">طالب نشيط</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number" data-target="21">+21</span>
+                    <span class="stat-label">معلم متخصص</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number" data-target="8">+8</span>
+                    <span class="stat-label">مسجد شريك</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA FINAL -->
+        <section class="landing-cta">
+            <h2>انضم إلى حلقتك اليوم</h2>
+            <button class="btn btn-glow btn-lg"
+                    onclick="QuranReview.showRegisterForm()">
+                إنشاء حساب مجاني
+            </button>
+        </section>
+
+    </div>
+    `;
+}
+
+function initLanding() {
+    // Animation compteurs stats au scroll (IntersectionObserver)
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                animateCounter(entry.target);
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.5 });
+
+    document.querySelectorAll('.stat-number[data-target]').forEach(el =>
+        observer.observe(el)
+    );
+}
+
+function animateCounter(el) {
+    const target = parseInt(el.dataset.target, 10) || 0;
+    let count = 0;
+    const step = Math.max(1, Math.ceil(target / 40));
+    const timer = setInterval(() => {
+        count = Math.min(count + step, target);
+        el.textContent = '+' + count;
+        if (count >= target) clearInterval(timer);
+    }, 30);
+}
+
+// ══════════════════════════════════════════════════════════════
+// DASHBOARDS — utilisateurs connectés
+// ══════════════════════════════════════════════════════════════
+
+function renderDashboard(role) {
+    const renderers = {
+        student: renderStudentDashboard,
+        teacher: renderTeacherDashboard,
+        admin:   renderAdminDashboard,
     };
+    return (renderers[role] || renderLanding)();
+}
+
+// ── Dashboard étudiant ────────────────────────────────────────
+
+function renderStudentDashboard() {
+    const name = state.user?.first_name || state.user?.username || 'طالب';
+    return `
+    <div class="dashboard dashboard-student" dir="rtl">
+        <div class="dashboard-header">
+            <h2>مرحباً يا ${escapeHtml(name)} 👋</h2>
+            <p class="dashboard-date">${getArabicDate()}</p>
+        </div>
+
+        <!-- DEVOIRS DU JOUR EN PREMIER (action avant statistiques) -->
+        <section class="dashboard-section">
+            <h3 class="section-title">📋 واجبات اليوم</h3>
+            <div id="student-tasks-list" class="tasks-list">
+                <div class="loading-placeholder">جاري التحميل...</div>
+            </div>
+        </section>
+
+        <!-- STATS -->
+        <section class="dashboard-section">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-icon">📖</span>
+                    <span id="hifz-progress" class="stat-value">—</span>
+                    <span class="stat-label">الحفظ</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-icon">🔁</span>
+                    <span id="revision-score" class="stat-value">—</span>
+                    <span class="stat-label">المراجعة</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-icon">🔥</span>
+                    <span id="streak-days" class="stat-value">—</span>
+                    <span class="stat-label">أيام متتالية</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ACCÈS RAPIDE -->
+        <section class="dashboard-section">
+            <h3 class="section-title">⚡ وصول سريع</h3>
+            <div class="quick-actions">
+                <button class="quick-btn"
+                        onclick="QuranReview.navigateTo('hifz')">
+                    📖 الحفظ
+                </button>
+                <button class="quick-btn"
+                        onclick="QuranReview.navigateTo('revision')">
+                    🔁 المراجعة
+                </button>
+                <button class="quick-btn"
+                        onclick="QuranReview.navigateTo('competition')">
+                    🏆 المسابقة
+                </button>
+            </div>
+        </section>
+    </div>
+    `;
+}
+
+// ── Dashboard enseignant ──────────────────────────────────────
+
+function renderTeacherDashboard() {
+    const name = state.user?.first_name || state.user?.username || 'أستاذ';
+    return `
+    <div class="dashboard dashboard-teacher" dir="rtl">
+        <div class="dashboard-header">
+            <h2>مرحباً أستاذ ${escapeHtml(name)}</h2>
+        </div>
+
+        <!-- STATS (4 cartes dont absents) -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span id="t-students" class="stat-value">—</span>
+                <span class="stat-label">👥 طلاب</span>
+            </div>
+            <div class="stat-card">
+                <span id="t-tasks" class="stat-value">—</span>
+                <span class="stat-label">📝 واجبات</span>
+            </div>
+            <div class="stat-card">
+                <span id="t-pending" class="stat-value">—</span>
+                <span class="stat-label">⏳ بانتظار التصحيح</span>
+            </div>
+            <div class="stat-card">
+                <span id="t-absent" class="stat-value">—</span>
+                <span class="stat-label">❌ غياب اليوم</span>
+            </div>
+        </div>
+
+        <!-- SOUMISSIONS RÉCENTES -->
+        <section class="dashboard-section">
+            <h3 class="section-title">🎧 آخر التسليمات</h3>
+            <div id="teacher-submissions-list" class="submissions-list">
+                <div class="loading-placeholder">جاري التحميل...</div>
+            </div>
+        </section>
+
+        <!-- ACCÈS RAPIDE -->
+        <section class="dashboard-section">
+            <div class="quick-actions">
+                <button class="quick-btn quick-btn--primary"
+                        onclick="QuranReview.navigateTo('teacher')">
+                    + واجب جديد
+                </button>
+                <button class="quick-btn"
+                        onclick="QuranReview.navigateTo('teacher')">
+                    📋 كل التسليمات
+                </button>
+            </div>
+        </section>
+    </div>
+    `;
+}
+
+// ── Dashboard admin ───────────────────────────────────────────
+
+function renderAdminDashboard() {
+    return `
+    <div class="dashboard dashboard-admin" dir="rtl">
+        <div class="dashboard-header">
+            <h2>لوحة الإدارة</h2>
+        </div>
+
+        <!-- STATS GLOBALES (dont soumissions aujourd'hui) -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span id="a-users" class="stat-value">—</span>
+                <span class="stat-label">👥 مستخدمون</span>
+            </div>
+            <div class="stat-card">
+                <span id="a-teachers" class="stat-value">—</span>
+                <span class="stat-label">👨‍🏫 معلمون</span>
+            </div>
+            <div class="stat-card">
+                <span id="a-students" class="stat-value">—</span>
+                <span class="stat-label">👨‍🎓 طلاب</span>
+            </div>
+            <div class="stat-card">
+                <span id="a-today" class="stat-value">—</span>
+                <span class="stat-label">📤 تسليمات اليوم</span>
+            </div>
+        </div>
+
+        <!-- ACTIVITÉ RÉCENTE -->
+        <section class="dashboard-section">
+            <h3 class="section-title">📊 النشاط الأخير</h3>
+            <div id="admin-activity-list" class="activity-list">
+                <div class="loading-placeholder">جاري التحميل...</div>
+            </div>
+        </section>
+
+        <!-- ACCÈS RAPIDE -->
+        <section class="dashboard-section">
+            <div class="quick-actions">
+                <button class="quick-btn"
+                        onclick="QuranReview.navigateTo('admin')">
+                    👥 المستخدمون
+                </button>
+                <button class="quick-btn"
+                        onclick="QuranReview.navigateTo('admin')">
+                    📊 الإحصاء
+                </button>
+            </div>
+        </section>
+    </div>
+    `;
+}
+
+// ══════════════════════════════════════════════════════════════
+// INIT DASHBOARDS — fetch API
+// ══════════════════════════════════════════════════════════════
+
+async function initDashboard(role) {
+    const token = localStorage.getItem(config.apiTokenKey);
+    if (!token) return;
+    const headers = { Authorization: `Bearer ${token}` };
+
+    if (role === 'student') {
+        const res = await fetch(`${config.apiBaseUrl}/api/tasks/`, { headers })
+            .catch(() => null);
+        if (res?.ok) {
+            const tasks = await res.json();
+            // L'API renvoie un tableau ou un objet paginé
+            const list = Array.isArray(tasks) ? tasks : (tasks.results || []);
+            renderStudentTasks(list);
+        } else {
+            renderStudentTasks([]);
+        }
+    }
+
+    if (role === 'teacher') {
+        const res = await fetch(`${config.apiBaseUrl}/api/submissions/`, { headers })
+            .catch(() => null);
+        if (res?.ok) {
+            const data = await res.json();
+            const subs = Array.isArray(data) ? data : (data.results || []);
+            const pending = subs.filter(s => s.status === 'pending' || !s.grade);
+            renderTeacherSubmissions(pending);
+            const el = document.getElementById('t-pending');
+            if (el) el.textContent = pending.length;
+        }
+    }
+
+    if (role === 'admin') {
+        const res = await fetch(`${config.apiBaseUrl}/api/admin/overview/`, { headers })
+            .catch(() => null);
+        if (res?.ok) {
+            const data = await res.json();
+            setText('a-users',    '+' + (data.total_users    || 0));
+            setText('a-teachers',        data.total_teachers || 0);
+            setText('a-students',        data.total_students || 0);
+            setText('a-today',           data.submissions_today || 0);
+        }
+    }
+}
+
+// ══════════════════════════════════════════════════════════════
+// HELPERS DE RENDU
+// ══════════════════════════════════════════════════════════════
+
+function renderStudentTasks(tasks) {
+    const el = document.getElementById('student-tasks-list');
+    if (!el) return;
+    if (!tasks.length) {
+        el.innerHTML = '<p class="empty-state">لا توجد واجبات اليوم 🎉</p>';
+        return;
+    }
+    el.innerHTML = tasks.slice(0, 3).map(t => `
+        <div class="task-row">
+            <span class="task-name">${escapeHtml(t.surah_name || t.title || 'واجب')}</span>
+            <button class="btn btn-sm btn-glow"
+                    onclick="QuranReview.navigateTo('soumettre')">
+                إرسال 🎧
+            </button>
+        </div>
+    `).join('');
+}
+
+function renderTeacherSubmissions(subs) {
+    const el = document.getElementById('teacher-submissions-list');
+    if (!el) return;
+    if (!subs.length) {
+        el.innerHTML = '<p class="empty-state">لا توجد تسليمات في الانتظار ✅</p>';
+        return;
+    }
+    el.innerHTML = subs.slice(0, 5).map(s => `
+        <div class="submission-row">
+            <span>${escapeHtml(s.student_name || s.student || 'طالب')} —
+                  ${escapeHtml(s.task_title   || s.task   || 'تسليم')}</span>
+            <span class="badge badge-warning">⏳ بانتظار التصحيح</span>
+        </div>
+    `).join('');
+}
+
+function setText(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+}
+
+function getArabicDate() {
+    return new Date().toLocaleDateString('ar-MA', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+    });
+}
+
+/** Échappe le HTML pour éviter XSS dans les données API */
+function escapeHtml(str) {
+    if (typeof str !== 'string') return String(str ?? '');
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
 }
