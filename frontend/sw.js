@@ -61,13 +61,13 @@ self.addEventListener('fetch', (event) => {
         event.respondWith(
             fetch(request)
                 .then((res) => {
+                    if (!res || res.status !== 200 || res.type !== 'basic') return res;
                     const clone = res.clone();
                     caches.open(CACHE_NAME).then((c) => c.put(request, clone));
                     return res;
                 })
                 .catch(() => caches.match(request))
         );
-        return;
     }
 
     // Stratégie : Cache First pour les autres assets statiques
