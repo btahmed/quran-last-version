@@ -251,8 +251,9 @@ export function resetData() {
         localStorage.removeItem(config.storageKey);
         localStorage.removeItem(config.themeKey);
 
-        // Réinitialiser aux valeurs par défaut via le router global
-        window.QuranReview.clearData();
+        // Réinitialiser l'état et naviguer vers l'accueil
+        if (window.QuranReview?.clearData) window.QuranReview.clearData();
+        else if (window.QuranReview?.navigateTo) window.QuranReview.navigateTo('home');
 
         showNotification('تم مسح جميع البيانات', 'info');
     } catch (error) {

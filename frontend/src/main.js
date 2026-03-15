@@ -10,6 +10,7 @@ import {
     performLogin, fetchMe, refreshToken, logout
 } from './services/auth.js';
 import { loadTasksFromApi } from './services/tasks.js';
+import { hifzEngine } from './services/hifz.js';
 import { navigateTo, renderPage, setupNavigation } from './core/router.js';
 import { render as renderModals, init as initModals } from './components/AuthModal.js';
 import { toggleRecording, stopRecording, submitRecording, openRecordModal } from './components/AudioRecordModal.js';
@@ -132,6 +133,22 @@ window.QuranReview = {
     loadStudentDashboard: MyTasksPage.loadStudentDashboard,
     openAudioModal: openRecordModal,
     openRecordModal: openRecordModal,
+
+    // MemorizationPage — fonctions manquantes de la façade
+    playSurahAudio: MemorizationPage.playSurahAudio,
+    openTarteel: MemorizationPage.openTarteel,
+
+    // HifzPage / Competition — moteur de mémorisation
+    hifzEngine,
+
+    // AudioPlayer — alias pour les callbacks du player
+    playPreviousAyah: WardPage.previousWardAyah,
+    playNextAyahManually: WardPage.nextWardAyah,
+    updateReciter: WardPage.updateWardDisplay,
+    playFullSurah: WardPage.playWard,
+
+    // SettingsPage — clearData (reset complet de l'état)
+    clearData: () => { state.data = loadData(); window.QuranReview.navigateTo('home'); },
 
     // TeacherPage
     handleCreateTask: TeacherPage.handleCreateTask,
