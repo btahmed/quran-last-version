@@ -63,9 +63,11 @@ function buildTopNav(role) {
     });
 
     // Bouton logout toujours présent pour les utilisateurs connectés
-    nav.insertAdjacentHTML('beforeend', `
-        <button class="btn btn-outline-glow btn-sm" onclick="QuranReview.logout()">خروج</button>
-    `);
+    const logoutBtn = document.createElement('button');
+    logoutBtn.className = 'btn btn-outline-glow btn-sm';
+    logoutBtn.textContent = 'خروج';
+    logoutBtn.addEventListener('click', () => window.QuranReview?.logout());
+    nav.appendChild(logoutBtn);
 }
 
 function buildBottomBar(role) {
@@ -78,16 +80,33 @@ function buildBottomBar(role) {
         return;
     }
 
+    if (bar.dataset.currentRole === role) return; // déjà construit pour ce rôle
+    bar.dataset.currentRole = role;
+
     const tabs = NAV_CONFIG[role] || [];
-    bar.innerHTML = tabs.map(tab => `
-        <a class="bottom-tab${tab.center ? ' bottom-tab--center' : ''}"
-           data-page="${tab.key}"
-           href="#"
-           onclick="event.preventDefault(); QuranReview.navigateTo('${tab.key}')">
-            <span class="tab-icon">${tab.icon}</span>
-            <span class="tab-label">${tab.label}</span>
-        </a>
-    `).join('');
+    bar.innerHTML = '';
+    tabs.forEach(tab => {
+        const a = document.createElement('a');
+        a.className = `bottom-tab${tab.center ? ' bottom-tab--center' : ''}`;
+        a.dataset.page = tab.key;
+        a.href = '#';
+        a.addEventListener('click', e => {
+            e.preventDefault();
+            window.QuranReview?.navigateTo(tab.key);
+        });
+
+        const icon = document.createElement('span');
+        icon.className = 'tab-icon';
+        icon.textContent = tab.icon;
+
+        const label = document.createElement('span');
+        label.className = 'tab-label';
+        label.textContent = tab.label;
+
+        a.appendChild(icon);
+        a.appendChild(label);
+        bar.appendChild(a);
+    });
 
     bar.style.display = 'flex';
     document.body.classList.add('has-bottom-bar');
