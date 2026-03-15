@@ -124,7 +124,9 @@ else:
 # Cloudinary storage pour les fichiers audio (si CLOUDINARY_URL défini)
 CLOUDINARY_URL = os.environ.get('CLOUDINARY_URL')
 if CLOUDINARY_URL:
-    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+    # RawMediaCloudinaryStorage : resource_type='raw' → accepte audio (.webm, .mp3, etc.)
+    # MediaCloudinaryStorage est réservé aux images (jpeg, png) → rejet audio
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.RawMediaCloudinaryStorage'
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
