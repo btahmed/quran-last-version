@@ -3,6 +3,7 @@ import { Logger } from '../core/logger.js';
 import { config, IS_DEMO_MODE } from '../core/config.js';
 import { state } from '../core/state.js';
 import { showNotification } from '../core/ui.js';
+import { buildNav } from '../core/NavManager.js';
 
 export function initAuth() {
     const token = localStorage.getItem(config.apiTokenKey);
@@ -108,6 +109,7 @@ export async function performLogin(username, password) {
 
         hideAuthModal();
         updateAuthUI(true);
+        buildNav(demoUser.role);
 
         // Charger des tâches de démo
         loadDemoTasks();
@@ -167,6 +169,7 @@ export async function performLogin(username, password) {
 
         if (state.user) {
             Logger.log('AUTH', `Redirecting user role: ${state.user.role}`);
+            buildNav(state.user.role);
             if (state.user.role === 'admin' || state.user.is_superuser) {
                 window.QuranReview.navigateTo('admin');
             } else if (state.user.role === 'teacher') {

@@ -30,6 +30,11 @@ const pages = {
     soumettre: SoumissionPage,  // ex-MyTasksPage
     profil:    ProfilPage,      // fusion Settings + Progress
 
+    // ── Routes enseignant (sub-views) ──
+    devoirs:     TeacherPage,
+    soumissions: TeacherPage,
+    eleves:      TeacherPage,
+
     // ── Routes admin (sub-views) ──
     'admin-users':   AdminPage,
     'admin-classes': AdminPage,

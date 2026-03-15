@@ -306,11 +306,11 @@ function renderAdminDashboard() {
         <section class="dashboard-section">
             <div class="quick-actions">
                 <button class="quick-btn"
-                        onclick="QuranReview.navigateTo('admin')">
+                        onclick="QuranReview.navigateTo('admin-users')">
                     👥 المستخدمون
                 </button>
                 <button class="quick-btn"
-                        onclick="QuranReview.navigateTo('admin')">
+                        onclick="QuranReview.navigateTo('admin-stats')">
                     📊 الإحصاء
                 </button>
             </div>

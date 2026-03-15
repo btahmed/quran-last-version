@@ -282,6 +282,16 @@
     <!-- Conteneur des modaux -->
     <div id="modals"></div>
 
+    <!-- Éléments DOM fantômes — requis par auth.js (updateAuthUI) et SettingsPage.js (updateThemeToggle).
+         NavManager gère la nav visible ; ces éléments restent cachés et servent de cible aux getElementById. -->
+    <div style="display:none" aria-hidden="true">
+        <button id="auth-login-btn"></button>
+        <div id="auth-user-info">
+            <span id="auth-username"></span>
+        </div>
+        <button id="theme-toggle"></button>
+    </div>
+
     <script>
         // Service Worker
         if ('serviceWorker' in navigator) {
