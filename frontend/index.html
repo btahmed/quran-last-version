@@ -112,6 +112,7 @@
     <!-- Pro Styles -->
     <link rel="stylesheet" href="style-pro.css">
     <link rel="stylesheet" href="style-pro-fixes.css">
+    <link rel="stylesheet" href="/src/core/NavManager.css">
 
     <style>
         /* Additional custom styles */
@@ -260,40 +261,14 @@
 
     <!-- Header -->
     <header class="header-pro header-glass">
-        <div class="container-pro">
-            <div class="flex-pro" style="justify-content: space-between;">
-                <div class="flex-pro" style="gap: var(--space-3);">
-                    <h1 class="gradient-text" style="font-size: 1.5rem; font-weight: 700;">🕌 مراجعة القرآن</h1>
-                    <span id="demo-badge" class="badge badge-warning hidden" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: white;">🎮 MODE DÉMO</span>
-                </div>
-                <nav class="flex-pro" style="gap: var(--space-2);">
-                    <a href="#" class="nav-link-pro active" data-page="home">الرئيسية</a>
-                    <a href="#" class="nav-link-pro" data-page="memorization">الحفظ</a>
-                    <a href="#" class="nav-link-pro" data-page="ward">الورد</a>
-                    <a href="#" class="nav-link-pro" data-page="progress">التقدم</a>
-                    <a href="#" class="nav-link-pro" data-page="competition">🏆</a>
-                    <a href="#" class="nav-link-pro" data-page="hifz">🎭</a>
-                    <!-- لينك مهامي — visible uniquement pour les étudiants connectés -->
-                    <a href="#" class="nav-link-pro nav-student-only" data-page="mytasks" style="display:none;">📝 مهامي</a>
-                    <!-- لينك لوحة المعلم — visible uniquement pour les enseignants connectés -->
-                    <a href="#" class="nav-link-pro nav-teacher-only" data-page="teacher" style="display:none;">👨‍🏫 المعلم</a>
-                    <!-- لينك لوحة الإدارة — visible uniquement pour les admins -->
-                    <a href="#" class="nav-link-pro nav-admin-only" data-page="admin" style="display:none;">⚙️ الإدارة</a>
-                    <button id="theme-toggle" class="btn btn-icon" style="margin-right: var(--space-4);">
-                        <span id="theme-icon">🌙</span>
-                    </button>
-                    <div id="auth-nav">
-                        <button id="auth-login-btn" class="btn btn-glow btn-sm" onclick="showAuthModal()">
-                            <span>👤</span>
-                            دخول
-                        </button>
-                        <div id="auth-user-info" class="hidden flex-pro" style="gap: var(--space-2);">
-                            <span id="auth-username" class="badge badge-primary"></span>
-                            <button class="btn btn-outline-glow btn-sm" onclick="QuranReview.logout()">خروج</button>
-                        </div>
-                    </div>
-                </nav>
+        <div class="nav-container">
+            <div class="nav-brand">
+                <h1 class="gradient-text">🕌 مراجعة القرآن</h1>
+                <span id="demo-badge" class="badge badge-warning hidden">🎮 MODE DÉMO</span>
             </div>
+            <nav class="top-nav-links">
+                <!-- Injecté dynamiquement par NavManager.buildNav(role) -->
+            </nav>
         </div>
     </header>
 
@@ -316,5 +291,9 @@
 
     <!-- ES Module entry point -->
     <script type="module" src="src/main.js"></script>
+
+    <!-- Bottom Bar Mobile — contenu injecté par NavManager.buildBottomBar(role) -->
+    <nav id="bottom-bar" class="bottom-bar" style="display:none;" aria-label="Navigation mobile">
+    </nav>
 </body>
 </html>
