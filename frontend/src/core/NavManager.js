@@ -79,7 +79,7 @@ function buildBottomBar(role) {
     if (!bar) return;
 
     if (role === 'visitor') {
-        bar.style.display = 'none';
+        bar.classList.remove('bottom-bar--active');
         document.body.classList.remove('has-bottom-bar');
         delete bar.dataset.currentRole; // réinitialiser pour la prochaine connexion
         return;
@@ -87,7 +87,7 @@ function buildBottomBar(role) {
 
     if (bar.dataset.currentRole === role) {
         // Rôle identique — s'assurer que la barre est bien visible (cas logout/re-login)
-        bar.style.display = 'flex';
+        bar.classList.add('bottom-bar--active');
         document.body.classList.add('has-bottom-bar');
         return;
     }
@@ -118,7 +118,7 @@ function buildBottomBar(role) {
         bar.appendChild(a);
     });
 
-    bar.style.display = 'flex';
+    bar.classList.add('bottom-bar--active');
     document.body.classList.add('has-bottom-bar');
 }
 

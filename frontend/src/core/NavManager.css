@@ -21,9 +21,11 @@
     gap: 0;
 }
 
-/* Afficher bottom bar uniquement sur mobile */
+/* Afficher bottom bar uniquement sur mobile ET seulement quand JS l'a activée.
+   Ne PAS utiliser bar.style.display (inline style bypasse ce media-query) ;
+   utiliser la classe .bottom-bar--active à la place. */
 @media (max-width: 768px) {
-    .bottom-bar {
+    .bottom-bar.bottom-bar--active {
         display: flex;
     }
 

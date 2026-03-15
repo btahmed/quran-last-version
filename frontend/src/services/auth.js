@@ -181,7 +181,7 @@ export async function performLogin(username, password) {
             } else if (state.user.role === 'teacher') {
                 window.QuranReview.navigateTo('teacher');
             } else {
-                window.QuranReview.navigateTo('mytasks');
+                window.QuranReview.navigateTo('home'); // dashboard étudiant (route canonique)
             }
         } else {
             window.QuranReview.navigateTo('home');
@@ -385,6 +385,7 @@ export function logout() {
     localStorage.removeItem('quranreview_user');
     state.user = null;
     updateAuthUI(false);
+    buildNav('visitor'); // réinitialiser la nav pour tout chemin de logout (explicit + expiration token)
     window.QuranReview.navigateTo('home');
     showNotification('تم تسجيل الخروج بنجاح', 'info');
 }
