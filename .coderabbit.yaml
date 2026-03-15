@@ -1,0 +1,33 @@
+# CodeRabbit — Configuration QuranReview
+language: "fr"
+
+reviews:
+  profile: "assertive"
+  auto_review:
+    enabled: true
+    drafts: false
+  poem: false
+  collapse_walkthrough: false
+  path_instructions:
+    - path: "frontend/src/**/*.js"
+      instructions: |
+        Vérifier : façade window.QuranReview complète, exports ES modules corrects,
+        pas d'appels undefined via la façade, gestion des erreurs async/await.
+    - path: "backend/**/*.py"
+      instructions: |
+        Vérifier : sécurité DRF (permissions, authentification JWT),
+        pas de données sensibles exposées, migrations Django cohérentes.
+    - path: "**/*.json"
+      instructions: "Vérifier la validité JSON et la config Vercel/Docker."
+
+path_filters:
+  - "!audio/**"
+  - "!*.mp3"
+  - "!*.sqlite3"
+  - "!staticfiles/**"
+  - "!**/__pycache__/**"
+  - "!**/node_modules/**"
+  - "!**/migrations/0001_initial.py"
+
+chat:
+  auto_reply: true
