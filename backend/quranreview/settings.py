@@ -16,7 +16,11 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-dev-key-change-in-pro
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,backend').split(',')
-ALLOWED_HOSTS += ['.vercel.app']
+# Hôte de production explicite (évite d'accepter tout *.vercel.app)
+ALLOWED_HOSTS += ['quranreview-api.vercel.app']
+# Previews Vercel dynamiques (ex: quranreview-api-abc123.vercel.app) — dev/staging uniquement
+if DEBUG:
+    ALLOWED_HOSTS += ['.vercel.app']
 
 # Application definition
 INSTALLED_APPS = [
