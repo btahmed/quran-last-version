@@ -156,7 +156,8 @@ h2,
 
 /* Touch targets — tous les éléments interactifs */
 .btn,
-button,
+.bottom-bar button,
+.top-nav-links button,
 a.nav-link-pro,
 .card-action,
 .bottom-tab {

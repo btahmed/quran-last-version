@@ -112,8 +112,8 @@
     <!-- Pro Styles -->
     <link rel="stylesheet" href="style-pro.css">
     <link rel="stylesheet" href="style-pro-fixes.css">
-    <link rel="stylesheet" href="/src/core/NavManager.css">
-    <link rel="stylesheet" href="/src/pages/HomePage.css">
+    <link rel="stylesheet" href="src/core/NavManager.css">
+    <link rel="stylesheet" href="src/pages/HomePage.css">
 
     <style>
         /* Additional custom styles */
@@ -285,11 +285,11 @@
     <!-- Éléments DOM fantômes — requis par auth.js (updateAuthUI) et SettingsPage.js (updateThemeToggle).
          NavManager gère la nav visible ; ces éléments restent cachés et servent de cible aux getElementById. -->
     <div style="display:none" aria-hidden="true">
-        <button id="auth-login-btn"></button>
+        <button type="button" id="auth-login-btn"></button>
         <div id="auth-user-info">
             <span id="auth-username"></span>
         </div>
-        <button id="theme-toggle"></button>
+        <button type="button" id="theme-toggle"></button>
     </div>
 
     <script>

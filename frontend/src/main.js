@@ -50,7 +50,10 @@ function init() {
 
     // Init auth
     initAuth();
-    buildNav(state.user?.role || 'visitor');
+    const initRole = state.user
+        ? (state.user.role === 'admin' || state.user.is_superuser ? 'admin' : state.user.role)
+        : 'visitor';
+    buildNav(initRole);
 
     // Auto-save
     setupAutoSave();
@@ -191,6 +194,10 @@ window.QuranReview = {
     renderProfilPage: ProfilPage.render,
     initProfilPage:   ProfilPage.init,
     switchProfilTab:  ProfilPage.switchProfilTab,
+
+    // RevisionPage (alias de WardPage — points d'entrée explicites)
+    renderRevisionPage: RevisionPage.render,
+    initRevisionPage:   RevisionPage.init,
 };
 
 // Globals directs pour onclick HTML qui n'utilisent pas QuranReview.xxx

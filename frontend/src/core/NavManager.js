@@ -42,9 +42,13 @@ function buildTopNav(role) {
     nav.innerHTML = '';
 
     if (role === 'visitor') {
-        nav.innerHTML = `
-            <button class="btn btn-glow btn-sm" onclick="showAuthModal()">تسجيل الدخول</button>
-        `;
+        nav.innerHTML = '';
+        const loginBtn = document.createElement('button');
+        loginBtn.type = 'button';
+        loginBtn.className = 'btn btn-glow btn-sm';
+        loginBtn.textContent = 'تسجيل الدخول';
+        loginBtn.addEventListener('click', () => window.QuranReview?.showAuthModal?.());
+        nav.appendChild(loginBtn);
         return;
     }
 

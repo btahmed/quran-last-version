@@ -7,9 +7,15 @@ import { config } from '../core/config.js';
 // Point d'entrée principal — détection visiteur / rôle connecté
 // ══════════════════════════════════════════════════════════════
 
+// Rôle effectif : un superuser Django est toujours traité comme 'admin'
+function getEffectiveRole(user) {
+    if (!user) return null;
+    return (user.role === 'admin' || user.is_superuser) ? 'admin' : user.role;
+}
+
 export function render() {
     if (!state.user) return renderLanding();
-    switch (state.user.role) {
+    switch (getEffectiveRole(state.user)) {
         case 'student': return renderDashboard('student');
         case 'teacher': return renderDashboard('teacher');
         case 'admin':   return renderDashboard('admin');
@@ -19,7 +25,7 @@ export function render() {
 
 export function init() {
     if (!state.user) return initLanding();
-    switch (state.user.role) {
+    switch (getEffectiveRole(state.user)) {
         case 'student': return initDashboard('student');
         case 'teacher': return initDashboard('teacher');
         case 'admin':   return initDashboard('admin');
