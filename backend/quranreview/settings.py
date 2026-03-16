@@ -155,16 +155,21 @@ SIMPLE_JWT = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost",
     "http://localhost:80",
+    "http://localhost:3456",   # python http.server dev local
+    "http://localhost:3000",   # autre port dev local
     "http://127.0.0.1",
     "http://127.0.0.1:8000",
     "http://frontend",
     "https://votrenom.github.io",  # Pour GitHub Pages
     "https://quranreview.vercel.app",
+    "https://quranreview-frontend.vercel.app",
     "https://quranreview.ma",
 ]
 
 CORS_ALLOWED_ORIGIN_REGEXES = [
     r"^https://quranreview.*\.vercel\.app$",
+    r"^http://localhost:\d+$",   # tous les ports localhost en dev
+    r"^http://127\.0\.0\.1:\d+$",
 ]
 
 CORS_ALLOW_CREDENTIALS = True

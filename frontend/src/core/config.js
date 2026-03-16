@@ -7,9 +7,13 @@ export const API_BASE_URL = window.API_BASE_URL || (() => {
     if ((host === 'localhost' || host === '127.0.0.1') && (port === '' || port === '80')) {
         return '';
     }
-    // Dev local direct backend sur port 8080 ou 8000
-    if (host === 'localhost' || host === '127.0.0.1') {
+    // Dev local port 8000 ou 8080 → backend Django local
+    if ((host === 'localhost' || host === '127.0.0.1') && (port === '8000' || port === '8080')) {
         return 'http://127.0.0.1:8000';
+    }
+    // Dev local autre port (ex: 3456 python http.server) → API Vercel prod
+    if (host === 'localhost' || host === '127.0.0.1') {
+        return 'https://quranreview-api.vercel.app';
     }
     // Production (Vercel)
     return 'https://quranreview-api.vercel.app';
