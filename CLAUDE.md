@@ -2,46 +2,49 @@
 
 ## Architecture du projet
 
-| Déploiement | URL | Usage |
-|-------------|-----|-------|
-| **Frontend Vercel** | https://quranreview-frontend.vercel.app | Site live (ES Modules statiques) |
-| **Backend Vercel** | https://quranreview-api.vercel.app | API Django serverless (production) |
-| **Dev local** | localhost:80 / localhost:8000 | Docker Compose (nginx + Django + PostgreSQL) |
+| Déploiement | Fichiers | URL | Usage |
+|-------------|----------|-----|-------|
+| **Frontend Vercel** (prod) | `frontend/` | https://quranreview-frontend.vercel.app | Site live actif |
+| **Backend Vercel** (prod) | `backend/` | https://quranreview-api.vercel.app | API Django serverless |
+| **Dev local** (port 3456) | `frontend/` | http://localhost:3456 | python http.server → API Vercel |
+| **Dev local** (port 80) | Docker Compose | http://localhost:80 | nginx + Django + PostgreSQL |
+
+> ✅ Branche active : **`main`** — worktree local : `.claude/worktrees/main-local/`
 
 ---
 
 ## Stack technique
 
-- **Frontend** : ES Modules natifs, organisé en `core/`, `services/`, `pages/`, `components/` — déployé sur Vercel
-- **Backend** : Django 4.x + DRF — déployé en serverless Vercel via `api/index.py` (WSGI)
-- **Auth** : JWT (SimpleJWT) — `/api/auth/token/` (pas `/api/auth/login/`)
+- **Frontend** : ES Modules natifs, `core/`, `services/`, `pages/`, `components/` — Vercel
+- **Backend** : Django 4.x + DRF, serverless Vercel via `api/index.py` (WSGI)
+- **Auth** : JWT (SimpleJWT) — endpoint : `/api/auth/token/` (**PAS** `/api/auth/login/` → 404)
 - **Base de données** : PostgreSQL Supabase — Transaction Pooler `aws-1-eu-west-1.pooler.supabase.com:6543`
-- **Stockage audio** : Cloudinary via `django-cloudinary-storage` — upload auto sur POST `/api/submissions/`
-- **Dev local** : Docker Compose (nginx + Django + PostgreSQL)
+- **Stockage audio** : Cloudinary (`django-cloudinary-storage`) — upload auto sur POST `/api/submissions/`
+- **Nav** : `NavManager.js` — navigation dynamique par rôle (top nav + bottom bar mobile)
 
 ---
 
 ## Lancer l'application
 
-### Production Vercel
+### Dev frontend rapide (port 3456 → API Vercel prod)
 ```bash
-# Déploiement automatique sur push vers main
-# Frontend : https://quranreview-frontend.vercel.app
-# Backend  : https://quranreview-api.vercel.app
+cd .claude/worktrees/main-local
+python -m http.server 3456 --directory frontend
+# http://localhost:3456
+# ⚠️ Port 3000 bloqué par Docker Desktop sur cette machine → utiliser 3456
 ```
 
-### App Docker (développement)
+### Dev full-stack Docker (port 80, API locale)
 ```bash
+cd .claude/worktrees/main-local
 docker-compose up --build
 # Frontend → http://localhost:80
 # Backend API → http://localhost:8000
 ```
 
-### Frontend seul (test rapide)
+### Production
 ```bash
-cd frontend
-python -m http.server 3000
-# Ouvrir http://localhost:3000
+# Déploiement automatique sur push vers main (GitHub → Vercel)
 ```
 
 ---
@@ -50,49 +53,91 @@ python -m http.server 3000
 
 ```
 frontend/
-├── index.html          # Shell mince (213 lignes)
+├── index.html              # Shell HTML — nav injectée par NavManager
+├── style.css               # Styles de base
+├── style-pro.css           # Styles Pro (glassmorphism, gradients)
+├── style-pro-fixes.css     # Corrections et overrides
 ├── src/
-│   ├── main.js         # Point d'entrée + façade window.QuranReview
-│   ├── core/           # logger, config, state, router, ui
-│   ├── components/     # AudioPlayer, AuthModal, AudioRecordModal, UserEditModal
-│   ├── services/       # auth, tasks, competition, hifz
-│   └── pages/          # HomePage, WardPage, MemorizationPage, ProgressPage,
-│                       # SettingsPage, CompetitionPage, HifzPage, MyTasksPage,
-│                       # TeacherPage, AdminPage
-└── Dockerfile
+│   ├── main.js             # Point d'entrée + façade window.QuranReview
+│   ├── core/
+│   │   ├── config.js       # API URL auto (Vercel prod / Docker / localhost)
+│   │   ├── router.js       # Routes + setActiveTab(NavManager)
+│   │   ├── NavManager.js   # ⭐ Nav dynamique par rôle (top + bottom bar)
+│   │   ├── NavManager.css  # Bottom bar mobile + touch targets
+│   │   ├── state.js        # État global
+│   │   ├── ui.js           # Notifications, date
+│   │   └── logger.js       # Logger centralisé
+│   ├── components/
+│   │   ├── AudioPlayer.js
+│   │   ├── AuthModal.js
+│   │   ├── AudioRecordModal.js
+│   │   └── UserEditModal.js
+│   ├── services/
+│   │   ├── auth.js         # Login/logout + buildNav() après login
+│   │   ├── tasks.js
+│   │   ├── competition.js
+│   │   └── hifz.js
+│   └── pages/
+│       ├── HomePage.js     # Landing (visiteur) + Dashboards (étudiant/prof/admin)
+│       ├── HomePage.css
+│       ├── HifzPage.js     # Mémorisation (🎭 wضع الحفظ)
+│       ├── RevisionPage.js # = WardPage re-exporté (muraja'a)
+│       ├── SoumissionPage.js # = MyTasksPage re-exporté (envoi audio)
+│       ├── ProfilPage.js   # Fusion ProgressPage + SettingsPage (onglets)
+│       ├── TeacherPage.js  # Tableau de bord enseignant
+│       ├── AdminPage.js    # Gestion utilisateurs admin
+│       └── [autres pages legacy avec alias rétrocompat]
 ```
-
-> `window.QuranReview` est une façade globale exposant toutes les fonctions de page
-> pour les handlers `onclick` inline dans le HTML.
 
 ---
 
-## Audio
+## Navigation par rôle (`NavManager.js`)
 
-Les fichiers MP3 (~1.6 GB, 114 sourates) ne sont pas dans le repo (limite GitHub 100MB).
+### 🎓 Étudiant (`student`)
+| Icône | Label | Route | Note |
+|-------|-------|-------|------|
+| 🏠 | الرئيسية | `home` | Dashboard étudiant |
+| 📖 | الحفظ | `hifz` | Mémorisation |
+| 🎧 | **إرسال** | `soumettre` | **Bouton central** — envoi audio |
+| 🔁 | المراجعة | `revision` | Muraja'a (WardPage) |
+| 👤 | حسابي | `profil` | Progression + Paramètres |
 
-| Option | Usage |
-|--------|-------|
-| **CDN Quran.com** (défaut) | `https://audio.qurancdn.com/audio/ar.abdul_basit_mujawwad/001.mp3` |
-| **Local** | Dossier `audio/abdul_basit/001.mp3` … `114.mp3` — non commité |
+### 👨‍🏫 Professeur (`teacher`)
+| Icône | Label | Route | Note |
+|-------|-------|-------|------|
+| 🏠 | الرئيسية | `home` | Dashboard enseignant |
+| 📋 | الواجبات | `devoirs` | Créer/gérer tâches |
+| 🎧 | **التسليمات** | `soumissions` | **Bouton central** — écoute + notation |
+| 👥 | الطلاب | `eleves` | Liste + progression élèves |
+| 👤 | حسابي | `profil` | Paramètres |
+
+### ⚙️ Admin
+| Icône | Label | Route |
+|-------|-------|-------|
+| 🏠 | لوحة | `admin` |
+| 👥 | المستخدمون | `admin-users` |
+| 🏫 | **الفصول** | `admin-classes` |
+| 📊 | الإحصاء | `admin-stats` |
+| ⚙️ | الإعدادات | `profil` |
 
 ---
 
 ## Rôles utilisateurs
 
-| Rôle | Accès |
-|------|-------|
-| `student` | Mémorisation, Ward, Hifz, Competition, MyTasks |
-| `teacher` | Page Teacher + gestion tâches/soumissions |
-| `admin` | Gestion complète |
+| Rôle | Dashboard | Accès |
+|------|-----------|-------|
+| `student` | `home` (dashboard étudiant) | hifz, soumettre, revision, profil |
+| `teacher` | `home` (dashboard enseignant) | devoirs, soumissions, eleves, profil |
+| `admin` / `is_superuser` | `admin` | admin-users, admin-classes, admin-stats |
 
 ---
 
 ## API Backend clés
 
 ```
-POST /api/auth/token/          → JWT login (NE PAS utiliser /api/auth/login/ → 404)
+POST /api/auth/token/          → JWT login ✅ (NE PAS utiliser /api/auth/login/ → 404)
 POST /api/auth/token/refresh/  → refresh token
+GET  /api/auth/me/             → profil utilisateur courant
 GET  /api/tasks/               → liste des tâches
 POST /api/tasks/               → créer tâche (teacher)
 POST /api/submissions/         → soumettre audio (student) — stocké sur Cloudinary
@@ -103,32 +148,34 @@ GET  /api/admin/users/         → liste utilisateurs (admin)
 
 ---
 
-## Déploiement (Vercel)
+## Déploiement Vercel
 
 ```bash
 # Frontend : projet Vercel séparé → frontend/vercel.json (rewrites SPA)
 # Backend  : projet Vercel séparé → backend/vercel.json (rewrites → api/index.py)
 # Build command backend : pip install -r requirements.txt && python manage.py collectstatic --noinput
-# ⚠️ Ne PAS mettre de clé "builds" dans vercel.json → supprime le build command → collectstatic ne tourne pas
+# ⚠️ Ne PAS mettre de clé "builds" dans vercel.json → supprime le build command
 ```
 
 Variables d'env Vercel (backend) : `DATABASE_URL`, `CLOUDINARY_URL`, `SECRET_KEY`, `DEBUG=False`
+
+CORS autorisé : `*.vercel.app`, `localhost:*` (tous ports — regex dans settings.py)
 
 ---
 
 ## Gotchas
 
-- `window.QuranReview` doit être défini avant tout `onclick` inline → `main.js` doit charger en premier
-- GSAP loading screen : animation inline dans `<head>` de `frontend/index.html`, timeout fallback 5s
-- PostgreSQL : variables d'env dans `.env` à la racine (non commité)
-- Supabase : utiliser le **Transaction Pooler** (`port 6543`) — la connexion directe est IPv6-only (incompatible Vercel)
-- `dj-database-url.parse()` : NE PAS passer `ssl_require=True` → crash en CI avec `DATABASE_URL=sqlite://`
-- Façade `window.QuranReview` : toute nouvelle fonction de page doit être exportée ET ajoutée à la façade dans `main.js`
-- Login endpoint : `/api/auth/token/` (POST) — ne pas tester avec `/api/auth/login/` (retourne 404)
-- Vercel serverless : pas de filesystem persistant → les fichiers uploadés doivent aller sur Cloudinary
-- `tasks.js` : seul `loadTasksFromApi` est importé — les autres fonctions (`handleCreateTask`, `handleDeleteAllTasks`, `switchTaskTab`) sont du code mort ; TeacherPage/MyTasksPage ont leurs propres versions, ne pas déboguer dans tasks.js
-- Service Worker (`sw.js`) : toujours `return` après chaque `event.respondWith()` — un double appel dans le même handler cause une erreur runtime silencieuse
-- Audit façade : pour trouver les fonctions manquantes de `window.QuranReview` : `grep -rn "QuranReview\." src/ --include="*.js" | grep -oE "QuranReview\.[a-zA-Z_]+" | sort -u` puis comparer avec les clés dans `main.js`
+- **Nav** : `NavManager.buildNav(role)` appelé après login/logout — sinon la nav garde l'ancien rôle
+- **Façade** : toute nouvelle fonction de page doit être exportée ET ajoutée à `window.QuranReview` dans `main.js`
+- **GSAP** : loading screen avec timeout fallback 5s — peut bloquer le screenshot tool (page jamais "idle")
+- **ES Module cache** : par origine → ouvrir un **nouvel onglet** (pas reload) pour forcer rechargement des modules modifiés
+- **Port local** : port 3000 bloqué par Docker Desktop → utiliser **3456**
+- **Supabase** : utiliser Transaction Pooler (`port 6543`) — connexion directe IPv6-only incompatible Vercel
+- **`dj-database-url.parse()`** : NE PAS passer `ssl_require=True` → crash CI avec `DATABASE_URL=sqlite://`
+- **Vercel serverless** : pas de filesystem persistant → fichiers uploadés sur Cloudinary obligatoire
+- **tasks.js** : seul `loadTasksFromApi` utilisé — `handleCreateTask`, `handleDeleteAllTasks`, `switchTaskTab` sont du code mort
+- **Service Worker** : toujours `return` après `event.respondWith()` — double appel = erreur silencieuse
+- **Audit façade** : `grep -rn "QuranReview\." src/ --include="*.js" | grep -oE "QuranReview\.[a-zA-Z_]+" | sort -u`
 
 ---
 
@@ -136,7 +183,8 @@ Variables d'env Vercel (backend) : `DATABASE_URL`, `CLOUDINARY_URL`, `SECRET_KEY
 
 | Doc | Emplacement |
 |-----|-------------|
+| Plan refonte navigation | `docs/plans/2026-03-15-navigation-refonte.md` |
+| Design refonte navigation | `docs/plans/2026-03-15-navigation-refonte-design.md` |
 | Plan refactoring ES modules | `docs/plans/2026-03-12-frontend-refactoring.md` |
-| Design refactoring | `docs/plans/2026-03-12-frontend-refactoring-design.md` |
 | Guide déploiement | `docs/deployment.md` |
 | Audio CDN/local | `docs/audio-setup.md` |
