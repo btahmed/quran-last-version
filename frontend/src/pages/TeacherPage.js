@@ -209,10 +209,9 @@ export function render() {
 
 // section : 'devoirs' | 'soumissions' | 'eleves' | null (tout visible)
 export async function init(section) {
+    // Masquer IMMÉDIATEMENT avant tout await — évite le flash "tout affiché" pendant le chargement API
+    if (section && section !== 'teacher') switchTeacherSection(section);
     await loadTeacherDashboard();
-    if (section && section !== 'teacher') {
-        switchTeacherSection(section);
-    }
 }
 
 /**
