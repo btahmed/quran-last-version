@@ -70,11 +70,11 @@ auth.js → detectRole() → NavManager.buildNav(role)
 **Admin :**
 | Onglet | Icône | Route | Description |
 |--------|-------|-------|-------------|
-| Dashboard | 🏠 | `admin` | Vue globale |
+| Dashboard | 🏠 | `home` | Vue globale (dashboard admin) |
 | Utilisateurs | 👥 | `admin-users` | Gérer élèves / profs |
 | Classes | 🏫 | `admin-classes` | Groupes de mosquée |
 | Statistiques | 📊 | `admin-stats` | Progression globale |
-| Paramètres | ⚙️ | `admin-settings` | Configuration système |
+| Profil | 👤 | `profil` | Paramètres du compte admin |
 
 **Visiteur :** Pas de bottom bar — logo + bouton login en top nav uniquement.
 
