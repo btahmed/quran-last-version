@@ -51,7 +51,7 @@ function renderLanding() {
                 </p>
                 <div class="hero-actions">
                     <button class="btn btn-glow btn-lg"
-                            onclick="showAuthModal()">
+                            onclick="QuranReview.showAuthModal()">
                         تسجيل الدخول
                     </button>
                     <button class="btn btn-outline-glow btn-lg"

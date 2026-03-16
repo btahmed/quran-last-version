@@ -26,7 +26,7 @@ import * as TeacherPage from './pages/TeacherPage.js';
 import * as RevisionPage   from './pages/RevisionPage.js';
 import * as SoumissionPage from './pages/SoumissionPage.js';
 import * as ProfilPage     from './pages/ProfilPage.js';
-import { buildNav }        from './core/NavManager.js';
+import { buildNav, setActiveTab } from './core/NavManager.js';
 
 function init() {
     Logger.log('APP', 'Initializing QuranReview App...');
@@ -196,8 +196,16 @@ window.QuranReview = {
     switchProfilTab:  ProfilPage.switchProfilTab,
 
     // RevisionPage (alias de WardPage — points d'entrée explicites)
-    renderRevisionPage: RevisionPage.render,
-    initRevisionPage:   RevisionPage.init,
+    renderRevisionPage:    RevisionPage.render,
+    initRevisionPage:      RevisionPage.init,
+
+    // SoumissionPage (alias de MyTasksPage — points d'entrée explicites)
+    renderSoumissionPage:  SoumissionPage.render,
+    initSoumissionPage:    SoumissionPage.init,
+
+    // NavManager — accès façade pour tests et intégrations externes
+    buildNav,
+    setActiveTab,
 };
 
 // Globals directs pour onclick HTML qui n'utilisent pas QuranReview.xxx

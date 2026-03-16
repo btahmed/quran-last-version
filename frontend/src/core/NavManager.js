@@ -42,7 +42,6 @@ function buildTopNav(role) {
     nav.innerHTML = '';
 
     if (role === 'visitor') {
-        nav.innerHTML = '';
         const loginBtn = document.createElement('button');
         loginBtn.type = 'button';
         loginBtn.className = 'btn btn-glow btn-sm';
