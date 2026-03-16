@@ -110,7 +110,7 @@ export function render() {
                         </div>
                     </div>
 
-                    <div class="card-glass-pro" style="margin-bottom: var(--space-6);">
+                    <div class="card-glass-pro" data-section="devoirs" style="margin-bottom: var(--space-6);">
                         <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">➕ إنشاء مهمة جديدة</h3>
                         <form id="teacher-create-task-form" onsubmit="QuranReview.handleCreateTask(event)">
                             <div class="form-floating" style="margin-bottom: var(--space-4);">
@@ -165,7 +165,7 @@ export function render() {
                     </div>
 
                     <!-- تسليمات الطلاب المعلقة -->
-                    <div class="card-glass-pro" style="margin-bottom: var(--space-6);">
+                    <div class="card-glass-pro" data-section="soumissions" style="margin-bottom: var(--space-6);">
                         <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">📥 تسليمات الطلاب</h3>
                         <div id="teacher-tasks-list">
                             <p class="empty-state">لا توجد تسليمات بانتظار التصحيح 🎉</p>
@@ -173,14 +173,14 @@ export function render() {
                     </div>
 
                     <!-- قائمة المهام المعينة -->
-                    <div class="card-glass-pro" style="margin-bottom: var(--space-6);">
+                    <div class="card-glass-pro" data-section="devoirs" style="margin-bottom: var(--space-6);">
                         <div id="teacher-assigned-tasks-list">
                             <p class="empty-state">لا توجد مهام بعد</p>
                         </div>
                     </div>
 
                     <!-- قائمة الطلاب -->
-                    <div class="card-glass-pro" style="margin-bottom: var(--space-6);">
+                    <div class="card-glass-pro" data-section="eleves" style="margin-bottom: var(--space-6);">
                         <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">🎓 قائمة الطلاب</h3>
                         <div id="teacher-students-list">
                             <p class="empty-state">لا يوجد طلاب بعد</p>
@@ -207,8 +207,33 @@ export function render() {
 // INIT
 // ===================================
 
-export async function init() {
+// section : 'devoirs' | 'soumissions' | 'eleves' | null (tout visible)
+export async function init(section) {
     await loadTeacherDashboard();
+    if (section && section !== 'teacher') {
+        switchTeacherSection(section);
+    }
+}
+
+/**
+ * Affiche uniquement la section demandée, masque les autres.
+ * Sections reconnues : 'devoirs', 'soumissions', 'eleves'.
+ * Sans argument (ou 'teacher') : tout est visible.
+ * @param {string} section
+ */
+export function switchTeacherSection(section) {
+    const SECTIONS = ['devoirs', 'soumissions', 'eleves'];
+    if (!SECTIONS.includes(section)) {
+        // Tout afficher (vue complète)
+        document.querySelectorAll('[data-section]').forEach(el => el.style.display = '');
+        return;
+    }
+    document.querySelectorAll('[data-section]').forEach(el => {
+        el.style.display = el.dataset.section === section ? '' : 'none';
+    });
+    // Scroll doux vers le premier bloc visible
+    const first = document.querySelector(`[data-section="${section}"]`);
+    if (first) first.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // ===================================

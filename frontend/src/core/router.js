@@ -72,8 +72,8 @@ export function renderPage(pageName) {
     const app = document.getElementById('app');
     if (!app) return;
     app.innerHTML = page.render();
-    // init peut être async
-    Promise.resolve(page.init()).catch(err => Logger.error('ROUTER', `init error on ${pageName}`, err));
+    // init peut être async — on passe pageName pour les pages multi-sections (TeacherPage, AdminPage)
+    Promise.resolve(page.init(pageName)).catch(err => Logger.error('ROUTER', `init error on ${pageName}`, err));
 }
 
 export function setupNavigation() {

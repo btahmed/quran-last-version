@@ -162,6 +162,7 @@ window.QuranReview = {
     clearData: () => { state.data = loadData(); window.QuranReview.navigateTo('home'); },
 
     // TeacherPage
+    switchTeacherSection: TeacherPage.switchTeacherSection,
     handleCreateTask: TeacherPage.handleCreateTask,
     handleDeleteAllTasks: TeacherPage.handleDeleteAllTasks,
     handleDeleteBatch: TeacherPage.handleDeleteBatch,
