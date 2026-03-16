@@ -23,6 +23,10 @@ import * as CompetitionPage from './pages/CompetitionPage.js';
 import * as HifzPage from './pages/HifzPage.js';
 import * as MyTasksPage from './pages/MyTasksPage.js';
 import * as TeacherPage from './pages/TeacherPage.js';
+import * as RevisionPage   from './pages/RevisionPage.js';
+import * as SoumissionPage from './pages/SoumissionPage.js';
+import * as ProfilPage     from './pages/ProfilPage.js';
+import { buildNav, setActiveTab } from './core/NavManager.js';
 
 function init() {
     Logger.log('APP', 'Initializing QuranReview App...');
@@ -46,6 +50,10 @@ function init() {
 
     // Init auth
     initAuth();
+    const initRole = state.user
+        ? (state.user.role === 'admin' || state.user.is_superuser ? 'admin' : state.user.role)
+        : 'visitor';
+    buildNav(initRole);
 
     // Auto-save
     setupAutoSave();
@@ -82,7 +90,10 @@ window.QuranReview = {
     navigateTo,
     renderPage,
     showNotification,
-    logout,
+    logout: async () => {
+        await logout();
+        buildNav('visitor');
+    },
     updateAuthUI,
     loadTasksFromApi,
 
@@ -178,6 +189,30 @@ window.QuranReview = {
     toggleRecording,
     stopRecording,
     submitRecording,
+
+    // ProfilPage
+    renderProfilPage: ProfilPage.render,
+    initProfilPage:   ProfilPage.init,
+    switchProfilTab:  ProfilPage.switchProfilTab,
+
+    // RevisionPage (alias pedagogique de WardPage — toutes les fonctions exposees explicitement)
+    renderRevisionPage:         RevisionPage.render,
+    initRevisionPage:           RevisionPage.init,
+    setupWardControls:          RevisionPage.setupWardControls,
+    populateWardSurahSelect:    RevisionPage.populateWardSurahSelect,
+    toggleWardPlay:             RevisionPage.toggleWardPlay,
+    previousWardAyah:           RevisionPage.previousWardAyah,
+    nextWardAyah:               RevisionPage.nextWardAyah,
+    stopWardPlayback:           RevisionPage.stopWardPlayback,
+    updateWardAyahDisplay:      RevisionPage.updateWardAyahDisplay,
+
+    // SoumissionPage (alias de MyTasksPage — points d'entrée explicites)
+    renderSoumissionPage:  SoumissionPage.render,
+    initSoumissionPage:    SoumissionPage.init,
+
+    // NavManager — accès façade pour tests et intégrations externes
+    buildNav,
+    setActiveTab,
 };
 
 // Globals directs pour onclick HTML qui n'utilisent pas QuranReview.xxx

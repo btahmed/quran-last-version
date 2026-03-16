@@ -1,0 +1,184 @@
+/* ============================================================
+   NavManager.css — Bottom Bar mobile + corrections responsive
+   QuranReview — 2026-03-15
+   ============================================================ */
+
+/* ── Bottom Bar ──────────────────────────────────────────────── */
+.bottom-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    /* Espace pour le notch iPhone */
+    padding-bottom: env(safe-area-inset-bottom);
+    background: var(--color-surface, #1a1a2e);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    display: none; /* activé dynamiquement par NavManager.buildBottomBar */
+    align-items: center;
+    justify-content: space-around;
+    z-index: 1000;
+    gap: 0;
+}
+
+/* Afficher bottom bar uniquement sur mobile ET seulement quand JS l'a activée.
+   Ne PAS utiliser bar.style.display (inline style bypasse ce media-query) ;
+   utiliser la classe .bottom-bar--active à la place. */
+@media (max-width: 768px) {
+    .bottom-bar.bottom-bar--active {
+        display: flex;
+    }
+
+    /* Masquer la top nav sur mobile (remplacée par bottom bar) */
+    .header-pro .top-nav-links,
+    .header-pro nav {
+        display: none !important;
+    }
+}
+
+/* ── Onglets bottom bar ──────────────────────────────────────── */
+.bottom-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    min-width: 44px;   /* touch target Apple HIG minimum */
+    min-height: 44px;
+    text-decoration: none;
+    color: var(--color-text-muted, #888);
+    transition: color 0.2s ease;
+    flex: 1;
+    padding: 4px 0;
+}
+
+/* Bouton central (action principale) — légèrement surélevé */
+.bottom-tab--center {
+    background: var(--color-primary, #4caf50);
+    border-radius: 50%;
+    width: 56px;
+    height: 56px;
+    min-width: 56px;
+    min-height: 56px;
+    margin-top: -16px; /* dépasse légèrement au-dessus de la barre */
+    color: white !important;
+    flex: none;
+    box-shadow: 0 4px 16px rgba(76, 175, 80, 0.4);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.bottom-tab--center:hover,
+.bottom-tab--center:active {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(76, 175, 80, 0.5);
+}
+
+/* État actif */
+.bottom-tab.active {
+    color: var(--color-primary, #4caf50);
+}
+
+.bottom-tab--center.active {
+    background: var(--color-primary-dark, #388e3c);
+}
+
+.tab-icon {
+    font-size: 1.25rem;
+    line-height: 1;
+    display: block;
+}
+
+.tab-label {
+    font-size: 0.6rem;
+    font-weight: 500;
+    line-height: 1;
+    display: block;
+}
+
+/* ── Body padding quand bottom bar présente ─────────────────── */
+body.has-bottom-bar {
+    padding-bottom: 80px;
+}
+
+/* ── Conteneur nav ───────────────────────────────────────────── */
+.nav-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--space-4, 1rem);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.nav-brand {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3, 0.75rem);
+}
+
+/* ── Corrections responsive globales ────────────────────────── */
+
+/* Max-width sur tous les conteneurs principaux */
+.container-pro {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Min height pour éviter les pages trop courtes */
+#app-content,
+main,
+.page-content {
+    min-height: 100vh;
+}
+
+/* Typographie fluide */
+h1,
+.hero-title {
+    font-size: clamp(1.5rem, 4vw, 3rem);
+}
+
+h2,
+.section-title {
+    font-size: clamp(1.2rem, 3vw, 2rem);
+}
+
+/* Grilles responsive auto-fit */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: var(--space-4, 1rem);
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--space-4, 1rem);
+}
+
+/* Touch targets — tous les éléments interactifs */
+.btn,
+.bottom-bar button,
+.top-nav-links button,
+a.nav-link-pro,
+.card-action,
+.bottom-tab {
+    min-height: 44px;
+}
+
+/* Padding fluide sur les cards */
+.card,
+.card-pro {
+    padding: clamp(0.75rem, 2vw, 1.5rem);
+}
+
+/* ── Modals mobile ───────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .modal-content,
+    .modal-pro {
+        max-height: 90vh;
+        border-radius: 1rem 1rem 0 0;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+}

@@ -3,6 +3,13 @@ import { Logger } from '../core/logger.js';
 import { config, IS_DEMO_MODE } from '../core/config.js';
 import { state } from '../core/state.js';
 import { showNotification } from '../core/ui.js';
+import { buildNav } from '../core/NavManager.js';
+
+// Rôle effectif : un is_superuser Django est toujours traité comme 'admin' par la nav
+function getEffectiveRole(user) {
+    if (!user) return 'visitor';
+    return (user.role === 'admin' || user.is_superuser) ? 'admin' : user.role;
+}
 
 export function initAuth() {
     const token = localStorage.getItem(config.apiTokenKey);
@@ -108,6 +115,7 @@ export async function performLogin(username, password) {
 
         hideAuthModal();
         updateAuthUI(true);
+        buildNav(getEffectiveRole(demoUser));
 
         // Charger des tâches de démo
         loadDemoTasks();
@@ -167,12 +175,13 @@ export async function performLogin(username, password) {
 
         if (state.user) {
             Logger.log('AUTH', `Redirecting user role: ${state.user.role}`);
+            buildNav(getEffectiveRole(state.user));
             if (state.user.role === 'admin' || state.user.is_superuser) {
                 window.QuranReview.navigateTo('admin');
             } else if (state.user.role === 'teacher') {
                 window.QuranReview.navigateTo('teacher');
             } else {
-                window.QuranReview.navigateTo('mytasks');
+                window.QuranReview.navigateTo('home'); // dashboard étudiant (route canonique)
             }
         } else {
             window.QuranReview.navigateTo('home');
@@ -376,6 +385,7 @@ export function logout() {
     localStorage.removeItem('quranreview_user');
     state.user = null;
     updateAuthUI(false);
+    buildNav('visitor'); // réinitialiser la nav pour tout chemin de logout (explicit + expiration token)
     window.QuranReview.navigateTo('home');
     showNotification('تم تسجيل الخروج بنجاح', 'info');
 }

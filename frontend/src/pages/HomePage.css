@@ -1,0 +1,353 @@
+/* ============================================================
+   HomePage.css — Landing visiteur + Dashboards par rôle
+   QuranReview — 2026-03-15
+   Mobile-first, RTL
+   ============================================================ */
+
+/* ── Landing Hero ─────────────────────────────────────────── */
+.landing-hero {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: linear-gradient(
+        135deg,
+        #0d2d0d 0%,
+        #1a3d1a 40%,
+        #0a0a1a 100%
+    );
+    padding: 2rem 1rem;
+}
+
+.hero-content {
+    max-width: 640px;
+    width: 100%;
+}
+
+.hero-logo {
+    font-size: clamp(3rem, 10vw, 6rem);
+    margin-bottom: 1rem;
+    display: block;
+    animation: fade-in-down 0.6s ease both;
+}
+
+.hero-title {
+    font-size: clamp(2rem, 6vw, 4rem);
+    color: #fff;
+    font-weight: 700;
+    margin: 0 0 0.5rem;
+    animation: fade-in-down 0.6s 0.1s ease both;
+}
+
+.hero-subtitle {
+    font-size: clamp(1rem, 3vw, 1.3rem);
+    color: rgba(255, 255, 255, 0.75);
+    max-width: 500px;
+    margin: 0 auto 2rem;
+    line-height: 1.7;
+    animation: fade-in-down 0.6s 0.2s ease both;
+}
+
+.hero-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    animation: fade-in-down 0.6s 0.3s ease both;
+}
+
+.hero-actions .btn {
+    min-width: 140px;
+}
+
+@keyframes fade-in-down {
+    from { opacity: 0; transform: translateY(-16px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Features ─────────────────────────────────────────────── */
+.landing-features {
+    padding: 4rem 1.5rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.feature-card {
+    background: var(--color-surface, #1a1a2e);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 1rem;
+    padding: clamp(1.5rem, 3vw, 2.5rem);
+    text-align: center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 32px rgba(76, 175, 80, 0.2);
+}
+
+.feature-icon {
+    font-size: 2.5rem;
+    display: block;
+    margin-bottom: 1rem;
+}
+
+.feature-card h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem;
+    color: var(--color-text, #fff);
+}
+
+.feature-card p {
+    font-size: 0.9rem;
+    color: var(--color-text-muted, #888);
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* ── Stats landing ─────────────────────────────────────────── */
+.landing-stats {
+    padding: 3rem 1.5rem;
+    background: rgba(255, 255, 255, 0.02);
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.stat-card {
+    text-align: center;
+    padding: 1.5rem 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.stat-number {
+    display: block;
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 700;
+    color: var(--color-primary, #4caf50);
+    line-height: 1;
+}
+
+.stat-value {
+    display: block;
+    font-size: clamp(1.5rem, 4vw, 2.5rem);
+    font-weight: 700;
+    color: var(--color-primary, #4caf50);
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: var(--color-text-muted, #888);
+    margin-top: 0.25rem;
+}
+
+.stat-icon {
+    font-size: 1.5rem;
+    margin-bottom: 0.25rem;
+}
+
+/* ── CTA Final ─────────────────────────────────────────────── */
+.landing-cta {
+    padding: 4rem 1.5rem;
+    text-align: center;
+}
+
+.landing-cta h2 {
+    font-size: clamp(1.5rem, 4vw, 2.5rem);
+    margin-bottom: 1.5rem;
+    color: var(--color-text, #fff);
+}
+
+/* ── Dashboard (commun) ────────────────────────────────────── */
+.dashboard {
+    padding: clamp(1rem, 3vw, 2rem);
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.dashboard-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.dashboard-header h2 {
+    font-size: clamp(1.3rem, 3vw, 2rem);
+    margin: 0 0 0.25rem;
+    color: var(--color-text, #fff);
+}
+
+.dashboard-date {
+    color: var(--color-text-muted, #888);
+    font-size: 0.875rem;
+    margin: 0;
+}
+
+.dashboard-section {
+    margin-bottom: 2rem;
+}
+
+.section-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin: 0 0 0.75rem;
+    color: var(--color-text, #fff);
+}
+
+/* ── Tâches étudiant ───────────────────────────────────────── */
+.tasks-list,
+.submissions-list,
+.activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.task-row,
+.submission-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background: var(--color-surface, #1a1a2e);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 0.5rem;
+    gap: 1rem;
+    min-height: 52px;
+}
+
+.task-name {
+    flex: 1;
+    font-size: 0.9rem;
+    color: var(--color-text, #fff);
+}
+
+/* ── Accès rapide ──────────────────────────────────────────── */
+.quick-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.quick-btn {
+    flex: 1;
+    min-width: 120px;
+    min-height: 44px;
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    background: var(--color-surface, #1a1a2e);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--color-text, #fff);
+    transition: background 0.2s ease, transform 0.1s ease;
+    font-family: inherit;
+    text-align: center;
+}
+
+.quick-btn:hover {
+    background: rgba(255, 255, 255, 0.06);
+    transform: translateY(-1px);
+}
+
+.quick-btn:active {
+    transform: translateY(0);
+}
+
+.quick-btn--primary {
+    background: var(--color-primary, #4caf50);
+    color: white;
+    border-color: transparent;
+}
+
+.quick-btn--primary:hover {
+    background: var(--color-primary-dark, #388e3c);
+}
+
+/* ── Profil (onglets) ──────────────────────────────────────── */
+.profil-page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: clamp(1rem, 3vw, 2rem);
+}
+
+.profil-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding-bottom: 0.5rem;
+}
+
+.profil-tab {
+    padding: 0.5rem 1.25rem;
+    min-height: 44px;
+    border-radius: 0.5rem 0.5rem 0 0;
+    background: transparent;
+    border: none;
+    color: var(--color-text-muted, #888);
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-family: inherit;
+    transition: color 0.2s, background 0.2s;
+}
+
+.profil-tab--active,
+.profil-tab.profil-tab--active {
+    color: var(--color-primary, #4caf50);
+    background: rgba(76, 175, 80, 0.08);
+    font-weight: 600;
+}
+
+/* ── États vides et loading ────────────────────────────────── */
+.empty-state {
+    text-align: center;
+    color: var(--color-text-muted, #888);
+    padding: 2rem 1rem;
+    font-size: 0.9rem;
+}
+
+.loading-placeholder {
+    color: var(--color-text-muted, #888);
+    padding: 1.5rem 1rem;
+    text-align: center;
+    font-size: 0.875rem;
+}
+
+/* ── Responsive mobile ─────────────────────────────────────── */
+@media (max-width: 480px) {
+    .hero-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .hero-actions .btn {
+        width: 100%;
+        max-width: 280px;
+    }
+
+    .task-row,
+    .submission-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .task-row .btn {
+        align-self: flex-end;
+    }
+
+    .quick-actions {
+        flex-direction: column;
+    }
+
+    .quick-btn {
+        min-width: unset;
+    }
+}

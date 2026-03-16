@@ -126,6 +126,9 @@ Variables d'env Vercel (backend) : `DATABASE_URL`, `CLOUDINARY_URL`, `SECRET_KEY
 - Façade `window.QuranReview` : toute nouvelle fonction de page doit être exportée ET ajoutée à la façade dans `main.js`
 - Login endpoint : `/api/auth/token/` (POST) — ne pas tester avec `/api/auth/login/` (retourne 404)
 - Vercel serverless : pas de filesystem persistant → les fichiers uploadés doivent aller sur Cloudinary
+- `tasks.js` : seul `loadTasksFromApi` est importé — les autres fonctions (`handleCreateTask`, `handleDeleteAllTasks`, `switchTaskTab`) sont du code mort ; TeacherPage/MyTasksPage ont leurs propres versions, ne pas déboguer dans tasks.js
+- Service Worker (`sw.js`) : toujours `return` après chaque `event.respondWith()` — un double appel dans le même handler cause une erreur runtime silencieuse
+- Audit façade : pour trouver les fonctions manquantes de `window.QuranReview` : `grep -rn "QuranReview\." src/ --include="*.js" | grep -oE "QuranReview\.[a-zA-Z_]+" | sort -u` puis comparer avec les clés dans `main.js`
 
 ---
 
