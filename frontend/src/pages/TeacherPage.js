@@ -93,7 +93,8 @@ export function render() {
         <div id="teacher-page" class="page active">
             <section class="section-pro">
                 <div class="container-pro">
-                    <h2 class="section-title" style="text-align: center; margin-bottom: var(--space-8);">📋 لوحة المعلم</h2>
+                    <h2 class="section-title" style="text-align: center; margin-bottom: var(--space-4);">📋 لوحة المعلم</h2>
+                    <p id="teacher-welcome" style="text-align:center;color:var(--color-text-secondary);margin-bottom:var(--space-6);"></p>
 
                     <div class="grid-pro grid-cols-3" style="margin-bottom: var(--space-8);">
                         <div class="card-stat-premium" style="text-align: center;">
@@ -165,7 +166,7 @@ export function render() {
                     </div>
 
                     <!-- تسليمات الطلاب المعلقة -->
-                    <div class="card-glass-pro" style="margin-bottom: var(--space-6);">
+                    <div id="teacher-soumissions-section" class="card-glass-pro" style="margin-bottom: var(--space-6);">
                         <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">📥 تسليمات الطلاب</h3>
                         <div id="teacher-tasks-list">
                             <p class="empty-state">لا توجد تسليمات بانتظار التصحيح 🎉</p>
@@ -180,7 +181,7 @@ export function render() {
                     </div>
 
                     <!-- قائمة الطلاب -->
-                    <div class="card-glass-pro" style="margin-bottom: var(--space-6);">
+                    <div id="teacher-eleves-section" class="card-glass-pro" style="margin-bottom: var(--space-6);">
                         <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">🎓 قائمة الطلاب</h3>
                         <div id="teacher-students-list">
                             <p class="empty-state">لا يوجد طلاب بعد</p>
@@ -207,8 +208,21 @@ export function render() {
 // INIT
 // ===================================
 
-export async function init() {
+export async function init(subRoute) {
     await loadTeacherDashboard();
+
+    // Scroll automatique vers la section correspondant à la sous-route
+    const scrollTargets = {
+        devoirs:     '#teacher-create-task-form',
+        soumissions: '#teacher-soumissions-section',
+        eleves:      '#teacher-eleves-section',
+    };
+    const route = subRoute || (window.QuranReview?.state?.currentPage);
+    const targetSelector = scrollTargets[route];
+    if (targetSelector) {
+        const el = document.querySelector(targetSelector);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
 }
 
 // ===================================
@@ -248,7 +262,7 @@ async function loadTeacherDashboard() {
 
     // Bloquer les étudiants sur la page enseignant
     if (state.user && state.user.role !== 'teacher' && !state.user.is_staff) {
-        window.QuranReview && window.QuranReview.navigateTo('mytasks');
+        window.QuranReview && window.QuranReview.navigateTo('soumettre');
         return;
     }
 
@@ -282,9 +296,14 @@ async function loadTeacherDashboard() {
             fetch(`${config.apiBaseUrl}/api/tasks/`, { headers }),
         ]);
 
-        const students = studentsRes.ok ? await studentsRes.json() : [];
-        const pending = pendingRes.ok ? await pendingRes.json() : [];
-        const tasks = tasksRes.ok ? await tasksRes.json() : [];
+        const studentsRaw = studentsRes.ok ? await studentsRes.json() : [];
+        const pendingRaw  = pendingRes.ok  ? await pendingRes.json()  : [];
+        const tasksRaw    = tasksRes.ok    ? await tasksRes.json()    : [];
+
+        // Gérer les réponses paginées DRF {count, results: [...]} ou tableau direct
+        const students = Array.isArray(studentsRaw) ? studentsRaw : (studentsRaw.results ?? []);
+        const pending  = Array.isArray(pendingRaw)  ? pendingRaw  : (pendingRaw.results  ?? []);
+        const tasks    = Array.isArray(tasksRaw)    ? tasksRaw    : (tasksRaw.results    ?? []);
 
         // Stocker pour usage ultérieur
         _teacherStudents = students;

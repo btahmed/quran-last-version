@@ -133,9 +133,13 @@ export async function loadStudentDashboard() {
             fetch(`${config.apiBaseUrl}/api/points/`, { headers }),
         ]);
 
-        const tasks = tasksRes.ok ? await tasksRes.json() : [];
-        const submissions = subsRes.ok ? await subsRes.json() : [];
+        const tasksRaw = tasksRes.ok ? await tasksRes.json() : [];
+        const subsRaw   = subsRes.ok   ? await subsRes.json()   : [];
         const pointsData = pointsRes.ok ? await pointsRes.json() : { total_points: 0, logs: [] };
+
+        // Gérer les réponses paginées DRF {count, results: [...]} ou tableau direct
+        const tasks       = Array.isArray(tasksRaw) ? tasksRaw : (tasksRaw.results ?? []);
+        const submissions = Array.isArray(subsRaw)   ? subsRaw   : (subsRaw.results   ?? []);
 
         // Construire le lookup soumissions par tâche
         const subByTask = {};
@@ -239,6 +243,8 @@ export async function loadStudentDashboard() {
     } catch (error) {
         console.error('Failed to load student dashboard:', error);
         showNotification('خطأ في تحميل البيانات', 'error');
+        const tasksList = document.getElementById('student-tasks-list');
+        if (tasksList) tasksList.innerHTML = '<p class="empty-state" style="color:#ef4444;">❌ تعذّر تحميل المهام — تحقق من اتصالك</p>';
     }
 }
 
