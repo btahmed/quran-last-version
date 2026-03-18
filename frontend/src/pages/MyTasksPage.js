@@ -5,6 +5,7 @@ import { config } from '../core/config.js';
 import { showNotification } from '../core/ui.js';
 import { Logger } from '../core/logger.js';
 import { showAuthModal } from '../services/auth.js';
+import { apiCache } from '../core/apiCache.js';
 
 function escapeHtml(str) {
     return String(str ?? '')
@@ -64,14 +65,17 @@ export function render() {
                     </div>
 
                     <div id="student-tasks-list" class="card-glass-pro" style="margin-bottom: var(--space-6);">
-                        <p class="empty-state">جاري التحميل...</p>
+                        <div class="skeleton skeleton-card"></div>
+                        <div class="skeleton skeleton-card"></div>
+                        <div class="skeleton skeleton-card"></div>
                     </div>
 
                     <!-- التسليمات -->
                     <div class="card-glass-pro" style="margin-bottom: var(--space-6);">
                         <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: var(--space-3);">📤 تسليماتي</h3>
                         <div id="student-submissions-list">
-                            <p class="empty-state">لا توجد تسليمات بعد</p>
+                            <div class="skeleton skeleton-card"></div>
+                            <div class="skeleton skeleton-card"></div>
                         </div>
                     </div>
 
@@ -106,26 +110,33 @@ let _studentSubByTask = {};
 
 export async function loadStudentDashboard() {
     const token = localStorage.getItem(config.apiTokenKey);
-    if (!token) {
-        showAuthModal();
-        return;
-    }
-
-    // Bloquer les enseignants sur la page étudiant
+    if (!token) { showAuthModal(); return; }
     if (state.user && state.user.role === 'teacher') {
-        // navigateTo géré par le router global
         window.QuranReview && window.QuranReview.navigateTo('teacher');
         return;
     }
-
     const headers = { Authorization: `Bearer ${token}` };
 
-    // Mettre à jour le message de bienvenue
     if (state.user) {
         const el = document.getElementById('student-welcome');
         if (el) el.textContent = `مرحباً ${state.user.first_name || state.user.username}`;
     }
 
+    // Tenter le cache avant le fetch
+    const cachedTasks = apiCache.get('tasks');
+    const cachedSubs  = apiCache.get('my-submissions');
+    const cachedPts   = apiCache.get('points');
+
+    if (cachedTasks && cachedSubs && cachedPts) {
+        _applyStudentData(cachedTasks, cachedSubs, cachedPts);
+        _fetchAndCacheStudent(headers); // refresh silencieux
+        return;
+    }
+
+    await _fetchAndCacheStudent(headers);
+}
+
+async function _fetchAndCacheStudent(headers) {
     try {
         const [tasksRes, subsRes, pointsRes] = await Promise.all([
             fetch(`${config.apiBaseUrl}/api/tasks/`, { headers }),
@@ -133,118 +144,125 @@ export async function loadStudentDashboard() {
             fetch(`${config.apiBaseUrl}/api/points/`, { headers }),
         ]);
 
-        const tasksRaw = tasksRes.ok ? await tasksRes.json() : [];
-        const subsRaw   = subsRes.ok   ? await subsRes.json()   : [];
-        const pointsData = pointsRes.ok ? await pointsRes.json() : { total_points: 0, logs: [] };
+        const tasksRaw   = tasksRes.ok   ? await tasksRes.json()   : [];
+        const subsRaw    = subsRes.ok    ? await subsRes.json()    : [];
+        const pointsData = pointsRes.ok  ? await pointsRes.json()  : { total_points: 0, logs: [] };
 
-        // Gérer les réponses paginées DRF {count, results: [...]} ou tableau direct
         const tasks       = Array.isArray(tasksRaw) ? tasksRaw : (tasksRaw.results ?? []);
-        const submissions = Array.isArray(subsRaw)   ? subsRaw   : (subsRaw.results   ?? []);
+        const submissions = Array.isArray(subsRaw)  ? subsRaw  : (subsRaw.results  ?? []);
 
-        // Construire le lookup soumissions par tâche
-        const subByTask = {};
-        submissions.forEach(s => { subByTask[s.task.id] = s; });
+        apiCache.set('tasks', tasks);
+        apiCache.set('my-submissions', submissions);
+        apiCache.set('points', pointsData);
 
-        const done = submissions.filter(s => s.status === 'approved').length;
-        const rejected = submissions.filter(s => s.status === 'rejected').length;
-        const pending = tasks.length - done;
-
-        // Stats
-        document.getElementById('student-points').textContent = pointsData.total_points || 0;
-        document.getElementById('student-tasks-done').textContent = done;
-        document.getElementById('student-tasks-pending').textContent = pending > 0 ? pending : 0;
-        document.getElementById('student-tasks-rejected').textContent = rejected;
-
-        // سجل النقاط
-        const pointsLogEl = document.getElementById('student-points-log');
-        const logs = pointsData.logs || [];
-        if (!logs.length) {
-            pointsLogEl.innerHTML = '<p class="empty-state">لا توجد نقاط بعد</p>';
-        } else {
-            pointsLogEl.innerHTML = logs.slice(0, 10).map(log => {
-                const date = new Date(log.created_at).toLocaleDateString('ar-SA');
-                const sign = log.delta > 0 ? '+' : '';
-                const isPositive = log.delta > 0;
-                // Normaliser les anciens textes français en arabe
-                const reason = log.reason
-                    .replace(/^Tache approuvee:\s*/i, 'تمت الموافقة على: ')
-                    .replace(/^Tache rejetee:\s*/i, 'تم رفض: ');
-                return `<div class="points-log-item" style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--color-border, rgba(255,255,255,0.08));gap:8px;">
-                    <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;">
-                        <span style="font-size:1.1rem;">${isPositive ? '🏆' : '📉'}</span>
-                        <span style="font-size:0.85rem;color:var(--color-text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(reason)}</span>
-                    </div>
-                    <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
-                        <span style="font-weight:700;font-size:0.95rem;color:${isPositive ? '#10b981' : '#ef4444'};">${sign}${log.delta}</span>
-                        <span style="font-size:0.75rem;color:var(--color-text-secondary);">${date}</span>
-                    </div>
-                </div>`;
-            }).join('');
-        }
-
-        // Stocker les données dans l'état interne pour le re-rendu par onglet
-        _studentTasks = tasks;
-        _studentSubByTask = subByTask;
-
-        // Détecter le bon onglet initial selon les statuts réels
-        const hasPending = tasks.some(t => { const s = subByTask[t.id]; return !s || s.status !== 'approved'; });
-        switchTaskTab(hasPending ? 'pending' : 'completed');
-
-        // Liste des soumissions
-        const subsList = document.getElementById('student-submissions-list');
-        if (!submissions.length) {
-            subsList.innerHTML = '<p class="empty-state">لا توجد تسليمات بعد</p>';
-        } else {
-            subsList.innerHTML = submissions.map(s => {
-                const isApproved = s.status === 'approved';
-                const isRejected = s.status === 'rejected';
-                const date = new Date(s.submitted_at).toLocaleDateString('ar-SA');
-                const audioSrc = s.audio_url
-                    ? (s.audio_url.startsWith('http') ? s.audio_url : config.apiBaseUrl + (s.audio_url.startsWith('/') ? s.audio_url : '/' + s.audio_url))
-                    : '';
-
-                // Affichage du feedback selon statut
-                let feedbackHtml = '';
-                if (s.admin_feedback) {
-                    if (isApproved) {
-                        // Note emoji → affiché en vert, gros et visible
-                        feedbackHtml = `<div style="display:inline-flex;align-items:center;gap:6px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);border-radius:8px;padding:4px 10px;margin-top:6px;font-size:1rem;font-weight:600;color:#10b981;">
-                            ⭐ ${escapeHtml(s.admin_feedback)}
-                        </div>`;
-                    } else if (isRejected) {
-                        // Motif de refus → affiché en rouge
-                        feedbackHtml = `<div style="font-size:0.82rem;color:#ef4444;margin-top:4px;">💬 ${escapeHtml(s.admin_feedback)}</div>`;
-                    }
-                }
-
-                const statusStyle = isApproved
-                    ? 'background:rgba(16,185,129,0.15);color:#10b981;border:1px solid rgba(16,185,129,0.3);'
-                    : isRejected
-                    ? 'background:rgba(239,68,68,0.15);color:#ef4444;border:1px solid rgba(239,68,68,0.3);'
-                    : 'background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.3);';
-                const statusText = isApproved ? 'مقبول ✓' : isRejected ? 'مرفوض ✗' : '⏳ بانتظار التصحيح';
-
-                return `<div class="task-card" style="flex-wrap:wrap;gap:8px;">
-                    <span class="task-status ${isApproved ? 'task-status-completed' : 'task-status-pending'}"></span>
-                    <div style="flex:1;min-width:0;">
-                        <div style="font-weight:600;margin-bottom:2px;">${escapeHtml(s.task.title)}</div>
-                        <div style="font-size:0.8rem;color:var(--color-text-secondary);">📅 ${date}${s.awarded_points ? ` &nbsp;🏆 +${s.awarded_points} نقطة` : ''}</div>
-                        ${feedbackHtml}
-                        ${audioSrc ? `
-                            <audio controls preload="metadata" style="width:100%;margin-top:6px;"
-                                onerror="this.outerHTML='<p style=\\'color:#999;font-size:0.85rem;\\'>الملف الصوتي غير متاح</p>'">
-                                <source src="${audioSrc}" type="audio/webm">
-                            </audio>` : ''}
-                    </div>
-                    <span class="badge" style="${statusStyle};font-size:0.78rem;padding:4px 10px;border-radius:6px;">${statusText}</span>
-                </div>`;
-            }).join('');
-        }
+        _applyStudentData(tasks, submissions, pointsData);
     } catch (error) {
         console.error('Failed to load student dashboard:', error);
         showNotification('خطأ في تحميل البيانات', 'error');
         const tasksList = document.getElementById('student-tasks-list');
         if (tasksList) tasksList.innerHTML = '<p class="empty-state" style="color:#ef4444;">❌ تعذّر تحميل المهام — تحقق من اتصالك</p>';
+    }
+}
+
+function _applyStudentData(tasks, submissions, pointsData) {
+    // Construire le lookup soumissions par tâche
+    const subByTask = {};
+    submissions.forEach(s => { subByTask[s.task.id] = s; });
+
+    const done = submissions.filter(s => s.status === 'approved').length;
+    const rejected = submissions.filter(s => s.status === 'rejected').length;
+    const pending = tasks.length - done;
+
+    // Stats
+    document.getElementById('student-points').textContent = pointsData.total_points || 0;
+    document.getElementById('student-tasks-done').textContent = done;
+    document.getElementById('student-tasks-pending').textContent = pending > 0 ? pending : 0;
+    document.getElementById('student-tasks-rejected').textContent = rejected;
+
+    // سجل النقاط
+    const pointsLogEl = document.getElementById('student-points-log');
+    const logs = pointsData.logs || [];
+    if (!logs.length) {
+        pointsLogEl.innerHTML = '<p class="empty-state">لا توجد نقاط بعد</p>';
+    } else {
+        pointsLogEl.innerHTML = logs.slice(0, 10).map(log => {
+            const date = new Date(log.created_at).toLocaleDateString('ar-SA');
+            const sign = log.delta > 0 ? '+' : '';
+            const isPositive = log.delta > 0;
+            // Normaliser les anciens textes français en arabe
+            const reason = log.reason
+                .replace(/^Tache approuvee:\s*/i, 'تمت الموافقة على: ')
+                .replace(/^Tache rejetee:\s*/i, 'تم رفض: ');
+            return `<div class="points-log-item" style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--color-border, rgba(255,255,255,0.08));gap:8px;">
+                <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;">
+                    <span style="font-size:1.1rem;">${isPositive ? '🏆' : '📉'}</span>
+                    <span style="font-size:0.85rem;color:var(--color-text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(reason)}</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+                    <span style="font-weight:700;font-size:0.95rem;color:${isPositive ? '#10b981' : '#ef4444'};">${sign}${log.delta}</span>
+                    <span style="font-size:0.75rem;color:var(--color-text-secondary);">${date}</span>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    // Stocker les données dans l'état interne pour le re-rendu par onglet
+    _studentTasks = tasks;
+    _studentSubByTask = subByTask;
+
+    // Détecter le bon onglet initial selon les statuts réels
+    const hasPending = tasks.some(t => { const s = subByTask[t.id]; return !s || s.status !== 'approved'; });
+    switchTaskTab(hasPending ? 'pending' : 'completed');
+
+    // Liste des soumissions
+    const subsList = document.getElementById('student-submissions-list');
+    if (!submissions.length) {
+        subsList.innerHTML = '<p class="empty-state">لا توجد تسليمات بعد</p>';
+    } else {
+        subsList.innerHTML = submissions.map(s => {
+            const isApproved = s.status === 'approved';
+            const isRejected = s.status === 'rejected';
+            const date = new Date(s.submitted_at).toLocaleDateString('ar-SA');
+            const audioSrc = s.audio_url
+                ? (s.audio_url.startsWith('http') ? s.audio_url : config.apiBaseUrl + (s.audio_url.startsWith('/') ? s.audio_url : '/' + s.audio_url))
+                : '';
+
+            // Affichage du feedback selon statut
+            let feedbackHtml = '';
+            if (s.admin_feedback) {
+                if (isApproved) {
+                    // Note emoji → affiché en vert, gros et visible
+                    feedbackHtml = `<div style="display:inline-flex;align-items:center;gap:6px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);border-radius:8px;padding:4px 10px;margin-top:6px;font-size:1rem;font-weight:600;color:#10b981;">
+                        ⭐ ${escapeHtml(s.admin_feedback)}
+                    </div>`;
+                } else if (isRejected) {
+                    // Motif de refus → affiché en rouge
+                    feedbackHtml = `<div style="font-size:0.82rem;color:#ef4444;margin-top:4px;">💬 ${escapeHtml(s.admin_feedback)}</div>`;
+                }
+            }
+
+            const statusStyle = isApproved
+                ? 'background:rgba(16,185,129,0.15);color:#10b981;border:1px solid rgba(16,185,129,0.3);'
+                : isRejected
+                ? 'background:rgba(239,68,68,0.15);color:#ef4444;border:1px solid rgba(239,68,68,0.3);'
+                : 'background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.3);';
+            const statusText = isApproved ? 'مقبول ✓' : isRejected ? 'مرفوض ✗' : '⏳ بانتظار التصحيح';
+
+            return `<div class="task-card" style="flex-wrap:wrap;gap:8px;">
+                <span class="task-status ${isApproved ? 'task-status-completed' : 'task-status-pending'}"></span>
+                <div style="flex:1;min-width:0;">
+                    <div style="font-weight:600;margin-bottom:2px;">${escapeHtml(s.task.title)}</div>
+                    <div style="font-size:0.8rem;color:var(--color-text-secondary);">📅 ${date}${s.awarded_points ? ` &nbsp;🏆 +${s.awarded_points} نقطة` : ''}</div>
+                    ${feedbackHtml}
+                    ${audioSrc ? `
+                        <audio controls preload="metadata" style="width:100%;margin-top:6px;"
+                            onerror="this.outerHTML='<p style=\\'color:#999;font-size:0.85rem;\\'>الملف الصوتي غير متاح</p>'">
+                            <source src="${audioSrc}" type="audio/webm">
+                        </audio>` : ''}
+                </div>
+                <span class="badge" style="${statusStyle};font-size:0.78rem;padding:4px 10px;border-radius:6px;">${statusText}</span>
+            </div>`;
+        }).join('');
     }
 }
 
