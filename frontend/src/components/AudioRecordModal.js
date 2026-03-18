@@ -4,6 +4,7 @@ import { state } from '../core/state.js';
 import { config } from '../core/config.js';
 import { showNotification } from '../core/ui.js';
 import { Logger } from '../core/logger.js';
+import { apiCache } from '../core/apiCache.js';
 
 // Variables module-level (remplacent this._recorder, this._recordBlob, etc.)
 let _recorder = null;
@@ -160,6 +161,9 @@ export async function submitRecording() {
         modal.classList.remove('active');
         modal.classList.add('hidden');
         _recordBlob = null;
+
+        // Invalider le cache pour forcer un rechargement des données fraîches
+        apiCache.invalidate('my-submissions', 'tasks', 'points');
 
         // Rafraîchir le tableau de bord étudiant si disponible
         if (window.QuranReview?.loadStudentDashboard) {
