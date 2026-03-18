@@ -27,6 +27,7 @@ import * as RevisionPage   from './pages/RevisionPage.js';
 import * as SoumissionPage from './pages/SoumissionPage.js';
 import * as ProfilPage     from './pages/ProfilPage.js';
 import { buildNav, setActiveTab } from './core/NavManager.js';
+import { apiCache } from './core/apiCache.js';
 
 function init() {
     Logger.log('APP', 'Initializing QuranReview App...');
@@ -99,6 +100,7 @@ window.QuranReview = {
     showNotification,
     logout: async () => {
         await logout();
+        apiCache.clear();
         buildNav('visitor');
     },
     updateAuthUI,
