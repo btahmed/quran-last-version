@@ -1,9 +1,13 @@
 name: Deploy to GitHub Pages
+# DÉSACTIVÉ — déploiement migré vers Vercel (quranreview-frontend.vercel.app)
+# Réactiver si retour sur GitHub Pages + activer dans les settings repo
 
 on:
-  push:
-    branches: [ main, master ]
   workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Taper "oui" pour forcer le déploiement GitHub Pages'
+        required: true
 
 permissions:
   contents: read
