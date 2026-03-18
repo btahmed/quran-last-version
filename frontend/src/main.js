@@ -31,6 +31,13 @@ import { buildNav, setActiveTab } from './core/NavManager.js';
 function init() {
     Logger.log('APP', 'Initializing QuranReview App...');
 
+    // Warm-up ping → réchauffe le cold start Django/Vercel avant que l'user se connecte
+    if (config.apiBaseUrl) {
+        fetch(`${config.apiBaseUrl}/api/health/`, { method: 'GET' })
+            .then(() => Logger.log('APP', 'API warm-up OK'))
+            .catch(() => Logger.log('APP', 'API warm-up silencieux (offline ?)'));
+    }
+
     // Monter les modaux
     document.getElementById('modals').innerHTML = renderModals();
     initModals();
