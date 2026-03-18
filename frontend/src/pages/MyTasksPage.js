@@ -165,6 +165,9 @@ async function _fetchAndCacheStudent(headers) {
 }
 
 function _applyStudentData(tasks, submissions, pointsData) {
+    // Guard : si l'utilisateur a navigué ailleurs, la page n'est plus dans le DOM
+    if (!document.getElementById('mytasks-page')) return;
+
     // Construire le lookup soumissions par tâche
     const subByTask = {};
     submissions.forEach(s => { subByTask[s.task.id] = s; });

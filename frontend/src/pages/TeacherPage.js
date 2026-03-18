@@ -321,6 +321,9 @@ async function _fetchAndCacheTeacher(headers) {
 }
 
 function _applyTeacherData(students, pending, tasks) {
+    // Guard : si l'utilisateur a navigué ailleurs, la page n'est plus dans le DOM
+    if (!document.getElementById('teacher-page')) return;
+
     // Stocker pour usage ultérieur
     _teacherStudents = students;
     _teacherTasks = tasks;
