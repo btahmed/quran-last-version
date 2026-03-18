@@ -2,6 +2,7 @@
 // Page d'accueil intelligente : landing visiteur OU dashboard selon le rôle
 import { state } from '../core/state.js';
 import { config } from '../core/config.js';
+import { apiCache } from '../core/apiCache.js';
 
 // ══════════════════════════════════════════════════════════════
 // Point d'entrée principal — détection visiteur / rôle connecté
@@ -169,7 +170,8 @@ function renderStudentDashboard() {
         <section class="dashboard-section">
             <h3 class="section-title">📋 واجبات اليوم</h3>
             <div id="student-tasks-list" class="tasks-list">
-                <div class="loading-placeholder">جاري التحميل...</div>
+                <div class="skeleton skeleton-card"></div>
+                <div class="skeleton skeleton-card"></div>
             </div>
         </section>
 
@@ -250,7 +252,8 @@ function renderTeacherDashboard() {
         <section class="dashboard-section">
             <h3 class="section-title">🎧 آخر التسليمات</h3>
             <div id="teacher-submissions-list" class="submissions-list">
-                <div class="loading-placeholder">جاري التحميل...</div>
+                <div class="skeleton skeleton-card"></div>
+                <div class="skeleton skeleton-card"></div>
             </div>
         </section>
 
@@ -335,12 +338,25 @@ async function initDashboard(role) {
     const headers = { Authorization: `Bearer ${token}` };
 
     if (role === 'student') {
-        const res = await fetch(`${config.apiBaseUrl}/api/tasks/`, { headers })
-            .catch(() => null);
+        const cached = apiCache.get('tasks');
+        if (cached) {
+            renderStudentTasks(cached);
+            // Refresh silencieux
+            fetch(`${config.apiBaseUrl}/api/tasks/`, { headers })
+                .then(r => r.ok ? r.json() : null)
+                .then(raw => {
+                    if (!raw) return;
+                    const list = Array.isArray(raw) ? raw : (raw.results || []);
+                    apiCache.set('tasks', list);
+                    renderStudentTasks(list);
+                }).catch(() => {});
+            return;
+        }
+        const res = await fetch(`${config.apiBaseUrl}/api/tasks/`, { headers }).catch(() => null);
         if (res?.ok) {
-            const tasks = await res.json();
-            // L'API renvoie un tableau ou un objet paginé
-            const list = Array.isArray(tasks) ? tasks : (tasks.results || []);
+            const raw = await res.json();
+            const list = Array.isArray(raw) ? raw : (raw.results || []);
+            apiCache.set('tasks', list);
             renderStudentTasks(list);
         } else {
             renderStudentTasks([]);
@@ -348,31 +364,46 @@ async function initDashboard(role) {
     }
 
     if (role === 'teacher') {
-        const res = await fetch(`${config.apiBaseUrl}/api/submissions/`, { headers })
-            .catch(() => null);
+        const cached = apiCache.get('submissions');
+        if (cached) {
+            const pending = cached.filter(s => s.status === 'pending' || !s.grade);
+            renderTeacherSubmissions(pending);
+            const el = document.getElementById('t-pending');
+            if (el) el.textContent = pending.length;
+            return;
+        }
+        const res = await fetch(`${config.apiBaseUrl}/api/submissions/`, { headers }).catch(() => null);
         if (res?.ok) {
             const data = await res.json();
             const subs = Array.isArray(data) ? data : (data.results || []);
+            apiCache.set('submissions', subs);
             const pending = subs.filter(s => s.status === 'pending' || !s.grade);
             renderTeacherSubmissions(pending);
             const el = document.getElementById('t-pending');
             if (el) el.textContent = pending.length;
         } else {
-            renderTeacherSubmissions([]); // fallback : vider le placeholder
+            renderTeacherSubmissions([]);
         }
     }
 
     if (role === 'admin') {
-        const res = await fetch(`${config.apiBaseUrl}/api/admin/overview/`, { headers })
-            .catch(() => null);
+        const cached = apiCache.get('admin-overview');
+        if (cached) {
+            setText('a-users',    '+' + (cached.total_users    || 0));
+            setText('a-teachers',        cached.total_teachers || 0);
+            setText('a-students',        cached.total_students || 0);
+            setText('a-today',           cached.submissions_today || 0);
+            return;
+        }
+        const res = await fetch(`${config.apiBaseUrl}/api/admin/overview/`, { headers }).catch(() => null);
         if (res?.ok) {
             const data = await res.json();
+            apiCache.set('admin-overview', data);
             setText('a-users',    '+' + (data.total_users    || 0));
             setText('a-teachers',        data.total_teachers || 0);
             setText('a-students',        data.total_students || 0);
             setText('a-today',           data.submissions_today || 0);
         } else {
-            // Fallback : remplacer les — par 0 pour signaler l'échec de chargement
             ['a-users', 'a-teachers', 'a-students', 'a-today'].forEach(id => setText(id, '—'));
         }
     }
