@@ -5,6 +5,7 @@ import { config } from '../core/config.js';
 import { showNotification } from '../core/ui.js';
 import { Logger } from '../core/logger.js';
 import { showAuthModal, refreshToken } from '../services/auth.js';
+import { apiCache } from '../core/apiCache.js';
 
 // Wrapper fetch avec auto-refresh du token JWT (401)
 async function authFetch(url, options = {}) {
@@ -169,14 +170,16 @@ export function render() {
                     <div id="teacher-soumissions-section" class="card-glass-pro" style="margin-bottom: var(--space-6);">
                         <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">📥 تسليمات الطلاب</h3>
                         <div id="teacher-tasks-list">
-                            <p class="empty-state">لا توجد تسليمات بانتظار التصحيح 🎉</p>
+                            <div class="skeleton skeleton-card"></div>
+                            <div class="skeleton skeleton-card"></div>
                         </div>
                     </div>
 
                     <!-- قائمة المهام المعينة -->
                     <div class="card-glass-pro" style="margin-bottom: var(--space-6);">
                         <div id="teacher-assigned-tasks-list">
-                            <p class="empty-state">لا توجد مهام بعد</p>
+                            <div class="skeleton skeleton-card"></div>
+                            <div class="skeleton skeleton-card"></div>
                         </div>
                     </div>
 
@@ -184,7 +187,11 @@ export function render() {
                     <div id="teacher-eleves-section" class="card-glass-pro" style="margin-bottom: var(--space-6);">
                         <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">🎓 قائمة الطلاب</h3>
                         <div id="teacher-students-list">
-                            <p class="empty-state">لا يوجد طلاب بعد</p>
+                            <div class="skeleton skeleton-line"></div>
+                            <div class="skeleton skeleton-line"></div>
+                            <div class="skeleton skeleton-line short"></div>
+                            <div class="skeleton skeleton-line"></div>
+                            <div class="skeleton skeleton-line short"></div>
                         </div>
                     </div>
 
@@ -255,40 +262,38 @@ function hideLoading() {
 
 async function loadTeacherDashboard() {
     const token = localStorage.getItem(config.apiTokenKey);
-    if (!token) {
-        showAuthModal();
-        return;
-    }
-
-    // Bloquer les étudiants sur la page enseignant
+    if (!token) { showAuthModal(); return; }
     if (state.user && state.user.role !== 'teacher' && !state.user.is_staff) {
         window.QuranReview && window.QuranReview.navigateTo('soumettre');
         return;
     }
-
     const headers = { Authorization: `Bearer ${token}` };
 
-    // Mettre à jour le message de bienvenue
     if (state.user) {
         const el = document.getElementById('teacher-welcome');
-        if (el) el.textContent = `مرحباً أستاذ ${state.user.first_name || state.user.username}`;
+        if (el) el.textContent = `مرحباً ${state.user.first_name || state.user.username}`;
     }
 
-    // Afficher l'onglet admin uniquement pour les superutilisateurs
-    const adminTab = document.querySelector('.admin-only-tab');
-    if (adminTab) {
-        const isAdmin = state.user && state.user.is_superuser;
-        adminTab.style.display = isAdmin ? 'inline-block' : 'none';
-    }
-
-    // Charger la liste des utilisateurs admin si superuser
     if (state.user && state.user.is_superuser) {
-        // Sans await pour ne pas bloquer le chargement du dashboard
         loadAdminUsersList();
     }
 
-    showLoading();
+    const cachedStudents = apiCache.get('my-students');
+    const cachedPending  = apiCache.get('pending-submissions');
+    const cachedTasks    = apiCache.get('tasks');
 
+    if (cachedStudents && cachedPending && cachedTasks) {
+        _applyTeacherData(cachedStudents, cachedPending, cachedTasks);
+        _fetchAndCacheTeacher(headers); // refresh silencieux
+        return;
+    }
+
+    showLoading();
+    await _fetchAndCacheTeacher(headers);
+    hideLoading();
+}
+
+async function _fetchAndCacheTeacher(headers) {
     try {
         const [studentsRes, pendingRes, tasksRes] = await Promise.all([
             fetch(`${config.apiBaseUrl}/api/my-students/`, { headers }),
@@ -300,28 +305,40 @@ async function loadTeacherDashboard() {
         const pendingRaw  = pendingRes.ok  ? await pendingRes.json()  : [];
         const tasksRaw    = tasksRes.ok    ? await tasksRes.json()    : [];
 
-        // Gérer les réponses paginées DRF {count, results: [...]} ou tableau direct
         const students = Array.isArray(studentsRaw) ? studentsRaw : (studentsRaw.results ?? []);
         const pending  = Array.isArray(pendingRaw)  ? pendingRaw  : (pendingRaw.results  ?? []);
         const tasks    = Array.isArray(tasksRaw)    ? tasksRaw    : (tasksRaw.results    ?? []);
 
-        // Stocker pour usage ultérieur
-        _teacherStudents = students;
-        _teacherTasks = tasks;
+        apiCache.set('my-students', students);
+        apiCache.set('pending-submissions', pending);
+        apiCache.set('tasks', tasks);
 
-        // Charger les cases à cocher des étudiants pour la création de tâche
-        _loadStudentCheckboxes(students);
+        _applyTeacherData(students, pending, tasks);
+    } catch (err) {
+        Logger.error('TEACHER', 'loadTeacherDashboard error', err);
+        hideLoading();
+    }
+}
 
-        // Stats
-        const studentsCountEl = document.getElementById('teacher-students-count');
-        if (studentsCountEl) studentsCountEl.textContent = students.length;
-        const pendingCountEl = document.getElementById('teacher-pending-count');
-        if (pendingCountEl) pendingCountEl.textContent = pending.length;
-        const tasksCountEl = document.getElementById('teacher-tasks-count');
-        if (tasksCountEl) tasksCountEl.textContent = tasks.length;
+function _applyTeacherData(students, pending, tasks) {
+    // Stocker pour usage ultérieur
+    _teacherStudents = students;
+    _teacherTasks = tasks;
 
-        // Soumissions en attente
-        const pendingList = document.getElementById('teacher-tasks-list');
+    // Charger les cases à cocher des étudiants pour la création de tâche
+    _loadStudentCheckboxes(students);
+
+    // Stats
+    const studentsCountEl = document.getElementById('teacher-students-count');
+    if (studentsCountEl) studentsCountEl.textContent = students.length;
+    const pendingCountEl = document.getElementById('teacher-pending-count');
+    if (pendingCountEl) pendingCountEl.textContent = pending.length;
+    const tasksCountEl = document.getElementById('teacher-tasks-count');
+    if (tasksCountEl) tasksCountEl.textContent = tasks.length;
+
+    // Soumissions en attente
+    const pendingList = document.getElementById('teacher-tasks-list');
+    if (pendingList) {
         if (!pending.length) {
             pendingList.innerHTML = '<p class="empty-state">لا توجد تسليمات بانتظار التصحيح 🎉</p>';
         } else {
@@ -355,9 +372,11 @@ async function loadTeacherDashboard() {
                 </div>`;
             }).join('');
         }
+    }
 
-        // Liste des étudiants avec clic pour voir le détail
-        const studentsList = document.getElementById('teacher-students-list');
+    // Liste des étudiants avec clic pour voir le détail
+    const studentsList = document.getElementById('teacher-students-list');
+    if (studentsList) {
         if (!students.length) {
             studentsList.innerHTML = '<p class="empty-state">لا يوجد طلاب بعد</p>';
         } else {
@@ -374,10 +393,11 @@ async function loadTeacherDashboard() {
                 </div>`;
             }).join('');
         }
+    }
 
-        // Liste des tâches — div séparé pour ne pas écraser les soumissions
-        const taskListEl = document.getElementById('teacher-assigned-tasks-list');
-
+    // Liste des tâches — div séparé pour ne pas écraser les soumissions
+    const taskListEl = document.getElementById('teacher-assigned-tasks-list');
+    if (taskListEl) {
         // En-tête avec bouton Supprimer tout
         const headerHtml = `
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
@@ -431,11 +451,6 @@ async function loadTeacherDashboard() {
                 </div>`;
             }).join('');
         }
-    } catch (error) {
-        console.error('Failed to load teacher dashboard:', error);
-        showNotification('خطأ في تحميل البيانات', 'error');
-    } finally {
-        hideLoading();
     }
 }
 
@@ -620,6 +635,7 @@ export async function handleCreateTask(event) {
         showNotification('تم إنشاء المهمة بنجاح!', 'success');
         document.getElementById('teacher-create-task-form').reset();
         document.getElementById('student-select-container')?.classList.add('hidden');
+        apiCache.invalidate('tasks', 'my-students');
         loadTeacherDashboard();
     } catch (error) {
         showNotification(error.message, 'error');
@@ -708,6 +724,7 @@ export async function approveSubmission(submissionId, grade) {
         if (!response.ok) throw new Error('فشل القبول');
         const gradeText = gradeInfo ? ` — ${gradeInfo.emoji} ${gradeInfo.text}` : '';
         showNotification(`تم قبول التسليم!${gradeText}`, 'success');
+        apiCache.invalidate('pending-submissions', 'my-submissions');
         loadTeacherDashboard();
     } catch (error) {
         showNotification(error.message, 'error');
@@ -758,6 +775,7 @@ export async function rejectSubmission(submissionId, feedback) {
 
         if (!response.ok) throw new Error('فشل الرفض');
         showNotification('تم رفض التسليم', 'success');
+        apiCache.invalidate('pending-submissions', 'my-submissions');
         loadTeacherDashboard();
     } catch (error) {
         showNotification(error.message, 'error');
