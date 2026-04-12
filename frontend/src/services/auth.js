@@ -4,6 +4,7 @@ import { config, IS_DEMO_MODE } from '../core/config.js';
 import { state } from '../core/state.js';
 import { showNotification } from '../core/ui.js';
 import { buildNav } from '../core/NavManager.js';
+import * as SupabaseAuth from './supabase-auth.js';
 
 // Rôle effectif : un is_superuser Django est toujours traité comme 'admin' par la nav
 function getEffectiveRole(user) {
@@ -11,21 +12,42 @@ function getEffectiveRole(user) {
     return (user.role === 'admin' || user.is_superuser) ? 'admin' : user.role;
 }
 
-export function initAuth() {
-    const token = localStorage.getItem(config.apiTokenKey);
-    const userData = localStorage.getItem('quranreview_user');
-
-    if (token && userData) {
-        try {
-            state.user = JSON.parse(userData);
-            updateAuthUI(true);
-            fetchMe();
-        } catch {
-            logout();
+export async function initAuth() {
+    try {
+        const { data, error } = await SupabaseAuth.getSession();
+        if (error || !data?.session) {
+            updateAuthUI(false);
+            return;
         }
-    } else {
+
+        const { data: profile } = await SupabaseAuth.getCurrentUser();
+        const user = profile || {
+            id: data.session.user.id,
+            username: data.session.user.user_metadata?.username || data.session.user.email,
+            role: data.session.user.user_metadata?.role || 'student',
+        };
+
+        state.user = user;
+        localStorage.setItem('quranreview_user', JSON.stringify(user));
+        localStorage.setItem(config.apiTokenKey, data.session.access_token);
+        updateAuthUI(true);
+        buildNav(getEffectiveRole(user));
+    } catch {
         updateAuthUI(false);
     }
+
+    // Écouter les changements d'état auth (refresh token, signout externe)
+    SupabaseAuth.onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_OUT') {
+            state.user = null;
+            localStorage.removeItem('quranreview_user');
+            localStorage.removeItem(config.apiTokenKey);
+            updateAuthUI(false);
+            buildNav('visitor');
+        } else if (event === 'TOKEN_REFRESHED' && session) {
+            localStorage.setItem(config.apiTokenKey, session.access_token);
+        }
+    });
 }
 
 export function updateAuthUI(loggedIn) {
@@ -128,61 +150,38 @@ export async function performLogin(username, password) {
         return;
     }
 
-    // Mode normal avec API
-    // Note: apiBaseUrl peut être '' (chaîne vide) pour les URLs relatives nginx — vérifier null/undefined uniquement
-    if (config.apiBaseUrl === null || config.apiBaseUrl === undefined) {
-        throw new Error('لم يتم تكوين خادم API');
-    }
-
+    // Mode normal avec Supabase
     try {
-        const response = await fetch(`${config.apiBaseUrl}/api/auth/token/`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password }),
-        });
+        const { data, error } = await SupabaseAuth.signIn(username, password);
 
-        Logger.log('AUTH', `Login Response Status: ${response.status}`);
-
-        let data;
-        try {
-            data = await response.json();
-        } catch (e) {
-            throw new Error('استجابة غير صالحة من الخادم');
+        if (error) {
+            Logger.warn('AUTH', 'Login failed', error);
+            throw new Error(error.message || 'اسم المستخدم أو كلمة المرور غير صحيحة');
         }
 
-        if (!response.ok) {
-            Logger.warn('AUTH', 'Login failed', data);
-            const errorMsg = data.detail || data.error || 'اسم المستخدم أو كلمة المرور غير صحيحة';
-            throw new Error(errorMsg);
-        }
+        if (!data?.session) throw new Error('لم يتم استلام جلسة صالحة');
 
-        if (!data.access || !data.refresh) {
-            throw new Error('استجابة غير كاملة من الخادم');
-        }
+        Logger.log('AUTH', 'Login successful via Supabase');
+        localStorage.setItem(config.apiTokenKey, data.session.access_token);
+        localStorage.setItem('quranreview_refresh_token', data.session.refresh_token);
 
-        Logger.log('AUTH', 'Login successful, tokens received');
-        localStorage.setItem(config.apiTokenKey, data.access);
-        localStorage.setItem('quranreview_refresh_token', data.refresh);
+        const { data: profile } = await SupabaseAuth.getCurrentUser();
+        state.user = profile || {
+            id: data.user.id,
+            username: data.user.user_metadata?.username || username,
+            role: data.user.user_metadata?.role || 'student',
+        };
+        localStorage.setItem('quranreview_user', JSON.stringify(state.user));
+
         hideAuthModal();
-
-        try {
-            await fetchMe();
-        } catch (e) {
-            console.warn('Could not fetch user info, but login succeeded');
-        }
-
+        updateAuthUI(true);
+        buildNav(getEffectiveRole(state.user));
         window.QuranReview.loadTasksFromApi();
 
-        if (state.user) {
-            Logger.log('AUTH', `Redirecting user role: ${state.user.role}`);
-            buildNav(getEffectiveRole(state.user));
-            if (state.user.role === 'admin' || state.user.is_superuser) {
-                window.QuranReview.navigateTo('admin');
-            } else if (state.user.role === 'teacher') {
-                window.QuranReview.navigateTo('teacher');
-            } else {
-                window.QuranReview.navigateTo('home'); // dashboard étudiant (route canonique)
-            }
+        if (state.user.role === 'admin' || state.user.is_superuser) {
+            window.QuranReview.navigateTo('admin');
+        } else if (state.user.role === 'teacher') {
+            window.QuranReview.navigateTo('teacher');
         } else {
             window.QuranReview.navigateTo('home');
         }
@@ -245,32 +244,12 @@ export async function handleRegister(event) {
         return;
     }
 
-    // Mode normal avec API
+    // Mode normal avec Supabase
     try {
-        const response = await fetch(`${config.apiBaseUrl}/api/auth/register/`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                username,
-                password,
-                first_name: firstName,
-                last_name: lastName
-            }),
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            let msg = data.detail || 'خطأ في التسجيل';
-            if (typeof data === 'object') {
-                if (data.username) msg = `اسم المستخدم: ${data.username[0]}`;
-                else if (data.password) msg = `كلمة المرور: ${data.password[0]}`;
-            }
-            throw new Error(msg);
-        }
+        const { data, error } = await SupabaseAuth.createUser(null, password, username, 'student');
+        if (error) throw new Error(error.message || 'خطأ في التسجيل');
 
         await performLogin(username, password);
-
     } catch (error) {
         console.error('Register error:', error);
         if (errorEl) {
@@ -333,24 +312,11 @@ export async function handleLogin(event) {
 }
 
 export async function fetchMe() {
-    const token = localStorage.getItem(config.apiTokenKey);
-    if (!token) return;
-
     try {
-        const response = await fetch(`${config.apiBaseUrl}/api/auth/me/`, {
-            headers: { Authorization: `Bearer ${token}` },
-        });
+        const { data, error } = await SupabaseAuth.getCurrentUser();
+        if (error || !data) return;
 
-        if (response.status === 401) {
-            const refreshed = await refreshToken();
-            if (refreshed) return fetchMe();
-            logout();
-            return;
-        }
-
-        if (!response.ok) throw new Error('Failed to fetch user');
-
-        state.user = await response.json();
+        state.user = data;
         localStorage.setItem('quranreview_user', JSON.stringify(state.user));
         updateAuthUI(true);
     } catch (error) {
@@ -359,33 +325,18 @@ export async function fetchMe() {
 }
 
 export async function refreshToken() {
-    const refresh = localStorage.getItem('quranreview_refresh_token');
-    if (!refresh) return false;
-
-    try {
-        const response = await fetch(`${config.apiBaseUrl}/api/auth/token/refresh/`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ refresh }),
-        });
-
-        if (!response.ok) return false;
-
-        const data = await response.json();
-        localStorage.setItem(config.apiTokenKey, data.access);
-        return true;
-    } catch {
-        return false;
-    }
+    // Supabase SDK gère le refresh automatiquement via onAuthStateChange TOKEN_REFRESHED
+    return true;
 }
 
-export function logout() {
+export async function logout() {
+    await SupabaseAuth.signOut();
     localStorage.removeItem(config.apiTokenKey);
     localStorage.removeItem('quranreview_refresh_token');
     localStorage.removeItem('quranreview_user');
     state.user = null;
     updateAuthUI(false);
-    buildNav('visitor'); // réinitialiser la nav pour tout chemin de logout (explicit + expiration token)
+    buildNav('visitor');
     window.QuranReview.navigateTo('home');
     showNotification('تم تسجيل الخروج بنجاح', 'info');
 }

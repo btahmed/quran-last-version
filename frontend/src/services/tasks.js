@@ -3,43 +3,25 @@ import { Logger } from '../core/logger.js';
 import { config } from '../core/config.js';
 import { state } from '../core/state.js';
 import { showNotification } from '../core/ui.js';
-import { refreshToken } from './auth.js';
+import * as SupabaseTasks from './supabase-tasks.js';
 
 // ===================================
 // CHARGEMENT DES TÂCHES DEPUIS L'API
 // ===================================
 
 export async function loadTasksFromApi() {
-    if (config.apiBaseUrl === null || config.apiBaseUrl === undefined) return;
-
-    Logger.log('API', 'Loading tasks from API...');
+    Logger.log('API', 'Loading tasks from Supabase...');
 
     try {
-        const token = localStorage.getItem(config.apiTokenKey);
-        if (!token) {
-            Logger.warn('API', 'No token found, skipping task load');
+        const { data, error } = await SupabaseTasks.getMyTasks();
+
+        if (error) {
+            Logger.error('API', 'Failed to load tasks', error);
             return;
         }
-        const headers = { Authorization: `Bearer ${token}` };
-        const response = await fetch(`${config.apiBaseUrl}/api/tasks/`, { headers });
-
-        Logger.log('API', `Fetch Tasks Response: ${response.status}`);
-
-        if (response.status === 401) {
-            Logger.warn('API', 'Token expired (401), attempting refresh');
-            const refreshed = await refreshToken();
-            if (refreshed) return loadTasksFromApi();
-            return;
-        }
-
-        if (!response.ok) {
-            throw new Error(`API error: ${response.status} ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        Logger.log('API', `Loaded ${Array.isArray(data) ? data.length : 0} tasks`, data);
 
         if (Array.isArray(data)) {
+            Logger.log('API', `Loaded ${data.length} tasks`);
             state.tasks = data;
             localStorage.setItem(config.tasksKey, JSON.stringify(data));
         }
@@ -69,29 +51,29 @@ export async function handleCreateTask(event) {
         }
     }
 
-    const body = {
+    const payload = {
         title: document.getElementById('task-title').value.trim(),
         description: document.getElementById('task-description').value.trim(),
-        task_type: document.getElementById('task-type').value,
+        type: document.getElementById('task-type').value,
         points: parseInt(document.getElementById('task-points').value) || 0,
         due_date: document.getElementById('task-due-date').value || null,
-        assign_all: assignMode === 'all',
-        student_ids: studentIds,
     };
 
     try {
-        const response = await fetch(`${config.apiBaseUrl}/api/tasks/create/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify(body),
-        });
-
-        if (!response.ok) {
-            const data = await response.json();
-            throw new Error(data.detail || 'خطأ في إنشاء المهمة');
+        if (assignMode === 'all') {
+            // Récupérer tous les étudiants et créer une tâche par étudiant
+            const { getAllUsers } = await import('./supabase-admin.js');
+            const { data: users } = await getAllUsers();
+            const students = (users || []).filter(u => u.role === 'student');
+            for (const student of students) {
+                const { error } = await SupabaseTasks.createTask({ ...payload, user_id: student.id });
+                if (error) throw new Error(error.message || 'خطأ في إنشاء المهمة');
+            }
+        } else {
+            for (const studentId of studentIds) {
+                const { error } = await SupabaseTasks.createTask({ ...payload, user_id: studentId });
+                if (error) throw new Error(error.message || 'خطأ في إنشاء المهمة');
+            }
         }
 
         showNotification('تم إنشاء المهمة بنجاح!', 'success');
@@ -99,7 +81,6 @@ export async function handleCreateTask(event) {
         document.getElementById('student-select-container')?.classList.add('hidden');
         window.QuranReview.switchTeacherTab('pending');
         window.QuranReview.loadTeacherDashboard();
-        // Forcer le refresh de la liste des tâches
         window.QuranReview._teacherTasks = null;
     } catch (error) {
         showNotification(error.message, 'error');
@@ -115,24 +96,11 @@ export async function handleDeleteAllTasks() {
         return;
     }
 
-    const token = localStorage.getItem(config.apiTokenKey);
-    if (!token) return;
-
     try {
-        const response = await fetch(`${config.apiBaseUrl}/api/admin/tasks/delete-all/`, {
-            method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-            },
-        });
+        const { error } = await SupabaseTasks.deleteAllTasks();
+        if (error) throw new Error(error.message || 'خطأ في حذف المهام');
 
-        if (!response.ok) {
-            const data = await response.json();
-            throw new Error(data.detail || 'خطأ في حذف المهام');
-        }
-
-        const result = await response.json();
-        showNotification(result.detail, 'success');
+        showNotification('تم حذف جميع المهام بنجاح', 'success');
         window.QuranReview.loadTeacherDashboard();
     } catch (error) {
         showNotification(error.message, 'error');
