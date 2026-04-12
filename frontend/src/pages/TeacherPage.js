@@ -271,7 +271,7 @@ async function loadTeacherDashboard() {
 
     if (state.user) {
         const el = document.getElementById('teacher-welcome');
-        if (el) el.textContent = `مرحباً ${state.user.first_name || state.user.username}`;
+        if (el) el.textContent = `مرحباً أستاذ ${state.user.first_name || state.user.username}`;
     }
 
     if (state.user && state.user.is_superuser) {
@@ -727,7 +727,7 @@ export async function approveSubmission(submissionId, grade) {
         if (!response.ok) throw new Error('فشل القبول');
         const gradeText = gradeInfo ? ` — ${gradeInfo.emoji} ${gradeInfo.text}` : '';
         showNotification(`تم قبول التسليم!${gradeText}`, 'success');
-        apiCache.invalidate('pending-submissions', 'my-submissions');
+        apiCache.invalidate('pending-submissions', 'submissions', 'my-submissions');
         loadTeacherDashboard();
     } catch (error) {
         showNotification(error.message, 'error');
@@ -778,7 +778,7 @@ export async function rejectSubmission(submissionId, feedback) {
 
         if (!response.ok) throw new Error('فشل الرفض');
         showNotification('تم رفض التسليم', 'success');
-        apiCache.invalidate('pending-submissions', 'my-submissions');
+        apiCache.invalidate('pending-submissions', 'submissions', 'my-submissions');
         loadTeacherDashboard();
     } catch (error) {
         showNotification(error.message, 'error');
