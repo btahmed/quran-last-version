@@ -29,15 +29,10 @@ import * as ProfilPage     from './pages/ProfilPage.js';
 import { buildNav, setActiveTab } from './core/NavManager.js';
 import { apiCache } from './core/apiCache.js';
 
-function init() {
+async function init() {
     Logger.log('APP', 'Initializing QuranReview App...');
 
-    // Warm-up ping → réchauffe le cold start Django/Vercel avant que l'user se connecte
-    if (config.apiBaseUrl) {
-        fetch(`${config.apiBaseUrl}/api/health/`, { method: 'GET' })
-            .then(() => Logger.log('APP', 'API warm-up OK'))
-            .catch(() => Logger.log('APP', 'API warm-up silencieux (offline ?)'));
-    }
+    // Note: warm-up Django supprimé — migration Supabase complète
 
     // Monter les modaux
     document.getElementById('modals').innerHTML = renderModals();
@@ -57,7 +52,7 @@ function init() {
     SettingsPage.initTheme?.();
 
     // Init auth
-    initAuth();
+    await initAuth();
     const initRole = state.user
         ? (state.user.role === 'admin' || state.user.is_superuser ? 'admin' : state.user.role)
         : 'visitor';

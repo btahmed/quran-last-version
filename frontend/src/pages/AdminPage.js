@@ -1,6 +1,7 @@
 // frontend/src/pages/AdminPage.js
 import { config } from '../core/config.js';
 import { Logger } from '../core/logger.js';
+import * as supabaseAdmin from '../services/supabase-admin.js';
 
 // ─── UTILS ───────────────────────────────────────────────────────────────────
 function escapeHtml(str) {
@@ -149,12 +150,10 @@ async function loadUsers() {
     const token = localStorage.getItem(config.apiTokenKey);
     if (!token) return;
     try {
-        const res = await fetch(`${config.apiBaseUrl}/api/auth/admin/users/`, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
-        if (!res.ok) throw new Error('Erreur chargement users');
-        const data = await res.json();
-        allUsers = data.users || [];
+        // Migration Supabase
+        const { data, error } = await supabaseAdmin.getAllUsers();
+        if (error) throw new Error('Erreur chargement users');
+        allUsers = data || [];
         const el = document.getElementById('admin-total-users');
         if (el) el.textContent = allUsers.length;
         renderUsersList();
@@ -236,19 +235,18 @@ async function loadOverview() {
     const token = localStorage.getItem(config.apiTokenKey);
     if (!token) return;
     try {
-        const res = await fetch(`${config.apiBaseUrl}/api/admin/overview/`, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
-        if (!res.ok) throw new Error('Erreur overview');
-        const data = await res.json();
+        // Migration Supabase
+        const { data, error } = await supabaseAdmin.getAdminOverview();
+        if (error) throw new Error('Erreur overview');
 
         const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-        set('admin-total-tasks', data.totals?.tasks ?? '—');
-        set('admin-pending-subs', data.totals?.pending_submissions ?? '—');
-        set('admin-approved-subs', data.totals?.approved_submissions ?? '—');
+        set('admin-total-tasks', data?.total_tasks ?? '—');
+        set('admin-pending-subs', data?.pending_submissions ?? '—');
+        set('admin-approved-subs', data?.approved_submissions ?? '—');
 
-        renderTeacherStats(data.teacher_stats || []);
-        renderAllTasks(data.tasks || []);
+        // TODO: teacher_stats et tasks ne sont pas encore dans getAdminOverview
+        renderTeacherStats([]);
+        renderAllTasks([]);
     } catch (err) {
         Logger.error('ADMIN', 'loadOverview error', err);
     }
@@ -327,11 +325,9 @@ async function openUserProfile(userId) {
 
     const token = localStorage.getItem(config.apiTokenKey);
     try {
-        const res = await fetch(`${config.apiBaseUrl}/api/admin/users/${userId}/profile/`, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
-        if (!res.ok) throw new Error('Not found');
-        const u = await res.json();
+        // Migration Supabase
+        const { data: u, error } = await supabaseAdmin.getStudentProgress(userId);
+        if (error || !u) throw new Error('Not found');
 
         const titleEl = document.getElementById('profile-modal-title');
         if (titleEl) titleEl.textContent = `${u.first_name || ''} ${u.last_name || ''} (@${u.username})`.trim();
@@ -510,21 +506,15 @@ function _adminToggleEditFn(userId, firstName, lastName, role) {
 }
 
 async function saveUserEdit(userId) {
-    const token = localStorage.getItem(config.apiTokenKey);
     const first_name = document.getElementById('edit-first-name').value.trim();
     const last_name = document.getElementById('edit-last-name').value.trim();
     const role = document.getElementById('edit-role').value;
 
     try {
-        const res = await fetch(`${config.apiBaseUrl}/api/auth/admin/users/${userId}/update/`, {
-            method: 'PUT',
-            headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ first_name, last_name, role }),
-        });
-        if (!res.ok) {
-            const errData = await res.json().catch(() => ({}));
-            throw new Error(errData.detail || errData.error || `خطأ ${res.status}`);
-        }
+        // Migration Supabase
+        const { error } = await supabaseAdmin.updateUser(userId, { first_name, last_name, role });
+        if (error) throw new Error(error.message || 'خطأ في التحديث');
+
         document.getElementById('admin-edit-form').style.display = 'none';
         await loadUsers();
         await openUserProfile(userId);
@@ -537,13 +527,10 @@ async function saveUserEdit(userId) {
 // ─── SUPPRESSION UTILISATEUR ─────────────────────────────────────────────────
 async function deleteUser(userId, userName) {
     if (!confirm(`هل أنت متأكد من حذف "${userName}"؟ هذا الإجراء لا يمكن التراجع عنه.`)) return;
-    const token = localStorage.getItem(config.apiTokenKey);
     try {
-        const res = await fetch(`${config.apiBaseUrl}/api/auth/admin/users/${userId}/delete/`, {
-            method: 'DELETE',
-            headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!res.ok) throw new Error('Erreur');
+        // Migration Supabase - Note: deleteUser nécessite une Edge Function
+        const { error } = await supabaseAdmin.deleteUser(userId);
+        if (error) throw new Error(error.message);
         closeProfile();
         await loadUsers();
     } catch (err) {

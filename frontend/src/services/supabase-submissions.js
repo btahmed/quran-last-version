@@ -68,7 +68,7 @@ export async function uploadAudio(taskId, audioBlob) {
 
     const { data: urlData } = await supabaseClient.storage
       .from('audio-submissions')
-      .createSignedUrl(path, 3600 * 24 * 365) // 1 an
+      .createSignedUrl(path, 3600 * 24 * 7) // 7 jours
 
     return { data: { path, url: urlData?.signedUrl }, error: null }
   } catch (error) {

@@ -6,6 +6,9 @@ import { showNotification } from '../core/ui.js';
 import { Logger } from '../core/logger.js';
 import { showAuthModal, refreshToken } from '../services/auth.js';
 import { apiCache } from '../core/apiCache.js';
+import * as supabaseTasks from '../services/supabase-tasks.js';
+import * as supabaseSubmissions from '../services/supabase-submissions.js';
+import * as supabaseAdmin from '../services/supabase-admin.js';
 
 // Wrapper fetch avec auto-refresh du token JWT (401)
 async function authFetch(url, options = {}) {
@@ -295,19 +298,16 @@ async function loadTeacherDashboard() {
 
 async function _fetchAndCacheTeacher(headers) {
     try {
-        const [studentsRes, pendingRes, tasksRes] = await Promise.all([
-            fetch(`${config.apiBaseUrl}/api/my-students/`, { headers }),
-            fetch(`${config.apiBaseUrl}/api/pending-submissions/`, { headers }),
-            fetch(`${config.apiBaseUrl}/api/tasks/`, { headers }),
+        // Migration Supabase : utiliser les modules au lieu de fetch Django
+        const [studentsResult, pendingResult, tasksResult] = await Promise.all([
+            supabaseAdmin.getMyStudents(),
+            supabaseSubmissions.getPendingSubmissions(),
+            supabaseTasks.getAllTasks(),
         ]);
 
-        const studentsRaw = studentsRes.ok ? await studentsRes.json() : [];
-        const pendingRaw  = pendingRes.ok  ? await pendingRes.json()  : [];
-        const tasksRaw    = tasksRes.ok    ? await tasksRes.json()    : [];
-
-        const students = Array.isArray(studentsRaw) ? studentsRaw : (studentsRaw.results ?? []);
-        const pending  = Array.isArray(pendingRaw)  ? pendingRaw  : (pendingRaw.results  ?? []);
-        const tasks    = Array.isArray(tasksRaw)    ? tasksRaw    : (tasksRaw.results    ?? []);
+        const students = studentsResult.data || [];
+        const pending  = pendingResult.data  || [];
+        const tasks    = tasksResult.data    || [];
 
         apiCache.set('my-students', students);
         apiCache.set('pending-submissions', pending);
@@ -497,13 +497,9 @@ export async function viewStudentProgress(studentId, studentName) {
     panel.classList.remove('hidden');
 
     try {
-        const response = await fetch(`${config.apiBaseUrl}/api/students/${studentId}/progress/`, {
-            headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (!response.ok) throw new Error('فشل تحميل بيانات الطالب');
-
-        const data = await response.json();
+        // Migration Supabase
+        const { data, error } = await supabaseAdmin.getStudentProgress(studentId);
+        if (error) throw new Error('فشل تحميل بيانات الطالب');
 
         let html = `<div class="student-detail-stats">
             <div class="stat-mini"><strong>🏆</strong> ${data.student.total_points} نقطة</div>
@@ -559,11 +555,13 @@ export function toggleAssignMode(mode) {
 
 export async function handleDeleteBatch(ids, title, count) {
     if (!confirm(`حذف "${title}" لـ ${count} طالب؟\nلا يمكن التراجع عن هذا الإجراء.`)) return;
+    // Migration Supabase
     const results = await Promise.allSettled(
-        ids.map(id => authFetch(`${config.apiBaseUrl}/api/tasks/${id}/`, { method: 'DELETE' }))
+        ids.map(id => supabaseTasks.deleteTask(id))
     );
-    const deleted = results.filter(r => r.status === 'fulfilled' && (r.value.ok || r.value.status === 204)).length;
+    const deleted = results.filter(r => r.status === 'fulfilled' && !r.value.error).length;
     showNotification(`تم حذف ${deleted} مهمة`, deleted === ids.length ? 'success' : 'error');
+    apiCache.invalidate('tasks');
     loadTeacherDashboard();
 }
 
@@ -576,17 +574,12 @@ export async function handleDeleteAllTasks() {
     if (!token) return;
 
     try {
-        const response = await authFetch(`${config.apiBaseUrl}/api/admin/tasks/delete-all/`, {
-            method: 'POST',
-        });
+        // Migration Supabase
+        const { error } = await supabaseTasks.deleteAllTasks();
+        if (error) throw new Error(error.message || 'خطأ في حذف المهام');
 
-        if (!response.ok) {
-            const data = await response.json();
-            throw new Error(data.detail || 'خطأ في حذف المهام');
-        }
-
-        const result = await response.json();
-        showNotification(result.detail, 'success');
+        showNotification('تم حذف جميع المهام بنجاح', 'success');
+        apiCache.invalidate('tasks');
         loadTeacherDashboard();
     } catch (error) {
         showNotification(error.message, 'error');
@@ -621,18 +614,23 @@ export async function handleCreateTask(event) {
     };
 
     try {
-        const response = await fetch(`${config.apiBaseUrl}/api/tasks/create/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify(body),
-        });
-
-        if (!response.ok) {
-            const data = await response.json();
-            throw new Error(data.detail || 'خطأ في إنشاء المهمة');
+        // Migration Supabase
+        if (body.assign_all) {
+            // Créer pour tous les étudiants
+            const { data: students } = await supabaseAdmin.getMyStudents();
+            if (students?.length) {
+                const results = await Promise.all(
+                    students.map(s => supabaseTasks.createTask({ ...body, user_id: s.id }))
+                );
+                const failed = results.filter(r => r.error).length;
+                if (failed) showNotification(`فشل إنشاء ${failed} مهمة`, 'error');
+            }
+        } else {
+            // Créer pour les étudiants sélectionnés
+            for (const studentId of studentIds) {
+                const { error } = await supabaseTasks.createTask({ ...body, user_id: studentId });
+                if (error) throw new Error(error.message || 'خطأ في إنشاء المهمة');
+            }
         }
 
         showNotification('تم إنشاء المهمة بنجاح!', 'success');
@@ -718,13 +716,11 @@ export async function approveSubmission(submissionId, grade) {
     const feedback = gradeInfo ? `${gradeInfo.emoji} ${gradeInfo.text} (${grade}/5)` : '';
 
     try {
-        const response = await authFetch(`${config.apiBaseUrl}/api/submissions/${submissionId}/approve/`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ feedback }),
-        });
+        // Migration Supabase - récupérer les points de la tâche
+        let points = grade ? grade * 2 : 10;
+        const { error } = await supabaseSubmissions.approveSubmission(submissionId, points, feedback);
+        if (error) throw new Error('فشل القبول');
 
-        if (!response.ok) throw new Error('فشل القبول');
         const gradeText = gradeInfo ? ` — ${gradeInfo.emoji} ${gradeInfo.text}` : '';
         showNotification(`تم قبول التسليم!${gradeText}`, 'success');
         apiCache.invalidate('pending-submissions', 'submissions', 'my-submissions');
@@ -770,13 +766,10 @@ export async function rejectSubmission(submissionId, feedback) {
     if (!token) return;
 
     try {
-        const response = await authFetch(`${config.apiBaseUrl}/api/submissions/${submissionId}/reject/`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ feedback: feedback || '' }),
-        });
+        // Migration Supabase
+        const { error } = await supabaseSubmissions.rejectSubmission(submissionId, feedback || '');
+        if (error) throw new Error('فشل الرفض');
 
-        if (!response.ok) throw new Error('فشل الرفض');
         showNotification('تم رفض التسليم', 'success');
         apiCache.invalidate('pending-submissions', 'submissions', 'my-submissions');
         loadTeacherDashboard();
@@ -794,16 +787,11 @@ export async function loadAdminUsersList() {
     if (!token) return;
 
     try {
-        const response = await fetch(`${config.apiBaseUrl}/api/admin/users/`, {
-            headers: {
-                'Authorization': `Bearer ${token}`,
-            },
-        });
+        // Migration Supabase
+        const { data, error } = await supabaseAdmin.getAllUsers();
+        if (error) throw new Error('فشل تحميل قائمة المستخدمين');
 
-        if (!response.ok) throw new Error('فشل تحميل قائمة المستخدمين');
-
-        const data = await response.json();
-        renderAdminUsersList(data.users);
+        renderAdminUsersList(data || []);
     } catch (error) {
         Logger.error('ADMIN', 'Failed to load users list', error);
         const usersListEl = document.getElementById('admin-users-list');
@@ -865,29 +853,18 @@ export async function handleUpdateUser(event) {
     successEl?.classList.add('hidden');
 
     try {
-        const response = await fetch(`${config.apiBaseUrl}/api/admin/users/${userId}/update/`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`,
-            },
-            body: JSON.stringify({
-                first_name: firstName,
-                last_name: lastName,
-                role: role,
-                is_superuser: isSuperuser,
-            }),
+        // Migration Supabase
+        const { data, error } = await supabaseAdmin.updateUser(userId, {
+            first_name: firstName,
+            last_name: lastName,
+            role: role,
         });
 
-        const data = await response.json();
+        if (error) throw new Error(error.message || 'خطأ في تحديث المستخدم');
 
-        if (!response.ok) {
-            throw new Error(data.detail || 'خطأ في تحديث المستخدم');
-        }
-
-        Logger.log('ADMIN', `User updated: ${data.username}`);
+        Logger.log('ADMIN', `User updated: ${data?.username || userId}`);
         if (successEl) {
-            successEl.textContent = `✅ تم تحديث بيانات "${data.username}" بنجاح`;
+            successEl.textContent = `✅ تم تحديث بيانات المستخدم بنجاح`;
             successEl.classList.remove('hidden');
         }
 
@@ -915,18 +892,9 @@ export async function deleteUser(userId, username) {
     const token = localStorage.getItem(config.apiTokenKey);
 
     try {
-        const response = await fetch(`${config.apiBaseUrl}/api/admin/users/${userId}/delete/`, {
-            method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-            },
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data.detail || 'خطأ في حذف المستخدم');
-        }
+        // Migration Supabase - Note: deleteUser nécessite une Edge Function
+        const { error } = await supabaseAdmin.deleteUser(userId);
+        if (error) throw new Error(error.message || 'خطأ في حذف المستخدم');
 
         Logger.log('ADMIN', `User deleted: ${username}`);
         showNotification(`تم حذف "${username}" بنجاح`, 'success');
@@ -957,24 +925,13 @@ export async function handleCreateTeacher(event) {
     Logger.log('AUTH', `Admin creating teacher: ${username}`);
 
     try {
-        const response = await fetch(`${config.apiBaseUrl}/api/admin/create-teacher/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({ username, password, first_name: firstName, last_name: lastName }),
-        });
+        // Migration Supabase
+        const { data, error } = await supabaseAdmin.createTeacher(null, password, username);
+        if (error) throw new Error(error.message || 'خطأ في إنشاء الحساب');
 
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data.detail || 'خطأ في إنشاء الحساب');
-        }
-
-        Logger.log('AUTH', `Teacher created: ${data.username} (${data.action})`);
+        Logger.log('AUTH', `Teacher created: ${username}`);
         if (successEl) {
-            successEl.textContent = `✅ تم إنشاء حساب الأستاذ "${data.username}" بنجاح`;
+            successEl.textContent = `✅ تم إنشاء حساب الأستاذ "${username}" بنجاح`;
             successEl.classList.remove('hidden');
         }
         document.getElementById('admin-create-teacher-form').reset();
@@ -1002,28 +959,21 @@ export async function handlePromoteTeacher(event) {
     Logger.log('AUTH', `Admin promoting user to teacher: ${username}`);
 
     try {
-        const response = await fetch(`${config.apiBaseUrl}/api/admin/create-teacher/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({ username, promote: true }),
-        });
+        // Migration Supabase - trouver l'utilisateur puis mettre à jour son rôle
+        const { data: users } = await supabaseAdmin.getAllUsers();
+        const user = users?.find(u => u.username === username);
+        if (!user) throw new Error('المستخدم غير موجود');
 
-        const data = await response.json();
+        const { error } = await supabaseAdmin.updateUser(user.id, { role: 'teacher' });
+        if (error) throw new Error(error.message || 'خطأ في الترقية');
 
-        if (!response.ok) {
-            throw new Error(data.detail || 'خطأ في الترقية');
-        }
-
-        Logger.log('AUTH', `User promoted: ${data.username} → ${data.role}`);
+        Logger.log('AUTH', `User promoted: ${username} → teacher`);
         if (successEl) {
-            successEl.textContent = `✅ تم ترقية "${data.username}" إلى أستاذ بنجاح`;
+            successEl.textContent = `✅ تم ترقية "${username}" إلى أستاذ بنجاح`;
             successEl.classList.remove('hidden');
         }
         document.getElementById('admin-promote-form').reset();
-        showNotification(`تم ترقية ${data.username} إلى أستاذ`, 'success');
+        showNotification(`تم ترقية ${username} إلى أستاذ`, 'success');
         loadAdminUsersList();
     } catch (error) {
         Logger.error('AUTH', 'Promote teacher failed', error);

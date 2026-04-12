@@ -66,7 +66,7 @@ self.addEventListener('fetch', (event) => {
                     caches.open(CACHE_NAME).then((c) => c.put(request, clone));
                     return res;
                 })
-                .catch(() => caches.match('/index.html'))
+                .catch(() => caches.match('/index.html').then(r => r || new Response('Offline', { status: 503 })))
         );
         return;
     }
@@ -81,7 +81,7 @@ self.addEventListener('fetch', (event) => {
                     caches.open(CACHE_NAME).then((c) => c.put(request, clone));
                     return res;
                 })
-                .catch(() => caches.match(request))
+                .catch(() => caches.match(request).then(r => r || new Response('// offline', { status: 503 })))
         );
         return;
     }
@@ -90,12 +90,14 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
         caches.match(request).then((cached) => {
             if (cached) return cached;
-            return fetch(request).then((res) => {
-                if (!res || res.status !== 200 || res.type !== 'basic') return res;
-                const clone = res.clone();
-                caches.open(CACHE_NAME).then((c) => c.put(request, clone));
-                return res;
-            });
+            return fetch(request)
+                .then((res) => {
+                    if (!res || res.status !== 200 || res.type !== 'basic') return res;
+                    const clone = res.clone();
+                    caches.open(CACHE_NAME).then((c) => c.put(request, clone));
+                    return res;
+                })
+                .catch(() => new Response('Offline', { status: 503, statusText: 'Service Unavailable' }));
         })
     );
 });

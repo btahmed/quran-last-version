@@ -100,6 +100,22 @@ export async function getClasses() {
   }
 }
 
+export async function getMyStudents() {
+  try {
+    // Récupérer tous les étudiants (pour un enseignant)
+    // TODO: Filtrer par classe/teacher_id quand la relation sera établie
+    const { data, error } = await supabaseClient
+      .from('profiles')
+      .select('*')
+      .eq('role', 'student')
+      .order('username', { ascending: true })
+
+    return { data, error }
+  } catch (error) {
+    return { data: null, error }
+  }
+}
+
 export async function assignStudentToClass(studentId, classId) {
   try {
     const { data, error } = await supabaseClient

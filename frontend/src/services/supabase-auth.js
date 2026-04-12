@@ -1,13 +1,9 @@
 // Service d'authentification Supabase — QuranReview
 import { supabaseClient } from './supabase-client.js'
 
-// Cas particulier : AHMAD utilise un email Gmail
-const SPECIAL_EMAIL_MAP = {
-  AHMAD: 'AHMAD@gmail.com',
-}
-
 function buildEmail(username) {
-  return SPECIAL_EMAIL_MAP[username] ?? `${username}@quranreview.local`
+  const normalized = (username || '').trim().toLowerCase()
+  return `${normalized}@quranreview.local`
 }
 
 export async function signIn(username, password) {
