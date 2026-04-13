@@ -1,5 +1,6 @@
 // Service de gestion des tâches Supabase — QuranReview
 import { supabaseClient } from './supabase-client.js'
+import { apiCache } from '../core/apiCache.js'
 
 export async function getMyTasks() {
   try {
@@ -144,6 +145,7 @@ export async function updateTask(id, payload) {
       .select()
       .single()
 
+    if (!error) apiCache.invalidate('tasks')
     return { data, error }
   } catch (error) {
     return { data: null, error }
@@ -157,21 +159,10 @@ export async function deleteTask(id) {
       .delete()
       .eq('id', id)
 
+    if (!error) apiCache.invalidate('tasks')
     return { data, error }
   } catch (error) {
     return { data: null, error }
   }
 }
 
-export async function deleteAllTasks() {
-  try {
-    const { data, error } = await supabaseClient
-      .from('tasks')
-      .delete()
-      .neq('id', '00000000-0000-0000-0000-000000000000')
-
-    return { data, error }
-  } catch (error) {
-    return { data: null, error }
-  }
-}

@@ -2,6 +2,7 @@
 // Cache mémoire TTL pour les réponses API — évite les re-fetch sur navigation
 
 const _store = new Map(); // clé → { data, ts }
+const MAX_ENTRIES = 50; // Limite mémoire
 
 const TTL = {
     'tasks':                60_000,
@@ -12,6 +13,23 @@ const TTL = {
     'submissions':          30_000,
     'admin-overview':       60_000,
 };
+
+// Nettoie les entrées expirées
+function _cleanup() {
+    const now = Date.now();
+    for (const [key, entry] of _store) {
+        const ttl = TTL[key] ?? 60_000;
+        if (now - entry.ts > ttl) _store.delete(key);
+    }
+}
+
+// Supprime les entrées les plus anciennes si limite atteinte
+function _evictOldest() {
+    if (_store.size <= MAX_ENTRIES) return;
+    const sorted = [..._store.entries()].sort((a, b) => a[1].ts - b[1].ts);
+    const toRemove = sorted.slice(0, _store.size - MAX_ENTRIES);
+    toRemove.forEach(([key]) => _store.delete(key));
+}
 
 export const apiCache = {
     get(key) {
@@ -26,7 +44,9 @@ export const apiCache = {
     },
 
     set(key, data) {
+        _cleanup();
         _store.set(key, { data, ts: Date.now() });
+        _evictOldest();
     },
 
     invalidate(...keys) {
