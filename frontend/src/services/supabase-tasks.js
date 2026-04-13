@@ -70,11 +70,37 @@ export async function createTask(payload) {
 
     if (!profile) return { data: null, error: { message: 'Profil non trouvé' } }
 
+    // Extraire les champs valides de la table tasks (exclure assign_all, student_ids, task_type)
+    const { assign_all, student_ids, task_type, ...rest } = payload
+    // Mapper task_type → type si l'appelant utilise l'ancien nom
+    const taskFields = { ...rest, ...(task_type && !rest.type ? { type: task_type } : {}) }
+
+    // Déterminer la liste des user_ids cibles
+    let targetIds = []
+    if (assign_all) {
+      // Tous les étudiants : récupérer depuis profiles
+      const { data: students } = await supabaseClient
+        .from('profiles')
+        .select('id')
+        .eq('role', 'student')
+      targetIds = (students || []).map(s => s.id)
+    } else {
+      targetIds = student_ids || []
+    }
+
+    if (!targetIds.length) return { data: null, error: { message: 'Aucun étudiant sélectionné' } }
+
+    // Insérer une tâche par étudiant
+    const rows = targetIds.map(userId => ({
+      ...taskFields,
+      user_id: userId,
+      assigned_by: profile.id,
+    }))
+
     const { data, error } = await supabaseClient
       .from('tasks')
-      .insert({ ...payload, assigned_by: profile.id })
+      .insert(rows)
       .select()
-      .single()
 
     return { data, error }
   } catch (error) {

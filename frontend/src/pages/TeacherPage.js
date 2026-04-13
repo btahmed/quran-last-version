@@ -606,7 +606,7 @@ export async function handleCreateTask(event) {
     const body = {
         title: document.getElementById('task-title').value.trim(),
         description: document.getElementById('task-description').value.trim(),
-        task_type: document.getElementById('task-type').value,
+        type: document.getElementById('task-type').value,
         points: parseInt(document.getElementById('task-points').value) || 0,
         due_date: document.getElementById('task-due-date').value || null,
         assign_all: assignMode === 'all',
