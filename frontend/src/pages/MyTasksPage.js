@@ -256,10 +256,13 @@ function _applyStudentData(tasks, submissions, pointsData) {
                 : 'background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.3);';
             const statusText = isApproved ? 'مقبول ✓' : isRejected ? 'مرفوض ✗' : '⏳ بانتظار التصحيح';
 
+            // Gérer le cas où s.task ou s.tasks peut être undefined
+            const taskTitle = s.task?.title || s.tasks?.title || 'Tâche sans titre';
+
             return `<div class="task-card" style="flex-wrap:wrap;gap:8px;">
                 <span class="task-status ${isApproved ? 'task-status-completed' : 'task-status-pending'}"></span>
                 <div style="flex:1;min-width:0;">
-                    <div style="font-weight:600;margin-bottom:2px;">${escapeHtml(s.task.title)}</div>
+                    <div style="font-weight:600;margin-bottom:2px;">${escapeHtml(taskTitle)}</div>
                     <div style="font-size:0.8rem;color:var(--color-text-secondary);">📅 ${date}${s.awarded_points ? ` &nbsp;🏆 +${s.awarded_points} نقطة` : ''}</div>
                     ${feedbackHtml}
                     ${audioSrc ? `
