@@ -75,7 +75,25 @@ export async function createTask(payload) {
     // Mapper task_type → type si l'appelant utilise l'ancien nom
     const taskFields = { ...rest, ...(task_type && !rest.type ? { type: task_type } : {}) }
 
-    // Déterminer la liste des user_ids cibles
+    // Si user_id est déjà fourni, insérer directement une seule tâche
+    if (taskFields.user_id) {
+      const { data, error } = await supabaseClient
+        .from('tasks')
+        .insert({
+          title: taskFields.title || '',
+          description: taskFields.description || '',
+          type: taskFields.type || 'hifz',
+          points: taskFields.points || 0,
+          due_date: taskFields.due_date || null,
+          user_id: taskFields.user_id,
+          assigned_by: profile.id,
+        })
+        .select()
+        .single()
+      return { data, error }
+    }
+
+    // Sinon, déterminer la liste des user_ids cibles
     let targetIds = []
     if (assign_all) {
       // Tous les étudiants : récupérer depuis profiles
@@ -92,7 +110,11 @@ export async function createTask(payload) {
 
     // Insérer une tâche par étudiant
     const rows = targetIds.map(userId => ({
-      ...taskFields,
+      title: taskFields.title || '',
+      description: taskFields.description || '',
+      type: taskFields.type || 'hifz',
+      points: taskFields.points || 0,
+      due_date: taskFields.due_date || null,
       user_id: userId,
       assigned_by: profile.id,
     }))
