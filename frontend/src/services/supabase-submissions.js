@@ -62,26 +62,47 @@ export async function uploadAudio(taskId, audioBlob) {
     const localUser = JSON.parse(localStorage.getItem('quranreview_user') || 'null')
     if (!localUser?.username) return { data: null, error: new Error('Non authentifié') }
 
-    const { data: profile } = await supabaseClient
+    const { data: profile, error: profileError } = await supabaseClient
       .from('profiles').select('id').eq('username', localUser.username).single()
+    
+    if (profileError) {
+      console.error('[uploadAudio] Profile fetch error:', profileError)
+      return { data: null, error: new Error('Erreur lors de la récupération du profil') }
+    }
+    
     if (!profile) return { data: null, error: new Error('Profil non trouvé') }
 
     const uid = profile.id
     const uuid = crypto.randomUUID()
     const path = `${uid}/${taskId}/${uuid}.webm`
 
+    console.log('[uploadAudio] Uploading to:', { bucket: 'audio-submissions', path, size: audioBlob.size })
+
     const { data, error } = await supabaseClient.storage
       .from('audio-submissions')
       .upload(path, audioBlob, { contentType: audioBlob.type || 'audio/webm', upsert: false })
 
-    if (error) return { data: null, error }
+    if (error) {
+      console.error('[uploadAudio] Upload error:', error)
+      return { data: null, error }
+    }
 
-    const { data: urlData } = await supabaseClient.storage
+    console.log('[uploadAudio] Upload success:', data)
+
+    const { data: urlData, error: urlError } = await supabaseClient.storage
       .from('audio-submissions')
       .createSignedUrl(path, 3600 * 24 * 7) // 7 jours
 
+    if (urlError) {
+      console.error('[uploadAudio] Signed URL error:', urlError)
+      return { data: null, error: urlError }
+    }
+
+    console.log('[uploadAudio] Signed URL created:', urlData?.signedUrl)
+
     return { data: { path, url: urlData?.signedUrl }, error: null }
   } catch (error) {
+    console.error('[uploadAudio] Unexpected error:', error)
     return { data: null, error }
   }
 }
