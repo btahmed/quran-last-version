@@ -595,7 +595,7 @@ export async function handleCreateTask(event) {
     const studentIds = [];
     if (assignMode === 'select') {
         document.querySelectorAll('input[name="student-ids"]:checked').forEach(cb => {
-            studentIds.push(parseInt(cb.value));
+            studentIds.push(cb.value); // UUID string, pas parseInt
         });
         if (!studentIds.length) {
             showNotification('يرجى اختيار طالب واحد على الأقل', 'error');

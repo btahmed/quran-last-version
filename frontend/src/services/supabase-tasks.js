@@ -3,13 +3,23 @@ import { supabaseClient } from './supabase-client.js'
 
 export async function getMyTasks() {
   try {
-    const { data: authData, error: authError } = await supabaseClient.auth.getUser()
-    if (authError || !authData?.user) return { data: null, error: authError }
+    // Récupérer l'utilisateur depuis localStorage (Django JWT)
+    const localUser = JSON.parse(localStorage.getItem('quranreview_user') || 'null')
+    if (!localUser?.username) return { data: [], error: null }
+
+    // Résoudre l'UUID Supabase via username
+    const { data: profile } = await supabaseClient
+      .from('profiles')
+      .select('id')
+      .eq('username', localUser.username)
+      .single()
+
+    if (!profile) return { data: [], error: null }
 
     const { data, error } = await supabaseClient
       .from('tasks')
       .select('*')
-      .eq('user_id', authData.user.id)
+      .eq('user_id', profile.id)
       .order('created_at', { ascending: false })
 
     return { data, error }
@@ -47,12 +57,22 @@ export async function getAllTasks() {
 
 export async function createTask(payload) {
   try {
-    const { data: authData, error: authError } = await supabaseClient.auth.getUser()
-    if (authError || !authData?.user) return { data: null, error: authError }
+    // Récupérer l'utilisateur depuis localStorage (Django JWT)
+    const localUser = JSON.parse(localStorage.getItem('quranreview_user') || 'null')
+    if (!localUser?.username) return { data: null, error: { message: 'Non authentifié' } }
+
+    // Résoudre l'UUID Supabase du prof via username
+    const { data: profile } = await supabaseClient
+      .from('profiles')
+      .select('id')
+      .eq('username', localUser.username)
+      .single()
+
+    if (!profile) return { data: null, error: { message: 'Profil non trouvé' } }
 
     const { data, error } = await supabaseClient
       .from('tasks')
-      .insert({ ...payload, assigned_by: authData.user.id })
+      .insert({ ...payload, assigned_by: profile.id })
       .select()
       .single()
 
