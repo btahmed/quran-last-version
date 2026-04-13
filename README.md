@@ -1,25 +1,22 @@
 # QuranReview 🕌
 
-Application professionnelle pour la mémorisation et révision du Coran — PWA avec backend Django.
+Application professionnelle pour la mémorisation et révision du Coran — PWA full Supabase.
 
-## Déploiements
+## Déploiement
 
-| | URL | Stack |
-|-|-----|-------|
-| **Frontend** | https://quranreview-frontend.vercel.app | Vercel (ES Modules statiques) |
-| **API** | https://quranreview-api.vercel.app | Vercel (Django serverless) |
+| URL | Stack |
+|-----|-------|
+| https://quranreview-frontend.vercel.app | Vercel (static ES Modules) |
 
 ## Stack technique
 
 | Couche | Technologie |
 |--------|-------------|
 | **Frontend** | Vanilla JS, ES Modules natifs, CSS, PWA |
-| **Backend** | Django 4.x + Django REST Framework |
-| **Auth** | JWT (SimpleJWT) |
-| **Base de données** | PostgreSQL — [Supabase](https://supabase.com) |
-| **Stockage audio** | [Cloudinary](https://cloudinary.com) |
-| **Déploiement** | [Vercel](https://vercel.com) (frontend + backend serverless) |
-| **Dev local** | Docker Compose (nginx + Django + PostgreSQL) |
+| **Auth** | Supabase Auth (email/password) |
+| **Base de données** | Supabase PostgreSQL (profiles, tasks, submissions, classes, points_log) |
+| **Stockage audio** | Supabase Storage (bucket `audio-submissions`) |
+| **Déploiement** | Vercel (frontend statique) |
 
 ## Fonctionnalités
 
@@ -27,8 +24,8 @@ Application professionnelle pour la mémorisation et révision du Coran — PWA 
 - 🎵 **Ward** — lecteur audio de récitation quotidienne (CDN Quran.com)
 - 🧠 **Hifz** — exercices 5 niveaux de difficulté (masquage de mots)
 - 🏆 **Compétition** — défis et classements entre étudiants
-- 👨‍🏫 **Espace enseignant** — gestion tâches et soumissions audio
-- 🎙️ **Soumission audio** — enregistrement navigateur → stockage Cloudinary
+- 👨‍🏫 **Espace enseignant** — gestion tâches, soumissions audio, classes
+- 🎙️ **Soumission audio** — enregistrement navigateur → Supabase Storage
 - 📊 **Progression** — analytics et historique par étudiant
 - 🌙 **Thème** — clair / sombre
 - 📱 **PWA** — installable, mode hors-ligne
@@ -37,79 +34,69 @@ Application professionnelle pour la mémorisation et révision du Coran — PWA 
 
 | Rôle | Accès |
 |------|-------|
-| `student` | Mémorisation, Ward, Hifz, Compétition, Mes tâches |
-| `teacher` | Espace enseignant + gestion tâches/soumissions |
-| `admin` | Gestion complète des utilisateurs et données |
+| `student` | Mémorisation, Ward, Hifz, Compétition, Mes tâches, Soumission audio |
+| `teacher` | Création tâches, correction soumissions, gestion classes |
+| `admin` | Gestion utilisateurs, classes, vue d'ensemble |
 
 ## Démarrage en développement
 
 ```bash
-# Application complète (frontend + backend + DB)
-docker-compose up --build
-# Frontend → http://localhost:80
-# API      → http://localhost:8000
-
-# Frontend seul (test rapide, sans Docker)
 cd frontend && python -m http.server 3000
+# → http://localhost:3000
 ```
 
 ## Variables d'environnement
 
-```env
-# Backend (.env à la racine)
-DATABASE_URL=postgresql://...        # Supabase Transaction Pooler
-CLOUDINARY_URL=cloudinary://...      # Stockage audio
-SECRET_KEY=...                       # Django secret key
-DEBUG=False
-ALLOWED_HOSTS=quranreview-api.vercel.app
+Les variables Supabase sont définies dans `frontend/index.html` (fallback dev local) et dans Vercel Dashboard (prod) :
+
+```
+window.__SUPABASE_URL__      = "https://xxx.supabase.co"
+window.__SUPABASE_ANON_KEY__ = "eyJ..."
 ```
 
 ## Structure du projet
 
 ```
 quran-last-version/
-├── frontend/                  # App Vercel (ES Modules natifs)
-│   ├── index.html             # Shell principal (SPA)
-│   ├── vercel.json            # Config Vercel + rewrites SPA
+├── frontend/                     # App Vercel (ES Modules natifs)
+│   ├── index.html                # Shell SPA + env vars Supabase
+│   ├── vercel.json               # Config Vercel + rewrites SPA
+│   ├── style.css                 # Design system principal
+│   ├── style-pro.css             # Glassmorphism / Neumorphism
+│   ├── sw.js                     # Service Worker PWA
 │   └── src/
-│       ├── main.js            # Point d'entrée + façade window.QuranReview
-│       ├── core/              # logger, config, state, router, ui
-│       ├── components/        # AudioPlayer, AuthModal, AudioRecordModal, ...
-│       ├── services/          # auth, tasks, competition, hifz
-│       └── pages/             # HomePage, WardPage, MemorizationPage,
-│                              # ProgressPage, SettingsPage, CompetitionPage,
-│                              # HifzPage, MyTasksPage, TeacherPage, AdminPage
-├── backend/                   # Django API (déployé sur Vercel)
-│   ├── api/                   # WSGI entry point + Views DRF
-│   │   ├── index.py           # Entry point WSGI Vercel
-│   │   └── views.py           # Endpoints (tasks, submissions, competition...)
-│   ├── vercel.json            # Config Vercel backend
-│   ├── quranreview/           # Settings, URLs, WSGI
-│   └── authentication/        # Modèle User personnalisé + JWT
-├── .coderabbit.yaml           # Config CodeRabbit AI review
-├── docker-compose.yml         # Dev local
-└── docs/                      # Documentation technique
+│       ├── main.js               # Point d'entrée + façade window.QuranReview
+│       ├── core/                 # logger, config, state, router, ui, apiCache, NavManager
+│       ├── components/           # AudioPlayer, AuthModal, AudioRecordModal, UserEditModal
+│       ├── services/
+│       │   ├── supabase-client.js    # Client Supabase singleton
+│       │   ├── supabase-auth.js      # signIn, signOut, createUser
+│       │   ├── supabase-tasks.js     # CRUD tâches
+│       │   ├── supabase-submissions.js # Upload audio, soumissions, corrections
+│       │   ├── supabase-admin.js     # Gestion users, classes, étudiants
+│       │   ├── supabase-leaderboard.js # Classement, points
+│       │   ├── auth.js               # Login flow, localStorage, redirection
+│       │   ├── tasks.js              # Facade tâches (legacy wrapper)
+│       │   ├── competition.js        # Logique compétition
+│       │   └── hifz.js              # Logique exercices Hifz
+│       └── pages/                # HomePage, WardPage, MemorizationPage,
+│                                 # TeacherPage, AdminPage, MyTasksPage,
+│                                 # CompetitionPage, HifzPage, ProgressPage,
+│                                 # SettingsPage, ProfilPage
+└── CLAUDE.md                     # Guide architecture pour Claude Code
 ```
 
-## API Backend clés
+## Tables Supabase
 
-```
-POST /api/auth/token/           → Login JWT
-POST /api/auth/token/refresh/   → Refresh token
-GET  /api/tasks/                → Liste des tâches
-POST /api/tasks/                → Créer une tâche (teacher)
-POST /api/submissions/          → Soumettre un audio (student)
-GET  /api/competition/          → Données compétition
-GET  /api/hifz/                 → Progression hifz
-GET  /api/admin/users/          → Liste utilisateurs (admin)
-```
-
-## Documentation
-
-- [`CLAUDE.md`](CLAUDE.md) — guide architecture pour Claude Code
-- [`docs/deployment.md`](docs/deployment.md) — guide déploiement Vercel
-- [`docs/audio-setup.md`](docs/audio-setup.md) — configuration audio (CDN / Cloudinary)
-- [`docs/plans/`](docs/plans/) — plans de développement
+| Table | Description |
+|-------|-------------|
+| `profiles` | Utilisateurs (username, role, first_name, last_name) |
+| `tasks` | Tâches (type: hifz/muraja/tilawa, assigned_by, user_id) |
+| `submissions` | Soumissions audio (task_id, student_id, audio_url, status) |
+| `classes` | Classes (name, teacher_id) |
+| `class_members` | Relation classe ↔ étudiant |
+| `points_log` | Historique de points |
+| `leaderboard` | Classement |
 
 ---
 *Made with ❤️ for Quran learners*
