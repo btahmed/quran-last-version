@@ -19,13 +19,18 @@ function validateAudio(audioBlob) {
 
 export async function getMySubmissions() {
   try {
-    const { data: authData, error: authError } = await supabaseClient.auth.getUser()
-    if (authError || !authData?.user) return { data: null, error: authError }
+    // Résoudre l'UUID Supabase depuis localStorage (Django JWT)
+    const localUser = JSON.parse(localStorage.getItem('quranreview_user') || 'null')
+    if (!localUser?.username) return { data: [], error: null }
+
+    const { data: profile } = await supabaseClient
+      .from('profiles').select('id').eq('username', localUser.username).single()
+    if (!profile) return { data: [], error: null }
 
     const { data, error } = await supabaseClient
       .from('submissions')
       .select('*, tasks(*)')
-      .eq('student_id', authData.user.id)
+      .eq('student_id', profile.id)
       .order('submitted_at', { ascending: false })
 
     return { data, error }
@@ -53,10 +58,15 @@ export async function uploadAudio(taskId, audioBlob) {
   if (!validation.valid) return { data: null, error: new Error(validation.error) }
 
   try {
-    const { data: authData, error: authError } = await supabaseClient.auth.getUser()
-    if (authError || !authData?.user) return { data: null, error: authError }
+    // Résoudre l'UUID Supabase depuis localStorage (Django JWT)
+    const localUser = JSON.parse(localStorage.getItem('quranreview_user') || 'null')
+    if (!localUser?.username) return { data: null, error: new Error('Non authentifié') }
 
-    const uid = authData.user.id
+    const { data: profile } = await supabaseClient
+      .from('profiles').select('id').eq('username', localUser.username).single()
+    if (!profile) return { data: null, error: new Error('Profil non trouvé') }
+
+    const uid = profile.id
     const uuid = crypto.randomUUID()
     const path = `${uid}/${taskId}/${uuid}.webm`
 
@@ -78,12 +88,17 @@ export async function uploadAudio(taskId, audioBlob) {
 
 export async function createSubmission(taskId, audioUrl) {
   try {
-    const { data: authData, error: authError } = await supabaseClient.auth.getUser()
-    if (authError || !authData?.user) return { data: null, error: authError }
+    // Résoudre l'UUID Supabase depuis localStorage (Django JWT)
+    const localUser = JSON.parse(localStorage.getItem('quranreview_user') || 'null')
+    if (!localUser?.username) return { data: null, error: new Error('Non authentifié') }
+
+    const { data: profile } = await supabaseClient
+      .from('profiles').select('id').eq('username', localUser.username).single()
+    if (!profile) return { data: null, error: new Error('Profil non trouvé') }
 
     const { data, error } = await supabaseClient
       .from('submissions')
-      .insert({ task_id: taskId, student_id: authData.user.id, audio_url: audioUrl, status: 'submitted' })
+      .insert({ task_id: taskId, student_id: profile.id, audio_url: audioUrl, status: 'submitted' })
       .select()
       .single()
 
