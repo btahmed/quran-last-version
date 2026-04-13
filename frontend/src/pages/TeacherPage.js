@@ -129,9 +129,9 @@ export function render() {
                             <div class="grid-pro grid-cols-2" style="margin-bottom: var(--space-4);">
                                 <div class="form-floating">
                                     <select id="task-type">
-                                        <option value="memorization">حفظ</option>
-                                        <option value="review">مراجعة</option>
-                                        <option value="tajweed">تجويد</option>
+                                        <option value="hifz">حفظ</option>
+                                        <option value="muraja">مراجعة</option>
+                                        <option value="tilawa">تلاوة</option>
                                     </select>
                                     <label for="task-type">نوع المهمة</label>
                                 </div>
