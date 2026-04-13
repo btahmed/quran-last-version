@@ -3,6 +3,9 @@
 import { state } from '../core/state.js';
 import { config } from '../core/config.js';
 import { apiCache } from '../core/apiCache.js';
+import * as supabaseSubmissions from '../services/supabase-submissions.js';
+import * as supabaseAdmin from '../services/supabase-admin.js';
+import * as supabaseTasks from '../services/supabase-tasks.js';
 
 // ══════════════════════════════════════════════════════════════
 // Point d'entrée principal — détection visiteur / rôle connecté
@@ -341,23 +344,20 @@ async function initDashboard(role) {
         const cached = apiCache.get('tasks');
         if (cached) {
             renderStudentTasks(cached);
-            // Refresh silencieux
-            fetch(`${config.apiBaseUrl}/api/tasks/`, { headers })
-                .then(r => r.ok ? r.json() : null)
-                .then(raw => {
-                    if (!raw) return;
-                    const list = Array.isArray(raw) ? raw : (raw.results || []);
-                    apiCache.set('tasks', list);
-                    renderStudentTasks(list);
-                }).catch(() => {});
+            // Refresh silencieux via Supabase
+            supabaseTasks.getMyTasks().then(({ data }) => {
+                if (data) {
+                    apiCache.set('tasks', data);
+                    renderStudentTasks(data);
+                }
+            }).catch(() => {});
             return;
         }
-        const res = await fetch(`${config.apiBaseUrl}/api/tasks/`, { headers }).catch(() => null);
-        if (res?.ok) {
-            const raw = await res.json();
-            const list = Array.isArray(raw) ? raw : (raw.results || []);
-            apiCache.set('tasks', list);
-            renderStudentTasks(list);
+        // Migration Supabase
+        const { data, error } = await supabaseTasks.getMyTasks();
+        if (!error && data) {
+            apiCache.set('tasks', data);
+            renderStudentTasks(data);
         } else {
             renderStudentTasks([]);
         }
@@ -366,18 +366,17 @@ async function initDashboard(role) {
     if (role === 'teacher') {
         const cached = apiCache.get('submissions');
         if (cached) {
-            const pending = cached.filter(s => s.status === 'pending' || !s.grade);
+            const pending = cached.filter(s => s.status === 'pending' || s.status === 'submitted' || !s.grade);
             renderTeacherSubmissions(pending);
             const el = document.getElementById('t-pending');
             if (el) el.textContent = pending.length;
             return;
         }
-        const res = await fetch(`${config.apiBaseUrl}/api/submissions/`, { headers }).catch(() => null);
-        if (res?.ok) {
-            const data = await res.json();
-            const subs = Array.isArray(data) ? data : (data.results || []);
-            apiCache.set('submissions', subs);
-            const pending = subs.filter(s => s.status === 'pending' || !s.grade);
+        // Migration Supabase
+        const { data, error } = await supabaseSubmissions.getPendingSubmissions();
+        if (!error && data) {
+            apiCache.set('submissions', data);
+            const pending = data.filter(s => s.status === 'pending' || s.status === 'submitted' || !s.grade);
             renderTeacherSubmissions(pending);
             const el = document.getElementById('t-pending');
             if (el) el.textContent = pending.length;
@@ -395,9 +394,9 @@ async function initDashboard(role) {
             setText('a-today',           cached.submissions_today || 0);
             return;
         }
-        const res = await fetch(`${config.apiBaseUrl}/api/admin/overview/`, { headers }).catch(() => null);
-        if (res?.ok) {
-            const data = await res.json();
+        // Migration Supabase
+        const { data, error } = await supabaseAdmin.getAdminOverview();
+        if (!error && data) {
             apiCache.set('admin-overview', data);
             setText('a-users',    '+' + (data.total_users    || 0));
             setText('a-teachers',        data.total_teachers || 0);

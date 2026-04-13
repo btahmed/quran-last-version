@@ -9,6 +9,7 @@
     <!-- PWA -->
     <meta name="theme-color" content="#2d5016">
     <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📖</text></svg>">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -67,30 +68,37 @@
 
         // Animations de page (appelées après masquage du loading screen)
         function initAnimations() {
-            // Animer les cartes de la page courante dans #app
-            gsap.from('#app .card-glass-pro', {
-                opacity: 0,
-                y: 50,
-                duration: 0.8,
-                stagger: 0.1,
-                ease: 'power3.out',
-                clearProps: 'opacity,transform'
-            });
-
-            // Compteurs animés
-            document.querySelectorAll('[data-count]').forEach(counter => {
-                const target = parseInt(counter.getAttribute('data-count'));
-                gsap.to(counter, {
-                    innerHTML: target,
-                    duration: 2,
-                    snap: { innerHTML: 1 },
-                    ease: 'power2.out',
-                    scrollTrigger: { trigger: counter, start: 'top 80%' }
+            // Animer les cartes de la page courante dans #app (si elles existent)
+            const cards = document.querySelectorAll('#app .card-glass-pro');
+            if (cards.length > 0) {
+                gsap.from(cards, {
+                    opacity: 0,
+                    y: 50,
+                    duration: 0.8,
+                    stagger: 0.1,
+                    ease: 'power3.out',
+                    clearProps: 'opacity,transform'
                 });
+            }
+
+            // Compteurs animés (si présents)
+            const counters = document.querySelectorAll('[data-count]');
+            counters.forEach(counter => {
+                const target = parseInt(counter.getAttribute('data-count'));
+                if (!isNaN(target)) {
+                    gsap.to(counter, {
+                        innerHTML: target,
+                        duration: 2,
+                        snap: { innerHTML: 1 },
+                        ease: 'power2.out',
+                        scrollTrigger: { trigger: counter, start: 'top 80%' }
+                    });
+                }
             });
 
-            // Scroll reveal
-            gsap.utils.toArray('.reveal').forEach(element => {
+            // Scroll reveal (si présents)
+            const reveals = document.querySelectorAll('.reveal');
+            reveals.forEach(element => {
                 gsap.from(element, {
                     scrollTrigger: {
                         trigger: element,
@@ -311,12 +319,22 @@
     <div id="modals"></div>
 
 <script>
-        // Service Worker
-        if ('serviceWorker' in navigator) {
+        // Service Worker — désactivé en dev local (HTTP), actif en prod (HTTPS)
+        if ('serviceWorker' in navigator && location.protocol === 'https:') {
             navigator.serviceWorker.register('/sw.js')
                 .catch(err => console.log('SW registration failed'));
         }
     </script>
+
+    <!-- Supabase env vars (en prod, Vercel injecte les vraies valeurs) -->
+    <script>
+        // Fallback pour dev local — en prod ces valeurs seront écrasées par Vercel
+        window.__SUPABASE_URL__ = window.__SUPABASE_URL__ || "https://devqrxfazgupmesnkdcw.supabase.co";
+        window.__SUPABASE_ANON_KEY__ = window.__SUPABASE_ANON_KEY__ || "sb_publishable_JPTESUSWI-iMehYb6ge0rg_0be70ncM";
+    </script>
+
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 
     <!-- ES Module entry point -->
     <script type="module" src="src/main.js"></script>

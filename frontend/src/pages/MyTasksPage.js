@@ -6,6 +6,9 @@ import { showNotification } from '../core/ui.js';
 import { Logger } from '../core/logger.js';
 import { showAuthModal } from '../services/auth.js';
 import { apiCache } from '../core/apiCache.js';
+import * as supabaseTasks from '../services/supabase-tasks.js';
+import * as supabaseSubmissions from '../services/supabase-submissions.js';
+import * as supabaseLeaderboard from '../services/supabase-leaderboard.js';
 
 function escapeHtml(str) {
     return String(str ?? '')
@@ -138,18 +141,16 @@ export async function loadStudentDashboard() {
 
 async function _fetchAndCacheStudent(headers) {
     try {
-        const [tasksRes, subsRes, pointsRes] = await Promise.all([
-            fetch(`${config.apiBaseUrl}/api/tasks/`, { headers }),
-            fetch(`${config.apiBaseUrl}/api/my-submissions/`, { headers }),
-            fetch(`${config.apiBaseUrl}/api/points/`, { headers }),
+        // Migration Supabase
+        const [tasksResult, subsResult, pointsResult] = await Promise.all([
+            supabaseTasks.getMyTasks(),
+            supabaseSubmissions.getMySubmissions(),
+            supabaseLeaderboard.getMyPoints(),
         ]);
 
-        const tasksRaw   = tasksRes.ok   ? await tasksRes.json()   : [];
-        const subsRaw    = subsRes.ok    ? await subsRes.json()    : [];
-        const pointsData = pointsRes.ok  ? await pointsRes.json()  : { total_points: 0, logs: [] };
-
-        const tasks       = Array.isArray(tasksRaw) ? tasksRaw : (tasksRaw.results ?? []);
-        const submissions = Array.isArray(subsRaw)  ? subsRaw  : (subsRaw.results  ?? []);
+        const tasks       = tasksResult.data || [];
+        const submissions = subsResult.data || [];
+        const pointsData  = { total_points: pointsResult.data || 0, logs: [] };
 
         apiCache.set('tasks', tasks);
         apiCache.set('my-submissions', submissions);

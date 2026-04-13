@@ -5,6 +5,7 @@ import { config } from '../core/config.js';
 import { showNotification } from '../core/ui.js';
 import { Logger } from '../core/logger.js';
 import { apiCache } from '../core/apiCache.js';
+import * as supabaseSubmissions from '../services/supabase-submissions.js';
 
 // Variables module-level (remplacent this._recorder, this._recordBlob, etc.)
 let _recorder = null;
@@ -138,22 +139,23 @@ export async function submitRecording() {
     try {
         document.getElementById('recording-submit-btn').disabled = true;
 
-        Logger.log('RECORDING', 'Sending submission to API...');
-        const response = await fetch(`${config.apiBaseUrl}/api/submissions/`, {
-            method: 'POST',
-            headers: { Authorization: `Bearer ${token}` },
-            body: formData,
-        });
+        // Migration Supabase : upload audio puis créer soumission
+        Logger.log('RECORDING', 'Uploading audio to Supabase Storage...');
+        const { data: uploadData, error: uploadError } = await supabaseSubmissions.uploadAudio(_recordTaskId, _recordBlob);
 
-        Logger.log('RECORDING', `API Response status: ${response.status}`);
-
-        if (!response.ok) {
-            const data = await response.json();
-            Logger.error('RECORDING', 'Submission failed', data);
-            throw new Error(data.detail || data.non_field_errors?.[0] || 'خطأ في الإرسال');
+        if (uploadError) {
+            Logger.error('RECORDING', 'Upload failed', uploadError);
+            throw new Error(uploadError.message || 'خطأ في رفع الملف');
         }
 
-        const result = await response.json();
+        Logger.log('RECORDING', 'Creating submission record...');
+        const { data: result, error: submitError } = await supabaseSubmissions.createSubmission(_recordTaskId, uploadData.url);
+
+        if (submitError) {
+            Logger.error('RECORDING', 'Submission failed', submitError);
+            throw new Error(submitError.message || 'خطأ في الإرسال');
+        }
+
         Logger.log('RECORDING', 'Submission successful', result);
 
         showNotification('تم إرسال التسجيل بنجاح!', 'success');

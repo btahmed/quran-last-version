@@ -1,6 +1,7 @@
 // frontend/src/pages/AdminPage.js
 import { config } from '../core/config.js';
 import { Logger } from '../core/logger.js';
+import * as supabaseAdmin from '../services/supabase-admin.js';
 
 // ─── UTILS ───────────────────────────────────────────────────────────────────
 function escapeHtml(str) {
@@ -48,6 +49,7 @@ export function render() {
                     <!-- Onglets -->
                     <div style="display:flex; gap:var(--space-2); margin-bottom:var(--space-4); border-bottom:2px solid var(--color-border); padding-bottom:var(--space-2);">
                         <button id="tab-btn-users" class="btn btn-glow btn-sm" onclick="window._adminSwitchTab('users')">👥 المستخدمون</button>
+                        <button id="tab-btn-classes" class="btn btn-outline-glow btn-sm" onclick="window._adminSwitchTab('classes')">🏫 الفصول</button>
                         <button id="tab-btn-overview" class="btn btn-outline-glow btn-sm" onclick="window._adminSwitchTab('overview')">📊 نظرة عامة</button>
                     </div>
 
@@ -70,6 +72,38 @@ export function render() {
                             </div>
                             <div id="admin-users-count" style="color:var(--color-text-secondary); font-size:0.875rem; margin-bottom:var(--space-3);"></div>
                             <div id="admin-users-list">
+                                <p style="text-align:center; color:var(--color-text-secondary); padding:var(--space-6);">جارٍ التحميل...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Classes -->
+                    <div id="admin-tab-classes" style="display:none;">
+                        <div class="card-glass-pro" style="margin-bottom:var(--space-4);">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-4);">
+                                <h3 style="font-size:1rem; font-weight:600; margin:0;">🏫 إدارة الفصول</h3>
+                                <button class="btn btn-glow btn-sm" onclick="window._adminShowCreateClass()">➕ فصل جديد</button>
+                            </div>
+                            
+                            <!-- Formulaire création classe (caché) -->
+                            <div id="admin-create-class-form" style="display:none; background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-lg); padding:var(--space-4); margin-bottom:var(--space-4);">
+                                <div style="display:flex; gap:var(--space-3); align-items:flex-end; flex-wrap:wrap;">
+                                    <div style="flex:1; min-width:200px;">
+                                        <label style="font-size:0.75rem; color:var(--color-text-secondary); display:block; margin-bottom:var(--space-1);">اسم الفصل</label>
+                                        <input id="new-class-name" type="text" placeholder="مثال: فصل الحفظ 1" style="width:100%; padding:var(--space-2) var(--space-3); border:1px solid var(--color-border); border-radius:var(--radius-lg); background:var(--color-bg); color:var(--color-text);" />
+                                    </div>
+                                    <div style="flex:1; min-width:200px;">
+                                        <label style="font-size:0.75rem; color:var(--color-text-secondary); display:block; margin-bottom:var(--space-1);">المعلم</label>
+                                        <select id="new-class-teacher" style="width:100%; padding:var(--space-2) var(--space-3); border:1px solid var(--color-border); border-radius:var(--radius-lg); background:var(--color-bg); color:var(--color-text);">
+                                            <option value="">-- اختر المعلم --</option>
+                                        </select>
+                                    </div>
+                                    <button class="btn btn-glow btn-sm" onclick="window._adminCreateClass()">✅ إنشاء</button>
+                                    <button class="btn btn-outline-glow btn-sm" onclick="document.getElementById('admin-create-class-form').style.display='none'">إلغاء</button>
+                                </div>
+                            </div>
+                            
+                            <div id="admin-classes-list">
                                 <p style="text-align:center; color:var(--color-text-secondary); padding:var(--space-6);">جارٍ التحميل...</p>
                             </div>
                         </div>
@@ -126,6 +160,13 @@ export async function init() {
     window._adminSaveEdit = saveUserEdit;
     window._adminDelete = deleteUser;
     window._adminToggleEdit = _adminToggleEditFn;
+    window._adminShowCreateClass = showCreateClassForm;
+    window._adminCreateClass = createClass;
+    window._adminDeleteClass = deleteClass;
+    window._adminOpenClassModal = openClassModal;
+    window._adminCloseClassModal = closeClassModal;
+    window._adminAddStudentToClass = addStudentToClass;
+    window._adminRemoveStudentFromClass = removeStudentFromClass;
 
     // Listener délégué pour les lignes utilisateur (évite les onclick inline avec u.id)
     document.getElementById('admin-users-list')?.addEventListener('click', (e) => {
@@ -149,12 +190,10 @@ async function loadUsers() {
     const token = localStorage.getItem(config.apiTokenKey);
     if (!token) return;
     try {
-        const res = await fetch(`${config.apiBaseUrl}/api/auth/admin/users/`, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
-        if (!res.ok) throw new Error('Erreur chargement users');
-        const data = await res.json();
-        allUsers = data.users || [];
+        // Migration Supabase
+        const { data, error } = await supabaseAdmin.getAllUsers();
+        if (error) throw new Error('Erreur chargement users');
+        allUsers = data || [];
         const el = document.getElementById('admin-total-users');
         if (el) el.textContent = allUsers.length;
         renderUsersList();
@@ -236,19 +275,18 @@ async function loadOverview() {
     const token = localStorage.getItem(config.apiTokenKey);
     if (!token) return;
     try {
-        const res = await fetch(`${config.apiBaseUrl}/api/admin/overview/`, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
-        if (!res.ok) throw new Error('Erreur overview');
-        const data = await res.json();
+        // Migration Supabase
+        const { data, error } = await supabaseAdmin.getAdminOverview();
+        if (error) throw new Error('Erreur overview');
 
         const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-        set('admin-total-tasks', data.totals?.tasks ?? '—');
-        set('admin-pending-subs', data.totals?.pending_submissions ?? '—');
-        set('admin-approved-subs', data.totals?.approved_submissions ?? '—');
+        set('admin-total-tasks', data?.total_tasks ?? '—');
+        set('admin-pending-subs', data?.pending_submissions ?? '—');
+        set('admin-approved-subs', data?.approved_submissions ?? '—');
 
-        renderTeacherStats(data.teacher_stats || []);
-        renderAllTasks(data.tasks || []);
+        // TODO: teacher_stats et tasks ne sont pas encore dans getAdminOverview
+        renderTeacherStats([]);
+        renderAllTasks([]);
     } catch (err) {
         Logger.error('ADMIN', 'loadOverview error', err);
     }
@@ -305,7 +343,7 @@ function renderAllTasks(tasks) {
 
 // ─── TABS ─────────────────────────────────────────────────────────────────────
 function switchTab(tab) {
-    ['users', 'overview'].forEach(t => {
+    ['users', 'classes', 'overview'].forEach(t => {
         const panel = document.getElementById(`admin-tab-${t}`);
         const btn = document.getElementById(`tab-btn-${t}`);
         if (panel) panel.style.display = t === tab ? 'block' : 'none';
@@ -314,6 +352,9 @@ function switchTab(tab) {
             btn.classList.toggle('btn-outline-glow', t !== tab);
         }
     });
+    if (tab === 'classes') {
+        loadClasses();
+    }
 }
 
 // ─── PROFIL MODAL ─────────────────────────────────────────────────────────────
@@ -327,11 +368,9 @@ async function openUserProfile(userId) {
 
     const token = localStorage.getItem(config.apiTokenKey);
     try {
-        const res = await fetch(`${config.apiBaseUrl}/api/admin/users/${userId}/profile/`, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
-        if (!res.ok) throw new Error('Not found');
-        const u = await res.json();
+        // Migration Supabase
+        const { data: u, error } = await supabaseAdmin.getStudentProgress(userId);
+        if (error || !u) throw new Error('Not found');
 
         const titleEl = document.getElementById('profile-modal-title');
         if (titleEl) titleEl.textContent = `${u.first_name || ''} ${u.last_name || ''} (@${u.username})`.trim();
@@ -510,21 +549,15 @@ function _adminToggleEditFn(userId, firstName, lastName, role) {
 }
 
 async function saveUserEdit(userId) {
-    const token = localStorage.getItem(config.apiTokenKey);
     const first_name = document.getElementById('edit-first-name').value.trim();
     const last_name = document.getElementById('edit-last-name').value.trim();
     const role = document.getElementById('edit-role').value;
 
     try {
-        const res = await fetch(`${config.apiBaseUrl}/api/auth/admin/users/${userId}/update/`, {
-            method: 'PUT',
-            headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ first_name, last_name, role }),
-        });
-        if (!res.ok) {
-            const errData = await res.json().catch(() => ({}));
-            throw new Error(errData.detail || errData.error || `خطأ ${res.status}`);
-        }
+        // Migration Supabase
+        const { error } = await supabaseAdmin.updateUser(userId, { first_name, last_name, role });
+        if (error) throw new Error(error.message || 'خطأ في التحديث');
+
         document.getElementById('admin-edit-form').style.display = 'none';
         await loadUsers();
         await openUserProfile(userId);
@@ -537,17 +570,237 @@ async function saveUserEdit(userId) {
 // ─── SUPPRESSION UTILISATEUR ─────────────────────────────────────────────────
 async function deleteUser(userId, userName) {
     if (!confirm(`هل أنت متأكد من حذف "${userName}"؟ هذا الإجراء لا يمكن التراجع عنه.`)) return;
-    const token = localStorage.getItem(config.apiTokenKey);
     try {
-        const res = await fetch(`${config.apiBaseUrl}/api/auth/admin/users/${userId}/delete/`, {
-            method: 'DELETE',
-            headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!res.ok) throw new Error('Erreur');
+        // Migration Supabase - Note: deleteUser nécessite une Edge Function
+        const { error } = await supabaseAdmin.deleteUser(userId);
+        if (error) throw new Error(error.message);
         closeProfile();
         await loadUsers();
     } catch (err) {
         Logger.error('ADMIN', 'deleteUser error', err);
         alert('فشل حذف المستخدم');
+    }
+}
+
+// ─── GESTION DES CLASSES ─────────────────────────────────────────────────────
+let allClasses = [];
+let currentClassId = null;
+
+async function loadClasses() {
+    const el = document.getElementById('admin-classes-list');
+    if (!el) return;
+    
+    try {
+        const { data, error } = await supabaseAdmin.getClasses();
+        if (error) throw error;
+        
+        allClasses = data || [];
+        renderClassesList();
+    } catch (err) {
+        Logger.error('ADMIN', 'loadClasses error', err);
+        el.innerHTML = '<p style="color:var(--color-danger); text-align:center; padding:var(--space-6);">فشل تحميل الفصول</p>';
+    }
+}
+
+function renderClassesList() {
+    const el = document.getElementById('admin-classes-list');
+    if (!el) return;
+    
+    if (!allClasses.length) {
+        el.innerHTML = '<p style="text-align:center; color:var(--color-text-secondary); padding:var(--space-6);">لا توجد فصول بعد. أنشئ فصلاً جديداً!</p>';
+        return;
+    }
+    
+    el.innerHTML = allClasses.map(c => {
+        const teacherName = c.profiles?.username || 'غير محدد';
+        const studentCount = c.class_members?.length || 0;
+        
+        return `
+            <div style="display:flex; align-items:center; gap:var(--space-3); padding:var(--space-3); border:1px solid var(--color-border); border-radius:var(--radius-lg); margin-bottom:var(--space-2); background:var(--color-surface);">
+                <div style="width:40px; height:40px; border-radius:var(--radius-lg); background:linear-gradient(135deg, var(--color-primary), var(--color-gold)); display:flex; align-items:center; justify-content:center; font-size:1.2rem; flex-shrink:0;">🏫</div>
+                <div style="flex:1; min-width:0;">
+                    <div style="font-weight:600; font-size:0.95rem;">${escapeHtml(c.name)}</div>
+                    <div style="font-size:0.8rem; color:var(--color-text-secondary); display:flex; gap:var(--space-3); flex-wrap:wrap; margin-top:2px;">
+                        <span>👨‍🏫 ${escapeHtml(teacherName)}</span>
+                        <span>🎓 ${studentCount} طالب</span>
+                    </div>
+                </div>
+                <button class="btn btn-outline-glow btn-sm" onclick="window._adminOpenClassModal('${c.id}')">⚙️ إدارة</button>
+                <button style="background:none; border:none; color:var(--color-danger); cursor:pointer; font-size:1.1rem; padding:var(--space-1);" onclick="window._adminDeleteClass('${c.id}', '${escapeHtml(c.name)}')">🗑️</button>
+            </div>
+        `;
+    }).join('');
+}
+
+async function showCreateClassForm() {
+    const form = document.getElementById('admin-create-class-form');
+    const teacherSelect = document.getElementById('new-class-teacher');
+    if (!form || !teacherSelect) return;
+    
+    // Charger les enseignants
+    const teachers = allUsers.filter(u => u.role === 'teacher');
+    teacherSelect.innerHTML = '<option value="">-- اختر المعلم --</option>' + 
+        teachers.map(t => `<option value="${t.id}">${escapeHtml(t.username)} (${escapeHtml(t.first_name || '')} ${escapeHtml(t.last_name || '')})</option>`).join('');
+    
+    form.style.display = 'block';
+    document.getElementById('new-class-name').value = '';
+    document.getElementById('new-class-name').focus();
+}
+
+async function createClass() {
+    const name = document.getElementById('new-class-name').value.trim();
+    const teacherId = document.getElementById('new-class-teacher').value;
+    
+    if (!name) {
+        alert('يرجى إدخال اسم الفصل');
+        return;
+    }
+    if (!teacherId) {
+        alert('يرجى اختيار المعلم');
+        return;
+    }
+    
+    try {
+        const { data, error } = await supabaseAdmin.createClassWithTeacher(name, teacherId);
+        if (error) throw error;
+        
+        document.getElementById('admin-create-class-form').style.display = 'none';
+        await loadClasses();
+    } catch (err) {
+        Logger.error('ADMIN', 'createClass error', err);
+        alert('فشل إنشاء الفصل');
+    }
+}
+
+async function deleteClass(classId, className) {
+    if (!confirm(`هل أنت متأكد من حذف فصل "${className}"؟ سيتم إزالة جميع الطلاب من هذا الفصل.`)) return;
+    
+    try {
+        const { error } = await supabaseAdmin.deleteClass(classId);
+        if (error) throw error;
+        await loadClasses();
+    } catch (err) {
+        Logger.error('ADMIN', 'deleteClass error', err);
+        alert('فشل حذف الفصل');
+    }
+}
+
+async function openClassModal(classId) {
+    currentClassId = classId;
+    const classData = allClasses.find(c => c.id === classId);
+    if (!classData) return;
+    
+    // Créer le modal s'il n'existe pas
+    let modal = document.getElementById('admin-class-modal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'admin-class-modal';
+        modal.style.cssText = 'display:none; position:fixed; top:0; left:0; right:0; bottom:0; width:100%; height:100%; background:rgba(0,0,0,0.65); z-index:9999; overflow-y:auto;';
+        modal.onclick = (e) => { if (e.target === modal) closeClassModal(); };
+        modal.innerHTML = `
+            <div style="position:relative; margin:40px auto; width:calc(100% - 32px); max-width:600px; background:#fff; border-radius:16px; box-shadow:0 24px 64px rgba(0,0,0,0.35); overflow:hidden;" onclick="event.stopPropagation()">
+                <div style="padding:20px 24px 16px; border-bottom:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center;">
+                    <h3 id="class-modal-title" style="margin:0; font-size:1.1rem; font-weight:700; color:#111827;">إدارة الفصل</h3>
+                    <button onclick="window._adminCloseClassModal()" style="display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; background:#f3f4f6; border:none; border-radius:8px; font-size:1.1rem; cursor:pointer; color:#6b7280;">✕</button>
+                </div>
+                <div id="class-modal-content" style="padding:20px 24px 24px;"></div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+    
+    modal.style.display = 'block';
+    document.getElementById('class-modal-title').textContent = `🏫 ${classData.name}`;
+    
+    await renderClassModalContent(classId);
+}
+
+async function renderClassModalContent(classId) {
+    const content = document.getElementById('class-modal-content');
+    if (!content) return;
+    
+    content.innerHTML = '<p style="text-align:center; color:#6b7280; padding:24px 0;">جارٍ التحميل...</p>';
+    
+    try {
+        // Récupérer les élèves de la classe
+        const { data: students, error: studentsError } = await supabaseAdmin.getClassStudents(classId);
+        if (studentsError) throw studentsError;
+        
+        // Récupérer les élèves non assignés
+        const { data: availableStudents, error: availableError } = await supabaseAdmin.getAllStudentsNotInClass(classId);
+        if (availableError) throw availableError;
+        
+        content.innerHTML = `
+            <!-- Élèves actuels -->
+            <div style="margin-bottom:20px;">
+                <h4 style="font-size:0.9rem; font-weight:600; color:#111827; margin:0 0 12px;">🎓 الطلاب الحاليون (${students?.length || 0})</h4>
+                <div id="class-current-students" style="max-height:200px; overflow-y:auto; border:1px solid #e5e7eb; border-radius:10px; padding:8px;">
+                    ${students?.length ? students.map(s => `
+                        <div style="display:flex; align-items:center; justify-content:space-between; padding:8px; border-bottom:1px solid #f3f4f6;">
+                            <span style="font-size:0.85rem;">${escapeHtml(s.first_name || '')} ${escapeHtml(s.last_name || '')} <span style="color:#9ca3af;">@${escapeHtml(s.username)}</span></span>
+                            <button onclick="window._adminRemoveStudentFromClass('${s.id}', '${classId}')" style="background:#fef2f2; border:1px solid #fecaca; color:#ef4444; font-size:0.75rem; padding:4px 10px; border-radius:6px; cursor:pointer;">إزالة</button>
+                        </div>
+                    `).join('') : '<p style="text-align:center; color:#9ca3af; padding:16px; font-size:0.85rem;">لا يوجد طلاب في هذا الفصل</p>'}
+                </div>
+            </div>
+            
+            <!-- Ajouter des élèves -->
+            <div>
+                <h4 style="font-size:0.9rem; font-weight:600; color:#111827; margin:0 0 12px;">➕ إضافة طلاب</h4>
+                <div style="display:flex; gap:8px; margin-bottom:12px;">
+                    <select id="add-student-select" style="flex:1; padding:8px 12px; border:1px solid #d1d5db; border-radius:8px; font-size:0.85rem;">
+                        <option value="">-- اختر طالباً --</option>
+                        ${availableStudents?.map(s => `<option value="${s.id}">${escapeHtml(s.username)} (${escapeHtml(s.first_name || '')} ${escapeHtml(s.last_name || '')})</option>`).join('') || ''}
+                    </select>
+                    <button onclick="window._adminAddStudentToClass('${classId}')" class="btn btn-glow btn-sm">إضافة</button>
+                </div>
+                ${!availableStudents?.length ? '<p style="color:#9ca3af; font-size:0.8rem; text-align:center;">جميع الطلاب مسجلون في فصول</p>' : ''}
+            </div>
+        `;
+    } catch (err) {
+        Logger.error('ADMIN', 'renderClassModalContent error', err);
+        content.innerHTML = '<p style="color:#ef4444; text-align:center; padding:24px 0;">فشل تحميل بيانات الفصل</p>';
+    }
+}
+
+function closeClassModal() {
+    const modal = document.getElementById('admin-class-modal');
+    if (modal) modal.style.display = 'none';
+    currentClassId = null;
+}
+
+async function addStudentToClass(classId) {
+    const select = document.getElementById('add-student-select');
+    const studentId = select?.value;
+    
+    if (!studentId) {
+        alert('يرجى اختيار طالب');
+        return;
+    }
+    
+    try {
+        const { error } = await supabaseAdmin.assignStudentToClass(studentId, classId);
+        if (error) throw error;
+        
+        await renderClassModalContent(classId);
+        await loadClasses();
+    } catch (err) {
+        Logger.error('ADMIN', 'addStudentToClass error', err);
+        alert('فشل إضافة الطالب');
+    }
+}
+
+async function removeStudentFromClass(studentId, classId) {
+    if (!confirm('هل أنت متأكد من إزالة هذا الطالب من الفصل؟')) return;
+    
+    try {
+        const { error } = await supabaseAdmin.removeStudentFromClass(studentId, classId);
+        if (error) throw error;
+        
+        await renderClassModalContent(classId);
+        await loadClasses();
+    } catch (err) {
+        Logger.error('ADMIN', 'removeStudentFromClass error', err);
+        alert('فشل إزالة الطالب');
     }
 }

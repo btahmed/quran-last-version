@@ -3,6 +3,7 @@ import { Logger } from '../core/logger.js';
 import { config } from '../core/config.js';
 import { state, saveData } from '../core/state.js';
 import { showNotification } from '../core/ui.js';
+import * as supabaseLeaderboard from './supabase-leaderboard.js';
 
 export const competitionManager = {
     // Générer un défi
@@ -408,19 +409,11 @@ export const competitionManager = {
         board.push(entry);
 
         try {
-            const token = localStorage.getItem(config.apiTokenKey);
-            if (token) {
-                const response = await fetch(`${config.apiBaseUrl}/api/leaderboard/`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                    },
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    this.renderLeaderboardData(data.leaderboard || []);
-                    return;
-                }
+            // Migration Supabase
+            const { data, error } = await supabaseLeaderboard.getLeaderboard();
+            if (!error && data) {
+                this.renderLeaderboardData(data);
+                return;
             }
         } catch (error) {
             Logger.error('LEADERBOARD', 'Failed to update leaderboard', error);
@@ -476,15 +469,10 @@ export const competitionManager = {
                 return;
             }
 
-            const response = await fetch(`${config.apiBaseUrl}/api/leaderboard/`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                },
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                this.renderLeaderboardData(data.leaderboard || []);
+            // Migration Supabase
+            const { data, error } = await supabaseLeaderboard.getLeaderboard();
+            if (!error && data) {
+                this.renderLeaderboardData(data);
             } else {
                 // Fallback to local leaderboard
                 this.renderLocalLeaderboard();
