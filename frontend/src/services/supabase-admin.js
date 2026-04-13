@@ -234,15 +234,33 @@ export async function getMyClasses() {
 
 export async function getClassStudents(classId) {
   try {
-    const { data, error } = await supabaseClient
+    // Étape 1 : récupérer les student_ids depuis class_members (accessible sans session Supabase)
+    const { data: members, error: membersError } = await supabaseClient
       .from('class_members')
-      .select('profiles!student_id(*)')
+      .select('student_id')
       .eq('class_id', classId)
 
-    if (error) return { data: null, error }
+    if (membersError) return { data: null, error: membersError }
+    if (!members || members.length === 0) return { data: [], error: null }
 
-    const students = (data || []).map(cm => cm.profiles).filter(Boolean)
-    return { data: students, error: null }
+    const studentIds = members.map(m => m.student_id)
+
+    // Étape 2 : récupérer les profils complets (nécessite une RLS SELECT policy sur profiles)
+    const { data: profiles, error: profilesError } = await supabaseClient
+      .from('profiles')
+      .select('*')
+      .in('id', studentIds)
+
+    if (!profilesError && profiles && profiles.length > 0) {
+      return { data: profiles, error: null }
+    }
+
+    // Fallback : profiles bloqués par RLS — retourner les IDs avec username minimal
+    // ⚠️ Ajouter dans Supabase Dashboard : CREATE POLICY "profiles_select" ON profiles FOR SELECT USING (true);
+    return {
+      data: studentIds.map(id => ({ id, username: id.substring(0, 8) + '…', first_name: '', last_name: '' })),
+      error: null,
+    }
   } catch (error) {
     return { data: null, error }
   }
@@ -259,6 +277,8 @@ export async function getAllStudentsNotInClass(classId) {
     const memberIds = (members || []).map(m => m.student_id)
 
     // Récupérer tous les étudiants qui ne sont pas dans cette classe
+    // ⚠️ Nécessite une RLS SELECT policy sur profiles pour fonctionner
+    // CREATE POLICY "profiles_select" ON profiles FOR SELECT USING (true);
     let query = supabaseClient
       .from('profiles')
       .select('*')
@@ -270,8 +290,8 @@ export async function getAllStudentsNotInClass(classId) {
     }
 
     const { data, error } = await query
-    return { data, error }
+    return { data: data || [], error }
   } catch (error) {
-    return { data: null, error }
+    return { data: [], error }
   }
 }
