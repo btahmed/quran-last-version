@@ -347,13 +347,17 @@ function _applyTeacherData(students, pending, tasks) {
         } else {
             pendingList.innerHTML = pending.map(s => {
                 const date = new Date(s.submitted_at).toLocaleDateString('ar-SA');
+                // Gérer le cas où s.task ou s.tasks peut être undefined
+                const taskTitle = s.task?.title || s.tasks?.title || 'Tâche sans titre';
+                const taskPoints = s.task?.points || s.tasks?.points || 0;
+                
                 return `<div class="pending-card">
                     <div class="pending-card-header">
                         <strong>🎓 ${s.student_name}</strong>
-                        <span class="task-type-badge">${s.task.title}</span>
+                        <span class="task-type-badge">${taskTitle}</span>
                     </div>
                     <div class="pending-card-meta">
-                        <span>🏆 ${s.task.points} نقطة</span>
+                        <span>🏆 ${taskPoints} نقطة</span>
                         <span>📅 ${date}</span>
                     </div>
                     ${s.audio_url ? `
