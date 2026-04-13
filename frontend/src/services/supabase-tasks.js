@@ -89,13 +89,11 @@ export async function createTask(payload) {
       // Ajouter due_date seulement si défini
       if (taskFields.due_date) row.due_date = taskFields.due_date
       
-      console.log('[createTask] Inserting row:', JSON.stringify(row, null, 2))
       const { data, error } = await supabaseClient
         .from('tasks')
         .insert(row)
         .select()
         .single()
-      if (error) console.error('[createTask] Error:', error.message, error.details, error.hint, error.code)
       return { data, error }
     }
 

@@ -17,13 +17,17 @@ export async function getLeaderboard() {
 
 export async function getMyPoints() {
   try {
-    const { data: authData, error: authError } = await supabaseClient.auth.getUser()
-    if (authError || !authData?.user) return { data: null, error: authError }
+    const localUser = JSON.parse(localStorage.getItem('quranreview_user') || 'null')
+    if (!localUser?.username) return { data: { total: 0 }, error: null }
+
+    const { data: profile } = await supabaseClient
+      .from('profiles').select('id').eq('username', localUser.username).single()
+    if (!profile) return { data: { total: 0 }, error: null }
 
     const { data, error } = await supabaseClient
       .from('points_log')
       .select('delta')
-      .eq('student_id', authData.user.id)
+      .eq('student_id', profile.id)
 
     if (error) return { data: null, error }
 

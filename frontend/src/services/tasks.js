@@ -43,7 +43,7 @@ export async function handleCreateTask(event) {
     const studentIds = [];
     if (assignMode === 'select') {
         document.querySelectorAll('input[name="student-ids"]:checked').forEach(cb => {
-            studentIds.push(parseInt(cb.value));
+            studentIds.push(cb.value); // UUID string, pas parseInt
         });
         if (!studentIds.length) {
             showNotification('يرجى اختيار طالب واحد على الأقل', 'error');
@@ -87,25 +87,7 @@ export async function handleCreateTask(event) {
     }
 }
 
-// ===================================
-// SUPPRESSION DE TOUTES LES TÂCHES (ADMIN)
-// ===================================
-
-export async function handleDeleteAllTasks() {
-    if (!confirm('⚠️ تحذير خطير!\nهل أنت متأكد تماماً أنك تريد حذف جميع المهام؟\nهذا الإجراء سيحذف كل المهام وكل التسليمات المرتبطة بها ولا يمكن التراجع عنه.')) {
-        return;
-    }
-
-    try {
-        const { error } = await SupabaseTasks.deleteAllTasks();
-        if (error) throw new Error(error.message || 'خطأ في حذف المهام');
-
-        showNotification('تم حذف جميع المهام بنجاح', 'success');
-        window.QuranReview.loadTeacherDashboard();
-    } catch (error) {
-        showNotification(error.message, 'error');
-    }
-}
+// handleDeleteAllTasks supprimée — utiliser TeacherPage.handleDeleteAllTasks()
 
 // ===================================
 // SWITCH ONGLET TÂCHES (ÉTUDIANT)

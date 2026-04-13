@@ -182,12 +182,16 @@ export async function removeStudentFromClass(studentId, classId) {
 
 export async function createClass(name) {
   try {
-    const { data: authData } = await supabaseClient.auth.getUser()
-    if (!authData?.user) return { data: null, error: new Error('Non authentifié') }
+    const localUser = JSON.parse(localStorage.getItem('quranreview_user') || 'null')
+    if (!localUser?.username) return { data: null, error: new Error('Non authentifié') }
+
+    const { data: profile } = await supabaseClient
+      .from('profiles').select('id').eq('username', localUser.username).single()
+    if (!profile) return { data: null, error: new Error('Profil non trouvé') }
 
     const { data, error } = await supabaseClient
       .from('classes')
-      .insert({ name, teacher_id: authData.user.id })
+      .insert({ name, teacher_id: profile.id })
       .select()
       .single()
 
@@ -226,13 +230,17 @@ export async function deleteClass(classId) {
 
 export async function getMyClasses() {
   try {
-    const { data: authData } = await supabaseClient.auth.getUser()
-    if (!authData?.user) return { data: [], error: null }
+    const localUser = JSON.parse(localStorage.getItem('quranreview_user') || 'null')
+    if (!localUser?.username) return { data: [], error: null }
+
+    const { data: profile } = await supabaseClient
+      .from('profiles').select('id').eq('username', localUser.username).single()
+    if (!profile) return { data: [], error: null }
 
     const { data, error } = await supabaseClient
       .from('classes')
       .select('*, class_members(student_id, profiles!student_id(id, username))')
-      .eq('teacher_id', authData.user.id)
+      .eq('teacher_id', profile.id)
       .order('name', { ascending: true })
 
     return { data, error }

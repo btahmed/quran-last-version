@@ -574,11 +574,22 @@ export async function handleDeleteAllTasks() {
     if (!token) return;
 
     try {
-        // Migration Supabase
-        const { error } = await supabaseTasks.deleteAllTasks();
-        if (error) throw new Error(error.message || 'خطأ في حذف المهام');
+        // Récupérer toutes les tâches du prof puis supprimer une par une
+        const { data: students } = await supabaseAdmin.getMyStudents();
+        if (!students?.length) { showNotification('لا يوجد طلاب', 'error'); return; }
 
-        showNotification('تم حذف جميع المهام بنجاح', 'success');
+        let deleted = 0;
+        for (const student of students) {
+            const { data: tasks } = await supabaseTasks.getStudentTasks(student.id);
+            if (tasks?.length) {
+                for (const task of tasks) {
+                    await supabaseTasks.deleteTask(task.id);
+                    deleted++;
+                }
+            }
+        }
+
+        showNotification(`تم حذف ${deleted} مهمة بنجاح`, 'success');
         apiCache.invalidate('tasks');
         loadTeacherDashboard();
     } catch (error) {
