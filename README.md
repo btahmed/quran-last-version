@@ -2,6 +2,10 @@
 
 Application professionnelle pour la mémorisation et révision du Coran — PWA full Supabase.
 
+> **✨ Projet nettoyé** — Migration Django → Supabase terminée (commit `60fd039`)  
+> **-9,168 lignes** supprimées, **54 fichiers** obsolètes retirés.  
+> Architecture 100% Supabase, zéro backend Django.
+
 ## Déploiement
 
 | URL | Stack |
@@ -43,6 +47,13 @@ Application professionnelle pour la mémorisation et révision du Coran — PWA 
 ```bash
 cd frontend && python -m http.server 3000
 # → http://localhost:3000
+```
+
+**Credentials de test :**
+```
+Admin:   admin2 / [mot de passe]
+Teacher: prof_youssef / [mot de passe]
+Student: abdelbasset_kolli / [mot de passe]
 ```
 
 ## Variables d'environnement
@@ -90,13 +101,35 @@ quran-last-version/
 
 | Table | Description |
 |-------|-------------|
-| `profiles` | Utilisateurs (username, role, first_name, last_name) |
-| `tasks` | Tâches (type: hifz/muraja/tilawa, assigned_by, user_id) |
-| `submissions` | Soumissions audio (task_id, student_id, audio_url, status) |
-| `classes` | Classes (name, teacher_id) |
-| `class_members` | Relation classe ↔ étudiant |
-| `points_log` | Historique de points |
-| `leaderboard` | Classement |
+| `profiles` | Utilisateurs (id uuid, username, role, first_name, last_name, phone) |
+| `tasks` | Tâches (type: hifz/muraja/tilawa, assigned_by, user_id, surah, ayah, points) |
+| `submissions` | Soumissions audio (task_id, student_id, audio_url, status, awarded_points) |
+| `classes` | Classes (name, teacher_id, time_slot, max_students) |
+| `class_members` | Relation classe ↔ étudiant (class_id, student_id) |
+| `points_log` | Historique de points (student_id, delta, reason, submission_id) |
+| `progress` | Progression mémorisation (user_id, surah, ayah, accuracy, duration) |
+| `leaderboard` | Vue SQL : classement par total_points |
+
+**Storage Bucket :**
+- `audio-submissions` — fichiers audio des soumissions (path: `{user_id}/{task_id}/{uuid}.webm`)
+
+## Migration Django → Supabase
+
+**Ce qui a été supprimé :**
+- ❌ Backend Django complet (`backend/`, -2,300 lignes)
+- ❌ Ancien monolithe `script.js` (205KB, -4,871 lignes)
+- ❌ Ancien `index.html` racine (-1,043 lignes)
+- ❌ Docker (`Dockerfile`, `docker-compose.yml`, `nginx.conf`)
+- ❌ Config obsolètes (`render.yaml`, `package.json`, `.coderabbit.yaml`)
+- ❌ Docs et tests obsolètes (`docs/`, `tests/`, `scripts/`)
+
+**Total : -9,168 lignes, 54 fichiers supprimés**
+
+**Architecture finale :**
+- ✅ Frontend modulaire ES6 (`frontend/src/`)
+- ✅ Supabase Auth + Database + Storage
+- ✅ Déploiement Vercel (fichiers statiques)
+- ✅ Zero backend custom, zero Docker
 
 ---
 *Made with ❤️ for Quran learners*
