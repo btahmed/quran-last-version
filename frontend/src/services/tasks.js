@@ -135,7 +135,7 @@ export function switchTaskTab(tabName) {
         const sub = subByTask[task.id];
         let dotClass = 'task-status-pending';
         let statusBadge = '<span class="badge" style="background:rgba(59,130,246,0.15);color:#3b82f6;">لم يُسلَّم</span>';
-        let actionBtn = `<button class="btn btn-primary btn-sm" onclick="QuranReview.openRecordModal(${task.id}, '${task.title.replace(/'/g, "\\'")}')">🎤 تسجيل</button>`;
+        let actionBtn = `<button class="btn btn-primary btn-sm" onclick="QuranReview.openRecordModal('${task.id}', '${task.title.replace(/'/g, "\\'")}')">🎤 تسجيل</button>`;
 
         if (sub) {
             if (sub.status === 'approved') {
@@ -145,7 +145,7 @@ export function switchTaskTab(tabName) {
             } else if (sub.status === 'rejected') {
                 dotClass = 'task-status-pending';
                 statusBadge = '<span class="badge" style="background:rgba(239,68,68,0.15);color:#ef4444;">مرفوض ✗</span>';
-                actionBtn = `<button class="btn btn-primary btn-sm" onclick="QuranReview.openRecordModal(${task.id}, '${task.title.replace(/'/g, "\\'")}')">🎤 إعادة التسجيل</button>`;
+                actionBtn = `<button class="btn btn-primary btn-sm" onclick="QuranReview.openRecordModal('${task.id}', '${task.title.replace(/'/g, "\\'")}')">🎤 إعادة التسجيل</button>`;
             } else {
                 dotClass = 'task-status-submitted';
                 statusBadge = '<span class="badge badge-warning" style="font-size:0.7rem;padding:2px 8px;">بانتظار التصحيح</span>';
