@@ -102,11 +102,20 @@ export async function getClasses() {
 
 export async function getMyStudents() {
   try {
-    // Récupérer l'utilisateur connecté
-    const { data: authData } = await supabaseClient.auth.getUser()
-    if (!authData?.user) return { data: [], error: null }
+    // Récupérer l'utilisateur connecté depuis localStorage (Django JWT — pas Supabase Auth)
+    const localUser = JSON.parse(localStorage.getItem('quranreview_user') || 'null')
+    if (!localUser?.username) return { data: [], error: null }
 
-    const teacherId = authData.user.id
+    // Résoudre l'UUID Supabase du prof via son username
+    const { data: profileData, error: profileError } = await supabaseClient
+      .from('profiles')
+      .select('id')
+      .eq('username', localUser.username)
+      .single()
+
+    if (profileError || !profileData) return { data: [], error: profileError }
+
+    const teacherId = profileData.id
 
     // Récupérer les étudiants des classes de ce prof
     const { data: classMembers, error: cmError } = await supabaseClient
