@@ -171,7 +171,11 @@ function _applyStudentData(tasks, submissions, pointsData) {
 
     // Construire le lookup soumissions par tâche
     const subByTask = {};
-    submissions.forEach(s => { subByTask[s.task.id] = s; });
+    submissions.forEach(s => { 
+      if (s.tasks && s.tasks.id) {
+        subByTask[s.tasks.id] = s; 
+      }
+    });
 
     const done = submissions.filter(s => s.status === 'approved').length;
     const rejected = submissions.filter(s => s.status === 'rejected').length;
