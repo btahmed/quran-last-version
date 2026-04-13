@@ -102,12 +102,39 @@ export async function getClasses() {
 
 export async function getMyStudents() {
   try {
-    // Récupérer tous les étudiants (pour un enseignant)
-    // TODO: Filtrer par classe/teacher_id quand la relation sera établie
+    // Récupérer l'utilisateur connecté
+    const { data: authData } = await supabaseClient.auth.getUser()
+    if (!authData?.user) return { data: [], error: null }
+
+    const teacherId = authData.user.id
+
+    // Récupérer les étudiants des classes de ce prof
+    const { data: classMembers, error: cmError } = await supabaseClient
+      .from('class_members')
+      .select('student_id, classes!inner(teacher_id)')
+      .eq('classes.teacher_id', teacherId)
+
+    if (cmError) {
+      // Si la table n'existe pas encore, retourner tous les étudiants (fallback)
+      console.warn('class_members query failed, falling back to all students:', cmError)
+      const { data, error } = await supabaseClient
+        .from('profiles')
+        .select('*')
+        .eq('role', 'student')
+        .order('username', { ascending: true })
+      return { data, error }
+    }
+
+    if (!classMembers || classMembers.length === 0) {
+      return { data: [], error: null }
+    }
+
+    // Récupérer les profils des étudiants
+    const studentIds = classMembers.map(cm => cm.student_id)
     const { data, error } = await supabaseClient
       .from('profiles')
       .select('*')
-      .eq('role', 'student')
+      .in('id', studentIds)
       .order('username', { ascending: true })
 
     return { data, error }
@@ -124,6 +151,125 @@ export async function assignStudentToClass(studentId, classId) {
       .select()
       .single()
 
+    return { data, error }
+  } catch (error) {
+    return { data: null, error }
+  }
+}
+
+export async function removeStudentFromClass(studentId, classId) {
+  try {
+    const { error } = await supabaseClient
+      .from('class_members')
+      .delete()
+      .eq('student_id', studentId)
+      .eq('class_id', classId)
+
+    return { error }
+  } catch (error) {
+    return { error }
+  }
+}
+
+export async function createClass(name) {
+  try {
+    const { data: authData } = await supabaseClient.auth.getUser()
+    if (!authData?.user) return { data: null, error: new Error('Non authentifié') }
+
+    const { data, error } = await supabaseClient
+      .from('classes')
+      .insert({ name, teacher_id: authData.user.id })
+      .select()
+      .single()
+
+    return { data, error }
+  } catch (error) {
+    return { data: null, error }
+  }
+}
+
+export async function createClassWithTeacher(name, teacherId) {
+  try {
+    const { data, error } = await supabaseClient
+      .from('classes')
+      .insert({ name, teacher_id: teacherId })
+      .select()
+      .single()
+
+    return { data, error }
+  } catch (error) {
+    return { data: null, error }
+  }
+}
+
+export async function deleteClass(classId) {
+  try {
+    const { error } = await supabaseClient
+      .from('classes')
+      .delete()
+      .eq('id', classId)
+
+    return { error }
+  } catch (error) {
+    return { error }
+  }
+}
+
+export async function getMyClasses() {
+  try {
+    const { data: authData } = await supabaseClient.auth.getUser()
+    if (!authData?.user) return { data: [], error: null }
+
+    const { data, error } = await supabaseClient
+      .from('classes')
+      .select('*, class_members(student_id, profiles!student_id(id, username))')
+      .eq('teacher_id', authData.user.id)
+      .order('name', { ascending: true })
+
+    return { data, error }
+  } catch (error) {
+    return { data: null, error }
+  }
+}
+
+export async function getClassStudents(classId) {
+  try {
+    const { data, error } = await supabaseClient
+      .from('class_members')
+      .select('profiles!student_id(*)')
+      .eq('class_id', classId)
+
+    if (error) return { data: null, error }
+
+    const students = (data || []).map(cm => cm.profiles).filter(Boolean)
+    return { data: students, error: null }
+  } catch (error) {
+    return { data: null, error }
+  }
+}
+
+export async function getAllStudentsNotInClass(classId) {
+  try {
+    // Récupérer les étudiants déjà dans cette classe
+    const { data: members } = await supabaseClient
+      .from('class_members')
+      .select('student_id')
+      .eq('class_id', classId)
+
+    const memberIds = (members || []).map(m => m.student_id)
+
+    // Récupérer tous les étudiants qui ne sont pas dans cette classe
+    let query = supabaseClient
+      .from('profiles')
+      .select('*')
+      .eq('role', 'student')
+      .order('username', { ascending: true })
+
+    if (memberIds.length > 0) {
+      query = query.not('id', 'in', `(${memberIds.join(',')})`)
+    }
+
+    const { data, error } = await query
     return { data, error }
   } catch (error) {
     return { data: null, error }
