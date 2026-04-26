@@ -33,7 +33,11 @@ export function openRecordModal(taskId, taskTitle) {
     if (preview) {
         preview.classList.add('hidden');
         preview.removeAttribute('src'); // Évite un 404 sur src vide
-        try { preview.load(); } catch (e) {} // Stoppe l'audio précédent
+        try {
+            preview.load();
+        } catch (e) {
+            Logger.warn('AUDIO', 'Failed to stop audio preview', e);
+        } // Stoppe l'audio précédent
     }
 
     document.getElementById('recording-submit-btn').classList.add('hidden');
