@@ -97,7 +97,7 @@ export function render() {
                             </label>
                         </div>
 
-                        <button class="btn btn-glow btn-full" onclick="playWard()">
+                        <button class="btn btn-glow btn-full" onclick="QuranReview.playWard()">
                             <span>▶️</span>
                             تشغيل الورد
                         </button>

@@ -11,6 +11,7 @@ import {
 } from './services/auth.js';
 import { loadTasksFromApi } from './services/tasks.js';
 import { hifzEngine } from './services/hifz.js';
+import { competitionManager } from './services/competition.js';
 import { navigateTo, renderPage, setupNavigation } from './core/router.js';
 import { render as renderModals, init as initModals } from './components/AuthModal.js';
 import { toggleRecording, stopRecording, submitRecording, openRecordModal } from './components/AudioRecordModal.js';
@@ -153,8 +154,21 @@ window.QuranReview = {
     playSurahAudio: MemorizationPage.playSurahAudio,
     openTarteel: MemorizationPage.openTarteel,
 
-    // HifzPage / Competition — moteur de mémorisation
+    // HifzPage / Competition — moteur de mémorisation et compétition
     hifzEngine,
+    competitionManager,
+
+    // Récupère le texte arabe d'un verset depuis l'API Quran.com (CDN public)
+    fetchAyahText: async (surahId, ayahNumber) => {
+        try {
+            const res = await fetch(`https://api.alquran.cloud/v1/ayah/${surahId}:${ayahNumber}`);
+            if (!res.ok) throw new Error('API error');
+            const json = await res.json();
+            return json?.data?.text || '';
+        } catch {
+            return '';
+        }
+    },
 
     // AudioPlayer — alias pour les callbacks du player
     playPreviousAyah: WardPage.previousWardAyah,
