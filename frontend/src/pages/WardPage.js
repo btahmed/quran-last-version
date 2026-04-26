@@ -121,13 +121,13 @@ export function render() {
                         </div>
 
                         <div class="player-controls">
-                            <button class="player-btn player-btn-secondary" id="prev-ayah-btn" onclick="QuranReview.previousWardAyah()">
+                            <button class="player-btn player-btn-secondary" id="prev-ayah-btn" onclick="QuranReview.previousWardAyah()" aria-label="الآية السابقة" title="الآية السابقة">
                                 ⏮️
                             </button>
-                            <button class="player-btn player-btn-lg" id="play-ward-btn" onclick="QuranReview.toggleWardPlay()">
+                            <button class="player-btn player-btn-lg" id="play-ward-btn" onclick="QuranReview.toggleWardPlay()" aria-label="تشغيل أو إيقاف" title="تشغيل أو إيقاف">
                                 ▶️
                             </button>
-                            <button class="player-btn player-btn-secondary" id="next-ayah-btn" onclick="QuranReview.nextWardAyah()">
+                            <button class="player-btn player-btn-secondary" id="next-ayah-btn" onclick="QuranReview.nextWardAyah()" aria-label="الآية التالية" title="الآية التالية">
                                 ⏭️
                             </button>
                         </div>

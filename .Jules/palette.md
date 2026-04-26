@@ -1,0 +1,3 @@
+## 2026-06-26 - Add ARIA Labels to Icon-Only Controls
+**Learning:** Found that this application frequently utilizes native HTML `<button>` elements for audio player and recording controls, but relies exclusively on emojis as the inner content (e.g., ⏮️, ▶️, 🎙️) without any semantic, screen-reader accessible names. Emojis alone are insufficient for screen readers or when images/fonts fail to load.
+**Action:** When implementing or modifying interactive icon-only components, always append appropriate native `aria-label` and `title` attributes that map to the specific action the control performs, preferably localized to match the app's default language (in this case, Arabic).

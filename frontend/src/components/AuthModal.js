@@ -23,6 +23,8 @@ export function render() {
             <div style="text-align: center; margin-bottom: var(--space-6);">
                 <button id="recording-btn"
                     onclick="QuranReview.toggleRecording()"
+                    aria-label="بدء أو إيقاف التسجيل"
+                    title="بدء أو إيقاف التسجيل"
                     style="width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--color-primary); background: var(--glass-bg); font-size: 2rem; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center;">
                     🎙️
                 </button>
