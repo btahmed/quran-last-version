@@ -13,7 +13,7 @@ export async function getMyTasks() {
       .from('profiles')
       .select('id')
       .eq('username', localUser.username)
-      .single()
+      .maybeSingle()
 
     if (!profile) return { data: [], error: null }
 
@@ -67,7 +67,7 @@ export async function createTask(payload) {
       .from('profiles')
       .select('id')
       .eq('username', localUser.username)
-      .single()
+      .maybeSingle()
 
     if (!profile) return { data: null, error: { message: 'Profil non trouvé' } }
 
