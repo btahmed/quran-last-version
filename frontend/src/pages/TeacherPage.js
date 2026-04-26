@@ -432,7 +432,7 @@ function _applyTeacherData(students, pending, tasks) {
             });
 
             taskListEl.innerHTML = headerHtml + Array.from(batches.values()).map(({ task, count, ids }) => {
-                const typeLabel = task.type_display || task.type || '';
+                const typeLabel = task.type || '';
                 const dueDate = task.due_date ? new Date(task.due_date).toLocaleDateString('ar-SA') : '';
                 const date = new Date(task.created_at).toLocaleDateString('ar-SA');
                 const idsJson = JSON.stringify(ids);
@@ -515,7 +515,7 @@ export async function viewStudentProgress(studentId, studentName) {
         } else {
             html += '<div class="student-tasks-progress">';
             data.tasks.forEach(task => {
-                const typeLabel = task.type_display || (task.task_type === 'memorization' ? 'حفظ' : task.task_type === 'recitation' ? 'تلاوة' : 'أخرى');
+                const typeLabel = task.type || 'مهمة';
                 let statusBadge = '';
                 if (task.submission_status === 'approved') {
                     statusBadge = '<span class="status-badge status-approved">مقبول ✓</span>';

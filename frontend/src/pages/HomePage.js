@@ -439,8 +439,8 @@ function renderTeacherSubmissions(subs) {
     }
     el.innerHTML = subs.slice(0, 5).map(s => `
         <div class="submission-row">
-            <span>${escapeHtml(s.student_name || s.student || 'طالب')} —
-                  ${escapeHtml(s.task_title   || s.task   || 'تسليم')}</span>
+            <span>${escapeHtml(s.profiles?.first_name || s.profiles?.username || s.student_name || 'طالب')} —
+                  ${escapeHtml(s.tasks?.title || s.task_title || 'تسليم')}</span>
             <span class="badge badge-warning">⏳ بانتظار التصحيح</span>
         </div>
     `).join('');
