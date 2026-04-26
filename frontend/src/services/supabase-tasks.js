@@ -29,6 +29,34 @@ export async function getMyTasks() {
   }
 }
 
+export async function deleteTasksByIds(ids) {
+  try {
+    const { data, error } = await supabaseClient
+      .from('tasks')
+      .delete()
+      .in('id', ids)
+
+    if (!error) apiCache.invalidate('tasks')
+    return { data, error }
+  } catch (error) {
+    return { data: null, error }
+  }
+}
+
+export async function deleteTasksByStudentIds(studentIds) {
+  try {
+    const { data, error } = await supabaseClient
+      .from('tasks')
+      .delete()
+      .in('user_id', studentIds)
+
+    if (!error) apiCache.invalidate('tasks')
+    return { data, error }
+  } catch (error) {
+    return { data: null, error }
+  }
+}
+
 export async function getStudentTasks(studentId) {
   try {
     const { data, error } = await supabaseClient

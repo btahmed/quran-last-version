@@ -560,14 +560,17 @@ export function toggleAssignMode(mode) {
 
 export async function handleDeleteBatch(ids, title, count) {
     if (!confirm(`حذف "${title}" لـ ${count} طالب؟\nلا يمكن التراجع عن هذا الإجراء.`)) return;
-    // Migration Supabase
-    const results = await Promise.allSettled(
-        ids.map(id => supabaseTasks.deleteTask(id))
-    );
-    const deleted = results.filter(r => r.status === 'fulfilled' && !r.value.error).length;
-    showNotification(`تم حذف ${deleted} مهمة`, deleted === ids.length ? 'success' : 'error');
-    apiCache.invalidate('tasks');
-    loadTeacherDashboard();
+
+    try {
+        const { error } = await supabaseTasks.deleteTasksByIds(ids);
+        if (error) throw error;
+
+        showNotification(`تم حذف المهام بنجاح`, 'success');
+        apiCache.invalidate('tasks');
+        loadTeacherDashboard();
+    } catch (error) {
+        showNotification(error.message, 'error');
+    }
 }
 
 export async function handleDeleteAllTasks() {
@@ -579,22 +582,16 @@ export async function handleDeleteAllTasks() {
     if (!token) return;
 
     try {
-        // Récupérer toutes les tâches du prof puis supprimer une par une
+        // Récupérer toutes les tâches du prof puis supprimer en bloc
         const { data: students } = await supabaseAdmin.getMyStudents();
         if (!students?.length) { showNotification('لا يوجد طلاب', 'error'); return; }
 
-        let deleted = 0;
-        for (const student of students) {
-            const { data: tasks } = await supabaseTasks.getStudentTasks(student.id);
-            if (tasks?.length) {
-                for (const task of tasks) {
-                    await supabaseTasks.deleteTask(task.id);
-                    deleted++;
-                }
-            }
-        }
+        const studentIds = students.map(s => s.id);
+        const { error } = await supabaseTasks.deleteTasksByStudentIds(studentIds);
 
-        showNotification(`تم حذف ${deleted} مهمة بنجاح`, 'success');
+        if (error) throw error;
+
+        showNotification(`تم حذف جميع المهام بنجاح`, 'success');
         apiCache.invalidate('tasks');
         loadTeacherDashboard();
     } catch (error) {
