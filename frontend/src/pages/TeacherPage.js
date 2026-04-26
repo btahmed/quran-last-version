@@ -249,6 +249,16 @@ function escapeHtml(text) {
         .replace(/'/g, '&#039;');
 }
 
+function escapeJs(text) {
+    if (!text) return '';
+    return String(text)
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "\\'")
+        .replace(/"/g, '\\"')
+        .replace(/\n/g, '\\n')
+        .replace(/\r/g, '\\r');
+}
+
 function showLoading() {
     const overlay = document.querySelector('.loading-overlay');
     if (overlay) overlay.style.display = 'flex';
@@ -355,10 +365,10 @@ function _applyTeacherData(students, pending, tasks) {
                 return `<div class="pending-card">
                     <div class="pending-card-header">
                         <strong>🎓 ${escapeHtml(studentName)}</strong>
-                        <span class="task-type-badge">${taskTitle}</span>
+                        <span class="task-type-badge">${escapeHtml(taskTitle)}</span>
                     </div>
                     <div class="pending-card-meta">
-                        <span>🏆 ${taskPoints} نقطة</span>
+                        <span>🏆 ${escapeHtml(String(taskPoints))} نقطة</span>
                         <span>📅 ${date}</span>
                     </div>
                     ${s.audio_url ? `
@@ -374,8 +384,8 @@ function _applyTeacherData(students, pending, tasks) {
                         </div>
                     ` : '<p class="empty-state">لا يوجد ملف صوتي</p>'}
                     <div class="pending-card-actions">
-                        <button class="btn btn-success btn-sm" onclick="QuranReview.openGradeModal('${s.id}', '${escapeHtml(studentName).replace(/'/g, "\\'")}', '${escapeHtml(taskTitle).replace(/'/g, "\\'")}')">⭐ قبول وتقييم</button>
-                        <button class="btn btn-danger btn-sm" onclick="QuranReview.openRejectModal('${s.id}', '${escapeHtml(studentName).replace(/'/g, "\\'")}')">✗ رفض</button>
+                        <button class="btn btn-success btn-sm" onclick="QuranReview.openGradeModal('${s.id}', '${escapeHtml(escapeJs(studentName))}', '${escapeHtml(escapeJs(taskTitle))}')">⭐ قبول وتقييم</button>
+                        <button class="btn btn-danger btn-sm" onclick="QuranReview.openRejectModal('${s.id}', '${escapeHtml(escapeJs(studentName))}')">✗ رفض</button>
                     </div>
                 </div>`;
             }).join('');
@@ -390,7 +400,7 @@ function _applyTeacherData(students, pending, tasks) {
         } else {
             studentsList.innerHTML = students.map(s => {
                 const safeName = escapeHtml(s.first_name || s.username);
-                const safeNameAttr = (s.first_name || s.username).replace(/['"\\]/g, '');
+                const safeNameAttr = escapeHtml(escapeJs(s.first_name || s.username));
                 return `<div class="student-card clickable" onclick="QuranReview.viewStudentProgress('${s.id}', '${safeNameAttr}')">
                     <div class="student-card-name">🎓 ${safeName}</div>
                     <div class="student-card-stats">
@@ -436,12 +446,12 @@ function _applyTeacherData(students, pending, tasks) {
                 const dueDate = task.due_date ? new Date(task.due_date).toLocaleDateString('ar-SA') : '';
                 const date = new Date(task.created_at).toLocaleDateString('ar-SA');
                 const idsJson = JSON.stringify(ids);
-                const safeTitle = task.title.replace(/'/g, "\\'");
+                const safeTitle = escapeHtml(escapeJs(task.title));
                 return `<div class="task-card" style="position:relative;">
                     <div class="task-card-header">
-                        <h3 class="task-card-title">${task.title}</h3>
+                        <h3 class="task-card-title">${escapeHtml(task.title)}</h3>
                         <div style="display:flex; align-items:center; gap:8px;">
-                            <span class="task-type-badge">${typeLabel}</span>
+                            <span class="task-type-badge">${escapeHtml(typeLabel)}</span>
                             <button onclick="QuranReview.handleDeleteBatch(${idsJson}, '${safeTitle}', ${count})"
                                 style="padding:4px 10px; background:#fff; border:1px solid #ef4444; border-radius:6px; color:#ef4444; font-size:0.78rem; cursor:pointer; flex-shrink:0;"
                                 title="حذف هذه المهمة">
@@ -449,9 +459,9 @@ function _applyTeacherData(students, pending, tasks) {
                             </button>
                         </div>
                     </div>
-                    ${task.description ? `<p class="task-card-desc">${task.description}</p>` : ''}
+                    ${task.description ? `<p class="task-card-desc">${escapeHtml(task.description)}</p>` : ''}
                     <div class="task-card-meta">
-                        <span>🏆 ${task.points} نقطة</span>
+                        <span>🏆 ${escapeHtml(String(task.points))} نقطة</span>
                         <span>👥 ${count} طالب</span>
                         <span>📅 أُنشئت: ${date}</span>
                         ${dueDate ? `<span>⏰ تسليم: ${dueDate}</span>` : ''}
@@ -478,7 +488,7 @@ function _loadStudentCheckboxes(students) {
     const checkboxes = students.map(student => `
         <label class="student-checkbox-label">
             <input type="checkbox" name="student-ids" value="${student.id}">
-            <span class="student-name">${student.first_name || student.username}</span>
+            <span class="student-name">${escapeHtml(student.first_name || student.username)}</span>
         </label>
     `).join('');
 
@@ -529,9 +539,9 @@ export async function viewStudentProgress(studentId, studentName) {
 
                 html += `<div class="student-task-row">
                     <div class="student-task-info">
-                        <span class="task-type-badge">${typeLabel}</span>
-                        <strong>${task.title}</strong>
-                        <span>🏆 ${task.points}</span>
+                        <span class="task-type-badge">${escapeHtml(typeLabel)}</span>
+                        <strong>${escapeHtml(task.title)}</strong>
+                        <span>🏆 ${escapeHtml(String(task.points))}</span>
                     </div>
                     ${statusBadge}
                 </div>`;
@@ -541,7 +551,7 @@ export async function viewStudentProgress(studentId, studentName) {
 
         contentEl.innerHTML = html;
     } catch (error) {
-        contentEl.innerHTML = `<p class="empty-state">${error.message}</p>`;
+        contentEl.innerHTML = `<p class="empty-state">${escapeHtml(error.message)}</p>`;
     }
 }
 
@@ -835,15 +845,15 @@ export function renderAdminUsersList(users) {
         html += `
             <div class="dashboard-item">
                 <div class="item-info">
-                    <div class="item-title">${user.username}${roleBadge}</div>
+                    <div class="item-title">${escapeHtml(user.username)}${roleBadge}</div>
                     <div class="item-subtitle">
-                        ${user.first_name} ${user.last_name} •
+                        ${escapeHtml(user.first_name)} ${escapeHtml(user.last_name)} •
                         ${(user.created_at || user.date_joined) ? new Date(user.created_at || user.date_joined).toLocaleDateString('ar-SA') : '—'}
                     </div>
                 </div>
                 <div class="item-actions">
-                    <button class="btn btn-sm btn-secondary" onclick="QuranReview.openUserEditModal('${user.id}', '${user.username}', '${user.first_name}', '${user.last_name}', '${user.role}', ${!!user.is_superuser})">✏️ تعديل</button>
-                    ${user.id !== state.user?.id ? `<button class="btn btn-sm btn-danger" onclick="QuranReview.deleteUser('${user.id}', '${user.username}')">🗑️ حذف</button>` : ''}
+                    <button class="btn btn-sm btn-secondary" onclick="QuranReview.openUserEditModal('${user.id}', '${escapeHtml(escapeJs(user.username))}', '${escapeHtml(escapeJs(user.first_name))}', '${escapeHtml(escapeJs(user.last_name))}', '${escapeHtml(escapeJs(user.role))}', ${!!user.is_superuser})">✏️ تعديل</button>
+                    ${user.id !== state.user?.id ? `<button class="btn btn-sm btn-danger" onclick="QuranReview.deleteUser('${user.id}', '${escapeHtml(escapeJs(user.username))}')">🗑️ حذف</button>` : ''}
                 </div>
             </div>
         `;
