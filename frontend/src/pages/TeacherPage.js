@@ -266,7 +266,7 @@ function hideLoading() {
 async function loadTeacherDashboard() {
     const token = localStorage.getItem(config.apiTokenKey);
     if (!token) { showAuthModal(); return; }
-    if (state.user && state.user.role !== 'teacher' && !state.user.is_staff) {
+    if (state.user && state.user.role !== 'teacher' && state.user.role !== 'admin' && !state.user.is_superuser) {
         window.QuranReview && window.QuranReview.navigateTo('soumettre');
         return;
     }
@@ -351,9 +351,10 @@ function _applyTeacherData(students, pending, tasks) {
                 const taskTitle = s.task?.title || s.tasks?.title || 'Tâche sans titre';
                 const taskPoints = s.task?.points || s.tasks?.points || 0;
                 
+                const studentName = s.student_name || s.profiles?.first_name || s.profiles?.username || 'طالب';
                 return `<div class="pending-card">
                     <div class="pending-card-header">
-                        <strong>🎓 ${s.student_name}</strong>
+                        <strong>🎓 ${escapeHtml(studentName)}</strong>
                         <span class="task-type-badge">${taskTitle}</span>
                     </div>
                     <div class="pending-card-meta">
@@ -373,8 +374,8 @@ function _applyTeacherData(students, pending, tasks) {
                         </div>
                     ` : '<p class="empty-state">لا يوجد ملف صوتي</p>'}
                     <div class="pending-card-actions">
-                        <button class="btn btn-success btn-sm" onclick="QuranReview.openGradeModal(${s.id}, '${escapeHtml(s.student_name).replace(/'/g, "\\'")}', '${escapeHtml(s.task ? s.task.title : '').replace(/'/g, "\\'")}')">⭐ قبول وتقييم</button>
-                        <button class="btn btn-danger btn-sm" onclick="QuranReview.openRejectModal(${s.id}, '${escapeHtml(s.student_name).replace(/'/g, "\\'")}')">✗ رفض</button>
+                        <button class="btn btn-success btn-sm" onclick="QuranReview.openGradeModal('${s.id}', '${escapeHtml(studentName).replace(/'/g, "\\'")}', '${escapeHtml(taskTitle).replace(/'/g, "\\'")}')">⭐ قبول وتقييم</button>
+                        <button class="btn btn-danger btn-sm" onclick="QuranReview.openRejectModal('${s.id}', '${escapeHtml(studentName).replace(/'/g, "\\'")}')">✗ رفض</button>
                     </div>
                 </div>`;
             }).join('');
@@ -390,11 +391,11 @@ function _applyTeacherData(students, pending, tasks) {
             studentsList.innerHTML = students.map(s => {
                 const safeName = escapeHtml(s.first_name || s.username);
                 const safeNameAttr = (s.first_name || s.username).replace(/['"\\]/g, '');
-                return `<div class="student-card clickable" onclick="QuranReview.viewStudentProgress(${s.id}, '${safeNameAttr}')">
+                return `<div class="student-card clickable" onclick="QuranReview.viewStudentProgress('${s.id}', '${safeNameAttr}')">
                     <div class="student-card-name">🎓 ${safeName}</div>
                     <div class="student-card-stats">
-                        <span>🏆 ${escapeHtml(String(s.total_points))} نقطة</span>
-                        <span>📝 ${escapeHtml(String(s.submissions_count))} تسليم</span>
+                        <span>🏆 ${escapeHtml(String(s.total_points ?? '—'))} نقطة</span>
+                        <span>📝 ${escapeHtml(String(s.submissions_count ?? '—'))} تسليم</span>
                     </div>
                     <span class="student-card-arrow">←</span>
                 </div>`;
@@ -431,7 +432,7 @@ function _applyTeacherData(students, pending, tasks) {
             });
 
             taskListEl.innerHTML = headerHtml + Array.from(batches.values()).map(({ task, count, ids }) => {
-                const typeLabel = task.type_display || task.type || '';
+                const typeLabel = task.type || '';
                 const dueDate = task.due_date ? new Date(task.due_date).toLocaleDateString('ar-SA') : '';
                 const date = new Date(task.created_at).toLocaleDateString('ar-SA');
                 const idsJson = JSON.stringify(ids);
@@ -506,7 +507,7 @@ export async function viewStudentProgress(studentId, studentName) {
         if (error) throw new Error('فشل تحميل بيانات الطالب');
 
         let html = `<div class="student-detail-stats">
-            <div class="stat-mini"><strong>🏆</strong> ${data.student.total_points} نقطة</div>
+            <div class="stat-mini"><strong>🏆</strong> ${data.totalPoints ?? 0} نقطة</div>
         </div>`;
 
         if (!data.tasks.length) {
@@ -514,7 +515,7 @@ export async function viewStudentProgress(studentId, studentName) {
         } else {
             html += '<div class="student-tasks-progress">';
             data.tasks.forEach(task => {
-                const typeLabel = task.type_display || (task.task_type === 'memorization' ? 'حفظ' : task.task_type === 'recitation' ? 'تلاوة' : 'أخرى');
+                const typeLabel = task.type || 'مهمة';
                 let statusBadge = '';
                 if (task.submission_status === 'approved') {
                     statusBadge = '<span class="status-badge status-approved">مقبول ✓</span>';
@@ -837,12 +838,12 @@ export function renderAdminUsersList(users) {
                     <div class="item-title">${user.username}${roleBadge}</div>
                     <div class="item-subtitle">
                         ${user.first_name} ${user.last_name} •
-                        ${new Date(user.date_joined).toLocaleDateString('ar-SA')}
+                        ${(user.created_at || user.date_joined) ? new Date(user.created_at || user.date_joined).toLocaleDateString('ar-SA') : '—'}
                     </div>
                 </div>
                 <div class="item-actions">
-                    <button class="btn btn-sm btn-secondary" onclick="QuranReview.openUserEditModal(${user.id}, '${user.username}', '${user.first_name}', '${user.last_name}', '${user.role}', ${user.is_superuser})">✏️ تعديل</button>
-                    ${user.id !== state.user?.id ? `<button class="btn btn-sm btn-danger" onclick="QuranReview.deleteUser(${user.id}, '${user.username}')">🗑️ حذف</button>` : ''}
+                    <button class="btn btn-sm btn-secondary" onclick="QuranReview.openUserEditModal('${user.id}', '${user.username}', '${user.first_name}', '${user.last_name}', '${user.role}', ${!!user.is_superuser})">✏️ تعديل</button>
+                    ${user.id !== state.user?.id ? `<button class="btn btn-sm btn-danger" onclick="QuranReview.deleteUser('${user.id}', '${user.username}')">🗑️ حذف</button>` : ''}
                 </div>
             </div>
         `;

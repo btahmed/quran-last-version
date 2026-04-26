@@ -441,7 +441,7 @@ async function openUserProfile(userId) {
                 </div>
                 <div style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:10px; padding:12px;">
                     <div style="font-size:0.72rem; color:#6b7280; margin-bottom:4px;">تاريخ الانضمام</div>
-                    <div style="font-size:0.82rem; color:#374151;">${u.date_joined ? u.date_joined.slice(0, 10) : '—'}</div>
+                    <div style="font-size:0.82rem; color:#374151;">${(u.created_at || u.date_joined) ? (u.created_at || u.date_joined).slice(0, 10) : '—'}</div>
                 </div>
                 ${!isTeacher ? `
                 <div style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:10px; padding:12px;">

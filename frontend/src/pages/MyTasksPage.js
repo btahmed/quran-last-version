@@ -150,7 +150,7 @@ async function _fetchAndCacheStudent(headers) {
 
         const tasks       = tasksResult.data || [];
         const submissions = subsResult.data || [];
-        const pointsData  = { total_points: pointsResult.data || 0, logs: [] };
+        const pointsData  = { total_points: pointsResult.data?.total || 0, logs: [] };
 
         apiCache.set('tasks', tasks);
         apiCache.set('my-submissions', submissions);
@@ -171,10 +171,9 @@ function _applyStudentData(tasks, submissions, pointsData) {
 
     // Construire le lookup soumissions par tâche
     const subByTask = {};
-    submissions.forEach(s => { 
-      if (s.tasks && s.tasks.id) {
-        subByTask[s.tasks.id] = s; 
-      }
+    submissions.forEach(s => {
+      const taskId = s.task_id || s.tasks?.id;
+      if (taskId) subByTask[taskId] = s;
     });
 
     const done = submissions.filter(s => s.status === 'approved').length;
@@ -341,7 +340,7 @@ export function switchTaskTab(tabName) {
             }
         }
 
-        const typeLabel = task.type_display || task.type || 'مهمة';
+        const typeLabel = task.type || 'مهمة';
         const dueDate = task.due_date ? new Date(task.due_date).toLocaleDateString('ar-SA') : '';
 
         // Feedback: note emoji pour approved, motif pour rejected
