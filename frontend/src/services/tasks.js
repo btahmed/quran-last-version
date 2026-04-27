@@ -153,7 +153,7 @@ export function switchTaskTab(tabName) {
             }
         }
 
-        const typeLabel = task.type_display || (task.task_type === 'memorization' ? 'حفظ' : task.task_type === 'recitation' ? 'تلاوة' : 'أخرى');
+        const typeLabel = task.type || 'مهمة';
         const dueDate = task.due_date ? new Date(task.due_date).toLocaleDateString('ar-SA') : '';
 
         return `<div class="task-card">

@@ -172,8 +172,8 @@ export async function init() {
     document.getElementById('admin-users-list')?.addEventListener('click', (e) => {
         const row = e.target.closest('.admin-user-row');
         if (!row) return;
-        const id = Number(row.dataset.userId);
-        if (!Number.isInteger(id) || id <= 0) return;
+        const id = row.dataset.userId;
+        if (!id) return;
         openUserProfile(id);
     });
 
@@ -205,10 +205,9 @@ async function loadUsers() {
 }
 
 function roleOrder(u) {
-    if (u.is_superuser) return 0;
-    if (u.role === 'admin') return 1;
-    if (u.role === 'teacher') return 2;
-    return 3;
+    if (u.role === 'admin' || u.is_superuser) return 0;
+    if (u.role === 'teacher') return 1;
+    return 2;
 }
 
 function getSortedFiltered() {
@@ -248,7 +247,7 @@ function renderUsersList() {
 
     el.innerHTML = users.map(u => `
         <div style="display:flex; align-items:center; gap:var(--space-3); padding:var(--space-3) var(--space-2); border-bottom:1px solid var(--color-border); cursor:pointer; transition:background 0.15s; border-radius:var(--radius-lg);"
-            data-user-id="${Number.isInteger(Number(u.id)) ? Number(u.id) : ''}"
+            data-user-id="${escapeHtml(u.id)}"
             class="admin-user-row"
             onmouseenter="this.style.background='var(--color-surface)'"
             onmouseleave="this.style.background='transparent'">
@@ -387,7 +386,7 @@ async function openUserProfile(userId) {
                     data-edit-first="${escapeHtml(u.first_name || '')}"
                     data-edit-last="${escapeHtml(u.last_name || '')}"
                     data-edit-role="${escapeHtml(u.role)}"
-                    onclick="window._adminToggleEdit(parseInt(this.dataset.editId), this.dataset.editFirst, this.dataset.editLast, this.dataset.editRole)"
+                    onclick="window._adminToggleEdit(this.dataset.editId, this.dataset.editFirst, this.dataset.editLast, this.dataset.editRole)"
                     style="font-size:0.8rem; padding:6px 14px; background:#f3f4f6; border:1px solid #d1d5db; border-radius:8px; cursor:pointer; color:#374151;">
                     ✏️ تعديل
                 </button>
@@ -418,7 +417,7 @@ async function openUserProfile(userId) {
                         style="font-size:0.8rem; padding:6px 14px; background:#fff; border:1px solid #d1d5db; border-radius:8px; cursor:pointer; color:#6b7280;">
                         إلغاء
                     </button>
-                    <button onclick="window._adminSaveEdit(${u.id})"
+                    <button onclick="window._adminSaveEdit('${u.id}')"
                         style="font-size:0.8rem; padding:6px 14px; background:#10b981; border:none; border-radius:8px; cursor:pointer; color:#fff; font-weight:600;">
                         💾 حفظ
                     </button>
@@ -441,7 +440,7 @@ async function openUserProfile(userId) {
                 </div>
                 <div style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:10px; padding:12px;">
                     <div style="font-size:0.72rem; color:#6b7280; margin-bottom:4px;">تاريخ الانضمام</div>
-                    <div style="font-size:0.82rem; color:#374151;">${(u.created_at || u.date_joined) ? (u.created_at || u.date_joined).slice(0, 10) : '—'}</div>
+                    <div style="font-size:0.82rem; color:#374151;">${u.created_at ? u.created_at.slice(0, 10) : '—'}</div>
                 </div>
                 ${!isTeacher ? `
                 <div style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:10px; padding:12px;">
@@ -520,7 +519,7 @@ async function openUserProfile(userId) {
             <!-- Bouton Supprimer -->
             <div style="margin-top:20px; padding-top:16px; border-top:1px solid #fee2e2;">
                 <button data-delete-id="${u.id}" data-delete-name="${escapeHtml(u.first_name || u.username)}"
-                    onclick="window._adminDelete(parseInt(this.dataset.deleteId), this.dataset.deleteName)"
+                    onclick="window._adminDelete(this.dataset.deleteId, this.dataset.deleteName)"
                     style="width:100%; padding:10px; background:#fff; border:1px solid #ef4444; border-radius:10px; color:#ef4444; font-size:0.85rem; font-weight:600; cursor:pointer; transition:background 0.15s;"
                     onmouseenter="this.style.background='#fef2f2'"
                     onmouseleave="this.style.background='#fff'">
@@ -613,7 +612,7 @@ function renderClassesList() {
     
     el.innerHTML = allClasses.map(c => {
         const teacherName = c.profiles?.username || 'غير محدد';
-        const studentCount = c.class_members?.length || 0;
+        const studentCount = parseInt(c.class_members?.[0]?.count || 0);
         
         return `
             <div style="display:flex; align-items:center; gap:var(--space-3); padding:var(--space-3); border:1px solid var(--color-border); border-radius:var(--radius-lg); margin-bottom:var(--space-2); background:var(--color-surface);">

@@ -153,6 +153,8 @@ window.QuranReview = {
     // MemorizationPage — fonctions manquantes de la façade
     playSurahAudio: MemorizationPage.playSurahAudio,
     openTarteel: MemorizationPage.openTarteel,
+    markAsReviewed: MemorizationPage.markAsReviewed,
+    deleteItem: MemorizationPage.deleteItem,
 
     // HifzPage / Competition — moteur de mémorisation et compétition
     hifzEngine,
