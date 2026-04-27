@@ -335,25 +335,40 @@ function renderAdminDashboard() {
 // INIT DASHBOARDS — fetch API
 // ══════════════════════════════════════════════════════════════
 
-async function initDashboard(role) {
-    const token = localStorage.getItem(config.apiTokenKey);
-    if (!token) return;
-    const headers = { Authorization: `Bearer ${token}` };
+function _applyStudentLocalStats() {
+    const data = state.memorizationData || [];
+    const mastered = data.filter(x => x.status === 'mastered').length;
+    const pct = data.length > 0 ? Math.round((mastered / data.length) * 100) : 0;
 
+    // Calcul streak : jours consécutifs avec au moins une révision
+    const today = new Date();
+    let streak = 0;
+    for (let i = 0; i < 30; i++) {
+        const d = new Date(today);
+        d.setDate(d.getDate() - i);
+        const ds = d.toISOString().split('T')[0];
+        if (data.some(x => x.lastReviewed === ds)) streak++;
+        else if (i > 0) break;
+    }
+
+    setText('hifz-progress', mastered);
+    setText('revision-score', pct + '%');
+    setText('streak-days', streak);
+}
+
+async function initDashboard(role) {
     if (role === 'student') {
+        // Stats locales (hifz, mémorisation)
+        _applyStudentLocalStats();
+
         const cached = apiCache.get('tasks');
         if (cached) {
             renderStudentTasks(cached);
-            // Refresh silencieux via Supabase
             supabaseTasks.getMyTasks().then(({ data }) => {
-                if (data) {
-                    apiCache.set('tasks', data);
-                    renderStudentTasks(data);
-                }
+                if (data) { apiCache.set('tasks', data); renderStudentTasks(data); }
             }).catch(() => {});
             return;
         }
-        // Migration Supabase
         const { data, error } = await supabaseTasks.getMyTasks();
         if (!error && data) {
             apiCache.set('tasks', data);
@@ -364,25 +379,26 @@ async function initDashboard(role) {
     }
 
     if (role === 'teacher') {
-        const cached = apiCache.get('submissions');
-        if (cached) {
-            const pending = cached.filter(s => s.status === 'pending' || s.status === 'submitted' || !s.grade);
+        // Charger étudiants + soumissions en parallèle
+        const [submissionsRes, studentsRes] = await Promise.all([
+            supabaseSubmissions.getPendingSubmissions(),
+            supabaseAdmin.getMyStudents(),
+        ]);
+
+        if (!submissionsRes.error && submissionsRes.data) {
+            apiCache.set('submissions', submissionsRes.data);
+            const pending = submissionsRes.data.filter(s => s.status === 'pending' || s.status === 'submitted' || !s.grade);
             renderTeacherSubmissions(pending);
-            const el = document.getElementById('t-pending');
-            if (el) el.textContent = pending.length;
-            return;
-        }
-        // Migration Supabase
-        const { data, error } = await supabaseSubmissions.getPendingSubmissions();
-        if (!error && data) {
-            apiCache.set('submissions', data);
-            const pending = data.filter(s => s.status === 'pending' || s.status === 'submitted' || !s.grade);
-            renderTeacherSubmissions(pending);
-            const el = document.getElementById('t-pending');
-            if (el) el.textContent = pending.length;
+            setText('t-pending', pending.length);
         } else {
             renderTeacherSubmissions([]);
         }
+
+        const students = studentsRes.data || [];
+        setText('t-students', students.length);
+        // t-tasks : depuis le cache si dispo, sinon on laisse "—"
+        const cachedTasks = apiCache.get('tasks');
+        if (cachedTasks) setText('t-tasks', cachedTasks.length);
     }
 
     if (role === 'admin') {

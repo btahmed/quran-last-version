@@ -215,16 +215,11 @@ window.QuranReview = {
     initProfilPage:   ProfilPage.init,
     switchProfilTab:  ProfilPage.switchProfilTab,
 
-    // RevisionPage (alias pedagogique de WardPage — toutes les fonctions exposees explicitement)
+    // RevisionPage (alias pédagogique de WardPage — fonctions spécifiques seulement)
     renderRevisionPage:         RevisionPage.render,
     initRevisionPage:           RevisionPage.init,
     setupWardControls:          RevisionPage.setupWardControls,
     populateWardSurahSelect:    RevisionPage.populateWardSurahSelect,
-    toggleWardPlay:             RevisionPage.toggleWardPlay,
-    previousWardAyah:           RevisionPage.previousWardAyah,
-    nextWardAyah:               RevisionPage.nextWardAyah,
-    stopWardPlayback:           RevisionPage.stopWardPlayback,
-    updateWardAyahDisplay:      RevisionPage.updateWardAyahDisplay,
 
     // SoumissionPage (alias de MyTasksPage — points d'entrée explicites)
     renderSoumissionPage:  SoumissionPage.render,
