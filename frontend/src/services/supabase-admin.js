@@ -154,7 +154,7 @@ export async function getMyStudents() {
       .from('profiles')
       .select('id')
       .eq('username', localUser.username)
-      .single()
+      .maybeSingle()
 
     if (profileError || !profileData) return { data: [], error: profileError }
 
@@ -229,7 +229,7 @@ export async function createClass(name) {
     if (!localUser?.username) return { data: null, error: new Error('Non authentifié') }
 
     const { data: profile } = await supabaseClient
-      .from('profiles').select('id').eq('username', localUser.username).single()
+      .from('profiles').select('id').eq('username', localUser.username).maybeSingle()
     if (!profile) return { data: null, error: new Error('Profil non trouvé') }
 
     const { data, error } = await supabaseClient
@@ -277,7 +277,7 @@ export async function getMyClasses() {
     if (!localUser?.username) return { data: [], error: null }
 
     const { data: profile } = await supabaseClient
-      .from('profiles').select('id').eq('username', localUser.username).single()
+      .from('profiles').select('id').eq('username', localUser.username).maybeSingle()
     if (!profile) return { data: [], error: null }
 
     const { data, error } = await supabaseClient

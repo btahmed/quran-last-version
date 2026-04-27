@@ -24,7 +24,7 @@ export async function getMySubmissions() {
     if (!localUser?.username) return { data: [], error: null }
 
     const { data: profile } = await supabaseClient
-      .from('profiles').select('id').eq('username', localUser.username).single()
+      .from('profiles').select('id').eq('username', localUser.username).maybeSingle()
     if (!profile) return { data: [], error: null }
 
     const { data, error } = await supabaseClient
@@ -63,7 +63,7 @@ export async function uploadAudio(taskId, audioBlob) {
     if (!localUser?.username) return { data: null, error: new Error('Non authentifié') }
 
     const { data: profile, error: profileError } = await supabaseClient
-      .from('profiles').select('id').eq('username', localUser.username).single()
+      .from('profiles').select('id').eq('username', localUser.username).maybeSingle()
     
     if (profileError) {
       console.error('[uploadAudio] Profile fetch error:', profileError)
@@ -114,7 +114,7 @@ export async function createSubmission(taskId, audioUrl) {
     if (!localUser?.username) return { data: null, error: new Error('Non authentifié') }
 
     const { data: profile } = await supabaseClient
-      .from('profiles').select('id').eq('username', localUser.username).single()
+      .from('profiles').select('id').eq('username', localUser.username).maybeSingle()
     if (!profile) return { data: null, error: new Error('Profil non trouvé') }
 
     const { data, error } = await supabaseClient
@@ -136,7 +136,7 @@ export async function approveSubmission(submissionId, points, feedback = '') {
       .from('submissions')
       .select('student_id')
       .eq('id', submissionId)
-      .single()
+      .maybeSingle()
 
     if (subError) return { data: null, error: subError }
 

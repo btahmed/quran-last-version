@@ -21,7 +21,7 @@ export async function getMyPoints() {
     if (!localUser?.username) return { data: { total: 0 }, error: null }
 
     const { data: profile } = await supabaseClient
-      .from('profiles').select('id').eq('username', localUser.username).single()
+      .from('profiles').select('id').eq('username', localUser.username).maybeSingle()
     if (!profile) return { data: { total: 0 }, error: null }
 
     const { data, error } = await supabaseClient

@@ -43,7 +43,7 @@ export async function getCurrentUser() {
       .from('profiles')
       .select('*')
       .eq('id', authData.user.id)
-      .single()
+      .maybeSingle()
 
     return { data, error }
   } catch (error) {
