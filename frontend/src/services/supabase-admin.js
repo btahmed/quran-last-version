@@ -40,21 +40,64 @@ export async function createTeacher(email, password, username) {
   return createUser(email, password, username, 'teacher')
 }
 
-export async function getStudentProgress(studentId) {
+export async function getStudentProgress(userId) {
   try {
-    const [tasksRes, submissionsRes, pointsRes] = await Promise.all([
-      supabaseClient.from('tasks').select('*').eq('user_id', studentId).order('created_at', { ascending: false }),
-      supabaseClient.from('submissions').select('*').eq('student_id', studentId).order('submitted_at', { ascending: false }),
-      supabaseClient.from('points_log').select('delta').eq('student_id', studentId),
-    ])
+    const { data: profile, error: profileError } = await supabaseClient
+      .from('profiles').select('*').eq('id', userId).single()
+    if (profileError || !profile) return { data: null, error: profileError }
 
+    const isTeacher = profile.role === 'teacher' || profile.role === 'admin'
+
+    if (isTeacher) {
+      const { data: assignedTasks, error: tasksError } = await supabaseClient
+        .from('tasks')
+        .select('*, profiles!user_id(first_name, username)')
+        .eq('assigned_by', userId)
+        .order('created_at', { ascending: false })
+      if (tasksError) return { data: null, error: tasksError }
+      return {
+        data: {
+          ...profile,
+          assigned_tasks_count: assignedTasks?.length || 0,
+          assigned_tasks: (assignedTasks || []).map(t => ({
+            ...t,
+            student_name: t.profiles?.first_name || t.profiles?.username || '',
+          })),
+          tasks: [],
+          totalPoints: 0,
+          total_points: 0,
+        },
+        error: null,
+      }
+    }
+
+    const [tasksRes, submissionsRes, pointsRes] = await Promise.all([
+      supabaseClient.from('tasks').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
+      supabaseClient.from('submissions').select('*').eq('student_id', userId).order('submitted_at', { ascending: false }),
+      supabaseClient.from('points_log').select('delta').eq('student_id', userId),
+    ])
     if (tasksRes.error) return { data: null, error: tasksRes.error }
     if (submissionsRes.error) return { data: null, error: submissionsRes.error }
-    if (pointsRes.error) return { data: null, error: pointsRes.error }
 
     const totalPoints = (pointsRes.data || []).reduce((sum, row) => sum + (row.delta || 0), 0)
+    const submissionsByTaskId = {}
+    ;(submissionsRes.data || []).forEach(s => { submissionsByTaskId[s.task_id] = s })
+    const tasksWithStatus = (tasksRes.data || []).map(t => ({
+      ...t,
+      status: submissionsByTaskId[t.id]?.status || t.status || 'pending',
+      submission_status: submissionsByTaskId[t.id]?.status || null,
+    }))
 
-    return { data: { tasks: tasksRes.data, submissions: submissionsRes.data, totalPoints }, error: null }
+    return {
+      data: {
+        ...profile,
+        tasks: tasksWithStatus,
+        submissions: submissionsRes.data || [],
+        totalPoints,
+        total_points: totalPoints,
+      },
+      error: null,
+    }
   } catch (error) {
     return { data: null, error }
   }

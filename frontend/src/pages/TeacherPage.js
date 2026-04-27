@@ -277,7 +277,7 @@ async function loadTeacherDashboard() {
         if (el) el.textContent = `مرحباً أستاذ ${state.user.first_name || state.user.username}`;
     }
 
-    if (state.user && state.user.is_superuser) {
+    if (state.user && (state.user.role === 'admin' || state.user.is_superuser)) {
         loadAdminUsersList();
     }
 
@@ -351,7 +351,7 @@ function _applyTeacherData(students, pending, tasks) {
                 const taskTitle = s.task?.title || s.tasks?.title || 'Tâche sans titre';
                 const taskPoints = s.task?.points || s.tasks?.points || 0;
                 
-                const studentName = s.student_name || s.profiles?.first_name || s.profiles?.username || 'طالب';
+                const studentName = s.profiles?.first_name || s.profiles?.username || 'طالب';
                 return `<div class="pending-card">
                     <div class="pending-card-header">
                         <strong>🎓 ${escapeHtml(studentName)}</strong>
@@ -828,8 +828,8 @@ export function renderAdminUsersList(users) {
 
     let html = '';
     users.forEach(user => {
-        const roleClass = user.is_superuser ? 'admin' : user.role;
-        const roleText = user.is_superuser ? 'مدير' : (user.role === 'teacher' ? 'أستاذ' : 'طالب');
+        const roleClass = (user.role === 'admin' || user.is_superuser) ? 'admin' : user.role;
+        const roleText = (user.role === 'admin' || user.is_superuser) ? 'مدير' : (user.role === 'teacher' ? 'أستاذ' : 'طالب');
         const roleBadge = `<span class="user-badge ${roleClass}">${roleText}</span>`;
 
         html += `
@@ -838,7 +838,7 @@ export function renderAdminUsersList(users) {
                     <div class="item-title">${user.username}${roleBadge}</div>
                     <div class="item-subtitle">
                         ${user.first_name} ${user.last_name} •
-                        ${(user.created_at || user.date_joined) ? new Date(user.created_at || user.date_joined).toLocaleDateString('ar-SA') : '—'}
+                        ${user.created_at ? new Date(user.created_at).toLocaleDateString('ar-SA') : '—'}
                     </div>
                 </div>
                 <div class="item-actions">
