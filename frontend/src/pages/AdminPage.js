@@ -136,7 +136,7 @@ export function render() {
                     <!-- Header modal -->
                     <div style="padding:20px 24px 16px; border-bottom:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center;">
                         <h3 id="profile-modal-title" style="margin:0; font-size:1.1rem; font-weight:700; color:#111827;">الملف الشخصي</h3>
-                        <button onclick="window._adminCloseProfile()"
+                        <button onclick="window._adminCloseProfile()" aria-label="إغلاق" title="إغلاق"
                             style="display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; background:#f3f4f6; border:none; border-radius:8px; font-size:1.1rem; cursor:pointer; color:#6b7280; line-height:1;">✕</button>
                     </div>
                     <!-- Contenu -->
@@ -638,7 +638,7 @@ function renderClassesList() {
                     </div>
                 </div>
                 <button class="btn btn-outline-glow btn-sm" onclick="window._adminOpenClassModal('${c.id}')">⚙️ إدارة</button>
-                <button style="background:none; border:none; color:var(--color-danger); cursor:pointer; font-size:1.1rem; padding:var(--space-1);" onclick="window._adminDeleteClass('${c.id}', '${escapeHtml(c.name)}')">🗑️</button>
+                <button aria-label="حذف الفصل" title="حذف الفصل" style="background:none; border:none; color:var(--color-danger); cursor:pointer; font-size:1.1rem; padding:var(--space-1);" onclick="window._adminDeleteClass('${c.id}', '${escapeHtml(c.name)}')">🗑️</button>
             </div>
         `;
     }).join('');
@@ -713,7 +713,7 @@ async function openClassModal(classId) {
             <div style="position:relative; margin:40px auto; width:calc(100% - 32px); max-width:600px; background:#fff; border-radius:16px; box-shadow:0 24px 64px rgba(0,0,0,0.35); overflow:hidden;" onclick="event.stopPropagation()">
                 <div style="padding:20px 24px 16px; border-bottom:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center;">
                     <h3 id="class-modal-title" style="margin:0; font-size:1.1rem; font-weight:700; color:#111827;">إدارة الفصل</h3>
-                    <button onclick="window._adminCloseClassModal()" style="display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; background:#f3f4f6; border:none; border-radius:8px; font-size:1.1rem; cursor:pointer; color:#6b7280;">✕</button>
+                    <button onclick="window._adminCloseClassModal()" aria-label="إغلاق" title="إغلاق" style="display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; background:#f3f4f6; border:none; border-radius:8px; font-size:1.1rem; cursor:pointer; color:#6b7280;">✕</button>
                 </div>
                 <div id="class-modal-content" style="padding:20px 24px 24px;"></div>
             </div>
