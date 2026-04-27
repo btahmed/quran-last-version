@@ -2,6 +2,7 @@
 // Page de progression du hafiz — extrait de frontend/script.js (renderProgressPage ~ligne 3021)
 import { state } from '../core/state.js';
 import { Logger } from '../core/logger.js';
+import { getMyPoints } from '../services/supabase-leaderboard.js';
 
 // Injection CSS
 if (!document.querySelector('link[href*="ProgressPage.css"]')) {
@@ -23,7 +24,7 @@ export function render() {
                     <h2 class="section-title" style="text-align: center; margin-bottom: var(--space-8);">📈 تقدمك في الحفظ</h2>
 
                     <!-- Stat cards principales -->
-                    <div class="grid-pro grid-cols-4" style="margin-bottom: var(--space-8);">
+                    <div class="grid-pro grid-cols-5" style="margin-bottom: var(--space-8);">
                         <div class="card-stat-premium" style="text-align: center;">
                             <div class="stat-value" id="progress-total-surahs">0</div>
                             <p style="color: var(--color-text-secondary); margin-top: var(--space-2);">سورة محفوظة</p>
@@ -39,6 +40,10 @@ export function render() {
                         <div class="card-stat-premium" style="text-align: center;">
                             <div class="stat-value" id="progress-streak">0</div>
                             <p style="color: var(--color-text-secondary); margin-top: var(--space-2);">يوم متتالي</p>
+                        </div>
+                        <div class="card-stat-premium" style="text-align: center; background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);">
+                            <div class="stat-value" id="progress-total-points" style="color: white;">—</div>
+                            <p style="color: rgba(255,255,255,0.9); margin-top: var(--space-2);">🏆 نقطة مكتسبة</p>
                         </div>
                     </div>
 
@@ -93,9 +98,26 @@ export function render() {
 // INIT — appelé après injection du HTML dans le DOM
 // ===================================
 
-export function init() {
+export async function init() {
     renderProgressStats();
     renderProgressChart();
+    await loadPointsFromSupabase();
+}
+
+async function loadPointsFromSupabase() {
+    try {
+        const { data, error } = await getMyPoints();
+        if (error) {
+            console.warn('[ProgressPage] Erreur chargement points:', error);
+            return;
+        }
+        const pointsEl = document.getElementById('progress-total-points');
+        if (pointsEl) {
+            pointsEl.textContent = data?.total ?? 0;
+        }
+    } catch (err) {
+        console.warn('[ProgressPage] Erreur loadPointsFromSupabase:', err);
+    }
 }
 
 // ===================================

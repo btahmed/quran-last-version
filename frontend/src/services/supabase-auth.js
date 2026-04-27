@@ -51,7 +51,7 @@ export async function getCurrentUser() {
   }
 }
 
-export async function createUser(email, password, username, role = 'student') {
+export async function createUser(email, password, username, role = 'student', firstName = '', lastName = '') {
   try {
     const userEmail = email || buildEmail(username)
     const { data, error } = await supabaseClient.auth.signUp({
@@ -59,6 +59,16 @@ export async function createUser(email, password, username, role = 'student') {
       password,
       options: { data: { username, role } },
     })
+    if (error || !data?.user) return { data, error }
+
+    // Mettre à jour le profil avec first_name et last_name si fournis
+    if (firstName || lastName) {
+      await supabaseClient
+        .from('profiles')
+        .update({ first_name: firstName, last_name: lastName })
+        .eq('id', data.user.id)
+    }
+
     return { data, error }
   } catch (error) {
     return { data: null, error }

@@ -4,32 +4,10 @@ import { state } from '../core/state.js';
 import { config } from '../core/config.js';
 import { showNotification } from '../core/ui.js';
 import { Logger } from '../core/logger.js';
-import { showAuthModal, refreshToken } from '../services/auth.js';
 import { apiCache } from '../core/apiCache.js';
 import * as supabaseTasks from '../services/supabase-tasks.js';
 import * as supabaseSubmissions from '../services/supabase-submissions.js';
 import * as supabaseAdmin from '../services/supabase-admin.js';
-
-// Wrapper fetch avec auto-refresh du token JWT (401)
-async function authFetch(url, options = {}) {
-    let token = localStorage.getItem(config.apiTokenKey);
-    const makeReq = (t) => fetch(url, {
-        ...options,
-        headers: { ...options.headers, Authorization: `Bearer ${t}` },
-    });
-    let res = await makeReq(token);
-    if (res.status === 401) {
-        const refreshed = await refreshToken();
-        if (refreshed) {
-            token = localStorage.getItem(config.apiTokenKey);
-            res = await makeReq(token);
-        } else {
-            showAuthModal();
-            throw new Error('انتهت صلاحية الجلسة، يرجى تسجيل الدخول مجدداً');
-        }
-    }
-    return res;
-}
 
 // Injection CSS
 if (!document.querySelector('link[href*="TeacherPage.css"]')) {
@@ -274,13 +252,10 @@ function hideLoading() {
 // ===================================
 
 async function loadTeacherDashboard() {
-    const token = localStorage.getItem(config.apiTokenKey);
-    if (!token) { showAuthModal(); return; }
     if (state.user && state.user.role !== 'teacher' && state.user.role !== 'admin' && !state.user.is_superuser) {
         window.QuranReview && window.QuranReview.navigateTo('soumettre');
         return;
     }
-    const headers = { Authorization: `Bearer ${token}` };
 
     if (state.user) {
         const el = document.getElementById('teacher-welcome');
@@ -297,18 +272,17 @@ async function loadTeacherDashboard() {
 
     if (cachedStudents && cachedPending && cachedTasks) {
         _applyTeacherData(cachedStudents, cachedPending, cachedTasks);
-        _fetchAndCacheTeacher(headers); // refresh silencieux
+        _fetchAndCacheTeacher(); // refresh silencieux
         return;
     }
 
     showLoading();
-    await _fetchAndCacheTeacher(headers);
+    await _fetchAndCacheTeacher();
     hideLoading();
 }
 
-async function _fetchAndCacheTeacher(headers) {
+async function _fetchAndCacheTeacher() {
     try {
-        // Migration Supabase : utiliser les modules au lieu de fetch Django
         const [studentsResult, pendingResult, tasksResult] = await Promise.all([
             supabaseAdmin.getMyStudents(),
             supabaseSubmissions.getPendingSubmissions(),
@@ -326,6 +300,7 @@ async function _fetchAndCacheTeacher(headers) {
         _applyTeacherData(students, pending, tasks);
     } catch (err) {
         Logger.error('TEACHER', 'loadTeacherDashboard error', err);
+        showNotification('فشل تحميل بيانات لوحة التحكم', 'error');
         hideLoading();
     }
 }

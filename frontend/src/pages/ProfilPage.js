@@ -3,6 +3,7 @@
 // Présente les deux dans un système d'onglets
 import * as SettingsPage from './SettingsPage.js';
 import * as ProgressPage from './ProgressPage.js';
+import { getCurrentUser } from '../services/supabase-auth.js';
 
 export function render() {
     // Render ProgressPage par défaut (stats en premier — plus utile au quotidien)
@@ -26,12 +27,29 @@ export function render() {
     `;
 }
 
-export function init() {
+export async function init() {
+    // Recharger les données utilisateur fraîches depuis Supabase
+    await refreshUserData();
     // Initialiser ProgressPage par défaut
-    if (ProgressPage.init) ProgressPage.init();
+    if (ProgressPage.init) await ProgressPage.init();
 }
 
-export function switchProfilTab(tab) {
+async function refreshUserData() {
+    try {
+        const { data: freshUser, error } = await getCurrentUser();
+        if (error) {
+            console.warn('[ProfilPage] Erreur rechargement utilisateur:', error);
+            return;
+        }
+        if (freshUser && window.QuranReview?.state) {
+            window.QuranReview.state.user = freshUser;
+        }
+    } catch (err) {
+        console.warn('[ProfilPage] Erreur refreshUserData:', err);
+    }
+}
+
+export async function switchProfilTab(tab) {
     // Mettre à jour les onglets actifs
     document.querySelectorAll('.profil-tab').forEach(t =>
         t.classList.remove('profil-tab--active')
@@ -47,7 +65,7 @@ export function switchProfilTab(tab) {
 
     if (tab === 'progress') {
         content.innerHTML = ProgressPage.render ? ProgressPage.render() : '';
-        if (ProgressPage.init) ProgressPage.init();
+        if (ProgressPage.init) await ProgressPage.init();
     } else if (tab === 'settings') {
         // SettingsPage expose render() et renderSettingsPage() — on préfère renderSettingsPage()
         // pour éviter toute ambiguïté avec le render() de ProfilPage
@@ -55,7 +73,7 @@ export function switchProfilTab(tab) {
             ?? SettingsPage.render?.()
             ?? '<p>Paramètres non disponibles</p>';
         content.innerHTML = settingsHtml;
-        if (SettingsPage.init) SettingsPage.init();
+        if (SettingsPage.init) await SettingsPage.init();
     }
 }
 

@@ -1,6 +1,6 @@
 // frontend/src/pages/AdminPage.js
-import { config } from '../core/config.js';
 import { Logger } from '../core/logger.js';
+import { state } from '../core/state.js';
 import * as supabaseAdmin from '../services/supabase-admin.js';
 
 // ─── UTILS ───────────────────────────────────────────────────────────────────
@@ -154,7 +154,20 @@ export async function init() {
     window._adminSwitchTab = switchTab;
     window._adminFilter = (q) => { searchQuery = q.toLowerCase(); renderUsersList(); };
     window._adminSort = (k) => { sortKey = k; renderUsersList(); };
-    window._adminRefresh = () => loadAll();
+    window._adminRefresh = async () => {
+        const btn = document.querySelector('[onclick="window._adminRefresh()"]');
+        if (btn) { btn.disabled = true; btn.textContent = '⏳ ...'; }
+        try {
+            await loadUsers();
+            const classesPanel = document.getElementById('admin-tab-classes');
+            const overviewPanel = document.getElementById('admin-tab-overview');
+            if (classesPanel && classesPanel.style.display !== 'none') await loadClasses();
+            if (overviewPanel && overviewPanel.style.display !== 'none') await loadOverview();
+            else loadOverview(); // stats en arrière-plan (compteurs en haut)
+        } finally {
+            if (btn) { btn.disabled = false; btn.textContent = '🔄 تحديث'; }
+        }
+    };
     window._adminOpenProfile = openUserProfile;
     window._adminCloseProfile = closeProfile;
     window._adminSaveEdit = saveUserEdit;
@@ -178,6 +191,11 @@ export async function init() {
     });
 
     await loadAll();
+
+    // Activer l'onglet correspondant à la sous-route
+    const page = state.currentPage;
+    if (page === 'admin-classes') switchTab('classes');
+    else if (page === 'admin-stats') switchTab('overview');
 }
 
 async function loadAll() {
@@ -187,8 +205,6 @@ async function loadAll() {
 
 // ─── UTILISATEURS ─────────────────────────────────────────────────────────────
 async function loadUsers() {
-    const token = localStorage.getItem(config.apiTokenKey);
-    if (!token) return;
     try {
         // Migration Supabase
         const { data, error } = await supabaseAdmin.getAllUsers();
@@ -271,21 +287,21 @@ function renderUsersList() {
 
 // ─── VUE GLOBALE ──────────────────────────────────────────────────────────────
 async function loadOverview() {
-    const token = localStorage.getItem(config.apiTokenKey);
-    if (!token) return;
     try {
-        // Migration Supabase
-        const { data, error } = await supabaseAdmin.getAdminOverview();
-        if (error) throw new Error('Erreur overview');
+        const [overviewRes, statsRes] = await Promise.all([
+            supabaseAdmin.getAdminOverview(),
+            supabaseAdmin.getTeacherStatsAndTasks(),
+        ]);
 
-        const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-        set('admin-total-tasks', data?.total_tasks ?? '—');
-        set('admin-pending-subs', data?.pending_submissions ?? '—');
-        set('admin-approved-subs', data?.approved_submissions ?? '—');
+        if (!overviewRes.error) {
+            const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+            set('admin-total-tasks', overviewRes.data?.total_tasks ?? '—');
+            set('admin-pending-subs', overviewRes.data?.pending_submissions ?? '—');
+            set('admin-approved-subs', overviewRes.data?.approved_submissions ?? '—');
+        }
 
-        // TODO: teacher_stats et tasks ne sont pas encore dans getAdminOverview
-        renderTeacherStats([]);
-        renderAllTasks([]);
+        renderTeacherStats(statsRes.teacherStats || []);
+        renderAllTasks(statsRes.recentTasks || []);
     } catch (err) {
         Logger.error('ADMIN', 'loadOverview error', err);
     }
@@ -351,9 +367,8 @@ function switchTab(tab) {
             btn.classList.toggle('btn-outline-glow', t !== tab);
         }
     });
-    if (tab === 'classes') {
-        loadClasses();
-    }
+    if (tab === 'classes') loadClasses();
+    else if (tab === 'overview') loadOverview();
 }
 
 // ─── PROFIL MODAL ─────────────────────────────────────────────────────────────
@@ -365,9 +380,7 @@ async function openUserProfile(userId) {
     modal.style.display = 'block';
     content.innerHTML = '<p style="text-align:center; color:#6b7280; padding:24px 0;">جارٍ التحميل...</p>';
 
-    const token = localStorage.getItem(config.apiTokenKey);
     try {
-        // Migration Supabase
         const { data: u, error } = await supabaseAdmin.getStudentProgress(userId);
         if (error || !u) throw new Error('Not found');
 
