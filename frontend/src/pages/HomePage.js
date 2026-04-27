@@ -399,6 +399,19 @@ async function initDashboard(role) {
         // t-tasks : depuis le cache si dispo, sinon on laisse "—"
         const cachedTasks = apiCache.get('tasks');
         if (cachedTasks) setText('t-tasks', cachedTasks.length);
+
+        // Calcul des absents : étudiants sans soumission depuis 7 jours
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+        const allSubmissions = submissionsRes.data || [];
+        const activeStudentIds = new Set(
+            allSubmissions
+                .filter(s => s.submitted_at && new Date(s.submitted_at) > sevenDaysAgo)
+                .map(s => s.student_id)
+        );
+        const absentCount = students.filter(s => !activeStudentIds.has(s.id)).length;
+        setText('t-absent', absentCount);
     }
 
     if (role === 'admin') {
