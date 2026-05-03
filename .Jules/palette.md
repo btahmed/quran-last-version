@@ -1,0 +1,3 @@
+## 2026-05-03 - Emoji Buttons Need ARIA Labels
+**Learning:** In this application, many administrative and interactive controls are represented exclusively by emoji characters inside `<button>` elements (e.g., ✕ for close, 🗑️ for delete). Since screen readers often struggle to interpret standalone emojis correctly in a UI context, relying solely on emojis makes these elements functionally invisible or confusing to visually impaired users.
+**Action:** When adding or modifying icon-only buttons (especially those using emojis), always ensure they are paired with appropriate localized `aria-label` and `title` attributes (e.g., `aria-label="إغلاق"`) to make their purpose explicit to assistive technologies.
