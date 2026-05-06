@@ -1,0 +1,3 @@
+## 2024-05-18 - Missing aria-label on icon-only buttons
+**Learning:** Found multiple instances where the application utilizes native HTML `<button>` elements with emojis for icon-only controls. Many of these do not have an `aria-label` attribute, which makes them inaccessible for screen-reader users. Specifically, I found a delete button in the AdminPage class list component missing proper accessibility features.
+**Action:** Always append an appropriate native `aria-label` and `title` attribute localized in Arabic when modifying or adding icon-only emoji buttons to ensure screen-reader accessibility.
