@@ -1,0 +1,3 @@
+## 2026-05-11 - [Missing Accessibility Attributes on Icon-Only Buttons in Modals]
+**Learning:** Found multiple instances where icon-only buttons (like ✕ and 🗑️) inside dynamically generated modals lacked `aria-label` and `title` attributes. Because these are built via template literals in JS files instead of standard HTML files, they can easily slip past static accessibility checkers that only scan .html files.
+**Action:** When adding new icon-only buttons via JavaScript template strings, always ensure native `aria-label` and `title` are included and localized in Arabic (e.g., إغلاق for close, حذف for delete) to maintain screen-reader accessibility.
