@@ -1,0 +1,3 @@
+## 2025-03-15 - ARIA Labels for Dynamically Generated Icon-Only Buttons
+**Learning:** Dynamically generated HTML containing icon-only buttons (like ✕ or 🗑️ emojis) in Vanilla JS templates often evade static HTML accessibility checkers. These components lack textual context for screen readers and must be rigorously supplied with `aria-label` and `title` attributes (e.g. localized in Arabic like `aria-label="إغلاق"`).
+**Action:** Always manually check JavaScript template literals for native `<button>` elements that only contain emojis or icons, and ensure they include `aria-label` and `title` attributes localized for the target language.
