@@ -1,0 +1,3 @@
+## 2024-05-24 - Accessibility improvements for icon-only buttons
+**Learning:** Some buttons in AdminPage.js that contain only icons (e.g. ✕ for closing modals, 🗑️ for deleting classes) lack ARIA labels and titles, making them inaccessible to screen readers and difficult to understand without tooltips. Dynamic elements inserted via innerHTML often evade static analysis.
+**Action:** Adding Arabic ARIA labels and titles (`aria-label="..." title="..."`) to these icon-only buttons ensures better a11y and UX. I will fix the close profile modal button, close class modal button, and delete class button in AdminPage.js.
