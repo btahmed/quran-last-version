@@ -73,7 +73,7 @@ export function render() {
                             <button class="btn btn-outline-glow" onclick="QuranReview.importData()">
                                 <span>📥</span> استيراد البيانات
                             </button>
-                            <button class="btn btn-outline-glow" onclick="QuranReview.resetData()" style="color: var(--color-danger);">
+                            <button class="btn btn-outline-glow" onclick="QuranReview.resetData()" style="color: var(--color-danger);" aria-label="إعادة تعيين البيانات" title="إعادة تعيين">
                                 <span>🗑️</span> إعادة تعيين
                             </button>
                         </div>

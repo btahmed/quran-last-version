@@ -180,7 +180,7 @@ export function render() {
                     <div id="student-detail-panel" class="card-glass-pro hidden" style="margin-bottom: var(--space-6);">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4);">
                             <h3 id="student-detail-name" style="font-size: 1.125rem; font-weight: 600;">📊 تقدم الطالب</h3>
-                            <button class="btn btn-outline-glow btn-sm" onclick="document.getElementById('student-detail-panel').classList.add('hidden')">✕ إغلاق</button>
+                            <button class="btn btn-outline-glow btn-sm" onclick="document.getElementById('student-detail-panel').classList.add('hidden')" aria-label="إغلاق تقدم الطالب" title="إغلاق">✕ إغلاق</button>
                         </div>
                         <div id="student-detail-content">
                             <p class="empty-state">جاري التحميل...</p>
@@ -395,7 +395,7 @@ function _applyTeacherData(students, pending, tasks) {
         const headerHtml = `
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                 <h3>📋 قائمة المهام</h3>
-                <button class="btn btn-danger btn-sm" onclick="QuranReview.handleDeleteAllTasks()" style="background-color: #dc3545;">
+                <button class="btn btn-danger btn-sm" onclick="QuranReview.handleDeleteAllTasks()" style="background-color: #dc3545;" aria-label="حذف جميع المهام" title="حذف جميع المهام">
                     🗑️ حذف جميع المهام
                 </button>
             </div>
@@ -429,7 +429,7 @@ function _applyTeacherData(students, pending, tasks) {
                             <span class="task-type-badge">${escapeHtml(typeLabel)}</span>
                             <button onclick="QuranReview.handleDeleteBatch(${idsJson}, '${safeTitle}', ${count})"
                                 style="padding:4px 10px; background:#fff; border:1px solid #ef4444; border-radius:6px; color:#ef4444; font-size:0.78rem; cursor:pointer; flex-shrink:0;"
-                                title="حذف هذه المهمة">
+                                title="حذف هذه المهمة" aria-label="حذف التحديد">
                                 🗑️ حذف
                             </button>
                         </div>
@@ -825,7 +825,7 @@ export function renderAdminUsersList(users) {
                 </div>
                 <div class="item-actions">
                     <button class="btn btn-sm btn-secondary" onclick="QuranReview.openUserEditModal('${user.id}', '${escapeHtml(escapeJs(user.username))}', '${escapeHtml(escapeJs(user.first_name))}', '${escapeHtml(escapeJs(user.last_name))}', '${escapeHtml(escapeJs(user.role))}', ${!!user.is_superuser})">✏️ تعديل</button>
-                    ${user.id !== state.user?.id ? `<button class="btn btn-sm btn-danger" onclick="QuranReview.deleteUser('${user.id}', '${escapeHtml(escapeJs(user.username))}')">🗑️ حذف</button>` : ''}
+                    ${user.id !== state.user?.id ? `<button class="btn btn-sm btn-danger" onclick="QuranReview.deleteUser('${user.id}', '${escapeHtml(escapeJs(user.username))}')" aria-label="حذف المستخدم" title="حذف المستخدم">🗑️ حذف</button>` : ''}
                 </div>
             </div>
         `;
