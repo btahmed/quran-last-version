@@ -1,0 +1,3 @@
+## 2024-05-29 - Dynamically Generated Icon Buttons Evade Static Analysis
+**Learning:** When UI components like modals and lists are generated via JavaScript template literals (e.g., in vanilla JS apps), icon-only buttons within them often miss native accessibility attributes like `aria-label` and `title`. Static HTML checkers and linters frequently fail to catch these issues because the elements aren't present in the source HTML files.
+**Action:** When working on vanilla JS or template literal-based rendering, always manually search for `<button` inside `.js` files and verify that icon-only buttons include localized `aria-label` and `title` attributes.
