@@ -35,8 +35,8 @@ export function render() {
 
             <!-- Actions -->
             <div style="display: flex; gap: var(--space-3);">
-                <button class="btn btn-outline-glow" style="flex: 1;" onclick="QuranReview.stopRecording(true)">إلغاء</button>
-                <button id="recording-submit-btn" class="btn btn-glow hidden" style="flex: 1;" onclick="QuranReview.submitRecording()">✅ إرسال التسجيل</button>
+                <button class="btn btn-outline-glow" style="flex: 1;" aria-label="إلغاء" title="إلغاء" onclick="QuranReview.stopRecording(true)">إلغاء</button>
+                <button id="recording-submit-btn" class="btn btn-glow hidden" style="flex: 1;" aria-label="إرسال التسجيل" title="إرسال التسجيل" onclick="QuranReview.submitRecording()">✅ إرسال التسجيل</button>
             </div>
         </div>
     </div>
@@ -88,8 +88,8 @@ export function render() {
                 </div>
 
                 <div class="flex-pro" style="gap: var(--space-3);">
-                    <button type="button" class="btn btn-outline-glow" style="flex: 1;" onclick="QuranReview.closeUserEditModal()">إلغاء</button>
-                    <button type="submit" class="btn btn-glow" style="flex: 1;">حفظ التغييرات</button>
+                    <button type="button" class="btn btn-outline-glow" style="flex: 1;" aria-label="إلغاء" title="إلغاء" onclick="QuranReview.closeUserEditModal()">إلغاء</button>
+                    <button type="submit" class="btn btn-glow" style="flex: 1;" aria-label="حفظ التغييرات" title="حفظ التغييرات">حفظ التغييرات</button>
                 </div>
             </form>
         </div>
@@ -119,7 +119,7 @@ export function render() {
                         <label for="login-password">كلمة المرور</label>
                     </div>
 
-                    <button type="button" class="btn btn-glow btn-full" id="login-submit-btn" onclick="QuranReview.handleLogin(event)">
+                    <button type="button" class="btn btn-glow btn-full" id="login-submit-btn" aria-label="تسجيل الدخول" title="تسجيل الدخول" onclick="QuranReview.handleLogin(event)">
                         <span>🔐</span>
                         دخول
                     </button>
@@ -162,7 +162,7 @@ export function render() {
                         <label for="reg-password">كلمة المرور</label>
                     </div>
 
-                    <button type="button" class="btn btn-gradient btn-full" id="reg-submit-btn" onclick="QuranReview.handleRegister(event)">
+                    <button type="button" class="btn btn-gradient btn-full" id="reg-submit-btn" aria-label="إنشاء الحساب" title="إنشاء الحساب" onclick="QuranReview.handleRegister(event)">
                         <span>✨</span>
                         إنشاء الحساب
                     </button>
