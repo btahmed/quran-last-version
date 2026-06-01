@@ -187,23 +187,26 @@ function renderStudentDashboard() {
             </div>
         </section>
 
-        <!-- STATS -->
+        <!-- STATS visuelles v2 -->
         <section class="dashboard-section">
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <span class="stat-icon">📖</span>
-                    <span id="hifz-progress" class="stat-value">—</span>
-                    <span class="stat-label">الحفظ</span>
+            <div class="stats-grid-v2">
+                <div class="stat-card-v2 stat-streak">
+                    <span class="stat-card-icon">🔥</span>
+                    <span id="streak-days" class="stat-value-big">0</span>
+                    <span class="stat-label">يوم متتالي</span>
                 </div>
-                <div class="stat-card">
-                    <span class="stat-icon">🔁</span>
-                    <span id="revision-score" class="stat-value">—</span>
-                    <span class="stat-label">المراجعة</span>
+                <div class="stat-card-v2 stat-hifz">
+                    <span class="stat-card-icon">📖</span>
+                    <span id="hifz-progress" class="stat-value-big">0%</span>
+                    <div class="progress-bar-wrap">
+                        <div class="progress-bar-fill" id="hifz-bar" style="width:0%"></div>
+                    </div>
+                    <span class="stat-label">تقدم الحفظ</span>
                 </div>
-                <div class="stat-card">
-                    <span class="stat-icon">🔥</span>
-                    <span id="streak-days" class="stat-value">—</span>
-                    <span class="stat-label">أيام متتالية</span>
+                <div class="stat-card-v2 stat-score">
+                    <span class="stat-card-icon">⭐</span>
+                    <span id="revision-score" class="stat-value-big">0</span>
+                    <span class="stat-label">نقاط المراجعة</span>
                 </div>
             </div>
         </section>
@@ -360,9 +363,22 @@ function _applyStudentLocalStats() {
         else if (i > 0) break;
     }
 
-    setText('hifz-progress', mastered);
+    // hifzDone = ayats mémorisés, hifzTotal = nombre total dans les données
+    const hifzDone = mastered;
+    const hifzTotal = data.length;
+    const hifzPct = (hifzTotal > 0) ? Math.round((hifzDone / hifzTotal) * 100) : 0;
+
+    setText('hifz-progress', hifzPct + '%');
     setText('revision-score', pct + '%');
     setText('streak-days', streak);
+
+    // Animation progress bar hifz
+    const hifzBarEl = document.getElementById('hifz-bar');
+    if (hifzBarEl) {
+        requestAnimationFrame(() => {
+            hifzBarEl.style.width = hifzPct + '%';
+        });
+    }
 }
 
 async function initDashboard(role) {
