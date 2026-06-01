@@ -1,0 +1,326 @@
+// frontend/src/pages/teacher/TeacherDevoirsSection.js
+// Section Devoirs — extraite de TeacherPage.js (Task 9 : lazy-loading)
+// Responsabilités : créer une tâche, lister les tâches assignées, supprimer par batch
+import { state }            from '../../core/state.js';
+import { config }           from '../../core/config.js';
+import { showNotification } from '../../core/ui.js';
+import { Logger }           from '../../core/logger.js';
+import { apiCache }         from '../../core/apiCache.js';
+import * as supabaseTasks   from '../../services/supabase-tasks.js';
+import * as supabaseAdmin   from '../../services/supabase-admin.js';
+
+// ─── UTILS ───────────────────────────────────────────────────────────────────
+
+function escapeHtml(text) {
+    if (!text) return '';
+    return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function escapeJs(text) {
+    if (!text) return '';
+    return String(text)
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "\\'")
+        .replace(/"/g, '\\"')
+        .replace(/\n/g, '\\n')
+        .replace(/\r/g, '\\r');
+}
+
+// ─── ÉTAT LOCAL ───────────────────────────────────────────────────────────────
+
+let _students = [];
+let _tasks    = [];
+
+// ─── RENDER ──────────────────────────────────────────────────────────────────
+
+export function render() {
+    return `
+        <!-- Formulaire de création de tâche -->
+        <div class="card-glass-pro" style="margin-bottom: var(--space-6);">
+            <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">➕ إنشاء مهمة جديدة</h3>
+            <form id="teacher-create-task-form" onsubmit="QuranReview.handleCreateTask(event)">
+                <div class="form-floating" style="margin-bottom: var(--space-4);">
+                    <input type="text" id="task-title" placeholder=" " required>
+                    <label for="task-title">عنوان المهمة</label>
+                </div>
+                <div class="form-floating" style="margin-bottom: var(--space-4);">
+                    <textarea id="task-description" placeholder=" " style="min-height: 80px; resize: vertical;"></textarea>
+                    <label for="task-description">وصف المهمة</label>
+                </div>
+                <div class="grid-pro grid-cols-2" style="margin-bottom: var(--space-4);">
+                    <div class="form-floating">
+                        <select id="task-type">
+                            <option value="hifz">حفظ</option>
+                            <option value="muraja">مراجعة</option>
+                            <option value="tilawa">تلاوة</option>
+                        </select>
+                        <label for="task-type">نوع المهمة</label>
+                    </div>
+                    <div class="form-floating">
+                        <input type="number" id="task-points" min="0" value="10" placeholder=" ">
+                        <label for="task-points">النقاط</label>
+                    </div>
+                </div>
+                <div class="form-floating" style="margin-bottom: var(--space-4);">
+                    <input type="date" id="task-due-date" placeholder=" ">
+                    <label for="task-due-date">تاريخ التسليم</label>
+                </div>
+                <!-- Assignation des étudiants -->
+                <div style="margin-bottom: var(--space-4);">
+                    <p style="font-size: 0.875rem; font-weight: 600; margin-bottom: var(--space-2);">👥 تعيين إلى</p>
+                    <div style="display: flex; gap: var(--space-4);">
+                        <label style="display: flex; align-items: center; gap: var(--space-2); cursor: pointer;">
+                            <input type="radio" name="assign-mode" value="all" checked
+                                onchange="QuranReview.toggleAssignMode('all')">
+                            <span>جميع الطلاب</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: var(--space-2); cursor: pointer;">
+                            <input type="radio" name="assign-mode" value="select"
+                                onchange="QuranReview.toggleAssignMode('select')">
+                            <span>طلاب محددون</span>
+                        </label>
+                    </div>
+                </div>
+                <div id="student-select-container" class="hidden" style="margin-bottom: var(--space-4);">
+                    <div id="student-checkboxes" style="display: flex; flex-wrap: wrap; gap: var(--space-2); padding: var(--space-3); background: var(--glass-bg); border-radius: var(--radius-lg);">
+                        <p class="empty-state">جاري تحميل الطلاب...</p>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-glow btn-full">إنشاء المهمة</button>
+            </form>
+        </div>
+
+        <!-- Liste des tâches assignées -->
+        <div class="card-glass-pro">
+            <div id="teacher-assigned-tasks-list">
+                <div class="skeleton skeleton-card"></div>
+                <div class="skeleton skeleton-card"></div>
+            </div>
+        </div>
+    `;
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+
+export async function init() {
+    Logger.log('TEACHER-DEVOIRS', 'init');
+    await _loadData();
+}
+
+// ─── CHARGEMENT DES DONNÉES ───────────────────────────────────────────────────
+
+async function _loadData() {
+    try {
+        const [studentsResult, tasksResult] = await Promise.all([
+            supabaseAdmin.getMyStudents(),
+            supabaseTasks.getAllTasks(),
+        ]);
+
+        _students = studentsResult.data || [];
+        _tasks    = tasksResult.data    || [];
+
+        apiCache.set('my-students', _students);
+        apiCache.set('tasks', _tasks);
+
+        _renderStudentCheckboxes(_students);
+        _renderTaskList(_tasks);
+    } catch (err) {
+        Logger.error('TEACHER-DEVOIRS', 'Erreur chargement données', err);
+        showNotification('فشل تحميل بيانات الواجبات', 'error');
+    }
+}
+
+// ─── RENDU DES CASES À COCHER ÉTUDIANTS ──────────────────────────────────────
+
+function _renderStudentCheckboxes(students) {
+    const container = document.getElementById('student-checkboxes');
+    if (!container) return;
+
+    if (!students.length) {
+        container.innerHTML = '<p class="empty-state">لا يوجد طلاب</p>';
+        return;
+    }
+
+    container.innerHTML = students.map(student => `
+        <label class="student-checkbox-label">
+            <input type="checkbox" name="student-ids" value="${student.id}">
+            <span class="student-name">${escapeHtml(student.first_name || student.username)}</span>
+        </label>
+    `).join('');
+}
+
+// ─── RENDU DE LA LISTE DES TÂCHES ────────────────────────────────────────────
+
+function _renderTaskList(tasks) {
+    const taskListEl = document.getElementById('teacher-assigned-tasks-list');
+    if (!taskListEl) return;
+
+    // En-tête avec bouton Supprimer tout
+    const headerHtml = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3>📋 قائمة المهام</h3>
+            <button class="btn btn-danger btn-sm" onclick="QuranReview.handleDeleteAllTasks()" style="background-color: #dc3545;">
+                🗑️ حذف جميع المهام
+            </button>
+        </div>
+    `;
+
+    if (!tasks.length) {
+        taskListEl.innerHTML = headerHtml + '<p class="empty-state">لا توجد مهام بعد</p>';
+        return;
+    }
+
+    // Regrouper les tâches par batch (title + type + due_date + jour de création)
+    const batches = new Map();
+    tasks.forEach(task => {
+        const day = task.created_at ? task.created_at.substring(0, 10) : '';
+        const key = `${task.title}||${task.type}||${task.due_date || ''}||${day}`;
+        if (!batches.has(key)) {
+            batches.set(key, { task, count: 0, ids: [] });
+        }
+        batches.get(key).count++;
+        batches.get(key).ids.push(task.id);
+    });
+
+    taskListEl.innerHTML = headerHtml + Array.from(batches.values()).map(({ task, count, ids }) => {
+        const typeLabel = task.type || '';
+        const dueDate   = task.due_date ? new Date(task.due_date).toLocaleDateString('ar-SA') : '';
+        const date      = new Date(task.created_at).toLocaleDateString('ar-SA');
+        const idsJson   = JSON.stringify(ids);
+        const safeTitle = escapeHtml(escapeJs(task.title));
+        return `<div class="task-card" style="position:relative;">
+            <div class="task-card-header">
+                <h3 class="task-card-title">${escapeHtml(task.title)}</h3>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span class="task-type-badge">${escapeHtml(typeLabel)}</span>
+                    <button onclick="QuranReview.handleDeleteBatch(${idsJson}, '${safeTitle}', ${count})"
+                        style="padding:4px 10px; background:#fff; border:1px solid #ef4444; border-radius:6px; color:#ef4444; font-size:0.78rem; cursor:pointer; flex-shrink:0;"
+                        title="حذف هذه المهمة">
+                        🗑️ حذف
+                    </button>
+                </div>
+            </div>
+            ${task.description ? `<p class="task-card-desc">${escapeHtml(task.description)}</p>` : ''}
+            <div class="task-card-meta">
+                <span>🏆 ${escapeHtml(String(task.points))} نقطة</span>
+                <span>👥 ${count} طالب</span>
+                <span>📅 أُنشئت: ${date}</span>
+                ${dueDate ? `<span>⏰ تسليم: ${dueDate}</span>` : ''}
+            </div>
+        </div>`;
+    }).join('');
+}
+
+// ─── ACTIONS EXPORTÉES (utilisées via TeacherPage.js ou main.js) ──────────────
+
+export function toggleAssignMode(mode) {
+    const container = document.getElementById('student-select-container');
+    if (!container) return;
+    if (mode === 'select') {
+        container.classList.remove('hidden');
+    } else {
+        container.classList.add('hidden');
+    }
+}
+
+export async function handleCreateTask(event) {
+    event.preventDefault();
+    const token = localStorage.getItem(config.apiTokenKey);
+    if (!token) return;
+
+    const assignMode = document.querySelector('input[name="assign-mode"]:checked')?.value || 'all';
+    const studentIds = [];
+    if (assignMode === 'select') {
+        document.querySelectorAll('input[name="student-ids"]:checked').forEach(cb => {
+            studentIds.push(cb.value); // UUID string, pas parseInt
+        });
+        if (!studentIds.length) {
+            showNotification('يرجى اختيار طالب واحد على الأقل', 'error');
+            return;
+        }
+    }
+
+    const body = {
+        title:       document.getElementById('task-title').value.trim(),
+        description: document.getElementById('task-description').value.trim(),
+        type:        document.getElementById('task-type').value,
+        points:      parseInt(document.getElementById('task-points').value) || 0,
+        due_date:    document.getElementById('task-due-date').value || null,
+        assign_all:  assignMode === 'all',
+        student_ids: studentIds,
+    };
+
+    try {
+        if (body.assign_all) {
+            // Créer pour tous les étudiants
+            const { data: students } = await supabaseAdmin.getMyStudents();
+            if (students?.length) {
+                const results = await Promise.all(
+                    students.map(s => supabaseTasks.createTask({ ...body, user_id: s.id }))
+                );
+                const failed = results.filter(r => r.error).length;
+                if (failed) showNotification(`فشل إنشاء ${failed} مهمة`, 'error');
+            }
+        } else {
+            // Créer pour les étudiants sélectionnés
+            for (const studentId of studentIds) {
+                const { error } = await supabaseTasks.createTask({ ...body, user_id: studentId });
+                if (error) throw new Error(error.message || 'خطأ في إنشاء المهمة');
+            }
+        }
+
+        showNotification('تم إنشاء المهمة بنجاح!', 'success');
+        document.getElementById('teacher-create-task-form').reset();
+        document.getElementById('student-select-container')?.classList.add('hidden');
+        apiCache.invalidate('tasks', 'my-students');
+        // Recharger la section
+        await init();
+    } catch (error) {
+        showNotification(error.message, 'error');
+    }
+}
+
+export async function handleDeleteBatch(ids, title, count) {
+    if (!confirm(`حذف "${title}" لـ ${count} طالب؟\nلا يمكن التراجع عن هذا الإجراء.`)) return;
+
+    try {
+        const { error } = await supabaseTasks.deleteTasksByIds(ids);
+        if (error) throw error;
+
+        showNotification('تم حذف المهام بنجاح', 'success');
+        apiCache.invalidate('tasks');
+        await init();
+    } catch (error) {
+        showNotification(error.message, 'error');
+    }
+}
+
+export async function handleDeleteAllTasks() {
+    if (!confirm('⚠️ تحذير خطير!\nهل أنت متأكد تماماً أنك تريد حذف جميع المهام؟\nهذا الإجراء سيحذف كل المهام وكل التسليمات المرتبطة بها ولا يمكن التراجع عنه.')) {
+        return;
+    }
+
+    const token = localStorage.getItem(config.apiTokenKey);
+    if (!token) return;
+
+    try {
+        const { data: students } = await supabaseAdmin.getMyStudents();
+        if (!students?.length) { showNotification('لا يوجد طلاب', 'error'); return; }
+
+        const studentIds = students.map(s => s.id);
+        const { error } = await supabaseTasks.deleteTasksByStudentIds(studentIds);
+
+        if (error) throw error;
+
+        showNotification('تم حذف جميع المهام بنجاح', 'success');
+        apiCache.invalidate('tasks');
+        await init();
+    } catch (error) {
+        showNotification(error.message, 'error');
+    }
+}

@@ -232,6 +232,9 @@ window.QuranReview = {
 
     // AdminPage — changement de section lazy (utilisé par les onglets admin)
     adminSwitchSection: (...args) => AdminPage.adminSwitchSection(...args),
+
+    // TeacherPage — changement de section lazy (utilisé par les onglets enseignant)
+    teacherSwitchSection: (...args) => TeacherPage.teacherSwitchSection(...args),
 };
 
 // Globals directs pour onclick HTML qui n'utilisent pas QuranReview.xxx

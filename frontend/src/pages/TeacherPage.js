@@ -1,190 +1,58 @@
-// frontend/src/pages/TeacherPage.js
-// Page tableau de bord enseignant — extrait de frontend/script.js (~lignes 4247-4912)
-import { state } from '../core/state.js';
-import { config } from '../core/config.js';
+// frontend/src/pages/TeacherPage.js — façade lazy-loading
+// Task 9 : découpage du monolithe (~47 KB) en 3 sous-modules chargés à la demande.
+// Architecture identique à AdminPage.js (Task 8) :
+//   TeacherPage ← lazy → teacher/TeacherDevoirsSection.js
+//                      → teacher/TeacherSoumissionsSection.js
+//                      → teacher/TeacherElevesSection.js
+import { Logger }           from '../core/logger.js';
+import { state }            from '../core/state.js';
+import { config }           from '../core/config.js';
 import { showNotification } from '../core/ui.js';
-import { Logger } from '../core/logger.js';
-import { apiCache } from '../core/apiCache.js';
-import * as supabaseTasks from '../services/supabase-tasks.js';
-import * as supabaseSubmissions from '../services/supabase-submissions.js';
-import * as supabaseAdmin from '../services/supabase-admin.js';
+import * as supabaseAdmin   from '../services/supabase-admin.js';
 
-// Injection CSS
+// Injecter le CSS des onglets enseignant (une seule fois)
 if (!document.querySelector('link[href*="TeacherPage.css"]')) {
     const link = document.createElement('link');
-    link.rel = 'stylesheet';
+    link.rel  = 'stylesheet';
     link.href = '/src/pages/TeacherPage.css';
     document.head.appendChild(link);
 }
 
-// ===================================
-// RENDER — structure HTML de la page
-// ===================================
-
-const GRADE_LABELS = {
-    1: { emoji: '😟', text: 'ضعيف' },
-    2: { emoji: '😐', text: 'مقبول' },
-    3: { emoji: '🙂', text: 'جيد' },
-    4: { emoji: '😊', text: 'جيد جداً' },
-    5: { emoji: '🌟', text: 'ممتاز' },
+// ─── MAPPAGE DES SECTIONS → MODULES ──────────────────────────────────────────
+const SECTION_MODULES = {
+    devoirs:     () => import('./teacher/TeacherDevoirsSection.js'),
+    soumissions: () => import('./teacher/TeacherSoumissionsSection.js'),
+    eleves:      () => import('./teacher/TeacherElevesSection.js'),
 };
 
-let _pendingGradeSubmissionId = null;
-let _selectedGrade = null;
-let _pendingRejectSubmissionId = null;
+// ─── ÉTAT INTERNE ─────────────────────────────────────────────────────────────
+let _activeSection = 'devoirs'; // section affichée
+let _sectionModule = null;      // module ES actuellement chargé
+let _loading       = false;     // flag anti-concurrence (double-clic)
 
+// ─── RENDER ──────────────────────────────────────────────────────────────────
 export function render() {
+    const name = state.user?.first_name || state.user?.username || 'أستاذ';
     return `
-        <!-- Modal notation emoji -->
-        <div id="grade-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:2000;align-items:center;justify-content:center;">
-            <div class="card-glass-pro" style="max-width:420px;width:90%;padding:2rem;text-align:center;border-radius:1rem;">
-                <h3 style="font-size:1.2rem;font-weight:700;margin-bottom:0.5rem;">⭐ تقييم التسليم</h3>
-                <p id="grade-modal-subtitle" style="color:var(--color-text-secondary);margin-bottom:1.5rem;font-size:0.9rem;"></p>
-                <div style="display:flex;justify-content:center;gap:0.75rem;margin-bottom:1rem;">
-                    ${[1,2,3,4,5].map(g => `
-                        <button onclick="QuranReview.selectGrade(${g})" data-grade="${g}"
-                            style="font-size:2rem;background:none;border:2px solid transparent;border-radius:12px;padding:8px;cursor:pointer;transition:all 0.2s;line-height:1;"
-                            title="${GRADE_LABELS[g].text}">
-                            ${GRADE_LABELS[g].emoji}
-                        </button>
-                    `).join('')}
-                </div>
-                <div id="grade-label" style="font-size:1rem;font-weight:600;min-height:1.5em;margin-bottom:1.5rem;color:var(--color-primary);"></div>
-                <div style="display:flex;gap:1rem;justify-content:center;">
-                    <button class="btn btn-outline-glow btn-sm" onclick="QuranReview.closeGradeModal()">إلغاء</button>
-                    <button class="btn btn-glow btn-sm" id="grade-confirm-btn" disabled onclick="QuranReview.confirmGrade()">✓ قبول</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Modal rejet -->
-        <div id="reject-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:2000;align-items:center;justify-content:center;">
-            <div class="card-glass-pro" style="max-width:420px;width:90%;padding:2rem;border-radius:1rem;">
-                <h3 style="font-size:1.1rem;font-weight:700;margin-bottom:0.75rem;">✗ رفض التسليم</h3>
-                <p id="reject-modal-subtitle" style="color:var(--color-text-secondary);margin-bottom:1rem;font-size:0.9rem;"></p>
-                <textarea id="reject-feedback" placeholder="سبب الرفض (اختياري)..."
-                    dir="rtl"
-                    style="width:100%;min-height:80px;border-radius:8px;padding:10px;border:1px solid var(--color-border);background:var(--glass-bg);color:var(--color-text);resize:vertical;font-family:inherit;font-size:0.95rem;"></textarea>
-                <div style="display:flex;gap:1rem;justify-content:center;margin-top:1rem;">
-                    <button class="btn btn-outline-glow btn-sm" onclick="QuranReview.closeRejectModal()">إلغاء</button>
-                    <button class="btn btn-danger btn-sm" onclick="QuranReview.confirmReject()">✗ تأكيد الرفض</button>
-                </div>
-            </div>
-        </div>
-
         <div id="teacher-page" class="page active">
             <section class="section-pro">
                 <div class="container-pro">
-                    <h2 class="section-title" style="text-align: center; margin-bottom: var(--space-4);">📋 لوحة المعلم</h2>
-                    <p id="teacher-welcome" style="text-align:center;color:var(--color-text-secondary);margin-bottom:var(--space-6);"></p>
+                    <h2 class="section-title" style="text-align:center; margin-bottom:var(--space-4);">📋 لوحة المعلم</h2>
+                    <p style="text-align:center; color:var(--color-text-secondary); margin-bottom:var(--space-6);">مرحباً أستاذ ${name}</p>
 
-                    <div class="grid-pro grid-cols-3" style="margin-bottom: var(--space-8);">
-                        <div class="card-stat-premium" style="text-align: center;">
-                            <div class="stat-value" id="teacher-students-count">0</div>
-                            <p style="color: var(--color-text-secondary);">عدد الطلاب</p>
-                        </div>
-                        <div class="card-stat-premium" style="text-align: center;">
-                            <div class="stat-value" id="teacher-pending-count">0</div>
-                            <p style="color: var(--color-text-secondary);">تسليمات معلقة</p>
-                        </div>
-                        <div class="card-stat-premium" style="text-align: center;">
-                            <div class="stat-value" id="teacher-tasks-count">0</div>
-                            <p style="color: var(--color-text-secondary);">المهام الكلية</p>
-                        </div>
+                    <!-- Onglets de navigation entre sections -->
+                    <div class="teacher-tabs">
+                        <button class="teacher-tab active" data-section="devoirs"
+                            onclick="QuranReview.teacherSwitchSection('devoirs')">📋 الواجبات</button>
+                        <button class="teacher-tab" data-section="soumissions"
+                            onclick="QuranReview.teacherSwitchSection('soumissions')">🎧 التسليمات</button>
+                        <button class="teacher-tab" data-section="eleves"
+                            onclick="QuranReview.teacherSwitchSection('eleves')">👥 الطلاب</button>
                     </div>
 
-                    <div class="card-glass-pro" style="margin-bottom: var(--space-6);">
-                        <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">➕ إنشاء مهمة جديدة</h3>
-                        <form id="teacher-create-task-form" onsubmit="QuranReview.handleCreateTask(event)">
-                            <div class="form-floating" style="margin-bottom: var(--space-4);">
-                                <input type="text" id="task-title" placeholder=" " required>
-                                <label for="task-title">عنوان المهمة</label>
-                            </div>
-                            <div class="form-floating" style="margin-bottom: var(--space-4);">
-                                <textarea id="task-description" placeholder=" " style="min-height: 80px; resize: vertical;"></textarea>
-                                <label for="task-description">وصف المهمة</label>
-                            </div>
-                            <div class="grid-pro grid-cols-2" style="margin-bottom: var(--space-4);">
-                                <div class="form-floating">
-                                    <select id="task-type">
-                                        <option value="hifz">حفظ</option>
-                                        <option value="muraja">مراجعة</option>
-                                        <option value="tilawa">تلاوة</option>
-                                    </select>
-                                    <label for="task-type">نوع المهمة</label>
-                                </div>
-                                <div class="form-floating">
-                                    <input type="number" id="task-points" min="0" value="10" placeholder=" ">
-                                    <label for="task-points">النقاط</label>
-                                </div>
-                            </div>
-                            <div class="form-floating" style="margin-bottom: var(--space-4);">
-                                <input type="date" id="task-due-date" placeholder=" ">
-                                <label for="task-due-date">تاريخ التسليم</label>
-                            </div>
-                            <!-- Assignation des étudiants -->
-                            <div style="margin-bottom: var(--space-4);">
-                                <p style="font-size: 0.875rem; font-weight: 600; margin-bottom: var(--space-2);">👥 تعيين إلى</p>
-                                <div style="display: flex; gap: var(--space-4);">
-                                    <label style="display: flex; align-items: center; gap: var(--space-2); cursor: pointer;">
-                                        <input type="radio" name="assign-mode" value="all" checked
-                                            onchange="QuranReview.toggleAssignMode('all')">
-                                        <span>جميع الطلاب</span>
-                                    </label>
-                                    <label style="display: flex; align-items: center; gap: var(--space-2); cursor: pointer;">
-                                        <input type="radio" name="assign-mode" value="select"
-                                            onchange="QuranReview.toggleAssignMode('select')">
-                                        <span>طلاب محددون</span>
-                                    </label>
-                                </div>
-                            </div>
-                            <div id="student-select-container" class="hidden" style="margin-bottom: var(--space-4);">
-                                <div id="student-checkboxes" style="display: flex; flex-wrap: wrap; gap: var(--space-2); padding: var(--space-3); background: var(--glass-bg); border-radius: var(--radius-lg);">
-                                    <p class="empty-state">جاري تحميل الطلاب...</p>
-                                </div>
-                            </div>
-                            <button type="submit" class="btn btn-glow btn-full">إنشاء المهمة</button>
-                        </form>
-                    </div>
-
-                    <!-- تسليمات الطلاب المعلقة -->
-                    <div id="teacher-soumissions-section" class="card-glass-pro" style="margin-bottom: var(--space-6);">
-                        <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">📥 تسليمات الطلاب</h3>
-                        <div id="teacher-tasks-list">
-                            <div class="skeleton skeleton-card"></div>
-                            <div class="skeleton skeleton-card"></div>
-                        </div>
-                    </div>
-
-                    <!-- قائمة المهام المعينة -->
-                    <div class="card-glass-pro" style="margin-bottom: var(--space-6);">
-                        <div id="teacher-assigned-tasks-list">
-                            <div class="skeleton skeleton-card"></div>
-                            <div class="skeleton skeleton-card"></div>
-                        </div>
-                    </div>
-
-                    <!-- قائمة الطلاب -->
-                    <div id="teacher-eleves-section" class="card-glass-pro" style="margin-bottom: var(--space-6);">
-                        <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">🎓 قائمة الطلاب</h3>
-                        <div id="teacher-students-list">
-                            <div class="skeleton skeleton-line"></div>
-                            <div class="skeleton skeleton-line"></div>
-                            <div class="skeleton skeleton-line short"></div>
-                            <div class="skeleton skeleton-line"></div>
-                            <div class="skeleton skeleton-line short"></div>
-                        </div>
-                    </div>
-
-                    <!-- لوحة تفاصيل الطالب -->
-                    <div id="student-detail-panel" class="card-glass-pro hidden" style="margin-bottom: var(--space-6);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4);">
-                            <h3 id="student-detail-name" style="font-size: 1.125rem; font-weight: 600;">📊 تقدم الطالب</h3>
-                            <button class="btn btn-outline-glow btn-sm" onclick="document.getElementById('student-detail-panel').classList.add('hidden')">✕ إغلاق</button>
-                        </div>
-                        <div id="student-detail-content">
-                            <p class="empty-state">جاري التحميل...</p>
-                        </div>
+                    <!-- Contenu dynamique de la section active -->
+                    <div id="teacher-section-content">
+                        <!-- chargé via lazy-import lors de teacherSwitchSection() -->
                     </div>
                 </div>
             </section>
@@ -192,30 +60,94 @@ export function render() {
     `;
 }
 
-// ===================================
-// INIT
-// ===================================
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+export async function init() {
+    Logger.log('TEACHER', 'init — chargement section par défaut');
 
-export async function init(subRoute) {
-    await loadTeacherDashboard();
+    // Charger la section initiale selon la sous-route (devoirs, soumissions, eleves)
+    const page = state.currentPage;
+    if (page === 'soumissions')      await teacherSwitchSection('soumissions');
+    else if (page === 'eleves')      await teacherSwitchSection('eleves');
+    else                             await teacherSwitchSection('devoirs');
+}
 
-    // Scroll automatique vers la section correspondant à la sous-route
-    const scrollTargets = {
-        devoirs:     '#teacher-create-task-form',
-        soumissions: '#teacher-soumissions-section',
-        eleves:      '#teacher-eleves-section',
-    };
-    const route = subRoute || (window.QuranReview?.state?.currentPage);
-    const targetSelector = scrollTargets[route];
-    if (targetSelector) {
-        const el = document.querySelector(targetSelector);
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+// ─── CHANGEMENT DE SECTION (lazy-loading) ─────────────────────────────────────
+export async function teacherSwitchSection(section) {
+    // Anti-concurrence : bloquer les appels simultanés (double-clic rapide)
+    if (_loading) return;
+    // Éviter le rechargement si on est déjà sur cette section avec le module en mémoire
+    if (section === _activeSection && _sectionModule) return;
+
+    _loading = true;
+    _activeSection = section;
+
+    // Mettre à jour le style actif des onglets
+    document.querySelectorAll('.teacher-tab').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.section === section);
+    });
+
+    // Afficher un squelette de chargement
+    const container = document.getElementById('teacher-section-content');
+    if (!container) { _loading = false; return; }
+    container.innerHTML = '<div class="skeleton skeleton-card"></div>'.repeat(3);
+
+    // Charger le module correspondant à la section
+    const loader = SECTION_MODULES[section];
+    if (!loader) {
+        Logger.warn('TEACHER', `Section inconnue : ${section}`);
+        container.innerHTML = '<p style="text-align:center; color:var(--color-danger);">Section introuvable</p>';
+        _loading = false;
+        return;
+    }
+
+    try {
+        _sectionModule      = await loader();
+        container.innerHTML = _sectionModule.render();
+        await _sectionModule.init();
+    } catch (err) {
+        Logger.error('TEACHER', `Erreur chargement section ${section}`, err);
+        container.innerHTML = '<p style="text-align:center; padding:2rem; color:var(--color-danger);">خطأ في تحميل القسم</p>';
+    } finally {
+        _loading = false; // toujours déverrouiller, même en cas d'erreur
     }
 }
 
-// ===================================
-// UTILITAIRES INTERNES
-// ===================================
+// ─── DÉLÉGATION VERS LE MODULE ACTIF ──────────────────────────────────────────
+// Toutes ces fonctions sont appelées via window.QuranReview depuis les onclick HTML.
+// Elles délèguent au module de section actuellement chargé, ce qui permet au
+// module lazy de gérer son propre état interne.
+
+function _delegate(fn, ...args) {
+    if (_sectionModule && typeof _sectionModule[fn] === 'function') {
+        return _sectionModule[fn](...args);
+    }
+    Logger.warn('TEACHER', `Fonction ${fn} non disponible dans le module actif (${_activeSection})`);
+}
+
+// ── Devoirs ──
+export const handleCreateTask     = (...args) => _delegate('handleCreateTask', ...args);
+export const handleDeleteAllTasks = (...args) => _delegate('handleDeleteAllTasks', ...args);
+export const handleDeleteBatch    = (...args) => _delegate('handleDeleteBatch', ...args);
+export const toggleAssignMode     = (...args) => _delegate('toggleAssignMode', ...args);
+
+// ── Soumissions ──
+export const openGradeModal   = (...args) => _delegate('openGradeModal', ...args);
+export const closeGradeModal  = (...args) => _delegate('closeGradeModal', ...args);
+export const selectGrade      = (...args) => _delegate('selectGrade', ...args);
+export const confirmGrade     = (...args) => _delegate('confirmGrade', ...args);
+export const approveSubmission = (...args) => _delegate('approveSubmission', ...args);
+export const openRejectModal  = (...args) => _delegate('openRejectModal', ...args);
+export const closeRejectModal = (...args) => _delegate('closeRejectModal', ...args);
+export const confirmReject    = (...args) => _delegate('confirmReject', ...args);
+export const rejectSubmission = (...args) => _delegate('rejectSubmission', ...args);
+
+// ── Élèves ──
+export const viewStudentProgress = (...args) => _delegate('viewStudentProgress', ...args);
+
+// ─── FONCTIONS ADMIN RÉSIDUELLES ──────────────────────────────────────────────
+// Ces fonctions étaient dans l'ancien TeacherPage.js monolithique.
+// Elles sont conservées ici pour compatibilité avec UserEditModal.js et main.js
+// qui les référencent via TeacherPage ou window.QuranReview.
 
 function escapeHtml(text) {
     if (!text) return '';
@@ -237,639 +169,37 @@ function escapeJs(text) {
         .replace(/\r/g, '\\r');
 }
 
-function showLoading() {
-    const overlay = document.querySelector('.loading-overlay');
-    if (overlay) overlay.style.display = 'flex';
-}
-
-function hideLoading() {
-    const overlay = document.querySelector('.loading-overlay');
-    if (overlay) overlay.style.display = 'none';
-}
-
-// ===================================
-// TEACHER DASHBOARD
-// ===================================
-
-async function loadTeacherDashboard() {
-    if (state.user && state.user.role !== 'teacher' && state.user.role !== 'admin' && !state.user.is_superuser) {
-        window.QuranReview && window.QuranReview.navigateTo('soumettre');
-        return;
-    }
-
-    if (state.user) {
-        const el = document.getElementById('teacher-welcome');
-        if (el) el.textContent = `مرحباً أستاذ ${state.user.first_name || state.user.username}`;
-    }
-
-    if (state.user && (state.user.role === 'admin' || state.user.is_superuser)) {
-        loadAdminUsersList();
-    }
-
-    const cachedStudents = apiCache.get('my-students');
-    const cachedPending  = apiCache.get('pending-submissions');
-    const cachedTasks    = apiCache.get('tasks');
-
-    if (cachedStudents && cachedPending && cachedTasks) {
-        _applyTeacherData(cachedStudents, cachedPending, cachedTasks);
-        _fetchAndCacheTeacher(); // refresh silencieux
-        return;
-    }
-
-    showLoading();
-    await _fetchAndCacheTeacher();
-    hideLoading();
-}
-
-async function _fetchAndCacheTeacher() {
-    try {
-        const [studentsResult, pendingResult, tasksResult] = await Promise.all([
-            supabaseAdmin.getMyStudents(),
-            supabaseSubmissions.getPendingSubmissions(),
-            supabaseTasks.getAllTasks(),
-        ]);
-
-        const students = studentsResult.data || [];
-        const pending  = pendingResult.data  || [];
-        const tasks    = tasksResult.data    || [];
-
-        apiCache.set('my-students', students);
-        apiCache.set('pending-submissions', pending);
-        apiCache.set('tasks', tasks);
-
-        _applyTeacherData(students, pending, tasks);
-    } catch (err) {
-        Logger.error('TEACHER', 'loadTeacherDashboard error', err);
-        showNotification('فشل تحميل بيانات لوحة التحكم', 'error');
-        hideLoading();
-    }
-}
-
-function _applyTeacherData(students, pending, tasks) {
-    // Guard : si l'utilisateur a navigué ailleurs, la page n'est plus dans le DOM
-    if (!document.getElementById('teacher-page')) return;
-
-    // Stocker pour usage ultérieur
-    _teacherStudents = students;
-    _teacherTasks = tasks;
-
-    // Charger les cases à cocher des étudiants pour la création de tâche
-    _loadStudentCheckboxes(students);
-
-    // Stats
-    const studentsCountEl = document.getElementById('teacher-students-count');
-    if (studentsCountEl) studentsCountEl.textContent = students.length;
-    const pendingCountEl = document.getElementById('teacher-pending-count');
-    if (pendingCountEl) pendingCountEl.textContent = pending.length;
-    const tasksCountEl = document.getElementById('teacher-tasks-count');
-    if (tasksCountEl) tasksCountEl.textContent = tasks.length;
-
-    // Soumissions en attente
-    const pendingList = document.getElementById('teacher-tasks-list');
-    if (pendingList) {
-        if (!pending.length) {
-            pendingList.innerHTML = '<p class="empty-state">لا توجد تسليمات بانتظار التصحيح 🎉</p>';
-        } else {
-            pendingList.innerHTML = pending.map(s => {
-                const date = new Date(s.submitted_at).toLocaleDateString('ar-SA');
-                // Gérer le cas où s.task ou s.tasks peut être undefined
-                const taskTitle = s.task?.title || s.tasks?.title || 'Tâche sans titre';
-                const taskPoints = s.task?.points || s.tasks?.points || 0;
-                
-                const studentName = s.profiles?.first_name || s.profiles?.username || 'طالب';
-                return `<div class="pending-card">
-                    <div class="pending-card-header">
-                        <strong>🎓 ${escapeHtml(studentName)}</strong>
-                        <span class="task-type-badge">${escapeHtml(taskTitle)}</span>
-                    </div>
-                    <div class="pending-card-meta">
-                        <span>🏆 ${escapeHtml(String(taskPoints))} نقطة</span>
-                        <span>📅 ${date}</span>
-                    </div>
-                    ${s.audio_url ? `
-                        <div class="audio-player-container">
-                            <audio controls preload="metadata" style="width:100%;margin:0.5rem 0;"
-                                onerror="this.parentElement.innerHTML='<p style=\\'color:#999;font-size:0.85rem;\\'>الملف الصوتي غير متاح حاليا</p>'">
-                                <source src="${s.audio_url.startsWith('http') ? s.audio_url : config.apiBaseUrl + (s.audio_url.startsWith('/') ? s.audio_url : '/' + s.audio_url)}" type="audio/webm">
-                                المتصفح لا يدعم تشغيل الصوت
-                            </audio>
-                            <div style="font-size:0.8rem;color:#666;margin-top:0.25rem;">
-                                📎 <a href="${s.audio_url.startsWith('http') ? s.audio_url : config.apiBaseUrl + (s.audio_url.startsWith('/') ? s.audio_url : '/' + s.audio_url)}" target="_blank" style="color:#007bff;">فتح الملف الصوتي</a>
-                            </div>
-                        </div>
-                    ` : '<p class="empty-state">لا يوجد ملف صوتي</p>'}
-                    <div class="pending-card-actions">
-                        <button class="btn btn-success btn-sm" onclick="QuranReview.openGradeModal('${s.id}', '${escapeHtml(escapeJs(studentName))}', '${escapeHtml(escapeJs(taskTitle))}')">⭐ قبول وتقييم</button>
-                        <button class="btn btn-danger btn-sm" onclick="QuranReview.openRejectModal('${s.id}', '${escapeHtml(escapeJs(studentName))}')">✗ رفض</button>
-                    </div>
-                </div>`;
-            }).join('');
-        }
-    }
-
-    // Liste des étudiants avec clic pour voir le détail
-    const studentsList = document.getElementById('teacher-students-list');
-    if (studentsList) {
-        if (!students.length) {
-            studentsList.innerHTML = '<p class="empty-state">لا يوجد طلاب بعد</p>';
-        } else {
-            studentsList.innerHTML = students.map(s => {
-                const safeName = escapeHtml(s.first_name || s.username);
-                const safeNameAttr = escapeHtml(escapeJs(s.first_name || s.username));
-                return `<div class="student-card clickable" onclick="QuranReview.viewStudentProgress('${s.id}', '${safeNameAttr}')">
-                    <div class="student-card-name">🎓 ${safeName}</div>
-                    <div class="student-card-stats">
-                        <span>🏆 ${escapeHtml(String(s.total_points ?? '—'))} نقطة</span>
-                        <span>📝 ${escapeHtml(String(s.submissions_count ?? '—'))} تسليم</span>
-                    </div>
-                    <span class="student-card-arrow">←</span>
-                </div>`;
-            }).join('');
-        }
-    }
-
-    // Liste des tâches — div séparé pour ne pas écraser les soumissions
-    const taskListEl = document.getElementById('teacher-assigned-tasks-list');
-    if (taskListEl) {
-        // En-tête avec bouton Supprimer tout
-        const headerHtml = `
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                <h3>📋 قائمة المهام</h3>
-                <button class="btn btn-danger btn-sm" onclick="QuranReview.handleDeleteAllTasks()" style="background-color: #dc3545;">
-                    🗑️ حذف جميع المهام
-                </button>
-            </div>
-        `;
-
-        if (!tasks.length) {
-            taskListEl.innerHTML = headerHtml + '<p class="empty-state">لا توجد مهام بعد</p>';
-        } else {
-            // Regrouper les tâches par batch (title + type + due_date + jour de création)
-            const batches = new Map();
-            tasks.forEach(task => {
-                const day = task.created_at ? task.created_at.substring(0, 10) : '';
-                const key = `${task.title}||${task.type}||${task.due_date || ''}||${day}`;
-                if (!batches.has(key)) {
-                    batches.set(key, { task, count: 0, ids: [] });
-                }
-                batches.get(key).count++;
-                batches.get(key).ids.push(task.id);
-            });
-
-            taskListEl.innerHTML = headerHtml + Array.from(batches.values()).map(({ task, count, ids }) => {
-                const typeLabel = task.type || '';
-                const dueDate = task.due_date ? new Date(task.due_date).toLocaleDateString('ar-SA') : '';
-                const date = new Date(task.created_at).toLocaleDateString('ar-SA');
-                const idsJson = JSON.stringify(ids);
-                const safeTitle = escapeHtml(escapeJs(task.title));
-                return `<div class="task-card" style="position:relative;">
-                    <div class="task-card-header">
-                        <h3 class="task-card-title">${escapeHtml(task.title)}</h3>
-                        <div style="display:flex; align-items:center; gap:8px;">
-                            <span class="task-type-badge">${escapeHtml(typeLabel)}</span>
-                            <button onclick="QuranReview.handleDeleteBatch(${idsJson}, '${safeTitle}', ${count})"
-                                style="padding:4px 10px; background:#fff; border:1px solid #ef4444; border-radius:6px; color:#ef4444; font-size:0.78rem; cursor:pointer; flex-shrink:0;"
-                                title="حذف هذه المهمة">
-                                🗑️ حذف
-                            </button>
-                        </div>
-                    </div>
-                    ${task.description ? `<p class="task-card-desc">${escapeHtml(task.description)}</p>` : ''}
-                    <div class="task-card-meta">
-                        <span>🏆 ${escapeHtml(String(task.points))} نقطة</span>
-                        <span>👥 ${count} طالب</span>
-                        <span>📅 أُنشئت: ${date}</span>
-                        ${dueDate ? `<span>⏰ تسليم: ${dueDate}</span>` : ''}
-                    </div>
-                </div>`;
-            }).join('');
-        }
-    }
-}
-
-// État interne pour les données enseignant
-let _teacherStudents = [];
-let _teacherTasks = [];
-
-function _loadStudentCheckboxes(students) {
-    const container = document.getElementById('student-checkboxes');
-    if (!container) return;
-
-    if (!students.length) {
-        container.innerHTML = '<p class="empty-state">لا يوجد طلاب</p>';
-        return;
-    }
-
-    const checkboxes = students.map(student => `
-        <label class="student-checkbox-label">
-            <input type="checkbox" name="student-ids" value="${student.id}">
-            <span class="student-name">${escapeHtml(student.first_name || student.username)}</span>
-        </label>
-    `).join('');
-
-    container.innerHTML = checkboxes;
-}
-
-// ===================================
-// STUDENT PROGRESS DETAIL
-// ===================================
-
-export async function viewStudentProgress(studentId, studentName) {
-    const token = localStorage.getItem(config.apiTokenKey);
-    if (!token) return;
-
-    const panel = document.getElementById('student-detail-panel');
-    const nameEl = document.getElementById('student-detail-name');
-    const contentEl = document.getElementById('student-detail-content');
-
-    nameEl.textContent = `📊 تقدم الطالب: ${studentName}`;
-    contentEl.innerHTML = '<p class="empty-state">جاري التحميل...</p>';
-    panel.classList.remove('hidden');
-
-    try {
-        // Migration Supabase
-        const { data, error } = await supabaseAdmin.getStudentProgress(studentId);
-        if (error) throw new Error('فشل تحميل بيانات الطالب');
-
-        let html = `<div class="student-detail-stats">
-            <div class="stat-mini"><strong>🏆</strong> ${data.totalPoints ?? 0} نقطة</div>
-        </div>`;
-
-        if (!data.tasks.length) {
-            html += '<p class="empty-state">لا توجد مهام معينة</p>';
-        } else {
-            html += '<div class="student-tasks-progress">';
-            data.tasks.forEach(task => {
-                const typeLabel = task.type || 'مهمة';
-                let statusBadge = '';
-                if (task.submission_status === 'approved') {
-                    statusBadge = '<span class="status-badge status-approved">مقبول ✓</span>';
-                } else if (task.submission_status === 'rejected') {
-                    statusBadge = '<span class="status-badge status-rejected">مرفوض ✗</span>';
-                } else if (task.submission_status === 'submitted') {
-                    statusBadge = '<span class="status-badge status-pending">بانتظار التصحيح</span>';
-                } else {
-                    statusBadge = '<span class="status-badge status-new">لم يُسلَّم</span>';
-                }
-
-                html += `<div class="student-task-row">
-                    <div class="student-task-info">
-                        <span class="task-type-badge">${escapeHtml(typeLabel)}</span>
-                        <strong>${escapeHtml(task.title)}</strong>
-                        <span>🏆 ${escapeHtml(String(task.points))}</span>
-                    </div>
-                    ${statusBadge}
-                </div>`;
-            });
-            html += '</div>';
-        }
-
-        contentEl.innerHTML = html;
-    } catch (error) {
-        contentEl.innerHTML = `<p class="empty-state">${escapeHtml(error.message)}</p>`;
-    }
-}
-
-// ===================================
-// TASK MANAGEMENT
-// ===================================
-
-export function toggleAssignMode(mode) {
-    const container = document.getElementById('student-select-container');
-    if (mode === 'select') {
-        container.classList.remove('hidden');
-    } else {
-        container.classList.add('hidden');
-    }
-}
-
-export async function handleDeleteBatch(ids, title, count) {
-    if (!confirm(`حذف "${title}" لـ ${count} طالب؟\nلا يمكن التراجع عن هذا الإجراء.`)) return;
-
-    try {
-        const { error } = await supabaseTasks.deleteTasksByIds(ids);
-        if (error) throw error;
-
-        showNotification(`تم حذف المهام بنجاح`, 'success');
-        apiCache.invalidate('tasks');
-        loadTeacherDashboard();
-    } catch (error) {
-        showNotification(error.message, 'error');
-    }
-}
-
-export async function handleDeleteAllTasks() {
-    if (!confirm('⚠️ تحذير خطير!\nهل أنت متأكد تماماً أنك تريد حذف جميع المهام؟\nهذا الإجراء سيحذف كل المهام وكل التسليمات المرتبطة بها ولا يمكن التراجع عنه.')) {
-        return;
-    }
-
-    const token = localStorage.getItem(config.apiTokenKey);
-    if (!token) return;
-
-    try {
-        // Récupérer toutes les tâches du prof puis supprimer en bloc
-        const { data: students } = await supabaseAdmin.getMyStudents();
-        if (!students?.length) { showNotification('لا يوجد طلاب', 'error'); return; }
-
-        const studentIds = students.map(s => s.id);
-        const { error } = await supabaseTasks.deleteTasksByStudentIds(studentIds);
-
-        if (error) throw error;
-
-        showNotification(`تم حذف جميع المهام بنجاح`, 'success');
-        apiCache.invalidate('tasks');
-        loadTeacherDashboard();
-    } catch (error) {
-        showNotification(error.message, 'error');
-    }
-}
-
-export async function handleCreateTask(event) {
-    event.preventDefault();
-    const token = localStorage.getItem(config.apiTokenKey);
-    if (!token) return;
-
-    const assignMode = document.querySelector('input[name="assign-mode"]:checked')?.value || 'all';
-    const studentIds = [];
-    if (assignMode === 'select') {
-        document.querySelectorAll('input[name="student-ids"]:checked').forEach(cb => {
-            studentIds.push(cb.value); // UUID string, pas parseInt
-        });
-        if (!studentIds.length) {
-            showNotification('يرجى اختيار طالب واحد على الأقل', 'error');
-            return;
-        }
-    }
-
-    const body = {
-        title: document.getElementById('task-title').value.trim(),
-        description: document.getElementById('task-description').value.trim(),
-        type: document.getElementById('task-type').value,
-        points: parseInt(document.getElementById('task-points').value) || 0,
-        due_date: document.getElementById('task-due-date').value || null,
-        assign_all: assignMode === 'all',
-        student_ids: studentIds,
-    };
-
-    try {
-        // Migration Supabase
-        if (body.assign_all) {
-            // Créer pour tous les étudiants
-            const { data: students } = await supabaseAdmin.getMyStudents();
-            if (students?.length) {
-                const results = await Promise.all(
-                    students.map(s => supabaseTasks.createTask({ ...body, user_id: s.id }))
-                );
-                const failed = results.filter(r => r.error).length;
-                if (failed) showNotification(`فشل إنشاء ${failed} مهمة`, 'error');
-            }
-        } else {
-            // Créer pour les étudiants sélectionnés
-            for (const studentId of studentIds) {
-                const { error } = await supabaseTasks.createTask({ ...body, user_id: studentId });
-                if (error) throw new Error(error.message || 'خطأ في إنشاء المهمة');
-            }
-        }
-
-        showNotification('تم إنشاء المهمة بنجاح!', 'success');
-        document.getElementById('teacher-create-task-form').reset();
-        document.getElementById('student-select-container')?.classList.add('hidden');
-        apiCache.invalidate('tasks', 'my-students');
-        loadTeacherDashboard();
-    } catch (error) {
-        showNotification(error.message, 'error');
-    }
-}
-
-// ===================================
-// GRADE MODAL (approbation avec emoji)
-// ===================================
-
-export function openGradeModal(submissionId, studentName, taskTitle) {
-    _pendingGradeSubmissionId = submissionId;
-    _selectedGrade = null;
-
-    const subtitle = document.getElementById('grade-modal-subtitle');
-    if (subtitle) subtitle.textContent = `${studentName} — ${taskTitle}`;
-
-    const label = document.getElementById('grade-label');
-    if (label) label.textContent = '';
-
-    const confirmBtn = document.getElementById('grade-confirm-btn');
-    if (confirmBtn) confirmBtn.disabled = true;
-
-    // Réinitialiser les boutons emoji
-    document.querySelectorAll('[data-grade]').forEach(btn => {
-        btn.style.border = '2px solid transparent';
-        btn.style.transform = 'scale(1)';
-    });
-
-    const modal = document.getElementById('grade-modal');
-    if (modal) { modal.style.display = 'flex'; }
-}
-
-export function closeGradeModal() {
-    const modal = document.getElementById('grade-modal');
-    if (modal) modal.style.display = 'none';
-    _pendingGradeSubmissionId = null;
-    _selectedGrade = null;
-}
-
-export function selectGrade(grade) {
-    _selectedGrade = grade;
-
-    // Mettre en surbrillance le bouton sélectionné
-    document.querySelectorAll('[data-grade]').forEach(btn => {
-        const g = parseInt(btn.dataset.grade);
-        if (g === grade) {
-            btn.style.border = '2px solid var(--color-primary, #6366f1)';
-            btn.style.transform = 'scale(1.2)';
-        } else {
-            btn.style.border = '2px solid transparent';
-            btn.style.transform = 'scale(1)';
-        }
-    });
-
-    const info = GRADE_LABELS[grade];
-    const label = document.getElementById('grade-label');
-    if (label) label.textContent = `${info.emoji} ${info.text}`;
-
-    const confirmBtn = document.getElementById('grade-confirm-btn');
-    if (confirmBtn) confirmBtn.disabled = false;
-}
-
-export async function confirmGrade() {
-    if (!_pendingGradeSubmissionId || !_selectedGrade) return;
-    const submissionId = _pendingGradeSubmissionId;
-    const grade = _selectedGrade;
-    closeGradeModal();
-    await approveSubmission(submissionId, grade);
-}
-
-export async function approveSubmission(submissionId, grade) {
-    const token = localStorage.getItem(config.apiTokenKey);
-    if (!token) return;
-
-    const gradeInfo = grade ? GRADE_LABELS[grade] : null;
-    const feedback = gradeInfo ? `${gradeInfo.emoji} ${gradeInfo.text} (${grade}/5)` : '';
-
-    try {
-        // Migration Supabase - récupérer les points de la tâche
-        let points = grade ? grade * 2 : 10;
-        const { error } = await supabaseSubmissions.approveSubmission(submissionId, points, feedback);
-        if (error) throw new Error('فشل القبول');
-
-        const gradeText = gradeInfo ? ` — ${gradeInfo.emoji} ${gradeInfo.text}` : '';
-        showNotification(`تم قبول التسليم!${gradeText}`, 'success');
-        apiCache.invalidate('pending-submissions', 'submissions', 'my-submissions');
-        loadTeacherDashboard();
-    } catch (error) {
-        showNotification(error.message, 'error');
-    }
-}
-
-// ===================================
-// REJECT MODAL
-// ===================================
-
-export function openRejectModal(submissionId, studentName) {
-    _pendingRejectSubmissionId = submissionId;
-
-    const subtitle = document.getElementById('reject-modal-subtitle');
-    if (subtitle) subtitle.textContent = `رفض تسليم الطالب: ${studentName}`;
-
-    const textarea = document.getElementById('reject-feedback');
-    if (textarea) textarea.value = '';
-
-    const modal = document.getElementById('reject-modal');
-    if (modal) modal.style.display = 'flex';
-}
-
-export function closeRejectModal() {
-    const modal = document.getElementById('reject-modal');
-    if (modal) modal.style.display = 'none';
-    _pendingRejectSubmissionId = null;
-}
-
-export async function confirmReject() {
-    if (!_pendingRejectSubmissionId) return;
-    const submissionId = _pendingRejectSubmissionId;
-    const feedback = document.getElementById('reject-feedback')?.value?.trim() || '';
-    closeRejectModal();
-    await rejectSubmission(submissionId, feedback);
-}
-
-export async function rejectSubmission(submissionId, feedback) {
-    const token = localStorage.getItem(config.apiTokenKey);
-    if (!token) return;
-
-    try {
-        // Migration Supabase
-        const { error } = await supabaseSubmissions.rejectSubmission(submissionId, feedback || '');
-        if (error) throw new Error('فشل الرفض');
-
-        showNotification('تم رفض التسليم', 'success');
-        apiCache.invalidate('pending-submissions', 'submissions', 'my-submissions');
-        loadTeacherDashboard();
-    } catch (error) {
-        showNotification(error.message, 'error');
-    }
-}
-
-// ===================================
-// ADMIN — GESTION DES UTILISATEURS
-// ===================================
-
-export async function loadAdminUsersList() {
-    const token = localStorage.getItem(config.apiTokenKey);
-    if (!token) return;
-
-    try {
-        // Migration Supabase
-        const { data, error } = await supabaseAdmin.getAllUsers();
-        if (error) throw new Error('فشل تحميل قائمة المستخدمين');
-
-        renderAdminUsersList(data || []);
-    } catch (error) {
-        Logger.error('ADMIN', 'Failed to load users list', error);
-        const usersListEl = document.getElementById('admin-users-list');
-        if (usersListEl) {
-            usersListEl.innerHTML = '<p class="empty-state">فشل تحميل القائمة</p>';
-        }
-    }
-}
-
-export function renderAdminUsersList(users) {
-    const usersListEl = document.getElementById('admin-users-list');
-    if (!usersListEl) return;
-
-    if (users.length === 0) {
-        usersListEl.innerHTML = '<p class="empty-state">لا يوجد مستخدمون</p>';
-        return;
-    }
-
-    let html = '';
-    users.forEach(user => {
-        const roleClass = (user.role === 'admin' || user.is_superuser) ? 'admin' : user.role;
-        const roleText = (user.role === 'admin' || user.is_superuser) ? 'مدير' : (user.role === 'teacher' ? 'أستاذ' : 'طالب');
-        const roleBadge = `<span class="user-badge ${roleClass}">${roleText}</span>`;
-
-        html += `
-            <div class="dashboard-item">
-                <div class="item-info">
-                    <div class="item-title">${escapeHtml(user.username)}${roleBadge}</div>
-                    <div class="item-subtitle">
-                        ${escapeHtml(user.first_name)} ${escapeHtml(user.last_name)} •
-                        ${user.created_at ? new Date(user.created_at).toLocaleDateString('ar-SA') : '—'}
-                    </div>
-                </div>
-                <div class="item-actions">
-                    <button class="btn btn-sm btn-secondary" onclick="QuranReview.openUserEditModal('${user.id}', '${escapeHtml(escapeJs(user.username))}', '${escapeHtml(escapeJs(user.first_name))}', '${escapeHtml(escapeJs(user.last_name))}', '${escapeHtml(escapeJs(user.role))}', ${!!user.is_superuser})">✏️ تعديل</button>
-                    ${user.id !== state.user?.id ? `<button class="btn btn-sm btn-danger" onclick="QuranReview.deleteUser('${user.id}', '${escapeHtml(escapeJs(user.username))}')">🗑️ حذف</button>` : ''}
-                </div>
-            </div>
-        `;
-    });
-
-    usersListEl.innerHTML = html;
-}
-
 export async function handleUpdateUser(event) {
     event.preventDefault();
 
-    const userId = document.getElementById('edit-user-id').value;
-    const firstName = document.getElementById('edit-first-name').value.trim();
-    const lastName = document.getElementById('edit-last-name').value.trim();
-    const role = document.getElementById('edit-role').value;
-    const isSuperuser = document.getElementById('edit-is-superuser').checked;
+    const userId     = document.getElementById('edit-user-id').value;
+    const firstName  = document.getElementById('edit-first-name').value.trim();
+    const lastName   = document.getElementById('edit-last-name').value.trim();
+    const role       = document.getElementById('edit-role').value;
 
-    const errorEl = document.getElementById('user-edit-error');
+    const errorEl   = document.getElementById('user-edit-error');
     const successEl = document.getElementById('user-edit-success');
-    const token = localStorage.getItem(config.apiTokenKey);
 
     errorEl?.classList.add('hidden');
     successEl?.classList.add('hidden');
 
     try {
-        // Migration Supabase
         const { data, error } = await supabaseAdmin.updateUser(userId, {
             first_name: firstName,
-            last_name: lastName,
-            role: role,
+            last_name:  lastName,
+            role,
         });
 
         if (error) throw new Error(error.message || 'خطأ في تحديث المستخدم');
 
         Logger.log('ADMIN', `User updated: ${data?.username || userId}`);
         if (successEl) {
-            successEl.textContent = `✅ تم تحديث بيانات المستخدم بنجاح`;
+            successEl.textContent = '✅ تم تحديث بيانات المستخدم بنجاح';
             successEl.classList.remove('hidden');
         }
 
-        // Fermer le modal après 2 secondes
         setTimeout(() => {
             window.QuranReview && window.QuranReview.closeUserEditModal();
-            loadAdminUsersList();
         }, 2000);
 
         showNotification('تم تحديث بيانات المستخدم بنجاح', 'success');
@@ -883,39 +213,26 @@ export async function handleUpdateUser(event) {
 }
 
 export async function deleteUser(userId, username) {
-    if (!confirm(`هل أنت متأكد من حذف المستخدم "${username}"؟\nهذا الإجراء لا يمكن التراجع عنه.`)) {
-        return;
-    }
-
-    const token = localStorage.getItem(config.apiTokenKey);
+    if (!confirm(`هل أنت متأكد من حذف المستخدم "${username}"؟\nهذا الإجراء لا يمكن التراجع عنه.`)) return;
 
     try {
-        // Migration Supabase - Note: deleteUser nécessite une Edge Function
         const { error } = await supabaseAdmin.deleteUser(userId);
         if (error) throw new Error(error.message || 'خطأ في حذف المستخدم');
 
         Logger.log('ADMIN', `User deleted: ${username}`);
         showNotification(`تم حذف "${username}" بنجاح`, 'success');
-        loadAdminUsersList();
     } catch (error) {
         Logger.error('ADMIN', 'Delete user failed', error);
         showNotification(error.message, 'error');
     }
 }
 
-// ===================================
-// ADMIN — CREATE / PROMOTE TEACHER
-// ===================================
-
 export async function handleCreateTeacher(event) {
     event.preventDefault();
-    const username = document.getElementById('teacher-new-username').value.trim();
-    const firstName = document.getElementById('teacher-new-firstname').value.trim();
-    const lastName = document.getElementById('teacher-new-lastname').value.trim();
-    const password = document.getElementById('teacher-new-password').value;
-    const errorEl = document.getElementById('admin-create-error');
+    const username  = document.getElementById('teacher-new-username').value.trim();
+    const password  = document.getElementById('teacher-new-password').value;
+    const errorEl   = document.getElementById('admin-create-error');
     const successEl = document.getElementById('admin-create-success');
-    const token = localStorage.getItem(config.apiTokenKey);
 
     errorEl?.classList.add('hidden');
     successEl?.classList.add('hidden');
@@ -923,7 +240,6 @@ export async function handleCreateTeacher(event) {
     Logger.log('AUTH', `Admin creating teacher: ${username}`);
 
     try {
-        // Migration Supabase
         const { data, error } = await supabaseAdmin.createTeacher(null, password, username);
         if (error) throw new Error(error.message || 'خطأ في إنشاء الحساب');
 
@@ -932,9 +248,8 @@ export async function handleCreateTeacher(event) {
             successEl.textContent = `✅ تم إنشاء حساب الأستاذ "${username}" بنجاح`;
             successEl.classList.remove('hidden');
         }
-        document.getElementById('admin-create-teacher-form').reset();
+        document.getElementById('admin-create-teacher-form')?.reset();
         showNotification('تم إنشاء حساب الأستاذ بنجاح', 'success');
-        loadAdminUsersList();
     } catch (error) {
         Logger.error('AUTH', 'Create teacher failed', error);
         if (errorEl) {
@@ -946,10 +261,9 @@ export async function handleCreateTeacher(event) {
 
 export async function handlePromoteTeacher(event) {
     event.preventDefault();
-    const username = document.getElementById('promote-username').value.trim();
-    const errorEl = document.getElementById('admin-promote-error');
+    const username  = document.getElementById('promote-username').value.trim();
+    const errorEl   = document.getElementById('admin-promote-error');
     const successEl = document.getElementById('admin-promote-success');
-    const token = localStorage.getItem(config.apiTokenKey);
 
     errorEl?.classList.add('hidden');
     successEl?.classList.add('hidden');
@@ -957,7 +271,6 @@ export async function handlePromoteTeacher(event) {
     Logger.log('AUTH', `Admin promoting user to teacher: ${username}`);
 
     try {
-        // Migration Supabase - trouver l'utilisateur puis mettre à jour son rôle
         const { data: users } = await supabaseAdmin.getAllUsers();
         const user = users?.find(u => u.username === username);
         if (!user) throw new Error('المستخدم غير موجود');
@@ -970,9 +283,8 @@ export async function handlePromoteTeacher(event) {
             successEl.textContent = `✅ تم ترقية "${username}" إلى أستاذ بنجاح`;
             successEl.classList.remove('hidden');
         }
-        document.getElementById('admin-promote-form').reset();
+        document.getElementById('admin-promote-form')?.reset();
         showNotification(`تم ترقية ${username} إلى أستاذ`, 'success');
-        loadAdminUsersList();
     } catch (error) {
         Logger.error('AUTH', 'Promote teacher failed', error);
         if (errorEl) {
