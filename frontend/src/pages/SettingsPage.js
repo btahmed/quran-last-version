@@ -62,6 +62,15 @@ export function render() {
                                 <span style="margin-right: var(--space-3);">الإشعارات</span>
                             </label>
                         </div>
+
+                        <!-- Toggle Notifications Push -->
+                        <div class="setting-row" id="push-settings-row" style="display: flex; justify-content: space-between; align-items: center; margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--border-color, rgba(255,255,255,0.1));">
+                            <div class="setting-info">
+                                <span class="setting-label" style="display: block; font-weight: 500;">إشعارات التصحيح</span>
+                                <span class="setting-desc" style="display: block; font-size: 0.85rem; opacity: 0.7;">إشعار فوري عند تصحيح المعلم لتلاوتك</span>
+                            </div>
+                            <button id="push-toggle-btn" class="btn btn-sm btn-outline">تفعيل</button>
+                        </div>
                     </div>
 
                     <div class="card-glass-pro">
@@ -85,6 +94,61 @@ export function render() {
 
 export function init() {
     renderSettingsForm();
+    initPushToggle();
+}
+
+// --- Toggle notifications push ---
+async function initPushToggle() {
+    const btn = document.getElementById('push-toggle-btn');
+    if (!btn) return;
+
+    // Vérifier si le navigateur supporte Web Push
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+        const reg = await navigator.serviceWorker.ready;
+        const existing = await reg.pushManager.getSubscription();
+        if (existing) {
+            btn.textContent = 'إلغاء التفعيل';
+            btn.classList.replace('btn-outline', 'btn-danger');
+        }
+    } else {
+        // Navigateur non supporté — masquer la ligne
+        const row = document.getElementById('push-settings-row');
+        if (row) row.style.display = 'none';
+        return;
+    }
+
+    btn.addEventListener('click', async () => {
+        const { subscribeToPush, savePushSubscription, unsubscribeFromPush } =
+            await import('../services/push-notifications.js');
+        const { supabaseClient } = await import('../services/supabase-client.js');
+        const { state } = await import('../core/state.js');
+        const { showNotification } = await import('../core/ui.js');
+
+        const reg = await navigator.serviceWorker.ready;
+        const existing = await reg.pushManager.getSubscription();
+
+        if (existing) {
+            // Désabonner
+            await unsubscribeFromPush(supabaseClient, state.user.id);
+            btn.textContent = 'تفعيل';
+            btn.classList.replace('btn-danger', 'btn-outline');
+            showNotification('تم إلغاء الإشعارات', 'info');
+        } else {
+            // Abonner
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') {
+                showNotification('يرجى السماح بالإشعارات في إعدادات المتصفح', 'error');
+                return;
+            }
+            const sub = await subscribeToPush();
+            if (sub) {
+                await savePushSubscription(supabaseClient, state.user.id, sub);
+                btn.textContent = 'إلغاء التفعيل';
+                btn.classList.replace('btn-outline', 'btn-danger');
+                showNotification('تم تفعيل الإشعارات ✅', 'success');
+            }
+        }
+    });
 }
 
 // ===================================

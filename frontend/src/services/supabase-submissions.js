@@ -157,6 +157,16 @@ export async function approveSubmission(submissionId, points, feedback = '') {
       submission_id: submissionId,
     })
 
+    // Notifier l'étudiant via push (non bloquant — échec silencieux)
+    supabaseClient.functions.invoke('send-push', {
+      body: {
+        user_id: sub.student_id,
+        title: 'تم تصحيح تلاوتك ✅',
+        body: `حصلت على ${points} نقطة`,
+        url: '/soumettre',
+      },
+    }).catch(err => console.warn('[Push] Notification non envoyée:', err));
+
     return { data, error: null }
   } catch (error) {
     return { data: null, error }
