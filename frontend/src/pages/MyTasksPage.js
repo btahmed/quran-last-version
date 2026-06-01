@@ -9,6 +9,7 @@ import { apiCache } from '../core/apiCache.js';
 import * as supabaseTasks from '../services/supabase-tasks.js';
 import * as supabaseSubmissions from '../services/supabase-submissions.js';
 import * as supabaseLeaderboard from '../services/supabase-leaderboard.js';
+import { updateNavBadge } from '../core/NavManager.js';
 
 function escapeHtml(str) {
     return String(str ?? '')
@@ -216,6 +217,14 @@ function _applyStudentData(tasks, submissions, pointsData) {
     // Stocker les données dans l'état interne pour le re-rendu par onglet
     _studentTasks = tasks;
     _studentSubByTask = subByTask;
+
+    // Mettre à jour le badge de l'onglet "soumettre" avec les tâches en attente
+    const pendingCount = tasks.filter(t => {
+        const sub = subByTask[t.id];
+        // En attente = pas de soumission, ou soumission rejetée/en cours de révision
+        return !sub || sub.status === 'pending' || sub.status === 'assigned' || sub.status === 'rejected';
+    }).length;
+    updateNavBadge('soumettre', pendingCount);
 
     // Détecter le bon onglet initial selon les statuts réels
     const hasPending = tasks.some(t => { const s = subByTask[t.id]; return !s || s.status !== 'approved'; });

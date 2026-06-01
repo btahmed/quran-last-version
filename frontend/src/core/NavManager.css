@@ -50,6 +50,7 @@
     transition: color 0.2s ease;
     flex: 1;
     padding: 4px 0;
+    position: relative; /* nécessaire pour positionner le badge absolu */
 }
 
 /* Bouton central (action principale) — légèrement surélevé */
@@ -170,6 +171,27 @@ a.nav-link-pro,
 .card,
 .card-pro {
     padding: clamp(0.75rem, 2vw, 1.5rem);
+}
+
+/* ── Badge de notification bottom bar ───────────────────────── */
+.nav-badge {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    border-radius: 999px;
+    background: #dc2626;
+    color: white;
+    font-size: 0.625rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    line-height: 1;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 /* ── Modals mobile ───────────────────────────────────────────── */

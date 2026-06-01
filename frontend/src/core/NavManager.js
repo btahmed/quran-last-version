@@ -112,13 +112,37 @@ function buildBottomBar(role) {
         label.className = 'tab-label';
         label.textContent = tab.label;
 
+        // Badge de notification (invisible par défaut)
+        const badgeEl = document.createElement('span');
+        badgeEl.className = 'nav-badge';
+        badgeEl.id = `nav-badge-${tab.key}`;
+        badgeEl.setAttribute('aria-hidden', 'true');
+        badgeEl.style.display = 'none';
+
         a.appendChild(icon);
         a.appendChild(label);
+        a.appendChild(badgeEl);
         bar.appendChild(a);
     });
 
     bar.classList.add('bottom-bar--active');
     document.body.classList.add('has-bottom-bar');
+}
+
+/**
+ * Met à jour le badge d'un item de la bottom bar.
+ * @param {string} key - La clé de la route (ex: 'soumettre', 'soumissions')
+ * @param {number} count - Le nombre à afficher (0 = masqué)
+ */
+export function updateNavBadge(key, count) {
+    const el = document.getElementById(`nav-badge-${key}`);
+    if (!el) return;
+    if (count > 0) {
+        el.textContent = count > 99 ? '99+' : String(count);
+        el.style.display = 'flex';
+    } else {
+        el.style.display = 'none';
+    }
 }
 
 /**
