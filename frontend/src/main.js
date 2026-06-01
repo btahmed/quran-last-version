@@ -27,6 +27,7 @@ import * as TeacherPage from './pages/TeacherPage.js';
 import * as RevisionPage   from './pages/RevisionPage.js';
 import * as SoumissionPage from './pages/SoumissionPage.js';
 import * as ProfilPage     from './pages/ProfilPage.js';
+import * as AdminPage      from './pages/AdminPage.js';
 import { buildNav, setActiveTab } from './core/NavManager.js';
 import { apiCache } from './core/apiCache.js';
 
@@ -228,6 +229,9 @@ window.QuranReview = {
     // NavManager — accès façade pour tests et intégrations externes
     buildNav,
     setActiveTab,
+
+    // AdminPage — changement de section lazy (utilisé par les onglets admin)
+    adminSwitchSection: (...args) => AdminPage.adminSwitchSection(...args),
 };
 
 // Globals directs pour onclick HTML qui n'utilisent pas QuranReview.xxx
