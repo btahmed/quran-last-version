@@ -2140,5 +2140,4 @@ a:not(.btn):not(.nav-link):not(.nav-item) {
 .max-w-lg        { max-width: 900px; }
 
 /* Affichage */
-.hidden          { display: none !important; }
 .block           { display: block; }
