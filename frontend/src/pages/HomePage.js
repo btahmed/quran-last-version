@@ -211,6 +211,14 @@ function renderStudentDashboard() {
             </div>
         </section>
 
+        <!-- CALENDRIER HEBDOMADAIRE -->
+        <section class="dashboard-section">
+            <h3 class="section-title">📅 أسبوعك</h3>
+            <div id="week-calendar-container">
+                <div class="skeleton" style="height:80px;border-radius:var(--radius-md);"></div>
+            </div>
+        </section>
+
         <!-- ACCÈS RAPIDE -->
         <section class="dashboard-section">
             <h3 class="section-title">⚡ وصول سريع</h3>
@@ -389,8 +397,19 @@ async function initDashboard(role) {
         const cached = apiCache.get('tasks');
         if (cached) {
             renderStudentTasks(cached);
-            supabaseTasks.getMyTasks().then(({ data }) => {
-                if (data) { apiCache.set('tasks', data); renderStudentTasks(data); }
+            // Rendu du calendrier hebdomadaire depuis le cache
+            const { renderWeekCalendar } = await import('../components/WeekCalendar.js');
+            const calContainer = document.getElementById('week-calendar-container');
+            if (calContainer) calContainer.innerHTML = renderWeekCalendar(cached);
+            supabaseTasks.getMyTasks().then(async ({ data }) => {
+                if (data) {
+                    apiCache.set('tasks', data);
+                    renderStudentTasks(data);
+                    // Mise à jour du calendrier avec les données fraîches
+                    const { renderWeekCalendar: rwc } = await import('../components/WeekCalendar.js');
+                    const cal = document.getElementById('week-calendar-container');
+                    if (cal) cal.innerHTML = rwc(data);
+                }
             }).catch(() => {});
             return;
         }
@@ -401,6 +420,10 @@ async function initDashboard(role) {
         } else {
             renderStudentTasks([]);
         }
+        // Rendu du calendrier hebdomadaire après chargement des tâches
+        const { renderWeekCalendar } = await import('../components/WeekCalendar.js');
+        const calContainer = document.getElementById('week-calendar-container');
+        if (calContainer) calContainer.innerHTML = renderWeekCalendar((!error && data) ? data : []);
     }
 
     if (role === 'teacher') {
