@@ -25,6 +25,7 @@ const SECTION_MODULES = {
 // ─── ÉTAT INTERNE ─────────────────────────────────────────────────────────────
 let _activeSection  = 'users'; // section affichée
 let _sectionModule  = null;    // module ES actuellement chargé
+let _loading        = false;   // flag anti-concurrence (double-clic)
 
 // ─── RENDER ──────────────────────────────────────────────────────────────────
 export function render() {
@@ -87,9 +88,12 @@ export async function init() {
 
 // ─── CHANGEMENT DE SECTION (lazy-loading) ─────────────────────────────────────
 export async function adminSwitchSection(section) {
+    // Anti-concurrence : bloquer les appels simultanés (double-clic rapide)
+    if (_loading) return;
     // Éviter le rechargement si on est déjà sur cette section avec le module en mémoire
     if (section === _activeSection && _sectionModule) return;
 
+    _loading = true;
     _activeSection = section;
 
     // Mettre à jour le style actif des onglets
@@ -99,7 +103,7 @@ export async function adminSwitchSection(section) {
 
     // Afficher un squelette de chargement
     const container = document.getElementById('admin-section-content');
-    if (!container) return;
+    if (!container) { _loading = false; return; }
     container.innerHTML = '<div class="skeleton skeleton-card"></div>'.repeat(3);
 
     // Charger le module correspondant à la section
@@ -107,6 +111,7 @@ export async function adminSwitchSection(section) {
     if (!loader) {
         Logger.warn('ADMIN', `Section inconnue : ${section}`);
         container.innerHTML = '<p style="text-align:center; color:var(--color-danger);">Section introuvable</p>';
+        _loading = false;
         return;
     }
 
@@ -117,6 +122,8 @@ export async function adminSwitchSection(section) {
     } catch (err) {
         Logger.error('ADMIN', `Erreur chargement section ${section}`, err);
         container.innerHTML = `<p style="text-align:center; color:var(--color-danger);">فشل تحميل القسم</p>`;
+    } finally {
+        _loading = false; // toujours déverrouiller, même en cas d'erreur
     }
 }
 
