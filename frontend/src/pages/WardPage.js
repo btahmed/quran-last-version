@@ -17,11 +17,11 @@ export function render() {
     // HTML exact de div#ward-page (index.html lignes 388-513)
     return `<div id="ward-page" class="page active">
             <section class="section-pro">
-                <div class="container-pro" style="max-width: 800px;">
-                    <h2 class="section-title" style="text-align: center; margin-bottom: var(--space-8);">🎧 الورد اليومي</h2>
+                <div class="container-pro max-w-md">
+                    <h2 class="section-title text-center mb-8">🎧 الورد اليومي</h2>
 
-                    <div class="card-glass-pro" style="margin-bottom: var(--space-6);">
-                        <div class="form-floating" style="margin-bottom: var(--space-4);">
+                    <div class="card-glass-pro mb-6">
+                        <div class="form-floating mb-4">
                             <select id="ward-surah-select" class="select-modern">
                                 <option value="">اختر السورة</option>
                                 <option value="1">سورة الفاتحة</option>
@@ -31,7 +31,7 @@ export function render() {
                             <label for="ward-surah-select">السورة</label>
                         </div>
 
-                        <div class="grid-pro grid-cols-2" style="margin-bottom: var(--space-6);">
+                        <div class="grid-pro grid-cols-2 mb-6">
                             <div class="form-floating">
                                 <input type="number" id="ward-from-ayah" placeholder=" " min="1" value="1">
                                 <label for="ward-from-ayah">من الآية</label>
@@ -42,7 +42,7 @@ export function render() {
                             </div>
                         </div>
 
-                        <div class="grid-pro grid-cols-2" style="margin-bottom: var(--space-4);">
+                        <div class="grid-pro grid-cols-2 mb-4">
                             <div class="form-floating">
                                 <select id="ward-reciter-selector">
                                     <option value="alafasy">مشاري بن راشد العفاسي</option>
@@ -59,7 +59,7 @@ export function render() {
                             </div>
                         </div>
 
-                        <div class="grid-pro grid-cols-2" style="margin-bottom: var(--space-4);">
+                        <div class="grid-pro grid-cols-2 mb-4">
                             <div class="form-floating">
                                 <select id="ward-audio-source">
                                     <option value="cdn" selected>الخادم المباشر</option>
@@ -77,7 +77,7 @@ export function render() {
                             </div>
                         </div>
 
-                        <div class="form-floating" style="margin-bottom: var(--space-4);">
+                        <div class="form-floating mb-4">
                             <select id="ward-ayah-delay">
                                 <option value="0" selected>بدون تأخير</option>
                                 <option value="0.5">0.5 ثانية</option>
@@ -89,7 +89,7 @@ export function render() {
                             <label for="ward-ayah-delay">تأخير بين الآيات</label>
                         </div>
 
-                        <div style="margin-bottom: var(--space-4);">
+                        <div class="mb-4">
                             <label class="toggle-switch">
                                 <input type="checkbox" id="ward-autoplay-next" checked>
                                 <span class="toggle-slider"></span>
@@ -105,13 +105,13 @@ export function render() {
 
                     <!-- Audio Player -->
                     <div class="player-glass" id="ward-player">
-                        <div style="text-align: center; margin-bottom: var(--space-4);">
+                        <div class="text-center mb-4">
                             <span class="badge badge-glass" id="ward-progress-text">الآية 1 من 7</span>
                         </div>
 
-                        <div class="ward-ayah-image" id="ward-image-container" style="min-height: 200px; display: flex; align-items: center; justify-content: center; background: rgba(45, 80, 22, 0.05); border-radius: var(--radius-2xl); margin-bottom: var(--space-4);">
+                        <div class="ward-ayah-image mb-4" id="ward-image-container" style="min-height: 200px; display: flex; align-items: center; justify-content: center; background: rgba(45, 80, 22, 0.05); border-radius: var(--radius-2xl);">
                             <img id="ward-image" src="" alt="Ayah Image" style="display: none; max-width: 100%; border-radius: var(--radius-xl);">
-                            <div id="ward-ayah-text" class="arabic-large" style="text-align: center; padding: var(--space-6); font-size: 1.75rem;">
+                            <div id="ward-ayah-text" class="arabic-large text-center" style="padding: var(--space-6); font-size: 1.75rem;">
                                 بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
                             </div>
                         </div>
@@ -132,7 +132,7 @@ export function render() {
                             </button>
                         </div>
 
-                        <div class="flex-pro" style="justify-content: center; margin-top: var(--space-4);">
+                        <div class="flex-pro mt-4" style="justify-content: center;">
                             <button class="btn btn-outline-glow btn-sm" id="stop-ward-btn" onclick="AudioManager.stopAll()">
                                 ⏹️ إيقاف
                             </button>
