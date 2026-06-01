@@ -35,7 +35,8 @@
     --radius-lg: 12px;
     --radius-xl: 16px;
 
-    /* Espacement unifié (scale) */
+    /* Espacement unifié (scale) — utilisé dans les templates JS (HifzPage, WardPage, etc.)
+       ex : style="margin-bottom: var(--space-4);" — NE PAS supprimer */
     --space-1: 0.25rem;
     --space-2: 0.5rem;
     --space-3: 0.75rem;
@@ -49,6 +50,10 @@
     --color-warning: #d97706;
     --color-danger:  #dc2626;
     --color-info:    #2563eb;
+
+    /* Alias sémantiques couleurs primaires */
+    --color-primary:      var(--accent-green);    /* = #2d5016 */
+    --color-primary-dark: #1e3a0f;
 
     /* Transitions standard */
     --transition-fast:   150ms ease;
@@ -393,7 +398,9 @@ body {
     font-size: 0.9rem;
 }
 
-.btn-primary {
+/* .btn-primary — bloc original remplacé par le bloc FIXES (ligne ~2060+) qui utilise
+   --color-primary (alias de --accent-green) pour cohérence WCAG AA. */
+/* .btn-primary {
     background-color: var(--accent-green);
     color: white;
 }
@@ -401,7 +408,7 @@ body {
 .btn-primary:hover {
     background-color: #1e7e34;
     transform: translateY(-1px);
-}
+} */
 
 .btn-secondary {
     background-color: var(--text-secondary);
@@ -2061,6 +2068,7 @@ body {
 
 .btn-primary:hover {
     background-color: var(--color-primary-dark, #1e3a0f);
+    transform: translateY(-1px); /* effet hover conservé depuis le bloc original */
 }
 
 [data-theme="dark"] .btn-primary {
