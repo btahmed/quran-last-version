@@ -47,22 +47,16 @@ function renderLanding() {
 
         <!-- HERO -->
         <section class="landing-hero">
+            <div class="hero-bg-pattern"></div>
             <div class="hero-content">
-                <div class="hero-logo">🕌</div>
-                <h1 class="hero-title">مراجعة القرآن</h1>
-                <p class="hero-subtitle">
-                    منصة لإدارة حلقات تحفيظ القرآن ومراجعة الحفظ من المنزل
-                </p>
+                <div class="hero-badge">✨ منصة حفظ القرآن الكريم</div>
+                <h1 class="hero-title">راجع القرآن<br><span class="hero-title-accent">بثقة واطمئنان</span></h1>
+                <p class="hero-subtitle">منصة متكاملة تجمع المعلم والطالب — حفظ، مراجعة، إرسال تلاوة، ومتابعة التقدم يومياً</p>
                 <div class="hero-actions">
-                    <button class="btn btn-glow btn-lg"
-                            onclick="QuranReview.showAuthModal()">
-                        تسجيل الدخول
-                    </button>
-                    <button class="btn btn-outline-glow btn-lg"
-                            onclick="QuranReview.showRegisterForm()">
-                        إنشاء حساب
-                    </button>
+                    <button class="btn btn-glow btn-lg" onclick="QuranReview.showAuthModal()">ابدأ الآن — مجاناً</button>
+                    <button class="btn btn-ghost btn-lg" onclick="QuranReview.showRegisterForm()">إنشاء حساب</button>
                 </div>
+                <p class="hero-social-proof">انضم إلى <strong>+224</strong> طالب يراجعون يومياً</p>
             </div>
         </section>
 
@@ -132,6 +126,24 @@ function initLanding() {
     document.querySelectorAll('.stat-number[data-target]').forEach(el =>
         observer.observe(el)
     );
+
+    // Stats live depuis Supabase
+    (async function fetchLiveStats() {
+        try {
+            const { supabaseClient } = await import('../services/supabase-client.js');
+            const { count: students } = await supabaseClient
+                .from('profiles')
+                .select('*', { count: 'exact', head: true })
+                .eq('role', 'student');
+            if (students != null) {
+                document.querySelectorAll('.stat-number[data-target]').forEach(el => {
+                    el.textContent = '+' + students;
+                });
+            }
+        } catch (e) {
+            // silently ignore — stats non critiques
+        }
+    })();
 }
 
 function animateCounter(el) {
