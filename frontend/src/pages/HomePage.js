@@ -135,11 +135,8 @@ function initLanding() {
                 .from('profiles')
                 .select('*', { count: 'exact', head: true })
                 .eq('role', 'student');
-            if (students != null) {
-                document.querySelectorAll('.stat-number[data-target]').forEach(el => {
-                    el.textContent = '+' + students;
-                });
-            }
+            const el = document.querySelector('.stat-number[data-target="224"]');
+            if (el && students != null) el.textContent = '+' + students;
         } catch (e) {
             // silently ignore — stats non critiques
         }
