@@ -180,7 +180,7 @@ export function render() {
                     <div id="student-detail-panel" class="card-glass-pro hidden" style="margin-bottom: var(--space-6);">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4);">
                             <h3 id="student-detail-name" style="font-size: 1.125rem; font-weight: 600;">📊 تقدم الطالب</h3>
-                            <button class="btn btn-outline-glow btn-sm" onclick="document.getElementById('student-detail-panel').classList.add('hidden')">✕ إغلاق</button>
+                            <button class="btn btn-outline-glow btn-sm" aria-label="إغلاق" title="إغلاق" onclick="document.getElementById('student-detail-panel').classList.add('hidden')">✕ إغلاق</button>
                         </div>
                         <div id="student-detail-content">
                             <p class="empty-state">جاري التحميل...</p>
@@ -824,8 +824,8 @@ export function renderAdminUsersList(users) {
                     </div>
                 </div>
                 <div class="item-actions">
-                    <button class="btn btn-sm btn-secondary" onclick="QuranReview.openUserEditModal('${user.id}', '${escapeHtml(escapeJs(user.username))}', '${escapeHtml(escapeJs(user.first_name))}', '${escapeHtml(escapeJs(user.last_name))}', '${escapeHtml(escapeJs(user.role))}', ${!!user.is_superuser})">✏️ تعديل</button>
-                    ${user.id !== state.user?.id ? `<button class="btn btn-sm btn-danger" onclick="QuranReview.deleteUser('${user.id}', '${escapeHtml(escapeJs(user.username))}')">🗑️ حذف</button>` : ''}
+                    <button class="btn btn-sm btn-secondary" aria-label="تعديل المستخدم" title="تعديل المستخدم" onclick="QuranReview.openUserEditModal('${user.id}', '${escapeHtml(escapeJs(user.username))}', '${escapeHtml(escapeJs(user.first_name))}', '${escapeHtml(escapeJs(user.last_name))}', '${escapeHtml(escapeJs(user.role))}', ${!!user.is_superuser})">✏️ تعديل</button>
+                    ${user.id !== state.user?.id ? `<button class="btn btn-sm btn-danger" aria-label="حذف المستخدم" title="حذف المستخدم" onclick="QuranReview.deleteUser('${user.id}', '${escapeHtml(escapeJs(user.username))}')">🗑️ حذف</button>` : ''}
                 </div>
             </div>
         `;
