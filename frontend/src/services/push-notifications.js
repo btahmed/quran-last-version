@@ -8,7 +8,7 @@
 //   4. Créer la table push_subscriptions (voir supabase/functions/send-push/index.ts)
 //   5. Déployer l'Edge Function : supabase functions deploy send-push
 
-const VAPID_PUBLIC_KEY = 'REMPLACER_PAR_VOTRE_CLE_VAPID_PUBLIQUE';
+const VAPID_PUBLIC_KEY = 'BLop-qhihAdaTL33D13QgIAVPVn_byLmpi960I8qsjeihVXYm459ABDgOVk_fNjRp5QXxkA-U2QRb6UP_jb3D_Y';
 
 /**
  * Abonne l'utilisateur aux notifications push.
