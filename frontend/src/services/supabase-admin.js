@@ -80,10 +80,14 @@ export async function getStudentProgress(userId) {
       }
     }
 
-    const [tasksRes, submissionsRes, pointsRes] = await Promise.all([
+    const [tasksRes, submissionsRes, pointsRes, classRes] = await Promise.all([
       supabaseClient.from('tasks').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
       supabaseClient.from('submissions').select('*').eq('student_id', userId).order('submitted_at', { ascending: false }),
       supabaseClient.from('points_log').select('delta').eq('student_id', userId),
+      supabaseClient.from('class_members')
+        .select('classes(name, profiles!teacher_id(username, first_name, last_name))')
+        .eq('student_id', userId)
+        .maybeSingle(),
     ])
     if (tasksRes.error) return { data: null, error: tasksRes.error }
     if (submissionsRes.error) return { data: null, error: submissionsRes.error }
