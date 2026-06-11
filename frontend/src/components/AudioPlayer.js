@@ -3,6 +3,24 @@ import { Logger } from '../core/logger.js';
 import { state, saveData } from '../core/state.js';
 import { config } from '../core/config.js';
 
+// URLs audio Coran via EveryAyah CDN (Alafasy, qualité sélectionnée dans WardPage)
+window.QuranAudio = {
+    surahAyahToGlobal(surahId, ayah) {
+        return surahId * 1000 + ayah;
+    },
+    getAyahAudioUrl(encoded) {
+        const surahId = Math.floor(encoded / 1000);
+        const ayah    = encoded % 1000;
+        const quality = document.getElementById('ward-audio-quality')?.value || '128';
+        const s = String(surahId).padStart(3, '0');
+        const a = String(ayah).padStart(3, '0');
+        return `https://everyayah.com/data/Alafasy_${quality}kbps/${s}${a}.mp3`;
+    },
+    getAudioUrl(surahId) {
+        return `https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/${String(surahId).padStart(3, '0')}.mp3`;
+    }
+};
+
 export const AudioManager = {
     audio: null,
     mode: null,          // "wird" | "full" | "surah-local" | null

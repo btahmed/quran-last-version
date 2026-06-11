@@ -6,6 +6,7 @@
 
 /* ── Landing Hero ─────────────────────────────────────────── */
 .landing-hero {
+    position: relative;
     min-height: 100vh;
     display: flex;
     align-items: center;
@@ -350,4 +351,161 @@
     .quick-btn {
         min-width: unset;
     }
+}
+
+/* === REDESIGN LANDING — Task 2 === */
+
+.hero-badge {
+    display: inline-block;
+    background: rgba(45, 80, 22, 0.12);
+    color: var(--accent-green);
+    border: 1px solid rgba(45, 80, 22, 0.25);
+    border-radius: 999px;
+    padding: 0.35rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: var(--space-4);
+}
+
+.hero-title-accent {
+    color: var(--accent-green);
+}
+
+.hero-social-proof {
+    margin-top: var(--space-4);
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.hero-bg-pattern {
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(circle at 20% 50%, rgba(45, 80, 22, 0.05) 0%, transparent 50%),
+                      radial-gradient(circle at 80% 20%, rgba(212, 165, 116, 0.07) 0%, transparent 40%);
+    pointer-events: none;
+}
+
+.btn-ghost {
+    background: transparent;
+    border: 2px solid var(--accent-green);
+    color: var(--accent-green);
+    transition: all var(--transition-normal);
+}
+.btn-ghost:hover {
+    background: var(--accent-green);
+    color: white;
+}
+
+.landing-hero .btn-ghost {
+    border-color: rgba(255, 255, 255, 0.75);
+    color: rgba(255, 255, 255, 0.9);
+}
+.landing-hero .btn-ghost:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: white;
+    color: white;
+}
+
+/* === STATS V2 — Task 3 === */
+
+.stats-grid-v2 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-3);
+}
+
+@media (max-width: 480px) {
+    .stats-grid-v2 {
+        grid-template-columns: 1fr;
+    }
+}
+
+.stat-card-v2 {
+    background: var(--card-bg, white);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4);
+    text-align: center;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    transition: transform var(--transition-fast);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-1);
+}
+.stat-card-v2:hover {
+    transform: translateY(-2px);
+}
+
+.stat-card-icon {
+    font-size: 1.5rem;
+    display: block;
+}
+.stat-value-big {
+    font-size: 1.75rem;
+    font-weight: 700;
+    display: block;
+}
+.stat-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-top: var(--space-1);
+}
+
+.progress-bar-wrap {
+    width: 100%;
+    height: 6px;
+    background: var(--border-color);
+    border-radius: 999px;
+    margin-top: var(--space-2);
+    overflow: hidden;
+}
+.progress-bar-fill {
+    height: 100%;
+    background: var(--accent-green);
+    border-radius: 999px;
+    transition: width 0.8s ease;
+    width: 0%;
+}
+
+/* ── KStat cards (Claude Design) ──────────────────────────── */
+.k-stat-card {
+    background: var(--surface-card, rgba(255,255,255,0.08));
+    border: 1px solid var(--border-subtle, rgba(45,80,22,0.12));
+    border-radius: var(--radius-lg, 12px);
+    padding: var(--space-4, 1rem);
+    text-align: center;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    transition: transform var(--transition-fast, 0.15s ease),
+                box-shadow var(--transition-fast, 0.15s ease);
+}
+.k-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+.k-stat-icon  { font-size: 1.5rem; line-height: 1; }
+.k-stat-value {
+    font-size: var(--text-2xl, 1.5rem);
+    font-weight: 800;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-primary, #1a2412);
+}
+.k-stat-label {
+    font-size: var(--text-xs, 0.6875rem);
+    color: var(--text-secondary, #4a5e36);
+    margin-top: 2px;
+}
+
+/* Greeting block */
+.k-greeting { margin-bottom: var(--space-5, 1.25rem); }
+.k-greeting h2 { margin: 0 0 4px; font-size: var(--text-xl, 1.25rem); }
+.k-greeting .date {
+    margin: 0;
+    font-size: var(--text-sm, 0.75rem);
+    color: var(--text-secondary, #4a5e36);
 }

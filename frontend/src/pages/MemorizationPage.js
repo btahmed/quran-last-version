@@ -23,7 +23,7 @@ export function render() {
                 <div class="container-pro">
                     <div class="flex-pro" style="justify-content: space-between; align-items: center; margin-bottom: var(--space-8); flex-wrap: wrap; gap: var(--space-4);">
                         <h2 class="section-title" style="margin: 0;">📖 قائمة الحفظ</h2>
-                        <button class="btn btn-glow" onclick="MemorizationPage.showAddMemorization()">
+                        <button class="btn btn-glow" onclick="QuranReview.showAddMemorization()">
                             <span>➕</span>
                             إضافة حفظ جديد
                         </button>
@@ -32,7 +32,7 @@ export function render() {
                     <!-- Add Form -->
                     <div class="card-glass-pro" id="add-memorization-form-container" style="margin-bottom: var(--space-6); display: none;">
                         <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: var(--space-6);">➕ إضافة حفظ جديد</h3>
-                        <form id="add-memorization-form" onsubmit="MemorizationPage.handleAddMemorization(event)">
+                        <form id="add-memorization-form" onsubmit="QuranReview.handleAddMemorization(event)">
                             <div class="form-floating" style="margin-bottom: var(--space-4);">
                                 <select id="surah-select" required>
                                     <option value="">-- اختر السورة --</option>
@@ -62,7 +62,7 @@ export function render() {
                             </div>
 
                             <div class="flex-pro" style="justify-content: flex-end; gap: var(--space-3);">
-                                <button type="button" class="btn btn-outline-glow" onclick="MemorizationPage.hideAddMemorization()">إلغاء</button>
+                                <button type="button" class="btn btn-outline-glow" onclick="QuranReview.hideAddMemorization()">إلغاء</button>
                                 <button type="submit" class="btn btn-glow">إضافة</button>
                             </div>
                         </form>
@@ -97,7 +97,7 @@ export function render() {
                             <div style="font-size: 4rem; margin-bottom: var(--space-4);">📚</div>
                             <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: var(--space-2);">لا توجد سور محفوظة</h3>
                             <p style="color: var(--color-text-secondary); margin-bottom: var(--space-4);">ابدأ رحلة الحفظ بإضافة سورة جديدة</p>
-                            <button class="btn btn-glow" onclick="MemorizationPage.showAddMemorization()">
+                            <button class="btn btn-glow" onclick="QuranReview.showAddMemorization()">
                                 <span>➕</span>
                                 إضافة سورة
                             </button>
@@ -207,16 +207,16 @@ function createTableRow(item) {
             <td>${escapeHtml(item.reviewCount || 0)}</td>
             <td>${getNextReviewDate(item)}</td>
             <td>
-                <button class="btn btn-sm btn-primary" onclick="MemorizationPage.markAsReviewed(${item.id})" title="تسجيل المراجعة">
+                <button class="btn btn-sm btn-primary" onclick="QuranReview.markAsReviewed(${item.id})" title="تسجيل المراجعة">
                     ✓ مراجعة
                 </button>
-                <button class="btn btn-sm btn-success" onclick="MemorizationPage.playSurahAudio(${item.surahId})" title="استماع للسورة">
+                <button class="btn btn-sm btn-success" onclick="QuranReview.playSurahAudio(${item.surahId})" title="استماع للسورة">
                     🎵 استماع
                 </button>
-                <button class="btn btn-sm btn-secondary" onclick="MemorizationPage.openTarteel(${item.surahId}, ${item.fromAyah}, ${item.toAyah})" title="فتح في تطبيق ترتيل">
+                <button class="btn btn-sm btn-secondary" onclick="QuranReview.openTarteel(${item.surahId}, ${item.fromAyah}, ${item.toAyah})" title="فتح في تطبيق ترتيل">
                     🎧 ترتيل
                 </button>
-                <button class="btn btn-sm btn-danger" onclick="MemorizationPage.deleteItem(${item.id})" title="حذف العنصر">
+                <button class="btn btn-sm btn-danger" onclick="QuranReview.deleteItem(${item.id})" title="حذف العنصر">
                     حذف
                 </button>
             </td>

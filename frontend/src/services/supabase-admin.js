@@ -32,29 +32,105 @@ export async function updateUser(userId, payload) {
 }
 
 export async function deleteUser(userId) {
-  // Nécessite une Edge Function avec service_role — non implémentable côté client
-  return { data: null, error: new Error('deleteUser nécessite une Edge Function (service_role requis)') }
+  try {
+    // Supprime le profil (cascade vers tasks, submissions, points_log via FK ON DELETE CASCADE)
+    // auth.users reste intact mais l'utilisateur n'a plus de profil actif
+    const { error } = await supabaseClient
+      .from('profiles')
+      .delete()
+      .eq('id', userId)
+    return { error }
+  } catch (error) {
+    return { error }
+  }
 }
 
 export async function createTeacher(email, password, username) {
   return createUser(email, password, username, 'teacher')
 }
 
-export async function getStudentProgress(studentId) {
+export async function getStudentProgress(userId) {
   try {
-    const [tasksRes, submissionsRes, pointsRes] = await Promise.all([
-      supabaseClient.from('tasks').select('*').eq('user_id', studentId).order('created_at', { ascending: false }),
-      supabaseClient.from('submissions').select('*').eq('student_id', studentId).order('submitted_at', { ascending: false }),
-      supabaseClient.from('points_log').select('delta').eq('student_id', studentId),
-    ])
+    const { data: profile, error: profileError } = await supabaseClient
+      .from('profiles').select('*').eq('id', userId).single()
+    if (profileError || !profile) return { data: null, error: profileError }
 
+    const isTeacher = profile.role === 'teacher' || profile.role === 'admin'
+
+    if (isTeacher) {
+      const { data: assignedTasks, error: tasksError } = await supabaseClient
+        .from('tasks')
+        .select('*, profiles!user_id(first_name, username)')
+        .eq('assigned_by', userId)
+        .order('created_at', { ascending: false })
+      if (tasksError) return { data: null, error: tasksError }
+      return {
+        data: {
+          ...profile,
+          assigned_tasks_count: assignedTasks?.length || 0,
+          assigned_tasks: (assignedTasks || []).map(t => ({
+            ...t,
+            student_name: t.profiles?.first_name || t.profiles?.username || '',
+          })),
+          tasks: [],
+          totalPoints: 0,
+          total_points: 0,
+        },
+        error: null,
+      }
+    }
+
+    const [tasksRes, submissionsRes, pointsRes, classRes] = await Promise.all([
+      supabaseClient.from('tasks').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
+      supabaseClient.from('submissions').select('*').eq('student_id', userId).order('submitted_at', { ascending: false }),
+      supabaseClient.from('points_log').select('delta').eq('student_id', userId),
+      supabaseClient.from('class_members')
+        .select('classes(name, profiles!teacher_id(username, first_name, last_name))')
+        .eq('student_id', userId)
+        .maybeSingle(),
+    ])
     if (tasksRes.error) return { data: null, error: tasksRes.error }
     if (submissionsRes.error) return { data: null, error: submissionsRes.error }
-    if (pointsRes.error) return { data: null, error: pointsRes.error }
+
+    // class_members optionnel — requête séparée pour ne pas bloquer si la FK n'existe pas
+    let classRes = { data: null };
+    try {
+      const r = await supabaseClient.from('class_members')
+        .select('classes(name)')
+        .eq('student_id', userId)
+        .maybeSingle();
+      if (!r.error) classRes = r;
+    } catch (_) { /* class info non disponible, on continue */ }
 
     const totalPoints = (pointsRes.data || []).reduce((sum, row) => sum + (row.delta || 0), 0)
+    const submissionsByTaskId = {}
+    ;(submissionsRes.data || []).forEach(s => { submissionsByTaskId[s.task_id] = s })
+    const tasksWithStatus = (tasksRes.data || []).map(t => ({
+      ...t,
+      status: submissionsByTaskId[t.id]?.status || t.status || 'pending',
+      submission_status: submissionsByTaskId[t.id]?.status || null,
+    }))
 
-    return { data: { tasks: tasksRes.data, submissions: submissionsRes.data, totalPoints }, error: null }
+    const classData = classRes.data?.classes
+    const teacherProfile = classData?.profiles
+    const classe_info = classData ? {
+      name: classData.name || null,
+      teacher: teacherProfile
+        ? (`${teacherProfile.first_name || ''} ${teacherProfile.last_name || ''}`.trim() || teacherProfile.username)
+        : null,
+    } : null
+
+    return {
+      data: {
+        ...profile,
+        tasks: tasksWithStatus,
+        submissions: submissionsRes.data || [],
+        totalPoints,
+        total_points: totalPoints,
+        classe_info,
+      },
+      error: null,
+    }
   } catch (error) {
     return { data: null, error }
   }
@@ -87,6 +163,47 @@ export async function getAdminOverview() {
   }
 }
 
+export async function getTeacherStatsAndTasks() {
+  try {
+    const [teachersRes, tasksRes] = await Promise.all([
+      supabaseClient
+        .from('profiles')
+        .select('id, username, first_name, last_name')
+        .eq('role', 'teacher'),
+      supabaseClient
+        .from('tasks')
+        .select('id, title, status, points, assigned_by, user_id, created_at, profiles!user_id(username, first_name)')
+        .order('created_at', { ascending: false })
+        .limit(50),
+    ])
+
+    const teachers = teachersRes.data || []
+    const tasks = tasksRes.data || []
+
+    const teacherMap = {}
+    teachers.forEach(t => {
+      teacherMap[t.id] = { ...t, assigned_tasks: 0, pending_submissions: 0 }
+    })
+    tasks.forEach(task => {
+      if (task.assigned_by && teacherMap[task.assigned_by]) {
+        teacherMap[task.assigned_by].assigned_tasks++
+        if (task.status === 'submitted') teacherMap[task.assigned_by].pending_submissions++
+      }
+    })
+
+    const teacherStats = Object.values(teacherMap)
+    const recentTasks = tasks.map(t => ({
+      ...t,
+      teacher: t.assigned_by && teacherMap[t.assigned_by] ? { username: teacherMap[t.assigned_by].username } : null,
+      student: t.profiles ? { first_name: t.profiles.first_name, username: t.profiles.username } : null,
+    }))
+
+    return { teacherStats, recentTasks }
+  } catch (error) {
+    return { teacherStats: [], recentTasks: [] }
+  }
+}
+
 export async function getClasses() {
   try {
     const { data, error } = await supabaseClient
@@ -111,7 +228,7 @@ export async function getMyStudents() {
       .from('profiles')
       .select('id')
       .eq('username', localUser.username)
-      .single()
+      .maybeSingle()
 
     if (profileError || !profileData) return { data: [], error: profileError }
 
@@ -186,7 +303,7 @@ export async function createClass(name) {
     if (!localUser?.username) return { data: null, error: new Error('Non authentifié') }
 
     const { data: profile } = await supabaseClient
-      .from('profiles').select('id').eq('username', localUser.username).single()
+      .from('profiles').select('id').eq('username', localUser.username).maybeSingle()
     if (!profile) return { data: null, error: new Error('Profil non trouvé') }
 
     const { data, error } = await supabaseClient
@@ -234,7 +351,7 @@ export async function getMyClasses() {
     if (!localUser?.username) return { data: [], error: null }
 
     const { data: profile } = await supabaseClient
-      .from('profiles').select('id').eq('username', localUser.username).single()
+      .from('profiles').select('id').eq('username', localUser.username).maybeSingle()
     if (!profile) return { data: [], error: null }
 
     const { data, error } = await supabaseClient

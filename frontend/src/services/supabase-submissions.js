@@ -24,7 +24,7 @@ export async function getMySubmissions() {
     if (!localUser?.username) return { data: [], error: null }
 
     const { data: profile } = await supabaseClient
-      .from('profiles').select('id').eq('username', localUser.username).single()
+      .from('profiles').select('id').eq('username', localUser.username).maybeSingle()
     if (!profile) return { data: [], error: null }
 
     const { data, error } = await supabaseClient
@@ -63,7 +63,7 @@ export async function uploadAudio(taskId, audioBlob) {
     if (!localUser?.username) return { data: null, error: new Error('Non authentifié') }
 
     const { data: profile, error: profileError } = await supabaseClient
-      .from('profiles').select('id').eq('username', localUser.username).single()
+      .from('profiles').select('id').eq('username', localUser.username).maybeSingle()
     
     if (profileError) {
       console.error('[uploadAudio] Profile fetch error:', profileError)
@@ -114,7 +114,7 @@ export async function createSubmission(taskId, audioUrl) {
     if (!localUser?.username) return { data: null, error: new Error('Non authentifié') }
 
     const { data: profile } = await supabaseClient
-      .from('profiles').select('id').eq('username', localUser.username).single()
+      .from('profiles').select('id').eq('username', localUser.username).maybeSingle()
     if (!profile) return { data: null, error: new Error('Profil non trouvé') }
 
     const { data, error } = await supabaseClient
@@ -136,7 +136,7 @@ export async function approveSubmission(submissionId, points, feedback = '') {
       .from('submissions')
       .select('student_id')
       .eq('id', submissionId)
-      .single()
+      .maybeSingle()
 
     if (subError) return { data: null, error: subError }
 
@@ -156,6 +156,16 @@ export async function approveSubmission(submissionId, points, feedback = '') {
       reason: 'Soumission approuvée',
       submission_id: submissionId,
     })
+
+    // Notifier l'étudiant via push (non bloquant — échec silencieux)
+    supabaseClient.functions.invoke('send-push', {
+      body: {
+        user_id: sub.student_id,
+        title: 'تم تصحيح تلاوتك ✅',
+        body: `حصلت على ${points} نقطة`,
+        url: '/soumettre',
+      },
+    }).catch(err => console.warn('[Push] Notification non envoyée:', err));
 
     return { data, error: null }
   } catch (error) {

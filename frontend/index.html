@@ -16,6 +16,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
+    <!-- Chart.js — graphes analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
     <!-- GSAP -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
@@ -119,9 +122,13 @@
 
     <!-- Pro Styles -->
     <link rel="stylesheet" href="style-pro.css">
-    <link rel="stylesheet" href="style-pro-fixes.css">
     <link rel="stylesheet" href="src/core/NavManager.css">
     <link rel="stylesheet" href="src/pages/HomePage.css">
+
+    <!-- Design System (Claude Design tokens + composants) -->
+    <link rel="stylesheet" href="ds/ds-tokens.css">
+    <link rel="stylesheet" href="ds/kit.css">
+    <link rel="stylesheet" href="ds/hifi.css">
 
     <style>
         /* Additional custom styles */
@@ -312,10 +319,51 @@
     <!-- Audio Element (requis par AudioManager) -->
     <audio id="audio-element" preload="none"></audio>
 
+    <!-- Modal progression étudiant — AVANT #app pour que getElementById le trouve en premier -->
+    <div class="modal-overlay-pro hidden" id="student-detail-panel">
+        <div class="modal-content-pro" style="max-width:600px;max-height:85vh;overflow-y:auto;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-4)">
+                <h3 id="student-detail-name" class="k-section-title" style="margin:0">📊 تقدم الطالب</h3>
+                <button class="k-quickbtn" style="min-width:auto;padding:var(--space-1) var(--space-3)"
+                    onclick="QuranReview.closeStudentDetail()">✕ إغلاق</button>
+            </div>
+            <div id="student-detail-content" class="k-stack"></div>
+        </div>
+    </div>
+
     <!-- Conteneur principal des pages -->
     <main id="app" class="main-content-pro"></main>
 
-    <!-- Conteneur des modaux -->
+    <!-- Modal Enregistrement Audio — statique dans index.html, toujours présent dans le DOM -->
+    <div class="modal-overlay-pro hidden" id="audio-record-modal">
+        <div class="modal-content-pro" style="max-width: 460px;">
+            <div style="text-align: center; margin-bottom: var(--space-6);">
+                <div style="font-size: 3rem; margin-bottom: var(--space-2);">🎤</div>
+                <h2 style="font-size: 1.5rem; font-weight: 700;">تسجيل المهمة</h2>
+                <p id="recording-task-name" style="color: var(--color-text-secondary); margin-top: var(--space-2); font-size: 0.95rem;"></p>
+            </div>
+            <div style="text-align: center; margin-bottom: var(--space-6);">
+                <div id="recording-timer" style="font-size: 2.5rem; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--color-primary);">00:00</div>
+                <p id="recording-status" style="color: var(--color-text-secondary); margin-top: var(--space-2);">اضغط للتسجيل</p>
+            </div>
+            <div style="text-align: center; margin-bottom: var(--space-6);">
+                <button id="recording-btn"
+                    onclick="QuranReview.toggleRecording()"
+                    aria-label="بدء أو إيقاف التسجيل"
+                    title="بدء أو إيقاف التسجيل"
+                    style="width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--color-primary); background: var(--glass-bg); font-size: 2rem; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center;">
+                    🎙️
+                </button>
+            </div>
+            <audio id="recording-preview" controls class="hidden" style="width: 100%; margin-bottom: var(--space-4);"></audio>
+            <div style="display: flex; gap: var(--space-3);">
+                <button class="btn btn-outline-glow" style="flex: 1;" onclick="QuranReview.stopRecording(true)">إلغاء</button>
+                <button id="recording-submit-btn" class="btn btn-glow hidden" style="flex: 1;" onclick="QuranReview.submitRecording()">✅ إرسال التسجيل</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Conteneur des modaux auth/user-edit injectés par JS -->
     <div id="modals"></div>
 
 <script>
@@ -340,7 +388,7 @@
     <script type="module" src="src/main.js"></script>
 
     <!-- Bottom Bar Mobile — contenu injecté par NavManager.buildBottomBar(role) -->
-    <nav id="bottom-bar" class="bottom-bar" style="display:none;" aria-label="Navigation mobile">
+    <nav id="bottom-bar" class="bottom-bar" aria-label="Navigation mobile">
     </nav>
 </body>
 </html>

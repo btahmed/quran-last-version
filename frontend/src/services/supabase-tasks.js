@@ -13,7 +13,7 @@ export async function getMyTasks() {
       .from('profiles')
       .select('id')
       .eq('username', localUser.username)
-      .single()
+      .maybeSingle()
 
     if (!profile) return { data: [], error: null }
 
@@ -23,6 +23,34 @@ export async function getMyTasks() {
       .eq('user_id', profile.id)
       .order('created_at', { ascending: false })
 
+    return { data, error }
+  } catch (error) {
+    return { data: null, error }
+  }
+}
+
+export async function deleteTasksByIds(ids) {
+  try {
+    const { data, error } = await supabaseClient
+      .from('tasks')
+      .delete()
+      .in('id', ids)
+
+    if (!error) apiCache.invalidate('tasks')
+    return { data, error }
+  } catch (error) {
+    return { data: null, error }
+  }
+}
+
+export async function deleteTasksByStudentIds(studentIds) {
+  try {
+    const { data, error } = await supabaseClient
+      .from('tasks')
+      .delete()
+      .in('user_id', studentIds)
+
+    if (!error) apiCache.invalidate('tasks')
     return { data, error }
   } catch (error) {
     return { data: null, error }
@@ -67,7 +95,7 @@ export async function createTask(payload) {
       .from('profiles')
       .select('id')
       .eq('username', localUser.username)
-      .single()
+      .maybeSingle()
 
     if (!profile) return { data: null, error: { message: 'Profil non trouvé' } }
 

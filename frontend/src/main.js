@@ -11,6 +11,7 @@ import {
 } from './services/auth.js';
 import { loadTasksFromApi } from './services/tasks.js';
 import { hifzEngine } from './services/hifz.js';
+import { competitionManager } from './services/competition.js';
 import { navigateTo, renderPage, setupNavigation } from './core/router.js';
 import { render as renderModals, init as initModals } from './components/AuthModal.js';
 import { toggleRecording, stopRecording, submitRecording, openRecordModal } from './components/AudioRecordModal.js';
@@ -26,6 +27,7 @@ import * as TeacherPage from './pages/TeacherPage.js';
 import * as RevisionPage   from './pages/RevisionPage.js';
 import * as SoumissionPage from './pages/SoumissionPage.js';
 import * as ProfilPage     from './pages/ProfilPage.js';
+import * as AdminPage      from './pages/AdminPage.js';
 import { buildNav, setActiveTab } from './core/NavManager.js';
 import { apiCache } from './core/apiCache.js';
 
@@ -63,6 +65,17 @@ async function init() {
 
     // Render page initiale
     renderPage('home');
+
+    // Fermer student-detail-panel sur clic overlay
+    const studentPanel = document.getElementById('student-detail-panel');
+    if (studentPanel) {
+        studentPanel.addEventListener('click', (e) => {
+            if (e.target === studentPanel) {
+                studentPanel.classList.remove('active');
+                studentPanel.classList.add('hidden');
+            }
+        });
+    }
 
     // Global click tracker
     document.addEventListener('click', (e) => Logger.click(e.target), true);
@@ -152,9 +165,24 @@ window.QuranReview = {
     // MemorizationPage — fonctions manquantes de la façade
     playSurahAudio: MemorizationPage.playSurahAudio,
     openTarteel: MemorizationPage.openTarteel,
+    markAsReviewed: MemorizationPage.markAsReviewed,
+    deleteItem: MemorizationPage.deleteItem,
 
-    // HifzPage / Competition — moteur de mémorisation
+    // HifzPage / Competition — moteur de mémorisation et compétition
     hifzEngine,
+    competitionManager,
+
+    // Récupère le texte arabe d'un verset depuis l'API Quran.com (CDN public)
+    fetchAyahText: async (surahId, ayahNumber) => {
+        try {
+            const res = await fetch(`https://api.alquran.cloud/v1/ayah/${surahId}:${ayahNumber}`);
+            if (!res.ok) throw new Error('API error');
+            const json = await res.json();
+            return json?.data?.text || '';
+        } catch {
+            return '';
+        }
+    },
 
     // AudioPlayer — alias pour les callbacks du player
     playPreviousAyah: WardPage.previousWardAyah,
@@ -171,6 +199,10 @@ window.QuranReview = {
     handleDeleteBatch: TeacherPage.handleDeleteBatch,
     toggleAssignMode: TeacherPage.toggleAssignMode,
     viewStudentProgress: TeacherPage.viewStudentProgress,
+    closeStudentDetail: () => {
+        const p = document.getElementById('student-detail-panel');
+        if (p) { p.classList.remove('active'); p.classList.add('hidden'); }
+    },
     approveSubmission: TeacherPage.approveSubmission,
     rejectSubmission: TeacherPage.rejectSubmission,
     // Grade modal (approbation emoji)
@@ -199,16 +231,11 @@ window.QuranReview = {
     initProfilPage:   ProfilPage.init,
     switchProfilTab:  ProfilPage.switchProfilTab,
 
-    // RevisionPage (alias pedagogique de WardPage — toutes les fonctions exposees explicitement)
+    // RevisionPage (alias pédagogique de WardPage — fonctions spécifiques seulement)
     renderRevisionPage:         RevisionPage.render,
     initRevisionPage:           RevisionPage.init,
     setupWardControls:          RevisionPage.setupWardControls,
     populateWardSurahSelect:    RevisionPage.populateWardSurahSelect,
-    toggleWardPlay:             RevisionPage.toggleWardPlay,
-    previousWardAyah:           RevisionPage.previousWardAyah,
-    nextWardAyah:               RevisionPage.nextWardAyah,
-    stopWardPlayback:           RevisionPage.stopWardPlayback,
-    updateWardAyahDisplay:      RevisionPage.updateWardAyahDisplay,
 
     // SoumissionPage (alias de MyTasksPage — points d'entrée explicites)
     renderSoumissionPage:  SoumissionPage.render,
@@ -217,6 +244,12 @@ window.QuranReview = {
     // NavManager — accès façade pour tests et intégrations externes
     buildNav,
     setActiveTab,
+
+    // AdminPage — changement de section lazy (utilisé par les onglets admin)
+    adminSwitchSection: (...args) => AdminPage.adminSwitchSection(...args),
+
+    // TeacherPage — changement de section lazy (utilisé par les onglets enseignant)
+    teacherSwitchSection: (...args) => TeacherPage.teacherSwitchSection(...args),
 };
 
 // Globals directs pour onclick HTML qui n'utilisent pas QuranReview.xxx

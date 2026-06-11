@@ -1,0 +1,60 @@
+/* WeekCalendar — Calendrier hebdomadaire 7 jours */
+
+.week-calendar {
+    display: flex;
+    gap: var(--space-2);
+    justify-content: center;
+    padding: var(--space-3) 0;
+    overflow-x: auto;
+    scrollbar-width: none; /* Firefox */
+}
+.week-calendar::-webkit-scrollbar { display: none; }
+
+.week-day {
+    flex: 1;
+    min-width: 40px;
+    max-width: 56px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: var(--space-2);
+    border-radius: var(--radius-md);
+    background: var(--card-bg, #f8f9fa);
+    border: 2px solid transparent;
+    transition: all var(--transition-fast);
+}
+
+.week-day--today {
+    border-color: var(--accent-green);
+    background: rgba(45, 80, 22, 0.08);
+    font-weight: 700;
+}
+
+.week-day--done    { background: rgba(22, 163, 74,  0.08); }
+.week-day--missed  { background: rgba(220, 38, 38,  0.08); }
+.week-day--pending { background: rgba(217, 119, 6,  0.08); }
+.week-day--empty   { background: var(--card-bg, #f8f9fa); }
+
+.week-day-label {
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+.week-day-num {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-primary, #212529);
+}
+.week-day-dot {
+    font-size: 0.75rem;
+    min-height: 1em;
+}
+
+/* Dark mode */
+[data-theme="dark"] .week-day {
+    background: rgba(255,255,255,0.05);
+}
+[data-theme="dark"] .week-day--today {
+    background: rgba(45, 80, 22, 0.2);
+}
