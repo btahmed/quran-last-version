@@ -35,25 +35,23 @@ export function render() {
     const name = state.user?.first_name || state.user?.username || 'أستاذ';
     return `
         <div id="teacher-page" class="page active">
-            <section class="section-pro">
-                <div class="container-pro">
-                    <h2 class="section-title" style="text-align:center; margin-bottom:var(--space-4);">📋 لوحة المعلم</h2>
-                    <p style="text-align:center; color:var(--color-text-secondary); margin-bottom:var(--space-6);">مرحباً أستاذ ${name}</p>
+            <section class="k-section">
+                <h2 class="k-section-title" style="text-align:center;margin-bottom:var(--space-2);">📋 لوحة المعلم</h2>
+                <p style="text-align:center;color:var(--color-text-secondary);margin-bottom:var(--space-6);">مرحباً أستاذ ${name}</p>
 
-                    <!-- Onglets de navigation entre sections -->
-                    <div class="teacher-tabs">
-                        <button class="teacher-tab active" data-section="devoirs"
-                            onclick="QuranReview.teacherSwitchSection('devoirs')">📋 الواجبات</button>
-                        <button class="teacher-tab" data-section="soumissions"
-                            onclick="QuranReview.teacherSwitchSection('soumissions')">🎧 التسليمات</button>
-                        <button class="teacher-tab" data-section="eleves"
-                            onclick="QuranReview.teacherSwitchSection('eleves')">👥 الطلاب</button>
-                    </div>
+                <!-- Onglets de navigation entre sections -->
+                <div class="teacher-tabs">
+                    <button class="teacher-tab active" data-section="devoirs"
+                        onclick="QuranReview.teacherSwitchSection('devoirs')">📋 الواجبات</button>
+                    <button class="teacher-tab" data-section="soumissions"
+                        onclick="QuranReview.teacherSwitchSection('soumissions')">🎧 التسليمات</button>
+                    <button class="teacher-tab" data-section="eleves"
+                        onclick="QuranReview.teacherSwitchSection('eleves')">👥 الطلاب</button>
+                </div>
 
-                    <!-- Contenu dynamique de la section active -->
-                    <div id="teacher-section-content">
-                        <!-- chargé via lazy-import lors de teacherSwitchSection() -->
-                    </div>
+                <!-- Contenu dynamique de la section active -->
+                <div id="teacher-section-content">
+                    <!-- chargé via lazy-import lors de teacherSwitchSection() -->
                 </div>
             </section>
         </div>

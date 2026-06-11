@@ -87,13 +87,13 @@ export function render() {
         </div>
 
         <!-- Liste des soumissions en attente -->
-        <div class="card-glass-pro">
-            <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">📥 تسليمات الطلاب</h3>
-            <div id="teacher-tasks-list">
+        <section class="k-section">
+            <h3 class="k-section-title">📥 تسليمات الطلاب</h3>
+            <div id="teacher-tasks-list" class="k-stack">
                 <div class="skeleton skeleton-card"></div>
                 <div class="skeleton skeleton-card"></div>
             </div>
-        </div>
+        </section>
     `;
 }
 
@@ -135,10 +135,12 @@ function _renderPendingList(pending) {
     }
 
     pendingList.innerHTML = pending.map(s => {
-        const date      = new Date(s.submitted_at).toLocaleDateString('ar-SA');
-        const taskTitle = s.task?.title || s.tasks?.title || 'Tâche sans titre';
-        const taskPoints = s.task?.points || s.tasks?.points || 0;
+        const date        = new Date(s.submitted_at).toLocaleDateString('ar-SA');
+        const taskTitle   = s.task?.title || s.tasks?.title || 'تسليم';
+        const taskPoints  = s.task?.points || s.tasks?.points || 0;
         const studentName = s.profiles?.first_name || s.profiles?.username || 'طالب';
+        const initial     = escapeHtml(studentName.charAt(0) || '؟');
+        const sid         = escapeHtml(String(s.id));
 
         // Construction de l'URL audio (Cloudinary ou backend local)
         const audioSrc = s.audio_url
@@ -147,30 +149,33 @@ function _renderPendingList(pending) {
                 : config.apiBaseUrl + (s.audio_url.startsWith('/') ? s.audio_url : '/' + s.audio_url))
             : null;
 
-        return `<div class="pending-card">
-            <div class="pending-card-header">
-                <strong>🎓 ${escapeHtml(studentName)}</strong>
-                <span class="task-type-badge">${escapeHtml(taskTitle)}</span>
+        return `<div class="k-pending-card">
+            <div class="k-pending-head">
+                <span class="k-avatar">${initial}</span>
+                <div style="flex:1;min-width:0">
+                    <div style="font-weight:600;font-size:var(--text-sm)">${escapeHtml(studentName)}</div>
+                    <div style="font-size:var(--text-xs);color:var(--text-secondary)">${escapeHtml(taskTitle)}</div>
+                </div>
+                <span class="k-chip k-chip--warning">⏳ بانتظار</span>
             </div>
-            <div class="pending-card-meta">
+            <div class="k-pending-meta">
                 <span>🏆 ${escapeHtml(String(taskPoints))} نقطة</span>
                 <span>📅 ${date}</span>
             </div>
             ${audioSrc ? `
-                <div class="audio-player-container">
-                    <audio controls preload="metadata" style="width:100%;margin:0.5rem 0;"
-                        onerror="this.parentElement.innerHTML='<p style=\\'color:#999;font-size:0.85rem;\\'>الملف الصوتي غير متاح حاليا</p>'">
+                <div class="k-pending-audio">
+                    <audio controls preload="metadata"
+                        onerror="this.closest('.k-pending-audio').innerHTML='<p class=\\'k-empty\\' style=\\'padding:var(--space-2)\\'>الملف الصوتي غير متاح</p>'">
                         <source src="${audioSrc}" type="audio/webm">
                         المتصفح لا يدعم تشغيل الصوت
                     </audio>
-                    <div style="font-size:0.8rem;color:#666;margin-top:0.25rem;">
-                        📎 <a href="${audioSrc}" target="_blank" style="color:#007bff;">فتح الملف الصوتي</a>
-                    </div>
                 </div>
-            ` : '<p class="empty-state">لا يوجد ملف صوتي</p>'}
-            <div class="pending-card-actions">
-                <button class="btn btn-success btn-sm" onclick="QuranReview.openGradeModal(&quot;${s.id}&quot;, &quot;${escapeHtml(escapeJs(studentName))}&quot;, &quot;${escapeHtml(escapeJs(taskTitle))}&quot;)">⭐ قبول وتقييم</button>
-                <button class="btn btn-danger btn-sm" onclick="QuranReview.openRejectModal(&quot;${s.id}&quot;, &quot;${escapeHtml(escapeJs(studentName))}&quot;)">✗ رفض</button>
+            ` : '<p class="k-empty" style="padding:var(--space-2) var(--space-4)">لا يوجد ملف صوتي 🎙</p>'}
+            <div class="k-pending-actions">
+                <button class="k-quickbtn k-quickbtn--primary"
+                    onclick="QuranReview.openGradeModal(&quot;${sid}&quot;,&quot;${escapeHtml(escapeJs(studentName))}&quot;,&quot;${escapeHtml(escapeJs(taskTitle))}&quot;)">⭐ قبول وتقييم</button>
+                <button class="k-quickbtn k-quickbtn--danger"
+                    onclick="QuranReview.openRejectModal(&quot;${sid}&quot;,&quot;${escapeHtml(escapeJs(studentName))}&quot;)">✗ رفض</button>
             </div>
         </div>`;
     }).join('');

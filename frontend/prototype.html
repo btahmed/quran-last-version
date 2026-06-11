@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QuranReview Pro — Design System</title>
+
+<!-- Design System tokens + composants -->
+<link rel="stylesheet" href="ds/ds-tokens.css">
+<link rel="stylesheet" href="ds/kit.css">
+<link rel="stylesheet" href="ds/hifi.css">
+<link rel="stylesheet" href="ds/pages.css">
+
+<style>
+  /* ── Reset pour mode galerie ── */
+  body {
+    margin: 0; padding: 0;
+    background:
+      radial-gradient(ellipse at 20% 10%, rgba(45,80,22,0.10) 0%, transparent 45%),
+      radial-gradient(ellipse at 85% 90%, rgba(212,165,116,0.10) 0%, transparent 45%),
+      var(--cream, #f5f0e8);
+    display: block;
+  }
+
+  /* ── En-tête ── */
+  .proto-header {
+    text-align: center;
+    padding: 40px 24px 24px;
+  }
+  .proto-header .logo { font-size: 2.2rem; margin-bottom: 10px; }
+  .proto-header h1 {
+    font-family: var(--font-arabic);
+    font-size: 1.5rem; font-weight: 800;
+    color: var(--green-600); margin: 0 0 6px;
+  }
+  .proto-header .sub {
+    font-size: var(--text-sm); color: var(--text-secondary); margin: 0;
+  }
+
+  /* ── Barre de contrôle sticky ── */
+  .ctrl-bar {
+    display: flex; gap: 8px; justify-content: center;
+    padding: 12px 24px;
+    background: rgba(255,255,255,0.88);
+    backdrop-filter: blur(12px);
+    position: sticky; top: 0; z-index: 200;
+    border-bottom: 1px solid var(--border-subtle);
+    flex-wrap: wrap;
+  }
+  .vbtn {
+    padding: 8px 20px; border-radius: var(--radius-full);
+    border: 2px solid var(--border-subtle);
+    background: var(--surface-card);
+    font-family: var(--font-sans); font-size: var(--text-sm); font-weight: 600;
+    cursor: pointer; transition: all var(--transition-fast); color: var(--text-secondary);
+  }
+  .vbtn.active {
+    background: var(--gradient-green); color: #fff;
+    border-color: transparent; box-shadow: var(--shadow-btn-green);
+  }
+  .vbtn.gold.active {
+    background: var(--gradient-gold);
+    box-shadow: var(--shadow-btn-gold);
+  }
+
+  /* ── Sélecteur d'écran (vue unique) ── */
+  .screen-selector {
+    display: none; gap: 6px; justify-content: center; flex-wrap: wrap;
+    padding: 10px 24px;
+    background: rgba(255,255,255,0.8);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .screen-selector.visible { display: flex; }
+  .screen-btn {
+    padding: 5px 12px; border-radius: var(--radius-full);
+    border: 1.5px solid var(--border-subtle);
+    background: var(--surface-card);
+    font-family: var(--font-sans); font-size: 0.7rem; font-weight: 600;
+    cursor: pointer; transition: all var(--transition-fast); color: var(--text-secondary);
+  }
+  .screen-btn:hover { border-color: var(--green-600); color: var(--green-600); }
+  .screen-btn.active {
+    background: var(--gradient-green); color: #fff;
+    border-color: transparent; box-shadow: var(--shadow-sm);
+  }
+  .screen-btn.staff.active { background: var(--gradient-gold); }
+  .screen-group { font-size: 0.65rem; font-weight: 700; color: var(--text-muted); align-self: flex-end; padding-bottom: 7px; white-space: nowrap; }
+
+  /* ── Conteneurs de vue ── */
+  #view-gallery  { padding: 0 40px 80px; }
+  #view-gallery.hidden { display: none; }
+
+  #view-single { display: none; justify-content: center; padding: 0 24px 60px; }
+  #view-single.visible { display: flex; }
+  #view-single .phone { max-width: 420px; width: 100%; }
+
+  #view-app { display: none; justify-content: center; padding: 0 24px 60px; }
+  #view-app.visible { display: flex; }
+  #view-app .phone { max-width: 420px; width: 100%; }
+</style>
+</head>
+<body>
+
+<!-- ── En-tête ────────────────────────────────────────────── -->
+<div class="proto-header">
+  <div class="logo">🕌</div>
+  <h1>QuranReview Pro</h1>
+  <p class="sub">Design System v3 · 14 écrans · 3 rôles</p>
+</div>
+
+<!-- ── Barre de contrôle ───────────────────────────────────── -->
+<div class="ctrl-bar">
+  <button class="vbtn active"   id="btn-gallery" onclick="setView('gallery')">📱 Galerie complète</button>
+  <button class="vbtn"          id="btn-single"  onclick="setView('single')">🔍 Vue unique</button>
+  <button class="vbtn gold"     id="btn-app"     onclick="setView('app')">🎮 App interactif</button>
+</div>
+
+<!-- ── Sélecteur d'écran (vue unique) ─────────────────────── -->
+<div class="screen-selector" id="screen-selector">
+  <span class="screen-group">🌙</span>
+  <button class="screen-btn active" onclick="showScreen('landing')">Landing</button>
+  <span class="screen-group">🎓 Étudiant</span>
+  <button class="screen-btn" onclick="showScreen('dashboard')">Dashboard</button>
+  <button class="screen-btn" onclick="showScreen('hifzsel')">Hifz sél.</button>
+  <button class="screen-btn" onclick="showScreen('hifzgame')">Hifz jeu</button>
+  <button class="screen-btn" onclick="showScreen('tasks')">Tâches</button>
+  <button class="screen-btn" onclick="showScreen('ward')">Ward</button>
+  <button class="screen-btn" onclick="showScreen('progress')">Progression</button>
+  <button class="screen-btn" onclick="showScreen('competition')">Compétition</button>
+  <button class="screen-btn" onclick="showScreen('settings')">Réglages</button>
+  <span class="screen-group">👨‍🏫 Enseignant</span>
+  <button class="screen-btn staff" onclick="showScreen('devoirs')">Devoirs</button>
+  <button class="screen-btn staff" onclick="showScreen('soumissions')">Soumissions</button>
+  <button class="screen-btn staff" onclick="showScreen('eleves')">Élèves</button>
+  <span class="screen-group">🛡️ Admin</span>
+  <button class="screen-btn staff" onclick="showScreen('adminusers')">Utilisateurs</button>
+  <button class="screen-btn staff" onclick="showScreen('adminclasses')">Classes</button>
+  <button class="screen-btn staff" onclick="showScreen('adminstats')">Stats</button>
+</div>
+
+<!-- ── Vue : Galerie ──────────────────────────────────────── -->
+<div id="view-gallery">
+  <div id="gallery-root" class="pages-gallery"></div>
+</div>
+
+<!-- ── Vue : Unique ───────────────────────────────────────── -->
+<div id="view-single">
+  <div id="screen-root"></div>
+</div>
+
+<!-- ── Vue : App interactif ───────────────────────────────── -->
+<div id="view-app">
+  <div id="app-root"></div>
+</div>
+
+<!-- React + Babel CDN -->
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+
+<!-- Primitives (KButton, KBadge, KStat…) -->
+<script type="text/babel" src="ds/components.jsx"></script>
+
+<!-- Cadres partagés (PhoneFrame, AppHeader, BottomBar, Toggle) -->
+<script type="text/babel" src="ds/pages-common.jsx"></script>
+
+<!-- Dashboards interactifs par rôle -->
+<script type="text/babel" src="ds/screens.jsx"></script>
+
+<!-- Écrans étudiant + visiteur -->
+<script type="text/babel" src="ds/pages-student.jsx"></script>
+
+<!-- Écrans enseignant + admin -->
+<script type="text/babel" src="ds/pages-staff.jsx"></script>
+
+<!-- Galerie + navigation -->
+<script type="text/babel">
+
+/* ══════════════════════════════════════════════════════════
+   GALERIE COMPLÈTE
+   ══════════════════════════════════════════════════════════ */
+function Screen({ cap, children }) {
+  return <div className="screen"><div className="scap">{cap}</div>{children}</div>;
+}
+
+function RoleGroup({ emoji, gold, title, sub, children }) {
+  return (
+    <section className="role-group">
+      <div className="role-head">
+        <span className={'role-emoji' + (gold ? ' gold' : '')}>{emoji}</span>
+        <div><h2>{title}</h2><p>{sub}</p></div>
+      </div>
+      <div className="role-row">{children}</div>
+    </section>
+  );
+}
+
+function PagesGallery() {
+  return (
+    <div className="pages-gallery">
+      <RoleGroup emoji="🌙" title="Visiteur" sub="Page d'accueil publique — avant connexion">
+        <Screen cap="Landing"><Landing /></Screen>
+      </RoleGroup>
+
+      <RoleGroup emoji="🎓" title="Étudiant — طالب"
+        sub="Dashboard, mémorisation, révision, tâches, progression, compétition, réglages">
+        <Screen cap="Dashboard"><Dashboard /></Screen>
+        <Screen cap="Hifz — sélection"><HifzSelection /></Screen>
+        <Screen cap="Hifz — jeu (mots cachés)"><HifzGame /></Screen>
+        <Screen cap="Mes tâches / Soumission"><Tasks /></Screen>
+        <Screen cap="Ward / Révision (audio)"><Ward /></Screen>
+        <Screen cap="Progression"><Progress /></Screen>
+        <Screen cap="Compétition"><Competition /></Screen>
+        <Screen cap="Réglages"><Settings /></Screen>
+      </RoleGroup>
+
+      <RoleGroup emoji="👨‍🏫" gold title="Enseignant — أستاذ"
+        sub="Devoirs, correction soumissions (notation 5 emoji), élèves">
+        <Screen cap="Devoirs (création + liste)"><TeacherDevoirs /></Screen>
+        <Screen cap="Soumissions + notation"><TeacherSoumissions /></Screen>
+        <Screen cap="Élèves + progression"><TeacherEleves /></Screen>
+      </RoleGroup>
+
+      <RoleGroup emoji="🛡️" gold title="Admin"
+        sub="Compteurs globaux, utilisateurs, classes, statistiques">
+        <Screen cap="Utilisateurs"><AdminUsers /></Screen>
+        <Screen cap="Classes / حلقات"><AdminClasses /></Screen>
+        <Screen cap="Statistiques"><AdminStats /></Screen>
+      </RoleGroup>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════
+   APP INTERACTIF (role picker + navigation)
+   ══════════════════════════════════════════════════════════ */
+function RolePicker({ onPick }) {
+  const roles = [
+    { key: 'student', emoji: '🎓', title: 'طالب', desc: 'حفظ، مراجعة، وإرسال التلاوة' },
+    { key: 'teacher', emoji: '👨‍🏫', title: 'معلم', desc: 'الواجبات، التسليمات، والطلاب' },
+    { key: 'admin',   emoji: '🛡️', title: 'مدير', desc: 'المستخدمون، الفصول، والإحصاء' },
+  ];
+  return (
+    <div className="k-login" dir="rtl">
+      <div className="logo">🕌</div>
+      <h1>راجع القرآن<br />بثقة واطمئنان</h1>
+      <p className="sub">اختر دورك للمتابعة إلى المنصة</p>
+      <div className="k-roles">
+        {roles.map(r => (
+          <button key={r.key} className="k-role" onClick={() => onPick(r.key)}>
+            <span className="re">{r.emoji}</span>
+            <span style={{ flex: 1 }}>
+              <span className="rt" style={{ display: 'block' }}>{r.title}</span>
+              <span className="rd">{r.desc}</span>
+            </span>
+            <span style={{ color: 'var(--green-400)' }}>‹</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const HOME_SCREENS = { student: StudentHome, teacher: TeacherHome, admin: AdminHome };
+const TAB_LABEL = {
+  hifz: ['📖', 'الحفظ'], revision: ['🔁', 'المراجعة'], submit: ['🎧', 'إرسال تلاوة'],
+  profile: ['👤', 'الملف الشخصي'],
+  devoirs: ['📋', 'الواجبات'], submissions: ['🎧', 'التسليمات'], students: ['👥', 'الطلاب'],
+  users: ['👥', 'المستخدمون'], classes: ['🏫', 'الفصول'], stats: ['📊', 'الإحصاء'],
+};
+
+function InteractiveApp() {
+  const [role, setRole] = React.useState(null);
+  const [tab, setTab] = React.useState('home');
+
+  if (!role) {
+    return <div className="phone"><RolePicker onPick={r => { setRole(r); setTab('home'); }} /></div>;
+  }
+
+  const HomeComp = HOME_SCREENS[role];
+  let body;
+  if (tab === 'home') body = <HomeComp />;
+  else {
+    const [icon, label] = TAB_LABEL[tab] || ['✨', tab];
+    body = <Placeholder icon={icon} label={label} />;
+  }
+
+  return (
+    <div className="phone">
+      <Header onLogout={() => setRole(null)} />
+      <div className="k-body">{body}</div>
+      <BottomBarNav role={role} active={tab} onNav={setTab} />
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════
+   MAP ÉCRANS (vue unique)
+   ══════════════════════════════════════════════════════════ */
+const SCREENS = {
+  landing:      () => React.createElement(Landing),
+  dashboard:    () => React.createElement(Dashboard),
+  hifzsel:      () => React.createElement(HifzSelection),
+  hifzgame:     () => React.createElement(HifzGame),
+  tasks:        () => React.createElement(Tasks),
+  ward:         () => React.createElement(Ward),
+  progress:     () => React.createElement(Progress),
+  competition:  () => React.createElement(Competition),
+  settings:     () => React.createElement(Settings),
+  devoirs:      () => React.createElement(TeacherDevoirs),
+  soumissions:  () => React.createElement(TeacherSoumissions),
+  eleves:       () => React.createElement(TeacherEleves),
+  adminusers:   () => React.createElement(AdminUsers),
+  adminclasses: () => React.createElement(AdminClasses),
+  adminstats:   () => React.createElement(AdminStats),
+};
+const SCREEN_KEYS = Object.keys(SCREENS);
+
+/* ══════════════════════════════════════════════════════════
+   ÉTAT GLOBAL + ROUTEUR
+   ══════════════════════════════════════════════════════════ */
+let galleryRoot = null;
+let singleRoot  = null;
+let appRoot     = null;
+let currentMode   = 'gallery';
+let currentScreen = 'landing';
+
+function setView(mode) {
+  currentMode = mode;
+  ['gallery','single','app'].forEach(m => {
+    document.getElementById('btn-' + m).classList.toggle('active', m === mode);
+  });
+  document.getElementById('view-gallery').classList.toggle('hidden', mode !== 'gallery');
+  document.getElementById('view-single').classList.toggle('visible', mode === 'single');
+  document.getElementById('view-app').classList.toggle('visible', mode === 'app');
+  document.getElementById('screen-selector').classList.toggle('visible', mode === 'single');
+
+  if (mode === 'gallery' && !galleryRoot) {
+    galleryRoot = ReactDOM.createRoot(document.getElementById('gallery-root'));
+    galleryRoot.render(React.createElement(PagesGallery));
+  }
+  if (mode === 'single') showScreen(currentScreen);
+  if (mode === 'app') {
+    if (!appRoot) {
+      appRoot = ReactDOM.createRoot(document.getElementById('app-root'));
+      appRoot.render(React.createElement(InteractiveApp));
+    }
+  }
+}
+
+function showScreen(name) {
+  currentScreen = name;
+  document.querySelectorAll('.screen-btn').forEach((b, i) => {
+    b.classList.toggle('active', SCREEN_KEYS[i] === name);
+  });
+  if (!singleRoot) singleRoot = ReactDOM.createRoot(document.getElementById('screen-root'));
+  singleRoot.render((SCREENS[name] || SCREENS.landing)());
+}
+
+/* ── Boot ─────────────────────────────────────────────────── */
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    galleryRoot = ReactDOM.createRoot(document.getElementById('gallery-root'));
+    galleryRoot.render(React.createElement(PagesGallery));
+  }, 300);
+});
+</script>
+
+</body>
+</html>

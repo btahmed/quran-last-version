@@ -25,8 +25,8 @@ export function render() {
         </div>
 
         <!-- Graphe évolution des points -->
-        <section class="dashboard-section profil-chart-section">
-            <h3 class="section-title">📊 تطور النقاط — 30 يوماً</h3>
+        <section class="k-section">
+            <h3 class="k-section-title">📊 تطور النقاط — 30 يوماً</h3>
             <div class="chart-container">
                 <canvas id="points-chart" height="200" aria-label="graphe d'évolution des points" role="img"></canvas>
             </div>
@@ -48,9 +48,16 @@ async function loadPointsChart() {
     const canvas = document.getElementById('points-chart');
     if (!canvas) return;
 
+    const _setEmpty = (el, text) => {
+        const p = document.createElement('p');
+        p.className = 'k-empty';
+        p.textContent = text;
+        el.replaceChildren(p);
+    };
+
     // Guard : Chart.js disponible ?
     if (typeof Chart === 'undefined') {
-        canvas.parentElement.innerHTML = '<p style="text-align:center;color:var(--text-secondary);padding:var(--space-4)">الرسم البياني غير متاح</p>';
+        _setEmpty(canvas.parentElement, 'الرسم البياني غير متاح');
         return;
     }
 
@@ -67,7 +74,7 @@ async function loadPointsChart() {
             .order('created_at', { ascending: true });
 
         if (error || !logs?.length) {
-            canvas.parentElement.innerHTML = '<p style="text-align:center;color:var(--text-secondary);padding:var(--space-4)">لا توجد نقاط بعد في آخر 30 يوماً</p>';
+            _setEmpty(canvas.parentElement, 'لا توجد نقاط بعد في آخر 30 يوماً');
             return;
         }
 

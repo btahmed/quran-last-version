@@ -24,10 +24,10 @@ let _cachedUsers = null;
 // ─── RENDER ──────────────────────────────────────────────────────────────────
 export function render() {
     return `
-        <div class="card-glass-pro" style="margin-bottom:var(--space-4);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--space-4);">
-                <h3 style="font-size:1rem; font-weight:600; margin:0;">🏫 إدارة الفصول</h3>
-                <button class="btn btn-glow btn-sm" onclick="window._adminShowCreateClass()">➕ فصل جديد</button>
+        <section class="k-section">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-4)">
+                <h3 class="k-section-title" style="margin:0">🏫 إدارة الفصول</h3>
+                <button class="k-quickbtn k-quickbtn--primary" style="min-width:auto;padding:var(--space-2) var(--space-3);font-size:var(--text-sm)" onclick="window._adminShowCreateClass()">➕ فصل جديد</button>
             </div>
 
             <!-- Formulaire création classe (caché par défaut) -->
@@ -48,10 +48,11 @@ export function render() {
                 </div>
             </div>
 
-            <div id="admin-classes-list">
-                <p style="text-align:center; color:var(--color-text-secondary); padding:var(--space-6);">جارٍ التحميل...</p>
+            <div id="admin-classes-list" class="k-stack">
+                <div class="skeleton skeleton-card"></div>
+                <div class="skeleton skeleton-card"></div>
             </div>
-        </div>
+        </section>
     `;
 }
 
@@ -99,20 +100,24 @@ function renderClassesList() {
     el.innerHTML = allClasses.map(c => {
         const teacherName  = c.profiles?.username || 'غير محدد';
         const studentCount = parseInt(c.class_members?.[0]?.count || 0);
+        const cid          = escapeHtml(String(c.id));
 
         return `
-            <div style="display:flex; align-items:center; gap:var(--space-3); padding:var(--space-3); border:1px solid var(--color-border); border-radius:var(--radius-lg); margin-bottom:var(--space-2); background:var(--color-surface);">
-                <div style="width:40px; height:40px; border-radius:var(--radius-lg); background:linear-gradient(135deg, var(--color-primary), var(--color-gold)); display:flex; align-items:center; justify-content:center; font-size:1.2rem; flex-shrink:0;">🏫</div>
-                <div style="flex:1; min-width:0;">
-                    <div style="font-weight:600; font-size:0.95rem;">${escapeHtml(c.name)}</div>
-                    <div style="font-size:0.8rem; color:var(--color-text-secondary); display:flex; gap:var(--space-3); flex-wrap:wrap; margin-top:2px;">
-                        <span>👨‍🏫 ${escapeHtml(teacherName)}</span>
-                        <span>🎓 ${studentCount} طالب</span>
-                    </div>
+        <div class="k-row">
+            <div class="rl">
+                <span class="k-avatar" style="border-radius:var(--radius-lg)">🏫</span>
+                <div>
+                    <div class="name">${escapeHtml(c.name)}</div>
+                    <div class="meta">👨‍🏫 ${escapeHtml(teacherName)} · 🎓 ${studentCount} طالب</div>
                 </div>
-                <button class="btn btn-outline-glow btn-sm" onclick="window._adminOpenClassModal('${c.id}')">⚙️ إدارة</button>
-                <button style="background:none; border:none; color:var(--color-danger); cursor:pointer; font-size:1.1rem; padding:var(--space-1);" onclick="window._adminDeleteClass('${c.id}', '${escapeHtml(c.name)}')">🗑️</button>
             </div>
+            <div style="display:flex;gap:var(--space-2);flex-shrink:0">
+                <button class="k-quickbtn" style="min-width:auto;padding:var(--space-1) var(--space-3);font-size:var(--text-xs)"
+                    onclick="window._adminOpenClassModal('${cid}')">⚙️ إدارة</button>
+                <button class="k-quickbtn k-quickbtn--danger" style="min-width:auto;padding:var(--space-1) var(--space-2)"
+                    onclick="window._adminDeleteClass('${cid}','${escapeHtml(c.name)}')">🗑</button>
+            </div>
+        </div>
         `;
     }).join('');
 }

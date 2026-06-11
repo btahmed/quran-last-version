@@ -31,27 +31,30 @@ let _loading        = false;   // flag anti-concurrence (double-clic)
 export function render() {
     return `
         <div id="admin-page" class="page active">
-            <section class="section-pro">
-                <div class="container-pro">
-                    <h2 class="section-title" style="text-align:center; margin-bottom:var(--space-6);">⚙️ لوحة الإدارة</h2>
+            <section class="k-section">
+                    <h2 class="k-section-title" style="text-align:center;margin-bottom:var(--space-6);">⚙️ لوحة الإدارة</h2>
 
                     <!-- Compteurs globaux (mis à jour par les sections) -->
-                    <div class="grid-pro grid-cols-4" style="margin-bottom:var(--space-6);">
-                        <div class="card-stat-premium" style="text-align:center;">
-                            <div class="stat-value" id="admin-total-users">—</div>
-                            <p style="color:var(--color-text-secondary);">المستخدمون</p>
+                    <div class="k-grid2" style="margin-bottom:var(--space-6);">
+                        <div class="k-stat-card">
+                            <div class="k-stat-icon">👥</div>
+                            <div class="k-stat-value gradient-value" id="admin-total-users">—</div>
+                            <div class="k-stat-label">المستخدمون</div>
                         </div>
-                        <div class="card-stat-premium" style="text-align:center;">
-                            <div class="stat-value" id="admin-total-tasks">—</div>
-                            <p style="color:var(--color-text-secondary);">المهام</p>
+                        <div class="k-stat-card">
+                            <div class="k-stat-icon">📋</div>
+                            <div class="k-stat-value" id="admin-total-tasks">—</div>
+                            <div class="k-stat-label">المهام</div>
                         </div>
-                        <div class="card-stat-premium" style="text-align:center;">
-                            <div class="stat-value" id="admin-pending-subs">—</div>
-                            <p style="color:var(--color-text-secondary);">انتظار مراجعة</p>
+                        <div class="k-stat-card">
+                            <div class="k-stat-icon">⏳</div>
+                            <div class="k-stat-value" id="admin-pending-subs">—</div>
+                            <div class="k-stat-label">انتظار مراجعة</div>
                         </div>
-                        <div class="card-stat-premium" style="text-align:center;">
-                            <div class="stat-value" id="admin-approved-subs">—</div>
-                            <p style="color:var(--color-text-secondary);">مقبول</p>
+                        <div class="k-stat-card">
+                            <div class="k-stat-icon">✅</div>
+                            <div class="k-stat-value" id="admin-approved-subs">—</div>
+                            <div class="k-stat-label">مقبول</div>
                         </div>
                     </div>
 
@@ -66,7 +69,6 @@ export function render() {
                     <div id="admin-section-content">
                         <!-- chargé via lazy-import lors de adminSwitchSection() -->
                     </div>
-                </div>
             </section>
         </div>
     `;

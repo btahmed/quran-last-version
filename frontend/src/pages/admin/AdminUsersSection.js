@@ -21,26 +21,28 @@ let sortKey = 'role';
 // ─── RENDER ──────────────────────────────────────────────────────────────────
 export function render() {
     return `
-        <div class="card-glass-pro">
-            <div style="display:flex; gap:var(--space-3); align-items:center; margin-bottom:var(--space-4); flex-wrap:wrap;">
+        <section class="k-section">
+            <!-- Barre de recherche + tri -->
+            <div style="display:flex;gap:var(--space-3);align-items:center;margin-bottom:var(--space-4);flex-wrap:wrap">
                 <input id="admin-search" type="text"
                     placeholder="🔍 بحث باسم أو اسم مستخدم..."
-                    style="flex:1; min-width:200px; padding:var(--space-2) var(--space-3); border-radius:var(--radius-lg); border:1px solid var(--color-border); background:var(--color-surface); color:var(--color-text);"
+                    style="flex:1;min-width:200px;padding:var(--space-2) var(--space-3);border-radius:var(--radius-lg);border:1px solid var(--border-subtle);background:var(--surface-card);color:var(--text-primary);font-family:inherit;font-size:var(--text-sm)"
                     oninput="window._adminFilter(this.value)" />
                 <select id="admin-sort"
-                    style="padding:var(--space-2) var(--space-3); border-radius:var(--radius-lg); border:1px solid var(--color-border); background:var(--color-surface); color:var(--color-text);"
+                    style="padding:var(--space-2) var(--space-3);border-radius:var(--radius-lg);border:1px solid var(--border-subtle);background:var(--surface-card);color:var(--text-primary);font-family:inherit;font-size:var(--text-sm)"
                     onchange="window._adminSort(this.value)">
                     <option value="role">ترتيب: الدور</option>
                     <option value="username">ترتيب: اسم المستخدم</option>
                     <option value="name">ترتيب: الاسم</option>
                 </select>
-                <button class="btn btn-glow btn-sm" onclick="window._adminRefresh()">🔄 تحديث</button>
+                <button class="k-quickbtn" style="min-width:auto;padding:var(--space-2) var(--space-4)" onclick="window._adminRefresh()">🔄 تحديث</button>
             </div>
-            <div id="admin-users-count" style="color:var(--color-text-secondary); font-size:0.875rem; margin-bottom:var(--space-3);"></div>
-            <div id="admin-users-list">
-                <p style="text-align:center; color:var(--color-text-secondary); padding:var(--space-6);">جارٍ التحميل...</p>
+            <div id="admin-users-count" style="color:var(--text-secondary);font-size:var(--text-xs);margin-bottom:var(--space-3)"></div>
+            <div id="admin-users-list" class="k-stack">
+                <div class="skeleton skeleton-card"></div>
+                <div class="skeleton skeleton-card"></div>
             </div>
-        </div>
+        </section>
 
         <!-- Modal profil utilisateur -->
         <div id="admin-profile-modal"
@@ -155,35 +157,34 @@ function renderUsersList() {
         return;
     }
 
-    const roleBadge = {
-        admin:   '<span style="background:rgba(239,68,68,0.15); color:#ef4444; font-size:0.75rem; padding:2px 8px; border-radius:99px; font-weight:600;">⚙️ مدير</span>',
-        teacher: '<span style="background:rgba(59,130,246,0.15); color:#3b82f6; font-size:0.75rem; padding:2px 8px; border-radius:99px; font-weight:600;">👨‍🏫 معلم</span>',
-        student: '<span style="background:rgba(16,185,129,0.15); color:#10b981; font-size:0.75rem; padding:2px 8px; border-radius:99px; font-weight:600;">🎓 طالب</span>',
+    const ROLE_CHIP = {
+        admin:   `<span class="k-chip k-chip--danger">⚙️ مدير</span>`,
+        teacher: `<span class="k-chip k-chip--info">👨‍🏫 معلم</span>`,
+        student: `<span class="k-chip k-chip--success">🎓 طالب</span>`,
     };
-    const superBadge = '<span style="background:rgba(245,158,11,0.15); color:#f59e0b; font-size:0.7rem; padding:2px 6px; border-radius:99px; margin-right:4px;">★ super</span>';
+    const SUPER_CHIP = `<span class="k-chip k-chip--warning">★ super</span>`;
 
-    el.innerHTML = users.map(u => `
-        <div style="display:flex; align-items:center; gap:var(--space-3); padding:var(--space-3) var(--space-2); border-bottom:1px solid var(--color-border); cursor:pointer; transition:background 0.15s; border-radius:var(--radius-lg);"
-            data-user-id="${escapeHtml(u.id)}"
-            class="admin-user-row"
-            onmouseenter="this.style.background='var(--color-surface)'"
-            onmouseleave="this.style.background='transparent'">
-            <div style="width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,var(--color-primary),var(--color-gold)); display:flex; align-items:center; justify-content:center; font-size:1rem; flex-shrink:0; color:white; font-weight:700;">
-                ${escapeHtml((u.first_name || u.username || '?')[0].toUpperCase())}
-            </div>
-            <div style="flex:1; min-width:0;">
-                <div style="font-weight:600; font-size:0.9rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                    ${escapeHtml(u.first_name || '')} ${escapeHtml(u.last_name || '')}
-                    <span style="color:var(--color-text-secondary); font-weight:400; font-size:0.8rem;">@${escapeHtml(u.username)}</span>
-                </div>
-                <div style="margin-top:2px; display:flex; align-items:center; gap:4px;">
-                    ${roleBadge[u.role] || `<span>${escapeHtml(u.role || '')}</span>`}
-                    ${u.is_superuser ? superBadge : ''}
+    el.innerHTML = users.map(u => {
+        const initial = escapeHtml((u.first_name || u.username || '?')[0].toUpperCase());
+        return `
+        <div class="k-row admin-user-row" style="cursor:pointer" data-user-id="${escapeHtml(u.id)}">
+            <div class="rl">
+                <span class="k-avatar">${initial}</span>
+                <div>
+                    <div class="name">
+                        ${escapeHtml(u.first_name || '')} ${escapeHtml(u.last_name || '')}
+                        <span style="color:var(--text-secondary);font-weight:400;font-size:var(--text-xs)">@${escapeHtml(u.username)}</span>
+                    </div>
+                    <div class="meta" style="display:flex;align-items:center;gap:var(--space-1);margin-top:2px">
+                        ${ROLE_CHIP[u.role] || `<span class="k-chip k-chip--primary">${escapeHtml(u.role || '')}</span>`}
+                        ${u.is_superuser ? SUPER_CHIP : ''}
+                    </div>
                 </div>
             </div>
-            <span style="color:var(--color-text-secondary); font-size:1.2rem; flex-shrink:0;">›</span>
+            <span style="color:var(--text-secondary);font-size:1.2rem">›</span>
         </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 // ─── MODAL PROFIL ─────────────────────────────────────────────────────────────

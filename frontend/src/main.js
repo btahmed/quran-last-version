@@ -66,6 +66,17 @@ async function init() {
     // Render page initiale
     renderPage('home');
 
+    // Fermer student-detail-panel sur clic overlay
+    const studentPanel = document.getElementById('student-detail-panel');
+    if (studentPanel) {
+        studentPanel.addEventListener('click', (e) => {
+            if (e.target === studentPanel) {
+                studentPanel.classList.remove('active');
+                studentPanel.classList.add('hidden');
+            }
+        });
+    }
+
     // Global click tracker
     document.addEventListener('click', (e) => Logger.click(e.target), true);
 
@@ -188,6 +199,10 @@ window.QuranReview = {
     handleDeleteBatch: TeacherPage.handleDeleteBatch,
     toggleAssignMode: TeacherPage.toggleAssignMode,
     viewStudentProgress: TeacherPage.viewStudentProgress,
+    closeStudentDetail: () => {
+        const p = document.getElementById('student-detail-panel');
+        if (p) { p.classList.remove('active'); p.classList.add('hidden'); }
+    },
     approveSubmission: TeacherPage.approveSubmission,
     rejectSubmission: TeacherPage.rejectSubmission,
     // Grade modal (approbation emoji)

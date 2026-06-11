@@ -173,68 +173,77 @@ function renderStudentDashboard() {
     const name = state.user?.first_name || state.user?.username || 'طالب';
     return `
     <div class="dashboard dashboard-student" dir="rtl">
-        <div class="dashboard-header">
-            <h2>مرحباً يا ${escapeHtml(name)} 👋</h2>
-            <p class="dashboard-date">${getArabicDate()}</p>
+
+        <!-- Salutation + streak chip (design Claude Design) -->
+        <div class="k-greeting">
+            <h2>السلام عليكم، ${escapeHtml(name)} 👋</h2>
+            <p class="date">${getArabicDate()} · واصل تقدمك</p>
         </div>
 
-        <!-- DEVOIRS DU JOUR EN PREMIER (action avant statistiques) -->
-        <section class="dashboard-section">
-            <h3 class="section-title">📋 واجبات اليوم</h3>
-            <div id="student-tasks-list" class="tasks-list">
-                <div class="skeleton skeleton-card"></div>
-                <div class="skeleton skeleton-card"></div>
+        <!-- STATS GRID 3 (KStat style) -->
+        <section class="k-section">
+            <div class="k-grid3">
+                <div class="k-stat-card">
+                    <span class="k-stat-icon">🔥</span>
+                    <span id="streak-days" class="k-stat-value gradient-text">0</span>
+                    <span class="k-stat-label">يوم متتالي</span>
+                </div>
+                <div class="k-stat-card">
+                    <span class="k-stat-icon">📖</span>
+                    <span id="hifz-progress" class="k-stat-value">0%</span>
+                    <span class="k-stat-label">تقدم الحفظ</span>
+                </div>
+                <div class="k-stat-card">
+                    <span class="k-stat-icon">⭐</span>
+                    <span id="revision-score" class="k-stat-value gradient-text">0</span>
+                    <span class="k-stat-label">النقاط</span>
+                </div>
             </div>
         </section>
 
-        <!-- STATS visuelles v2 -->
-        <section class="dashboard-section">
-            <div class="stats-grid-v2">
-                <div class="stat-card-v2 stat-streak">
-                    <span class="stat-card-icon">🔥</span>
-                    <span id="streak-days" class="stat-value-big">0</span>
-                    <span class="stat-label">يوم متتالي</span>
-                </div>
-                <div class="stat-card-v2 stat-hifz">
-                    <span class="stat-card-icon">📖</span>
-                    <span id="hifz-progress" class="stat-value-big">0%</span>
-                    <div class="progress-bar-wrap">
-                        <div class="progress-bar-fill" id="hifz-bar" style="width:0%"></div>
+        <!-- HIFZ PROGRESS CARD (hifz-prog style) -->
+        <section class="k-section">
+            <h3 class="k-section-title">📖 الحفظ الحالي</h3>
+            <div class="hifz-prog">
+                <div class="top">
+                    <div class="surah" id="hifz-surah-name">
+                        جاري التحميل…
+                        <small id="hifz-surah-detail"> </small>
                     </div>
-                    <span class="stat-label">تقدم الحفظ</span>
+                    <div class="pct" id="hifz-pct">0%</div>
                 </div>
-                <div class="stat-card-v2 stat-score">
-                    <span class="stat-card-icon">⭐</span>
-                    <span id="revision-score" class="stat-value-big">0</span>
-                    <span class="stat-label">نقاط المراجعة</span>
+                <div style="width:100%;height:8px;background:rgba(0,0,0,0.08);border-radius:999px;overflow:hidden;">
+                    <div id="hifz-bar" style="height:100%;width:0%;background:var(--gradient-progress);border-radius:999px;transition:width 0.8s ease;"></div>
                 </div>
             </div>
         </section>
 
         <!-- CALENDRIER HEBDOMADAIRE -->
-        <section class="dashboard-section">
-            <h3 class="section-title">📅 أسبوعك</h3>
-            <div id="week-calendar-container">
-                <div class="skeleton" style="height:80px;border-radius:var(--radius-md);"></div>
+        <section class="k-section">
+            <h3 class="k-section-title">📅 أسبوعك</h3>
+            <div class="hifz-prog" style="padding:var(--space-3)">
+                <div id="week-calendar-container">
+                    <div class="skeleton" style="height:72px;border-radius:var(--radius-md);"></div>
+                </div>
             </div>
         </section>
 
-        <!-- ACCÈS RAPIDE -->
-        <section class="dashboard-section">
-            <h3 class="section-title">⚡ وصول سريع</h3>
-            <div class="quick-actions">
-                <button class="quick-btn"
-                        onclick="QuranReview.navigateTo('hifz')">
-                    📖 الحفظ
-                </button>
-                <button class="quick-btn"
-                        onclick="QuranReview.navigateTo('revision')">
-                    🔁 المراجعة
-                </button>
-                <button class="quick-btn"
-                        onclick="QuranReview.navigateTo('competition')">
-                    🏆 المسابقة
-                </button>
+        <!-- DEVOIRS DU JOUR -->
+        <section class="k-section">
+            <h3 class="k-section-title">📋 واجبات اليوم</h3>
+            <div id="student-tasks-list" class="k-stack">
+                <div class="skeleton skeleton-card"></div>
+                <div class="skeleton skeleton-card"></div>
+            </div>
+        </section>
+
+        <!-- ACCÈS RAPIDE (k-quickbtn style) -->
+        <section class="k-section">
+            <h3 class="k-section-title">⚡ وصول سريع</h3>
+            <div class="k-quick">
+                <button class="k-quickbtn" onclick="QuranReview.navigateTo('hifz')">📖 متابعة الحفظ</button>
+                <button class="k-quickbtn" onclick="QuranReview.navigateTo('revision')">🔁 مراجعة اليوم</button>
+                <button class="k-quickbtn" onclick="QuranReview.navigateTo('competition')">🏆 المسابقة</button>
             </div>
         </section>
     </div>
@@ -247,50 +256,55 @@ function renderTeacherDashboard() {
     const name = state.user?.first_name || state.user?.username || 'أستاذ';
     return `
     <div class="dashboard dashboard-teacher" dir="rtl">
-        <div class="dashboard-header">
-            <h2>مرحباً أستاذ ${escapeHtml(name)}</h2>
+
+        <div class="k-greeting">
+            <h2>مرحباً أستاذ ${escapeHtml(name)} 👋</h2>
+            <p class="date">${getArabicDate()}</p>
         </div>
 
-        <!-- STATS (4 cartes dont absents) -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <span id="t-students" class="stat-value">—</span>
-                <span class="stat-label">👥 طلاب</span>
+        <!-- STATS 2×2 (DS3 k-grid2) -->
+        <section class="k-section">
+            <div class="k-grid2">
+                <div class="k-stat-card">
+                    <span class="k-stat-icon">👥</span>
+                    <span id="t-students" class="k-stat-value">—</span>
+                    <span class="k-stat-label">طلاب</span>
+                </div>
+                <div class="k-stat-card">
+                    <span class="k-stat-icon">📝</span>
+                    <span id="t-tasks" class="k-stat-value">—</span>
+                    <span class="k-stat-label">واجبات نشطة</span>
+                </div>
+                <div class="k-stat-card">
+                    <span class="k-stat-icon">⏳</span>
+                    <span id="t-pending" class="k-stat-value gradient-value">—</span>
+                    <span class="k-stat-label">بانتظار التصحيح</span>
+                </div>
+                <div class="k-stat-card">
+                    <span class="k-stat-icon">❌</span>
+                    <span id="t-absent" class="k-stat-value">—</span>
+                    <span class="k-stat-label">غياب اليوم</span>
+                </div>
             </div>
-            <div class="stat-card">
-                <span id="t-tasks" class="stat-value">—</span>
-                <span class="stat-label">📝 واجبات</span>
-            </div>
-            <div class="stat-card">
-                <span id="t-pending" class="stat-value">—</span>
-                <span class="stat-label">⏳ بانتظار التصحيح</span>
-            </div>
-            <div class="stat-card">
-                <span id="t-absent" class="stat-value">—</span>
-                <span class="stat-label">❌ غياب اليوم</span>
-            </div>
-        </div>
+        </section>
 
         <!-- SOUMISSIONS RÉCENTES -->
-        <section class="dashboard-section">
-            <h3 class="section-title">🎧 آخر التسليمات</h3>
-            <div id="teacher-submissions-list" class="submissions-list">
+        <section class="k-section">
+            <h3 class="k-section-title">🎧 آخر التسليمات</h3>
+            <div id="teacher-submissions-list" class="k-stack">
                 <div class="skeleton skeleton-card"></div>
                 <div class="skeleton skeleton-card"></div>
             </div>
         </section>
 
         <!-- ACCÈS RAPIDE -->
-        <section class="dashboard-section">
-            <div class="quick-actions">
-                <button class="quick-btn quick-btn--primary"
-                        onclick="QuranReview.navigateTo('devoirs')">
-                    + واجب جديد
-                </button>
-                <button class="quick-btn"
-                        onclick="QuranReview.navigateTo('soumissions')">
-                    📋 كل التسليمات
-                </button>
+        <section class="k-section">
+            <h3 class="k-section-title">⚡ وصول سريع</h3>
+            <div class="k-quick">
+                <button class="k-quickbtn k-quickbtn--primary"
+                        onclick="QuranReview.navigateTo('devoirs')">＋ واجب جديد</button>
+                <button class="k-quickbtn"
+                        onclick="QuranReview.navigateTo('soumissions')">📋 كل التسليمات</button>
             </div>
         </section>
     </div>
@@ -302,49 +316,55 @@ function renderTeacherDashboard() {
 function renderAdminDashboard() {
     return `
     <div class="dashboard dashboard-admin" dir="rtl">
-        <div class="dashboard-header">
+
+        <div class="k-greeting">
             <h2>لوحة الإدارة</h2>
+            <p class="date">${getArabicDate()}</p>
         </div>
 
-        <!-- STATS GLOBALES (dont soumissions aujourd'hui) -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <span id="a-users" class="stat-value">—</span>
-                <span class="stat-label">👥 مستخدمون</span>
+        <!-- STATS 2×2 (DS3 k-grid2) -->
+        <section class="k-section">
+            <div class="k-grid2">
+                <div class="k-stat-card">
+                    <span class="k-stat-icon">👥</span>
+                    <span id="a-users" class="k-stat-value gradient-value">—</span>
+                    <span class="k-stat-label">مستخدمون</span>
+                </div>
+                <div class="k-stat-card">
+                    <span class="k-stat-icon">👨‍🏫</span>
+                    <span id="a-teachers" class="k-stat-value">—</span>
+                    <span class="k-stat-label">معلمون</span>
+                </div>
+                <div class="k-stat-card">
+                    <span class="k-stat-icon">👨‍🎓</span>
+                    <span id="a-students" class="k-stat-value">—</span>
+                    <span class="k-stat-label">طلاب</span>
+                </div>
+                <div class="k-stat-card">
+                    <span class="k-stat-icon">📤</span>
+                    <span id="a-today" class="k-stat-value">—</span>
+                    <span class="k-stat-label">تسليمات اليوم</span>
+                </div>
             </div>
-            <div class="stat-card">
-                <span id="a-teachers" class="stat-value">—</span>
-                <span class="stat-label">👨‍🏫 معلمون</span>
-            </div>
-            <div class="stat-card">
-                <span id="a-students" class="stat-value">—</span>
-                <span class="stat-label">👨‍🎓 طلاب</span>
-            </div>
-            <div class="stat-card">
-                <span id="a-today" class="stat-value">—</span>
-                <span class="stat-label">📤 تسليمات اليوم</span>
-            </div>
-        </div>
+        </section>
 
         <!-- ACTIVITÉ RÉCENTE -->
-        <section class="dashboard-section">
-            <h3 class="section-title">📊 النشاط الأخير</h3>
-            <div id="admin-activity-list" class="activity-list">
-                <div class="loading-placeholder">جاري التحميل...</div>
+        <section class="k-section">
+            <h3 class="k-section-title">📊 النشاط الأخير</h3>
+            <div id="admin-activity-list" class="k-stack">
+                <div class="skeleton skeleton-card"></div>
+                <div class="skeleton skeleton-card"></div>
             </div>
         </section>
 
         <!-- ACCÈS RAPIDE -->
-        <section class="dashboard-section">
-            <div class="quick-actions">
-                <button class="quick-btn"
-                        onclick="QuranReview.navigateTo('admin-users')">
-                    👥 المستخدمون
-                </button>
-                <button class="quick-btn"
-                        onclick="QuranReview.navigateTo('admin-stats')">
-                    📊 الإحصاء
-                </button>
+        <section class="k-section">
+            <h3 class="k-section-title">⚡ وصول سريع</h3>
+            <div class="k-quick">
+                <button class="k-quickbtn"
+                        onclick="QuranReview.navigateTo('admin-users')">👥 المستخدمون</button>
+                <button class="k-quickbtn"
+                        onclick="QuranReview.navigateTo('admin-stats')">📊 الإحصاء</button>
             </div>
         </section>
     </div>
@@ -379,6 +399,17 @@ function _applyStudentLocalStats() {
     setText('hifz-progress', hifzPct + '%');
     setText('revision-score', pct + '%');
     setText('streak-days', streak);
+
+    // Nouveaux IDs Claude Design (hifz-prog card)
+    setText('hifz-pct', hifzPct + '%');
+    const surahEl = document.getElementById('hifz-surah-name');
+    if (surahEl && hifzTotal > 0) {
+        surahEl.childNodes[0].textContent = `${hifzDone} سور محفوظة`;
+        setText('hifz-surah-detail', `من أصل ${hifzTotal} · ${hifzPct}%`);
+    } else if (surahEl) {
+        surahEl.childNodes[0].textContent = 'لم تبدأ الحفظ بعد';
+        setText('hifz-surah-detail', 'ابدأ أول سورة من صفحة الحفظ');
+    }
 
     // Animation progress bar hifz
     const hifzBarEl = document.getElementById('hifz-bar');
@@ -469,6 +500,7 @@ async function initDashboard(role) {
             setText('a-teachers',        cached.total_teachers || 0);
             setText('a-students',        cached.total_students || 0);
             setText('a-today',           cached.submissions_today || 0);
+            renderAdminActivity(cached);
             return;
         }
         // Migration Supabase
@@ -479,8 +511,10 @@ async function initDashboard(role) {
             setText('a-teachers',        data.total_teachers || 0);
             setText('a-students',        data.total_students || 0);
             setText('a-today',           data.submissions_today || 0);
+            renderAdminActivity(data);
         } else {
             ['a-users', 'a-teachers', 'a-students', 'a-today'].forEach(id => setText(id, '—'));
+            renderAdminActivity(null);
         }
     }
 }
@@ -493,32 +527,73 @@ function renderStudentTasks(tasks) {
     const el = document.getElementById('student-tasks-list');
     if (!el) return;
     if (!tasks.length) {
-        el.innerHTML = '<p class="empty-state">لا توجد واجبات اليوم 🎉</p>';
+        el.innerHTML = '<p class="k-empty">لا توجد واجبات اليوم 🎉</p>';
         return;
     }
-    el.innerHTML = tasks.slice(0, 3).map(t => `
-        <div class="task-row">
-            <span class="task-name">${escapeHtml(t.surah_name || t.title || 'واجب')}</span>
-            <button class="btn btn-sm btn-glow"
-                    onclick="QuranReview.navigateTo('soumettre')">
-                إرسال 🎧
-            </button>
+    el.innerHTML = tasks.slice(0, 3).map(t => {
+        const isRevision = t.task_type === 'revision';
+        const dotClass   = isRevision ? 'k-dot--pending' : 'k-dot--new';
+        const metaLabel  = isRevision ? 'مراجعة مجدولة' : 'حفظ جديد';
+        return `
+        <div class="k-row">
+            <div class="rl">
+                <span class="k-dot ${dotClass}"></span>
+                <div>
+                    <div class="name">${escapeHtml(t.surah_name || t.title || 'واجب')}</div>
+                    <div class="meta">${metaLabel}</div>
+                </div>
+            </div>
+            <button class="k-quickbtn" style="min-width:auto;flex:none;padding:var(--space-2) var(--space-4)"
+                    onclick="QuranReview.navigateTo('soumettre')">إرسال 🎧</button>
         </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 function renderTeacherSubmissions(subs) {
     const el = document.getElementById('teacher-submissions-list');
     if (!el) return;
     if (!subs.length) {
-        el.innerHTML = '<p class="empty-state">لا توجد تسليمات في الانتظار ✅</p>';
+        el.innerHTML = '<p class="k-empty">لا توجد تسليمات في الانتظار ✅</p>';
         return;
     }
-    el.innerHTML = subs.slice(0, 5).map(s => `
-        <div class="submission-row">
-            <span>${escapeHtml(s.profiles?.first_name || s.profiles?.username || s.student_name || 'طالب')} —
-                  ${escapeHtml(s.tasks?.title || s.task_title || 'تسليم')}</span>
-            <span class="badge badge-warning">⏳ بانتظار التصحيح</span>
+    el.innerHTML = subs.slice(0, 5).map(s => {
+        const name    = s.profiles?.first_name || s.profiles?.username || s.student_name || 'طالب';
+        const task    = s.tasks?.title || s.task_title || 'تسليم';
+        const initial = escapeHtml(name.charAt(0) || '؟');
+        return `
+        <div class="k-row">
+            <div class="rl">
+                <span class="k-avatar">${initial}</span>
+                <div>
+                    <div class="name">${escapeHtml(name)}</div>
+                    <div class="meta">${escapeHtml(task)}</div>
+                </div>
+            </div>
+            <span class="k-chip k-chip--warning">⏳ بانتظار</span>
+        </div>
+        `;
+    }).join('');
+}
+
+function renderAdminActivity(data) {
+    const el = document.getElementById('admin-activity-list');
+    if (!el) return;
+    const items = [];
+    if (data?.submissions_today > 0)
+        items.push({ label: `${data.submissions_today} تسليم اليوم`, meta: 'تقييم مكتمل · آخر تحديث', dot: 'done' });
+    if (data?.total_students > 0)
+        items.push({ label: `${data.total_students} طالب مسجّل`, meta: `${data.total_teachers || 0} معلم · حلقات نشطة`, dot: 'new' });
+    items.push({ label: 'النظام يعمل بكامل طاقته', meta: getArabicDate(), dot: 'pending' });
+    el.innerHTML = items.map(item => `
+        <div class="k-row">
+            <div class="rl">
+                <span class="k-dot k-dot--${item.dot}"></span>
+                <div>
+                    <div class="name">${escapeHtml(item.label)}</div>
+                    <div class="meta">${escapeHtml(item.meta)}</div>
+                </div>
+            </div>
         </div>
     `).join('');
 }

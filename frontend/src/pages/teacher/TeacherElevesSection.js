@@ -1,7 +1,6 @@
 // frontend/src/pages/teacher/TeacherElevesSection.js
 // Section Élèves — extraite de TeacherPage.js (Task 9 : lazy-loading)
 // Responsabilités : liste des élèves, panneau de progression détaillée par élève
-import { config }           from '../../core/config.js';
 import { showNotification } from '../../core/ui.js';
 import { Logger }           from '../../core/logger.js';
 import { apiCache }         from '../../core/apiCache.js';
@@ -34,28 +33,16 @@ function escapeJs(text) {
 export function render() {
     return `
         <!-- Liste des élèves -->
-        <div class="card-glass-pro" style="margin-bottom: var(--space-6);">
-            <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">🎓 قائمة الطلاب</h3>
-            <div id="teacher-students-list">
-                <div class="skeleton skeleton-line"></div>
-                <div class="skeleton skeleton-line"></div>
-                <div class="skeleton skeleton-line short"></div>
-                <div class="skeleton skeleton-line"></div>
-                <div class="skeleton skeleton-line short"></div>
+        <section class="k-section">
+            <h3 class="k-section-title">🎓 قائمة الطلاب</h3>
+            <div id="teacher-students-list" class="k-stack">
+                <div class="skeleton skeleton-card"></div>
+                <div class="skeleton skeleton-card"></div>
+                <div class="skeleton skeleton-card"></div>
             </div>
-        </div>
-
-        <!-- Panneau de détail de progression d'un élève (caché par défaut) -->
-        <div id="student-detail-panel" class="card-glass-pro hidden" style="margin-bottom: var(--space-6);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-4);">
-                <h3 id="student-detail-name" style="font-size: 1.125rem; font-weight: 600;">📊 تقدم الطالب</h3>
-                <button class="btn btn-outline-glow btn-sm" onclick="document.getElementById('student-detail-panel').classList.add('hidden')">✕ إغلاق</button>
-            </div>
-            <div id="student-detail-content">
-                <p class="empty-state">جاري التحميل...</p>
-            </div>
-        </div>
+        </section>
     `;
+    // student-detail-panel est statique dans index.html (hors #app) pour que position:fixed fonctionne
 }
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
@@ -98,13 +85,22 @@ function _renderStudentsList(students) {
     studentsList.innerHTML = students.map(s => {
         const safeName     = escapeHtml(s.first_name || s.username);
         const safeNameAttr = escapeHtml(escapeJs(s.first_name || s.username));
-        return `<div class="student-card clickable" onclick="QuranReview.viewStudentProgress('${s.id}', '${safeNameAttr}')">
-            <div class="student-card-name">🎓 ${safeName}</div>
-            <div class="student-card-stats">
-                <span>🏆 ${escapeHtml(String(s.total_points ?? '—'))} نقطة</span>
-                <span>📝 ${escapeHtml(String(s.submissions_count ?? '—'))} تسليم</span>
+        const initial      = escapeHtml((s.first_name || s.username || '؟')[0]);
+        const sid          = escapeHtml(String(s.id));
+        return `
+        <div class="k-row" style="cursor:pointer"
+            onclick="QuranReview.viewStudentProgress('${sid}','${safeNameAttr}')">
+            <div class="rl">
+                <span class="k-avatar">${initial}</span>
+                <div>
+                    <div class="name">🎓 ${safeName}</div>
+                    <div class="meta">
+                        🏆 ${escapeHtml(String(s.total_points ?? '—'))} نقطة ·
+                        📝 ${escapeHtml(String(s.submissions_count ?? '—'))} تسليم
+                    </div>
+                </div>
             </div>
-            <span class="student-card-arrow">←</span>
+            <span style="color:var(--text-secondary)">←</span>
         </div>`;
     }).join('');
 }
@@ -112,9 +108,6 @@ function _renderStudentsList(students) {
 // ─── DÉTAIL DE PROGRESSION D'UN ÉLÈVE ────────────────────────────────────────
 
 export async function viewStudentProgress(studentId, studentName) {
-    const token = localStorage.getItem(config.apiTokenKey);
-    if (!token) return;
-
     const panel    = document.getElementById('student-detail-panel');
     const nameEl   = document.getElementById('student-detail-name');
     const contentEl = document.getElementById('student-detail-content');
@@ -124,6 +117,7 @@ export async function viewStudentProgress(studentId, studentName) {
     nameEl.textContent   = `📊 تقدم الطالب: ${studentName}`;
     contentEl.innerHTML  = '<p class="empty-state">جاري التحميل...</p>';
     panel.classList.remove('hidden');
+    panel.classList.add('active');
 
     try {
         const { data, error } = await supabaseAdmin.getStudentProgress(studentId);

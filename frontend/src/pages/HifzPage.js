@@ -14,83 +14,81 @@ if (!document.querySelector('link[href*="HifzPage.css"]')) {
 
 export function render() {
     return `<div id="hifz-page" class="page active">
-            <section class="section-pro">
-                <div class="container-pro max-w-lg">
-                    <h2 class="section-title text-center mb-8">🎭 وضع الحفظ</h2>
+        <section class="k-section">
+            <h2 class="k-section-title" style="text-align:center;margin-bottom:var(--space-6);">🎭 وضع الحفظ</h2>
 
-                    <!-- Hifz Selection Container -->
-                    <div class="card-glass-pro mb-6" id="hifz-selection">
-                        <h3 class="text-lg font-semibold mb-4">اختيار التمرين</h3>
+            <!-- Hifz Selection Container -->
+            <div class="card-glass-pro" id="hifz-selection" style="margin-bottom:var(--space-6);">
+                <h3 style="font-size:1rem;font-weight:600;margin-bottom:var(--space-4);">اختيار التمرين</h3>
 
-                        <form id="hifz-start-form">
-                            <div class="form-floating mb-4">
-                                <select id="hifz-surah-select" required>
-                                    <option value="">-- اختر السورة --</option>
-                                </select>
-                                <label for="hifz-surah-select">السورة</label>
-                            </div>
-
-                            <div class="grid-pro grid-cols-2 mb-4">
-                                <div class="form-floating">
-                                    <input type="number" id="hifz-from-ayah" min="1" value="1" placeholder=" " required>
-                                    <label for="hifz-from-ayah">من الآية</label>
-                                </div>
-                                <div class="form-floating">
-                                    <input type="number" id="hifz-to-ayah" min="1" value="7" placeholder=" " required>
-                                    <label for="hifz-to-ayah">إلى الآية</label>
-                                </div>
-                            </div>
-
-                            <button type="submit" class="btn btn-glow btn-full">
-                                <span>🎮</span>
-                                ابدأ التمرين
-                            </button>
-                        </form>
+                <form id="hifz-start-form">
+                    <div class="form-floating" style="margin-bottom:var(--space-4);">
+                        <select id="hifz-surah-select" required>
+                            <option value="">-- اختر السورة --</option>
+                        </select>
+                        <label for="hifz-surah-select">السورة</label>
                     </div>
 
-                    <!-- Hifz Active Game Container -->
-                    <div class="card-glass-pro" id="hifz-active-container" style="display: none;">
-                        <div class="flex-between mb-4">
-                            <div>
-                                <span class="badge badge-primary" id="hifz-score">النقاط: 0</span>
-                                <span class="badge badge-glass" id="hints-count" style="margin-right: var(--space-2);">تلميحات: 3</span>
-                            </div>
-                            <span class="badge badge-gold" id="hifz-level">المستوى: ⭐⭐⭐</span>
+                    <div class="k-grid2" style="margin-bottom:var(--space-4);">
+                        <div class="form-floating">
+                            <input type="number" id="hifz-from-ayah" min="1" value="1" placeholder=" " required>
+                            <label for="hifz-from-ayah">من الآية</label>
                         </div>
-
-                        <!-- Hifz Display Container -->
-                        <div id="hifz-display" style="margin: var(--space-6) 0; min-height: 150px;"></div>
-
-                        <!-- Hifz Text (fallback display) -->
-                        <div class="arabic-large text-center" id="hifz-text" style="line-height: 2.5; margin: var(--space-6) 0; font-size: 1.75rem; display: none;">
-                            بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
-                        </div>
-
-                        <!-- Feedback Area -->
-                        <div id="hifz-feedback" class="text-center" style="margin: var(--space-4) 0; min-height: 30px;"></div>
-
-                        <div class="flex-pro gap-3" style="justify-content: center;">
-                            <button class="btn btn-outline-glow" onclick="QuranReview.showHint()">
-                                <span>💡</span>
-                                تلميح
-                            </button>
-                            <button class="btn btn-glow" onclick="QuranReview.checkMemorization()">
-                                <span>✓</span>
-                                تحقق
-                            </button>
-                            <button class="btn btn-outline-glow" onclick="QuranReview.nextLevel()">
-                                <span>⏭️</span>
-                                التالي
-                            </button>
-                            <button class="btn btn-outline-glow" onclick="QuranReview.stopHifzSession()">
-                                <span>⏹️</span>
-                                إيقاف
-                            </button>
+                        <div class="form-floating">
+                            <input type="number" id="hifz-to-ayah" min="1" value="7" placeholder=" " required>
+                            <label for="hifz-to-ayah">إلى الآية</label>
                         </div>
                     </div>
+
+                    <button type="submit" class="btn btn-glow btn-full">
+                        <span>🎮</span>
+                        ابدأ التمرين
+                    </button>
+                </form>
+            </div>
+
+            <!-- Hifz Active Game Container -->
+            <div class="card-glass-pro" id="hifz-active-container" style="display:none;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-4);">
+                    <div style="display:flex;gap:var(--space-2);">
+                        <span class="k-chip k-chip--primary" id="hifz-score">النقاط: 0</span>
+                        <span class="k-chip" id="hints-count">تلميحات: 3</span>
+                    </div>
+                    <span class="k-chip k-chip--warning" id="hifz-level">المستوى: ⭐⭐⭐</span>
                 </div>
-            </section>
-        </div>`;
+
+                <!-- Hifz Display Container -->
+                <div id="hifz-display" style="margin:var(--space-6) 0;min-height:150px;"></div>
+
+                <!-- Hifz Text (fallback display) -->
+                <div class="arabic-large" id="hifz-text" style="text-align:center;line-height:2.5;margin:var(--space-6) 0;font-size:1.75rem;display:none;">
+                    بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
+                </div>
+
+                <!-- Feedback Area -->
+                <div id="hifz-feedback" style="text-align:center;margin:var(--space-4) 0;min-height:30px;"></div>
+
+                <div style="display:flex;gap:var(--space-3);justify-content:center;flex-wrap:wrap;">
+                    <button class="btn btn-outline-glow" onclick="QuranReview.showHint()">
+                        <span>💡</span>
+                        تلميح
+                    </button>
+                    <button class="btn btn-glow" onclick="QuranReview.checkMemorization()">
+                        <span>✓</span>
+                        تحقق
+                    </button>
+                    <button class="btn btn-outline-glow" onclick="QuranReview.nextLevel()">
+                        <span>⏭️</span>
+                        التالي
+                    </button>
+                    <button class="btn btn-outline-glow" onclick="QuranReview.stopHifzSession()">
+                        <span>⏹️</span>
+                        إيقاف
+                    </button>
+                </div>
+            </div>
+        </section>
+    </div>`;
 }
 
 export function init() {

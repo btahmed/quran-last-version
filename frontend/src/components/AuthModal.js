@@ -1,46 +1,10 @@
 // frontend/src/components/AuthModal.js
-// Composant regroupant les 3 modaux : audio-record-modal, user-edit-modal, auth-modal
+// Composant regroupant 2 modaux : user-edit-modal, auth-modal
+// Note : audio-record-modal est désormais statique dans index.html
 import { hideAuthModal } from '../services/auth.js';
 
 export function render() {
     return `
-    <!-- Modal Enregistrement Audio (Étudiant) -->
-    <div class="modal-overlay-pro hidden" id="audio-record-modal">
-        <div class="modal-content-pro" style="max-width: 460px;">
-            <div style="text-align: center; margin-bottom: var(--space-6);">
-                <div style="font-size: 3rem; margin-bottom: var(--space-2);">🎤</div>
-                <h2 style="font-size: 1.5rem; font-weight: 700;">تسجيل المهمة</h2>
-                <p id="recording-task-name" style="color: var(--color-text-secondary); margin-top: var(--space-2); font-size: 0.95rem;"></p>
-            </div>
-
-            <!-- Timer et statut -->
-            <div style="text-align: center; margin-bottom: var(--space-6);">
-                <div id="recording-timer" style="font-size: 2.5rem; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--color-primary);">00:00</div>
-                <p id="recording-status" style="color: var(--color-text-secondary); margin-top: var(--space-2);">اضغط للتسجيل</p>
-            </div>
-
-            <!-- Bouton enregistrement -->
-            <div style="text-align: center; margin-bottom: var(--space-6);">
-                <button id="recording-btn"
-                    onclick="QuranReview.toggleRecording()"
-                    aria-label="بدء أو إيقاف التسجيل"
-                    title="بدء أو إيقاف التسجيل"
-                    style="width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--color-primary); background: var(--glass-bg); font-size: 2rem; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center;">
-                    🎙️
-                </button>
-            </div>
-
-            <!-- Prévisualisation audio -->
-            <audio id="recording-preview" controls class="hidden" style="width: 100%; margin-bottom: var(--space-4);"></audio>
-
-            <!-- Actions -->
-            <div style="display: flex; gap: var(--space-3);">
-                <button class="btn btn-outline-glow" style="flex: 1;" onclick="QuranReview.stopRecording(true)">إلغاء</button>
-                <button id="recording-submit-btn" class="btn btn-glow hidden" style="flex: 1;" onclick="QuranReview.submitRecording()">✅ إرسال التسجيل</button>
-            </div>
-        </div>
-    </div>
-
     <!-- User Edit Modal (Admin) -->
     <div class="modal-overlay-pro hidden" id="user-edit-modal">
         <div class="modal-content-pro" style="max-width: 420px;">

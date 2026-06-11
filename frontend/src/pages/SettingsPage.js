@@ -15,9 +15,8 @@ if (!document.querySelector('link[href*="SettingsPage.css"]')) {
 export function render() {
     // HTML exact de div#settings-page (index.html lignes 760-826)
     return `<div id="settings-page" class="page active">
-            <section class="section-pro">
-                <div class="container-pro" style="max-width: 600px;">
-                    <h2 class="section-title" style="text-align: center; margin-bottom: var(--space-8);">⚙️ الإعدادات</h2>
+        <section class="k-section" style="max-width:600px;margin-inline:auto;">
+            <h2 class="k-section-title" style="text-align:center;margin-bottom:var(--space-6);">⚙️ الإعدادات</h2>
 
                     <div class="card-glass-pro" style="margin-bottom: var(--space-6);">
                         <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">👤 الملف الشخصي</h3>
@@ -87,8 +86,7 @@ export function render() {
                             </button>
                         </div>
                     </div>
-                </div>
-            </section>
+        </section>
         </div>`;
 }
 

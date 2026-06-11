@@ -19,74 +19,77 @@ if (!document.querySelector('link[href*="ProgressPage.css"]')) {
 export function render() {
     return `
         <div id="progress-page" class="page active">
-            <section class="section-pro">
-                <div class="container-pro">
-                    <h2 class="section-title" style="text-align: center; margin-bottom: var(--space-8);">📈 تقدمك في الحفظ</h2>
+            <section class="k-section">
+                <h2 class="k-section-title" style="text-align:center;margin-bottom:var(--space-6);">📈 تقدمك في الحفظ</h2>
 
-                    <!-- Stat cards principales -->
-                    <div class="grid-pro grid-cols-5" style="margin-bottom: var(--space-8);">
-                        <div class="card-stat-premium" style="text-align: center;">
-                            <div class="stat-value" id="progress-total-surahs">0</div>
-                            <p style="color: var(--color-text-secondary); margin-top: var(--space-2);">سورة محفوظة</p>
-                        </div>
-                        <div class="card-stat-premium" style="text-align: center;">
-                            <div class="stat-value" id="progress-total-ayahs">0</div>
-                            <p style="color: var(--color-text-secondary); margin-top: var(--space-2);">آية محفوظة</p>
-                        </div>
-                        <div class="card-stat-premium" style="text-align: center;">
-                            <div class="stat-value" id="progress-completion">0%</div>
-                            <p style="color: var(--color-text-secondary); margin-top: var(--space-2);">نسبة الإنجاز</p>
-                        </div>
-                        <div class="card-stat-premium" style="text-align: center;">
-                            <div class="stat-value" id="progress-streak">0</div>
-                            <p style="color: var(--color-text-secondary); margin-top: var(--space-2);">يوم متتالي</p>
-                        </div>
-                        <div class="card-stat-premium" style="text-align: center; background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);">
-                            <div class="stat-value" id="progress-total-points" style="color: white;">—</div>
-                            <p style="color: rgba(255,255,255,0.9); margin-top: var(--space-2);">🏆 نقطة مكتسبة</p>
-                        </div>
+                <!-- Stat cards principales -->
+                <div class="k-grid2" style="margin-bottom:var(--space-6);">
+                    <div class="k-stat-card">
+                        <div class="k-stat-icon">📖</div>
+                        <div class="k-stat-value" id="progress-total-surahs">0</div>
+                        <div class="k-stat-label">سورة محفوظة</div>
                     </div>
-
-                    <!-- Répartition des statuts + activité hebdomadaire -->
-                    <div class="grid-pro grid-cols-2" style="margin-bottom: var(--space-8);">
-                        <div class="card-glass-pro">
-                            <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">📊 توزيع الحالات</h3>
-                            <div style="display: flex; flex-direction: column; gap: var(--space-3);">
-                                <div class="flex-pro" style="justify-content: space-between;">
-                                    <span class="flex-pro" style="gap: var(--space-2);"><span class="status-badge status-strong"></span><span>متقن</span></span>
-                                    <span id="status-strong-count" style="font-weight: 600;">0</span>
-                                </div>
-                                <div class="flex-pro" style="justify-content: space-between;">
-                                    <span class="flex-pro" style="gap: var(--space-2);"><span class="status-badge status-weak"></span><span>ضعيف</span></span>
-                                    <span id="status-weak-count" style="font-weight: 600;">0</span>
-                                </div>
-                                <div class="flex-pro" style="justify-content: space-between;">
-                                    <span class="flex-pro" style="gap: var(--space-2);"><span class="status-badge status-new"></span><span>جديد</span></span>
-                                    <span id="status-new-count" style="font-weight: 600;">0</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="card-glass-pro">
-                            <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">📅 نشاط الأسبوع</h3>
-                            <div class="grid-pro grid-cols-7" style="text-align: center; gap: var(--space-2);">
-                                <div class="card-glass-pro" style="padding: var(--space-3);"><div style="font-size: 0.75rem; color: var(--color-text-secondary);">سبت</div><div style="font-weight: 600;" id="activity-sat">0</div></div>
-                                <div class="card-glass-pro" style="padding: var(--space-3);"><div style="font-size: 0.75rem; color: var(--color-text-secondary);">أحد</div><div style="font-weight: 600;" id="activity-sun">0</div></div>
-                                <div class="card-glass-pro" style="padding: var(--space-3);"><div style="font-size: 0.75rem; color: var(--color-text-secondary);">اثن</div><div style="font-weight: 600;" id="activity-mon">0</div></div>
-                                <div class="card-glass-pro" style="padding: var(--space-3);"><div style="font-size: 0.75rem; color: var(--color-text-secondary);">ثلا</div><div style="font-weight: 600;" id="activity-tue">0</div></div>
-                                <div class="card-glass-pro" style="padding: var(--space-3);"><div style="font-size: 0.75rem; color: var(--color-text-secondary);">أرب</div><div style="font-weight: 600;" id="activity-wed">0</div></div>
-                                <div class="card-glass-pro" style="padding: var(--space-3);"><div style="font-size: 0.75rem; color: var(--color-text-secondary);">خمي</div><div style="font-weight: 600;" id="activity-thu">0</div></div>
-                                <div class="card-glass-pro" style="padding: var(--space-3);"><div style="font-size: 0.75rem; color: var(--color-text-secondary);">جمعة</div><div style="font-weight: 600;" id="activity-fri">0</div></div>
-                            </div>
-                        </div>
+                    <div class="k-stat-card">
+                        <div class="k-stat-icon">📝</div>
+                        <div class="k-stat-value" id="progress-total-ayahs">0</div>
+                        <div class="k-stat-label">آية محفوظة</div>
                     </div>
+                    <div class="k-stat-card">
+                        <div class="k-stat-icon">✨</div>
+                        <div class="k-stat-value" id="progress-completion">0%</div>
+                        <div class="k-stat-label">نسبة الإنجاز</div>
+                    </div>
+                    <div class="k-stat-card">
+                        <div class="k-stat-icon">🔥</div>
+                        <div class="k-stat-value" id="progress-streak">0</div>
+                        <div class="k-stat-label">يوم متتالي</div>
+                    </div>
+                    <div class="k-stat-card" style="background:linear-gradient(135deg,var(--color-primary) 0%,var(--color-secondary) 100%);">
+                        <div class="k-stat-icon" style="color:rgba(255,255,255,0.8);">🏆</div>
+                        <div class="k-stat-value gradient-value" id="progress-total-points" style="color:#fff;">—</div>
+                        <div class="k-stat-label" style="color:rgba(255,255,255,0.9);">نقطة مكتسبة</div>
+                    </div>
+                </div>
 
-                    <!-- Graphique d'évolution -->
+                <!-- Répartition des statuts + activité hebdomadaire -->
+                <div class="k-grid2" style="margin-bottom:var(--space-6);">
                     <div class="card-glass-pro">
-                        <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: var(--space-4);">📈 تطور الحفظ</h3>
-                        <div style="height: 300px; background: rgba(45, 80, 22, 0.05); border-radius: var(--radius-xl); display: flex; align-items: center; justify-content: center; color: var(--color-text-secondary);">
-                            <div style="text-align: center;"><div style="font-size: 3rem; margin-bottom: var(--space-4);">📊</div><p>الرسم البياني قريباً</p></div>
+                        <h3 style="font-size:1rem;font-weight:600;margin-bottom:var(--space-4);">📊 توزيع الحالات</h3>
+                        <div style="display:flex;flex-direction:column;gap:var(--space-3);">
+                            <div style="display:flex;justify-content:space-between;align-items:center;">
+                                <span style="display:flex;gap:var(--space-2);align-items:center;"><span class="k-dot k-dot--done"></span><span>متقن</span></span>
+                                <span id="status-strong-count" style="font-weight:600;">0</span>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;align-items:center;">
+                                <span style="display:flex;gap:var(--space-2);align-items:center;"><span class="k-dot k-dot--missed"></span><span>ضعيف</span></span>
+                                <span id="status-weak-count" style="font-weight:600;">0</span>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;align-items:center;">
+                                <span style="display:flex;gap:var(--space-2);align-items:center;"><span class="k-dot k-dot--new"></span><span>جديد</span></span>
+                                <span id="status-new-count" style="font-weight:600;">0</span>
+                            </div>
                         </div>
+                    </div>
+
+                    <div class="card-glass-pro">
+                        <h3 style="font-size:1rem;font-weight:600;margin-bottom:var(--space-4);">📅 نشاط الأسبوع</h3>
+                        <div style="display:grid;grid-template-columns:repeat(7,1fr);text-align:center;gap:var(--space-2);">
+                            <div class="card-glass-pro" style="padding:var(--space-2);"><div style="font-size:0.7rem;color:var(--color-text-secondary);">سبت</div><div style="font-weight:600;" id="activity-sat">0</div></div>
+                            <div class="card-glass-pro" style="padding:var(--space-2);"><div style="font-size:0.7rem;color:var(--color-text-secondary);">أحد</div><div style="font-weight:600;" id="activity-sun">0</div></div>
+                            <div class="card-glass-pro" style="padding:var(--space-2);"><div style="font-size:0.7rem;color:var(--color-text-secondary);">اثن</div><div style="font-weight:600;" id="activity-mon">0</div></div>
+                            <div class="card-glass-pro" style="padding:var(--space-2);"><div style="font-size:0.7rem;color:var(--color-text-secondary);">ثلا</div><div style="font-weight:600;" id="activity-tue">0</div></div>
+                            <div class="card-glass-pro" style="padding:var(--space-2);"><div style="font-size:0.7rem;color:var(--color-text-secondary);">أرب</div><div style="font-weight:600;" id="activity-wed">0</div></div>
+                            <div class="card-glass-pro" style="padding:var(--space-2);"><div style="font-size:0.7rem;color:var(--color-text-secondary);">خمي</div><div style="font-weight:600;" id="activity-thu">0</div></div>
+                            <div class="card-glass-pro" style="padding:var(--space-2);"><div style="font-size:0.7rem;color:var(--color-text-secondary);">جمعة</div><div style="font-weight:600;" id="activity-fri">0</div></div>
+                        </div>
+                        </div>
+                    </div>
+
+                <!-- Graphique d'évolution -->
+                <div class="card-glass-pro">
+                    <h3 style="font-size:1rem;font-weight:600;margin-bottom:var(--space-4);">📈 تطور الحفظ</h3>
+                    <div style="height:300px;background:rgba(45,80,22,0.05);border-radius:var(--radius-xl);display:flex;align-items:center;justify-content:center;color:var(--color-text-secondary);">
+                        <div style="text-align:center;"><div style="font-size:3rem;margin-bottom:var(--space-4);">📊</div><p class="k-empty">الرسم البياني قريباً</p></div>
                     </div>
                 </div>
             </section>

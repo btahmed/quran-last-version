@@ -14,133 +14,130 @@ if (!document.querySelector('link[href*="WardPage.css"]')) {
 }
 
 export function render() {
-    // HTML exact de div#ward-page (index.html lignes 388-513)
     return `<div id="ward-page" class="page active">
-            <section class="section-pro">
-                <div class="container-pro max-w-md">
-                    <h2 class="section-title text-center mb-8">🎧 الورد اليومي</h2>
+        <section class="k-section">
+            <h2 class="k-section-title" style="text-align:center;margin-bottom:var(--space-6);">🎧 الورد اليومي</h2>
 
-                    <div class="card-glass-pro mb-6">
-                        <div class="form-floating mb-4">
-                            <select id="ward-surah-select" class="select-modern">
-                                <option value="">اختر السورة</option>
-                                <option value="1">سورة الفاتحة</option>
-                                <option value="2">سورة البقرة</option>
-                                <option value="3">سورة آل عمران</option>
-                            </select>
-                            <label for="ward-surah-select">السورة</label>
-                        </div>
+            <div class="card-glass-pro" style="margin-bottom:var(--space-6);">
+                <div class="form-floating" style="margin-bottom:var(--space-4);">
+                    <select id="ward-surah-select" class="select-modern">
+                        <option value="">اختر السورة</option>
+                        <option value="1">سورة الفاتحة</option>
+                        <option value="2">سورة البقرة</option>
+                        <option value="3">سورة آل عمران</option>
+                    </select>
+                    <label for="ward-surah-select">السورة</label>
+                </div>
 
-                        <div class="grid-pro grid-cols-2 mb-6">
-                            <div class="form-floating">
-                                <input type="number" id="ward-from-ayah" placeholder=" " min="1" value="1">
-                                <label for="ward-from-ayah">من الآية</label>
-                            </div>
-                            <div class="form-floating">
-                                <input type="number" id="ward-to-ayah" placeholder=" " min="1" value="7">
-                                <label for="ward-to-ayah">إلى الآية</label>
-                            </div>
-                        </div>
-
-                        <div class="grid-pro grid-cols-2 mb-4">
-                            <div class="form-floating">
-                                <select id="ward-reciter-selector">
-                                    <option value="alafasy">مشاري بن راشد العفاسي</option>
-                                </select>
-                                <label for="ward-reciter-selector">القارئ</label>
-                            </div>
-                            <div class="form-floating">
-                                <select id="ward-audio-quality">
-                                    <option value="192">عالية (192 kbps)</option>
-                                    <option value="128" selected>متوسطة (128 kbps)</option>
-                                    <option value="64">منخفضة (64 kbps)</option>
-                                </select>
-                                <label for="ward-audio-quality">جودة الصوت</label>
-                            </div>
-                        </div>
-
-                        <div class="grid-pro grid-cols-2 mb-4">
-                            <div class="form-floating">
-                                <select id="ward-audio-source">
-                                    <option value="cdn" selected>الخادم المباشر</option>
-                                    <option value="api">API</option>
-                                </select>
-                                <label for="ward-audio-source">مصدر الصوت</label>
-                            </div>
-                            <div class="form-floating">
-                                <select id="ward-image-quality">
-                                    <option value="high" selected>عالية</option>
-                                    <option value="medium">متوسطة</option>
-                                    <option value="low">منخفضة</option>
-                                </select>
-                                <label for="ward-image-quality">جودة الصورة</label>
-                            </div>
-                        </div>
-
-                        <div class="form-floating mb-4">
-                            <select id="ward-ayah-delay">
-                                <option value="0" selected>بدون تأخير</option>
-                                <option value="0.5">0.5 ثانية</option>
-                                <option value="1">1 ثانية</option>
-                                <option value="2">2 ثوان</option>
-                                <option value="3">3 ثوان</option>
-                                <option value="5">5 ثوان</option>
-                            </select>
-                            <label for="ward-ayah-delay">تأخير بين الآيات</label>
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="toggle-switch">
-                                <input type="checkbox" id="ward-autoplay-next" checked>
-                                <span class="toggle-slider"></span>
-                                <span style="margin-right: var(--space-3);">التشغيل التلقائي للآية التالية</span>
-                            </label>
-                        </div>
-
-                        <button class="btn btn-glow btn-full" onclick="QuranReview.playWard()">
-                            <span>▶️</span>
-                            تشغيل الورد
-                        </button>
+                <div class="k-grid2" style="margin-bottom:var(--space-6);">
+                    <div class="form-floating">
+                        <input type="number" id="ward-from-ayah" placeholder=" " min="1" value="1">
+                        <label for="ward-from-ayah">من الآية</label>
                     </div>
-
-                    <!-- Audio Player -->
-                    <div class="player-glass" id="ward-player">
-                        <div class="text-center mb-4">
-                            <span class="badge badge-glass" id="ward-progress-text">الآية 1 من 7</span>
-                        </div>
-
-                        <div class="ward-ayah-image mb-4" id="ward-image-container" style="min-height: 200px; display: flex; align-items: center; justify-content: center; background: rgba(45, 80, 22, 0.05); border-radius: var(--radius-2xl);">
-                            <img id="ward-image" src="" alt="Ayah Image" style="display: none; max-width: 100%; border-radius: var(--radius-xl);">
-                            <div id="ward-ayah-text" class="arabic-large text-center" style="padding: var(--space-6); font-size: 1.75rem;">
-                                بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
-                            </div>
-                        </div>
-
-                        <div class="progress-glass" style="margin: var(--space-6) 0;">
-                            <div class="fill" id="ward-progress-bar" style="width: 0%;"></div>
-                        </div>
-
-                        <div class="player-controls">
-                            <button class="player-btn player-btn-secondary" id="prev-ayah-btn" onclick="QuranReview.previousWardAyah()" aria-label="الآية السابقة" title="الآية السابقة">
-                                ⏮️
-                            </button>
-                            <button class="player-btn player-btn-lg" id="play-ward-btn" onclick="QuranReview.toggleWardPlay()" aria-label="تشغيل أو إيقاف" title="تشغيل أو إيقاف">
-                                ▶️
-                            </button>
-                            <button class="player-btn player-btn-secondary" id="next-ayah-btn" onclick="QuranReview.nextWardAyah()" aria-label="الآية التالية" title="الآية التالية">
-                                ⏭️
-                            </button>
-                        </div>
-
-                        <div class="flex-pro mt-4" style="justify-content: center;">
-                            <button class="btn btn-outline-glow btn-sm" id="stop-ward-btn" onclick="AudioManager.stopAll()">
-                                ⏹️ إيقاف
-                            </button>
-                        </div>
+                    <div class="form-floating">
+                        <input type="number" id="ward-to-ayah" placeholder=" " min="1" value="7">
+                        <label for="ward-to-ayah">إلى الآية</label>
                     </div>
                 </div>
-            </section>
-        </div>`;
+
+                <div class="k-grid2" style="margin-bottom:var(--space-4);">
+                    <div class="form-floating">
+                        <select id="ward-reciter-selector">
+                            <option value="alafasy">مشاري بن راشد العفاسي</option>
+                        </select>
+                        <label for="ward-reciter-selector">القارئ</label>
+                    </div>
+                    <div class="form-floating">
+                        <select id="ward-audio-quality">
+                            <option value="192">عالية (192 kbps)</option>
+                            <option value="128" selected>متوسطة (128 kbps)</option>
+                            <option value="64">منخفضة (64 kbps)</option>
+                        </select>
+                        <label for="ward-audio-quality">جودة الصوت</label>
+                    </div>
+                </div>
+
+                <div class="k-grid2" style="margin-bottom:var(--space-4);">
+                    <div class="form-floating">
+                        <select id="ward-audio-source">
+                            <option value="cdn" selected>الخادم المباشر</option>
+                            <option value="api">API</option>
+                        </select>
+                        <label for="ward-audio-source">مصدر الصوت</label>
+                    </div>
+                    <div class="form-floating">
+                        <select id="ward-image-quality">
+                            <option value="high" selected>عالية</option>
+                            <option value="medium">متوسطة</option>
+                            <option value="low">منخفضة</option>
+                        </select>
+                        <label for="ward-image-quality">جودة الصورة</label>
+                    </div>
+                </div>
+
+                <div class="form-floating" style="margin-bottom:var(--space-4);">
+                    <select id="ward-ayah-delay">
+                        <option value="0" selected>بدون تأخير</option>
+                        <option value="0.5">0.5 ثانية</option>
+                        <option value="1">1 ثانية</option>
+                        <option value="2">2 ثوان</option>
+                        <option value="3">3 ثوان</option>
+                        <option value="5">5 ثوان</option>
+                    </select>
+                    <label for="ward-ayah-delay">تأخير بين الآيات</label>
+                </div>
+
+                <div style="margin-bottom:var(--space-4);">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="ward-autoplay-next" checked>
+                        <span class="toggle-slider"></span>
+                        <span style="margin-right:var(--space-3);">التشغيل التلقائي للآية التالية</span>
+                    </label>
+                </div>
+
+                <button class="btn btn-glow btn-full" onclick="QuranReview.playWard()">
+                    <span>▶️</span>
+                    تشغيل الورد
+                </button>
+            </div>
+
+            <!-- Audio Player -->
+            <div class="player-glass" id="ward-player">
+                <div style="text-align:center;margin-bottom:var(--space-4);">
+                    <span class="k-chip" id="ward-progress-text">الآية 1 من 7</span>
+                </div>
+
+                <div id="ward-image-container" class="ward-ayah-image" style="min-height:200px;display:flex;align-items:center;justify-content:center;background:rgba(45,80,22,0.05);border-radius:var(--radius-2xl);margin-bottom:var(--space-4);">
+                    <img id="ward-image" src="" alt="Ayah Image" style="display:none;max-width:100%;border-radius:var(--radius-xl);">
+                    <div id="ward-ayah-text" class="arabic-large" style="text-align:center;padding:var(--space-6);font-size:1.75rem;">
+                        بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
+                    </div>
+                </div>
+
+                <div class="progress-glass" style="margin:var(--space-6) 0;">
+                    <div class="fill" id="ward-progress-bar" style="width:0%;"></div>
+                </div>
+
+                <div class="player-controls">
+                    <button class="player-btn player-btn-secondary" id="prev-ayah-btn" onclick="QuranReview.previousWardAyah()" aria-label="الآية السابقة" title="الآية السابقة">
+                        ⏮️
+                    </button>
+                    <button class="player-btn player-btn-lg" id="play-ward-btn" onclick="QuranReview.toggleWardPlay()" aria-label="تشغيل أو إيقاف" title="تشغيل أو إيقاف">
+                        ▶️
+                    </button>
+                    <button class="player-btn player-btn-secondary" id="next-ayah-btn" onclick="QuranReview.nextWardAyah()" aria-label="الآية التالية" title="الآية التالية">
+                        ⏭️
+                    </button>
+                </div>
+
+                <div style="display:flex;justify-content:center;margin-top:var(--space-4);">
+                    <button class="btn btn-outline-glow btn-sm" id="stop-ward-btn" onclick="AudioManager.stopAll()">
+                        ⏹️ إيقاف
+                    </button>
+                </div>
+            </div>
+        </section>
+    </div>`;
 }
 
 export function init() {

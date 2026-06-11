@@ -52,7 +52,7 @@ export function render() {
                     <textarea id="task-description" placeholder=" " style="min-height: 80px; resize: vertical;"></textarea>
                     <label for="task-description">وصف المهمة</label>
                 </div>
-                <div class="grid-pro grid-cols-2" style="margin-bottom: var(--space-4);">
+                <div class="k-grid2" style="margin-bottom: var(--space-4);">
                     <div class="form-floating">
                         <select id="task-type">
                             <option value="hifz">حفظ</option>
@@ -96,12 +96,12 @@ export function render() {
         </div>
 
         <!-- Liste des tâches assignées -->
-        <div class="card-glass-pro">
-            <div id="teacher-assigned-tasks-list">
+        <section class="k-section">
+            <div id="teacher-assigned-tasks-list" class="k-stack">
                 <div class="skeleton skeleton-card"></div>
                 <div class="skeleton skeleton-card"></div>
             </div>
-        </div>
+        </section>
     `;
 }
 
@@ -162,11 +162,11 @@ function _renderTaskList(tasks) {
 
     // En-tête avec bouton Supprimer tout
     const headerHtml = `
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-            <h3>📋 قائمة المهام</h3>
-            <button class="btn btn-danger btn-sm" onclick="QuranReview.handleDeleteAllTasks()" style="background-color: #dc3545;">
-                🗑️ حذف جميع المهام
-            </button>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-4)">
+            <h3 class="k-section-title" style="margin:0">📋 قائمة المهام</h3>
+            <button class="k-quickbtn k-quickbtn--danger"
+                style="min-width:auto;padding:var(--space-2) var(--space-3);font-size:var(--text-xs)"
+                onclick="QuranReview.handleDeleteAllTasks()">🗑 حذف الكل</button>
         </div>
     `;
 
@@ -193,24 +193,23 @@ function _renderTaskList(tasks) {
         const date      = new Date(task.created_at).toLocaleDateString('ar-SA');
         const idsJson   = JSON.stringify(ids);
         const safeTitle = escapeHtml(escapeJs(task.title));
-        return `<div class="task-card" style="position:relative;">
-            <div class="task-card-header">
-                <h3 class="task-card-title">${escapeHtml(task.title)}</h3>
-                <div style="display:flex; align-items:center; gap:8px;">
-                    <span class="task-type-badge">${escapeHtml(typeLabel)}</span>
-                    <button onclick="QuranReview.handleDeleteBatch(${idsJson}, '${safeTitle}', ${count})"
-                        style="padding:4px 10px; background:#fff; border:1px solid #ef4444; border-radius:6px; color:#ef4444; font-size:0.78rem; cursor:pointer; flex-shrink:0;"
-                        title="حذف هذه المهمة">
-                        🗑️ حذف
-                    </button>
+        return `<div class="k-task-card">
+            <div class="k-task-card-header">
+                <h3 class="k-task-card-title">${escapeHtml(task.title)}</h3>
+                <div style="display:flex;align-items:center;gap:var(--space-2);flex-shrink:0">
+                    ${typeLabel ? `<span class="k-type-badge">${escapeHtml(typeLabel)}</span>` : ''}
+                    <button class="k-quickbtn k-quickbtn--danger"
+                        style="min-width:auto;padding:var(--space-1) var(--space-3);font-size:var(--text-xs)"
+                        onclick="QuranReview.handleDeleteBatch(${idsJson},'${safeTitle}',${count})"
+                        title="حذف هذه المهمة">🗑 حذف</button>
                 </div>
             </div>
-            ${task.description ? `<p class="task-card-desc">${escapeHtml(task.description)}</p>` : ''}
-            <div class="task-card-meta">
+            ${task.description ? `<p class="k-task-card-desc">${escapeHtml(task.description)}</p>` : ''}
+            <div class="k-task-card-meta">
                 <span>🏆 ${escapeHtml(String(task.points))} نقطة</span>
                 <span>👥 ${count} طالب</span>
-                <span>📅 أُنشئت: ${date}</span>
-                ${dueDate ? `<span>⏰ تسليم: ${dueDate}</span>` : ''}
+                <span>📅 ${date}</span>
+                ${dueDate ? `<span>⏰ ${dueDate}</span>` : ''}
             </div>
         </div>`;
     }).join('');

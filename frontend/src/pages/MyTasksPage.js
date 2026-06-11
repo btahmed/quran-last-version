@@ -20,6 +20,15 @@ function escapeHtml(str) {
         .replace(/'/g, '&#039;');
 }
 
+function escapeJs(str) {
+    return String(str ?? '')
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "\\'")
+        .replace(/"/g, '\\"')
+        .replace(/\n/g, '\\n')
+        .replace(/\r/g, '\\r');
+}
+
 // Injection CSS
 if (!document.querySelector('link[href*="MyTasksPage.css"]')) {
     const link = document.createElement('link');
@@ -35,61 +44,57 @@ if (!document.querySelector('link[href*="MyTasksPage.css"]')) {
 export function render() {
     return `
         <div id="mytasks-page" class="page active">
-            <section class="section-pro">
-                <div class="container-pro">
-                    <h2 class="section-title" style="text-align: center; margin-bottom: var(--space-8);">📝 مهامي</h2>
-
-                    <!-- رسالة الترحيب -->
-                    <p id="student-welcome" style="text-align:center;color:var(--color-text-secondary);margin-bottom:var(--space-4);"></p>
-
-                    <!-- Student Task Stats — 4 cartes dont les points -->
-                    <div class="grid-pro grid-cols-4" style="margin-bottom: var(--space-6);">
-                        <div class="card-stat-premium" style="text-align: center;">
-                            <div class="stat-value" id="student-points">0</div>
-                            <p style="color: var(--color-text-secondary);">🏆 نقاطي</p>
-                        </div>
-                        <div class="card-stat-premium" style="text-align: center;">
-                            <div class="stat-value" id="student-tasks-done">0</div>
-                            <p style="color: var(--color-text-secondary);">مكتملة</p>
-                        </div>
-                        <div class="card-stat-premium" style="text-align: center;">
-                            <div class="stat-value" id="student-tasks-pending">0</div>
-                            <p style="color: var(--color-text-secondary);">قيد الانتظار</p>
-                        </div>
-                        <div class="card-stat-premium" style="text-align: center;">
-                            <div class="stat-value" id="student-tasks-rejected">0</div>
-                            <p style="color: var(--color-text-secondary);">مرفوضة</p>
-                        </div>
+            <section class="k-section">
+                <h2 class="k-section-title" style="text-align:center;margin-bottom:var(--space-6);">📝 مهامي</h2>
+                <p id="student-welcome" style="text-align:center;color:var(--color-text-secondary);margin-bottom:var(--space-4);"></p>
+                <div class="k-grid2" style="margin-bottom:var(--space-6);">
+                    <div class="k-stat-card">
+                        <div class="k-stat-icon">🏆</div>
+                        <div class="k-stat-value gradient-value" id="student-points">0</div>
+                        <div class="k-stat-label">نقاطي</div>
                     </div>
-
-                    <!-- قائمة المهام -->
-                    <div class="tabs" style="margin-bottom: var(--space-4);">
-                        <button class="tab active" onclick="QuranReview.switchTaskTab('pending')">قيد الانتظار</button>
-                        <button class="tab" onclick="QuranReview.switchTaskTab('completed')">مكتملة</button>
+                    <div class="k-stat-card">
+                        <div class="k-stat-icon">✅</div>
+                        <div class="k-stat-value" id="student-tasks-done">0</div>
+                        <div class="k-stat-label">مكتملة</div>
                     </div>
-
-                    <div id="student-tasks-list" class="card-glass-pro" style="margin-bottom: var(--space-6);">
-                        <div class="skeleton skeleton-card"></div>
-                        <div class="skeleton skeleton-card"></div>
-                        <div class="skeleton skeleton-card"></div>
+                    <div class="k-stat-card">
+                        <div class="k-stat-icon">⏳</div>
+                        <div class="k-stat-value" id="student-tasks-pending">0</div>
+                        <div class="k-stat-label">قيد الانتظار</div>
                     </div>
-
-                    <!-- التسليمات -->
-                    <div class="card-glass-pro" style="margin-bottom: var(--space-6);">
-                        <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: var(--space-3);">📤 تسليماتي</h3>
-                        <div id="student-submissions-list">
-                            <div class="skeleton skeleton-card"></div>
-                            <div class="skeleton skeleton-card"></div>
-                        </div>
+                    <div class="k-stat-card">
+                        <div class="k-stat-icon">❌</div>
+                        <div class="k-stat-value" id="student-tasks-rejected">0</div>
+                        <div class="k-stat-label">مرفوضة</div>
                     </div>
+                </div>
+            </section>
 
-                    <!-- سجل النقاط -->
-                    <div class="card-glass-pro">
-                        <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: var(--space-3);">📊 سجل النقاط</h3>
-                        <div id="student-points-log">
-                            <p class="empty-state">لا توجد نقاط بعد</p>
-                        </div>
-                    </div>
+            <section class="k-section">
+                <div class="tabs" style="margin-bottom:var(--space-4);">
+                    <button class="tab active" onclick="QuranReview.switchTaskTab('pending')">قيد الانتظار</button>
+                    <button class="tab" onclick="QuranReview.switchTaskTab('completed')">مكتملة</button>
+                </div>
+                <div id="student-tasks-list" class="k-stack">
+                    <div class="skeleton skeleton-card"></div>
+                    <div class="skeleton skeleton-card"></div>
+                    <div class="skeleton skeleton-card"></div>
+                </div>
+            </section>
+
+            <section class="k-section">
+                <h3 class="k-section-title">📤 تسليماتي</h3>
+                <div id="student-submissions-list" class="k-stack">
+                    <div class="skeleton skeleton-card"></div>
+                    <div class="skeleton skeleton-card"></div>
+                </div>
+            </section>
+
+            <section class="k-section">
+                <h3 class="k-section-title">📊 سجل النقاط</h3>
+                <div id="student-points-log" class="k-stack">
+                    <p class="k-empty">لا توجد نقاط بعد</p>
                 </div>
             </section>
         </div>
@@ -191,25 +196,25 @@ function _applyStudentData(tasks, submissions, pointsData) {
     const pointsLogEl = document.getElementById('student-points-log');
     const logs = pointsData.logs || [];
     if (!logs.length) {
-        pointsLogEl.innerHTML = '<p class="empty-state">لا توجد نقاط بعد</p>';
+        pointsLogEl.innerHTML = '<p class="k-empty">لا توجد نقاط بعد</p>';
     } else {
         pointsLogEl.innerHTML = logs.slice(0, 10).map(log => {
             const date = new Date(log.created_at).toLocaleDateString('ar-SA');
             const sign = log.delta > 0 ? '+' : '';
             const isPositive = log.delta > 0;
-            // Normaliser les anciens textes français en arabe
             const reason = log.reason
                 .replace(/^Tache approuvee:\s*/i, 'تمت الموافقة على: ')
                 .replace(/^Tache rejetee:\s*/i, 'تم رفض: ');
-            return `<div class="points-log-item" style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--color-border, rgba(255,255,255,0.08));gap:8px;">
-                <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;">
-                    <span style="font-size:1.1rem;">${isPositive ? '🏆' : '📉'}</span>
-                    <span style="font-size:0.85rem;color:var(--color-text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(reason)}</span>
+            return `
+            <div class="k-row">
+                <div class="rl">
+                    <span class="k-dot ${isPositive ? 'k-dot--done' : 'k-dot--missed'}"></span>
+                    <div>
+                        <div class="name">${escapeHtml(reason)}</div>
+                        <div class="meta">${date}</div>
+                    </div>
                 </div>
-                <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
-                    <span style="font-weight:700;font-size:0.95rem;color:${isPositive ? '#10b981' : '#ef4444'};">${sign}${log.delta}</span>
-                    <span style="font-size:0.75rem;color:var(--color-text-secondary);">${date}</span>
-                </div>
+                <span class="k-chip ${isPositive ? 'k-chip--success' : 'k-chip--danger'}">${sign}${log.delta}</span>
             </div>`;
         }).join('');
     }
@@ -233,53 +238,50 @@ function _applyStudentData(tasks, submissions, pointsData) {
     // Liste des soumissions
     const subsList = document.getElementById('student-submissions-list');
     if (!submissions.length) {
-        subsList.innerHTML = '<p class="empty-state">لا توجد تسليمات بعد</p>';
+        subsList.innerHTML = '<p class="k-empty">لا توجد تسليمات بعد</p>';
     } else {
         subsList.innerHTML = submissions.map(s => {
             const isApproved = s.status === 'approved';
             const isRejected = s.status === 'rejected';
+            const dot = isApproved ? 'k-dot--done' : isRejected ? 'k-dot--missed' : 'k-dot--pending';
+            const chipClass = isApproved ? 'k-chip--success' : isRejected ? 'k-chip--danger' : 'k-chip--warning';
+            const statusText = isApproved ? 'مقبول ✓' : isRejected ? 'مرفوض ✗' : '⏳ بانتظار';
             const date = new Date(s.submitted_at).toLocaleDateString('ar-SA');
+            const taskTitle = s.task?.title || s.tasks?.title || 'مهمة';
             const audioSrc = s.audio_url
                 ? (s.audio_url.startsWith('http') ? s.audio_url : config.apiBaseUrl + (s.audio_url.startsWith('/') ? s.audio_url : '/' + s.audio_url))
                 : '';
 
-            // Affichage du feedback selon statut
             let feedbackHtml = '';
             if (s.admin_feedback) {
                 if (isApproved) {
-                    // Note emoji → affiché en vert, gros et visible
-                    feedbackHtml = `<div style="display:inline-flex;align-items:center;gap:6px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);border-radius:8px;padding:4px 10px;margin-top:6px;font-size:1rem;font-weight:600;color:#10b981;">
-                        ⭐ ${escapeHtml(s.admin_feedback)}
-                    </div>`;
+                    feedbackHtml = `<span class="k-chip k-chip--success">⭐ ${escapeHtml(s.admin_feedback)}</span>`;
                 } else if (isRejected) {
-                    // Motif de refus → affiché en rouge
-                    feedbackHtml = `<div style="font-size:0.82rem;color:#ef4444;margin-top:4px;">💬 ${escapeHtml(s.admin_feedback)}</div>`;
+                    feedbackHtml = `<span class="k-chip k-chip--danger">💬 ${escapeHtml(s.admin_feedback)}</span>`;
                 }
             }
 
-            const statusStyle = isApproved
-                ? 'background:rgba(16,185,129,0.15);color:#10b981;border:1px solid rgba(16,185,129,0.3);'
-                : isRejected
-                ? 'background:rgba(239,68,68,0.15);color:#ef4444;border:1px solid rgba(239,68,68,0.3);'
-                : 'background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.3);';
-            const statusText = isApproved ? 'مقبول ✓' : isRejected ? 'مرفوض ✗' : '⏳ بانتظار التصحيح';
+            const audioHtml = audioSrc ? `
+                <audio controls preload="metadata" style="width:100%;margin-top:var(--space-2);"
+                    onerror="this.outerHTML='<p style=\\'color:var(--color-text-secondary);font-size:0.85rem;\\'>الملف الصوتي غير متاح</p>'">
+                    <source src="${audioSrc}" type="audio/webm">
+                </audio>` : '';
 
-            // Gérer le cas où s.task ou s.tasks peut être undefined
-            const taskTitle = s.task?.title || s.tasks?.title || 'Tâche sans titre';
-
-            return `<div class="task-card" style="flex-wrap:wrap;gap:8px;">
-                <span class="task-status ${isApproved ? 'task-status-completed' : 'task-status-pending'}"></span>
-                <div style="flex:1;min-width:0;">
-                    <div style="font-weight:600;margin-bottom:2px;">${escapeHtml(taskTitle)}</div>
-                    <div style="font-size:0.8rem;color:var(--color-text-secondary);">📅 ${date}${s.awarded_points ? ` &nbsp;🏆 +${s.awarded_points} نقطة` : ''}</div>
-                    ${feedbackHtml}
-                    ${audioSrc ? `
-                        <audio controls preload="metadata" style="width:100%;margin-top:6px;"
-                            onerror="this.outerHTML='<p style=\\'color:#999;font-size:0.85rem;\\'>الملف الصوتي غير متاح</p>'">
-                            <source src="${audioSrc}" type="audio/webm">
-                        </audio>` : ''}
+            return `
+            <div class="k-task-card">
+                <div class="k-task-card-header">
+                    <div style="display:flex;align-items:center;gap:var(--space-2);">
+                        <span class="k-dot ${dot}"></span>
+                        <h3 class="k-task-card-title">${escapeHtml(taskTitle)}</h3>
+                    </div>
+                    <span class="k-chip ${chipClass}">${statusText}</span>
                 </div>
-                <span class="badge" style="${statusStyle};font-size:0.78rem;padding:4px 10px;border-radius:6px;">${statusText}</span>
+                <div class="k-task-card-meta">
+                    <span>📅 ${date}</span>
+                    ${s.awarded_points ? `<span class="k-chip k-chip--primary">🏆 +${s.awarded_points}</span>` : ''}
+                    ${feedbackHtml}
+                </div>
+                ${audioHtml}
             </div>`;
         }).join('');
     }
@@ -329,54 +331,58 @@ export function switchTaskTab(tabName) {
     // Re-rendre uniquement les tâches filtrées
     tasksList.innerHTML = filtered.map(task => {
         const sub = subByTask[task.id];
-        let dotClass = 'task-status-pending';
-        let statusBadge = '<span class="badge" style="background:rgba(59,130,246,0.15);color:#3b82f6;">لم يُسلَّم</span>';
-        let actionBtn = `<button class="btn btn-primary btn-sm" onclick="QuranReview.openRecordModal('${task.id}', '${task.title.replace(/'/g, "\\'")}')">🎤 تسجيل</button>`;
+        let dotClass = 'k-dot--pending';
+        let chipHtml  = '<span class="k-chip k-chip--info">لم يُسلَّم</span>';
+        const safeId    = escapeHtml(String(task.id));
+        const safeTitle = escapeHtml(escapeJs(task.title));
+        let actionBtn = `<button class="k-quickbtn k-quickbtn--primary" style="min-width:auto;padding:var(--space-1) var(--space-3);font-size:var(--text-xs)" onclick="QuranReview.openRecordModal('${safeId}', '${safeTitle}')">🎤 تسجيل</button>`;
 
         if (sub) {
             if (sub.status === 'approved') {
-                dotClass = 'task-status-completed';
-                statusBadge = '<span class="badge" style="background:rgba(16,185,129,0.15);color:#10b981;border:1px solid rgba(16,185,129,0.3);">مقبول ✓</span>';
+                dotClass  = 'k-dot--done';
+                chipHtml  = '<span class="k-chip k-chip--success">مقبول ✓</span>';
                 actionBtn = '';
             } else if (sub.status === 'rejected') {
-                dotClass = 'task-status-pending';
-                statusBadge = '<span class="badge" style="background:rgba(239,68,68,0.15);color:#ef4444;border:1px solid rgba(239,68,68,0.3);">مرفوض ✗</span>';
-                actionBtn = `<button class="btn btn-primary btn-sm" onclick="QuranReview.openRecordModal('${task.id}', '${task.title.replace(/'/g, "\\'")}')">🎤 إعادة التسجيل</button>`;
+                dotClass  = 'k-dot--missed';
+                chipHtml  = '<span class="k-chip k-chip--danger">مرفوض ✗</span>';
+                actionBtn = `<button class="k-quickbtn k-quickbtn--primary" style="min-width:auto;padding:var(--space-1) var(--space-3);font-size:var(--text-xs)" onclick="QuranReview.openRecordModal('${safeId}', '${safeTitle}')">🎤 إعادة التسجيل</button>`;
             } else {
-                dotClass = 'task-status-submitted';
-                statusBadge = '<span class="badge" style="background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.3);font-size:0.7rem;padding:2px 8px;">⏳ بانتظار التصحيح</span>';
+                dotClass  = 'k-dot--new';
+                chipHtml  = '<span class="k-chip k-chip--warning">⏳ بانتظار</span>';
                 actionBtn = '';
             }
         }
 
         const typeLabel = task.type || 'مهمة';
-        const dueDate = task.due_date ? new Date(task.due_date).toLocaleDateString('ar-SA') : '';
+        const dueDate   = task.due_date ? new Date(task.due_date).toLocaleDateString('ar-SA') : '';
 
-        // Feedback: note emoji pour approved, motif pour rejected
-        let feedbackInTaskHtml = '';
-        if (sub && sub.admin_feedback) {
+        let feedbackHtml = '';
+        if (sub?.admin_feedback) {
             if (sub.status === 'approved') {
-                feedbackInTaskHtml = `<div style="display:inline-flex;align-items:center;gap:5px;background:rgba(16,185,129,0.1);border-radius:6px;padding:3px 8px;margin-top:4px;font-size:0.9rem;font-weight:600;color:#10b981;">⭐ ${escapeHtml(sub.admin_feedback)}</div>`;
+                feedbackHtml = `<span class="k-chip k-chip--success">⭐ ${escapeHtml(sub.admin_feedback)}</span>`;
             } else if (sub.status === 'rejected') {
-                feedbackInTaskHtml = `<div style="font-size:0.8rem;color:#ef4444;margin-top:4px;">💬 ${escapeHtml(sub.admin_feedback)}</div>`;
+                feedbackHtml = `<span class="k-chip k-chip--danger">💬 ${escapeHtml(sub.admin_feedback)}</span>`;
             }
         }
 
-        return `<div class="task-card">
-            <span class="task-status ${dotClass}"></span>
-            <div style="flex:1;min-width:0;">
-                <div style="font-weight:600;margin-bottom:var(--space-1);">${escapeHtml(task.title)}</div>
-                <div style="font-size:0.875rem;color:var(--color-text-secondary);display:flex;flex-wrap:wrap;gap:var(--space-2);align-items:center;">
-                    <span class="badge badge-primary" style="font-size:0.7rem;">${typeLabel}</span>
-                    🏆 ${task.points} نقطة
-                    ${dueDate ? `<span>📅 ${dueDate}</span>` : ''}
+        return `
+        <div class="k-task-card">
+            <div class="k-task-card-header">
+                <div style="display:flex;align-items:center;gap:var(--space-2);">
+                    <span class="k-dot ${dotClass}"></span>
+                    <h3 class="k-task-card-title">${escapeHtml(task.title)}</h3>
                 </div>
-                ${task.description ? `<div style="font-size:0.8rem;color:var(--color-text-secondary);margin-top:var(--space-1);">${escapeHtml(task.description)}</div>` : ''}
-                ${feedbackInTaskHtml}
+                <div style="display:flex;align-items:center;gap:var(--space-2);flex-shrink:0;">
+                    ${chipHtml}
+                    ${actionBtn}
+                </div>
             </div>
-            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:var(--space-2);flex-shrink:0;">
-                ${statusBadge}
-                ${actionBtn}
+            ${task.description ? `<p class="k-task-card-desc">${escapeHtml(task.description)}</p>` : ''}
+            <div class="k-task-card-meta">
+                <span class="k-type-badge">${escapeHtml(typeLabel)}</span>
+                <span>🏆 ${escapeHtml(String(task.points))} نقطة</span>
+                ${dueDate ? `<span>📅 ${dueDate}</span>` : ''}
+                ${feedbackHtml}
             </div>
         </div>`;
     }).join('');
