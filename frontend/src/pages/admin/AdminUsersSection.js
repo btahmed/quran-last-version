@@ -53,7 +53,7 @@ export function render() {
                 <div style="padding:20px 24px 16px; border-bottom:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center;">
                     <h3 id="profile-modal-title" style="margin:0; font-size:1.1rem; font-weight:700; color:#111827;">الملف الشخصي</h3>
                     <button onclick="window._adminCloseProfile()"
-                        style="display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; background:#f3f4f6; border:none; border-radius:8px; font-size:1.1rem; cursor:pointer; color:#6b7280; line-height:1;">✕</button>
+                        style="display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; background:#f3f4f6; border:none; border-radius:8px; font-size:1.1rem; cursor:pointer; color:#6b7280; line-height:1;" aria-label="إغلاق" title="إغلاق">✕</button>
                 </div>
                 <div id="admin-profile-content" style="padding:20px 24px 24px;">
                     <p style="text-align:center; color:#6b7280; padding:24px 0;">جارٍ التحميل...</p>

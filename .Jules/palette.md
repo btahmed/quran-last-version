@@ -1,0 +1,3 @@
+## 2024-06-13 - Missing ARIA Labels on Dynamically Injected Icon-Only Buttons
+**Learning:** In Vanilla JS applications that heavily rely on injecting HTML templates dynamically via JavaScript template literals (like modals or lists), native accessibility features such as `aria-label` and `title` attributes on icon-only buttons (`🗑`, `✕`, etc.) are frequently missed. Static code analyzers and basic DOM checks sometimes overlook these hidden-until-rendered elements.
+**Action:** Always verify dynamically generated HTML snippets (e.g. `modal.innerHTML = ...` or `itemHtml = ...`) for icon-only `<button>`s, and proactively ensure they include both `aria-label` and `title` attributes natively localized to the app's primary language (Arabic).
