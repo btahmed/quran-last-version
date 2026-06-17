@@ -1,0 +1,3 @@
+## 2024-06-17 - Added Accessibility Labels to Dynamically Generated Icon-Only Buttons
+**Learning:** Dynamically generated HTML templates containing icon-only buttons (like `✕` or emojis) often evade static accessibility checkers because they reside within JavaScript string literals. These components require extra manual review to ensure they have an accessible name (`aria-label`) and descriptive `title`.
+**Action:** When working with vanilla JS or template literals to generate UI components, proactively scan string templates for `<button>` tags without text content and ensure `aria-label` and `title` attributes are manually added.
