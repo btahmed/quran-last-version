@@ -1,0 +1,3 @@
+## 2026-06-19 - Accessibility for Dynamically Generated Icon-Only Buttons
+**Learning:** Dynamically generated UI components created via JavaScript template strings (such as the modals in the Admin section) often lack proper accessibility attributes on icon-only controls. Because these elements are rendered at runtime and not written directly in static HTML files, they can easily evade static accessibility checkers during development.
+**Action:** When creating or modifying components via template literals, actively inspect inline buttons—especially those using emojis or symbols like `✕` or `🗑`—and explicitly add `aria-label` and `title` attributes tailored to their function.
