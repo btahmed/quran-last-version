@@ -58,7 +58,7 @@ export function render() {
                     ${[1,2,3,4,5].map(g => `
                         <button onclick="QuranReview.selectGrade(${g})" data-grade="${g}"
                             style="font-size:2rem;background:none;border:2px solid transparent;border-radius:12px;padding:8px;cursor:pointer;transition:all 0.2s;line-height:1;"
-                            title="${GRADE_LABELS[g].text}">
+                            aria-label="${GRADE_LABELS[g].text}" title="${GRADE_LABELS[g].text}">
                             ${GRADE_LABELS[g].emoji}
                         </button>
                     `).join('')}
