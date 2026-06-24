@@ -1,0 +1,3 @@
+## 2023-10-27 - Dynamically generated UI components lacking accessibility attributes
+**Learning:** Dynamically generated HTML strings (using template literals) that contain icon-only buttons often evade static accessibility checkers. This leads to missing `aria-label` and `title` attributes on important UI controls like modal close buttons (`✕`) and action buttons (`🗑`).
+**Action:** When auditing for accessibility, explicitly search for dynamically injected HTML strings that create buttons with icons/emojis. Ensure these buttons include descriptive, localized `aria-label` and `title` attributes (e.g., `aria-label="إغلاق"`).
