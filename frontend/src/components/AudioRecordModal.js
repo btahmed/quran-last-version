@@ -140,8 +140,13 @@ export async function submitRecording() {
     formData.append('task_id', _recordTaskId);
     formData.append('audio_file', _recordBlob, `recording_${Date.now()}.webm`);
 
+    const submitBtn = document.getElementById('recording-submit-btn');
+
     try {
-        document.getElementById('recording-submit-btn').disabled = true;
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.classList.add('btn-loading');
+        }
 
         // Migration Supabase : upload audio puis créer soumission
         Logger.log('RECORDING', 'Uploading audio to Supabase Storage...');
@@ -178,6 +183,9 @@ export async function submitRecording() {
     } catch (error) {
         showNotification(error.message, 'error');
     } finally {
-        document.getElementById('recording-submit-btn').disabled = false;
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('btn-loading');
+        }
     }
 }
