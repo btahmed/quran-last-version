@@ -142,6 +142,7 @@ export async function submitRecording() {
 
     try {
         document.getElementById('recording-submit-btn').disabled = true;
+        document.getElementById('recording-submit-btn').classList.add('btn-loading');
 
         // Migration Supabase : upload audio puis créer soumission
         Logger.log('RECORDING', 'Uploading audio to Supabase Storage...');
@@ -179,5 +180,6 @@ export async function submitRecording() {
         showNotification(error.message, 'error');
     } finally {
         document.getElementById('recording-submit-btn').disabled = false;
+        document.getElementById('recording-submit-btn').classList.remove('btn-loading');
     }
 }
