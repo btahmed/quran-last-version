@@ -1,0 +1,3 @@
+## 2024-06-29 - Missing Accessible Names on Dynamically Injected Icon-Only Controls
+**Learning:** Icon-only buttons representing standard actions (e.g., closing modals with "✕" or deleting items with "🗑") are sometimes injected directly via template literals in this Vanilla JS app (e.g., in `AdminClassesSection.js` and `AdminUsersSection.js`). These dynamically generated elements often bypass static accessibility linters and fail to provide accessible names for screen readers.
+**Action:** When working with dynamically injected UI components, especially modals and lists, explicitly verify that all native `<button>` elements—particularly those utilizing emojis for icons—include properly localized Arabic `aria-label` and `title` attributes.
