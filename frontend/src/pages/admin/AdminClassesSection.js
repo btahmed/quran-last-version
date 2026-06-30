@@ -115,6 +115,7 @@ function renderClassesList() {
                 <button class="k-quickbtn" style="min-width:auto;padding:var(--space-1) var(--space-3);font-size:var(--text-xs)"
                     onclick="window._adminOpenClassModal('${cid}')">⚙️ إدارة</button>
                 <button class="k-quickbtn k-quickbtn--danger" style="min-width:auto;padding:var(--space-1) var(--space-2)"
+                    aria-label="حذف" title="حذف"
                     onclick="window._adminDeleteClass('${cid}','${escapeHtml(c.name)}')">🗑</button>
             </div>
         </div>
@@ -189,7 +190,7 @@ async function openClassModal(classId) {
             <div style="position:relative; margin:40px auto; width:calc(100% - 32px); max-width:600px; background:#fff; border-radius:16px; box-shadow:0 24px 64px rgba(0,0,0,0.35); overflow:hidden;" onclick="event.stopPropagation()">
                 <div style="padding:20px 24px 16px; border-bottom:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center;">
                     <h3 id="class-modal-title" style="margin:0; font-size:1.1rem; font-weight:700; color:#111827;">إدارة الفصل</h3>
-                    <button onclick="window._adminCloseClassModal()" style="display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; background:#f3f4f6; border:none; border-radius:8px; font-size:1.1rem; cursor:pointer; color:#6b7280;">✕</button>
+                    <button onclick="window._adminCloseClassModal()" aria-label="إغلاق" title="إغلاق" style="display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; background:#f3f4f6; border:none; border-radius:8px; font-size:1.1rem; cursor:pointer; color:#6b7280;">✕</button>
                 </div>
                 <div id="class-modal-content" style="padding:20px 24px 24px;"></div>
             </div>
