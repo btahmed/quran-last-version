@@ -1,5 +1,12 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { state, loadData, saveData, getDefaultMemorizationData } from '../../../frontend/src/core/state.js';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import {
+    state,
+    loadData,
+    saveData,
+    getDefaultMemorizationData,
+    subscribe,
+    notify,
+} from '../../../frontend/src/core/state.js';
 
 describe('state', () => {
     beforeEach(() => {
@@ -7,7 +14,14 @@ describe('state', () => {
         // Remettre state à ses valeurs par défaut
         state.tasks = [];
         state.memorizationData = [];
-        state.settings = { dailyGoal: 5, theme: 'light', notifications: true, ayahDelay: 0, autoPlayNext: true, userName: '' };
+        state.settings = {
+            dailyGoal: 5,
+            theme: 'light',
+            notifications: true,
+            ayahDelay: 0,
+            autoPlayNext: true,
+            userName: '',
+        };
         state.hifz = { currentSession: null, level: 1 };
         state.competition = {};
         state.user = null;
@@ -111,6 +125,61 @@ describe('state', () => {
             expect(() => loadData()).not.toThrow();
             // Doit utiliser les defaults
             expect(state.settings.dailyGoal).toBe(5);
+        });
+    });
+
+    // ─── Observer pattern : subscribe / notify ────────────────────────────────
+
+    describe('Observer pattern', () => {
+        it("subscribe déclenche le callback lors d'une affectation directe", () => {
+            const cb = vi.fn();
+            const unsub = subscribe('user', cb);
+
+            state.user = { id: 'u1', username: 'ali' };
+
+            expect(cb).toHaveBeenCalledOnce();
+            expect(cb).toHaveBeenCalledWith({ id: 'u1', username: 'ali' }, 'user');
+            unsub();
+        });
+
+        it('unsubscribe arrête les notifications', () => {
+            const cb = vi.fn();
+            const unsub = subscribe('tasks', cb);
+
+            state.tasks = [{ id: 't1' }];
+            expect(cb).toHaveBeenCalledOnce();
+
+            unsub();
+            state.tasks = [{ id: 't2' }];
+            expect(cb).toHaveBeenCalledOnce(); // toujours 1
+        });
+
+        it('plusieurs subscribers sur la même clé sont tous notifiés', () => {
+            const cb1 = vi.fn();
+            const cb2 = vi.fn();
+            const unsub1 = subscribe('currentPage', cb1);
+            const unsub2 = subscribe('currentPage', cb2);
+
+            state.currentPage = 'admin';
+
+            expect(cb1).toHaveBeenCalledWith('admin', 'currentPage');
+            expect(cb2).toHaveBeenCalledWith('admin', 'currentPage');
+            unsub1();
+            unsub2();
+        });
+
+        it('notify déclenche les subscribers sans affectation', () => {
+            const cb = vi.fn();
+            const unsub = subscribe('settings', cb);
+
+            // Mutation imbriquée — le Proxy ne la voit pas directement
+            state.settings.theme = 'dark';
+            expect(cb).not.toHaveBeenCalled();
+
+            // notify() déclenche manuellement
+            notify('settings');
+            expect(cb).toHaveBeenCalledOnce();
+            unsub();
         });
     });
 });

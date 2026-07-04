@@ -1,8 +1,27 @@
-// State central — extrait de frontend/script.js
 import { Logger } from './logger.js';
 import { config } from './config.js';
 
-export const state = {
+// ─── Observer pattern ─────────────────────────────────────────────────────────
+// Usage : const unsub = subscribe('user', (newValue) => { ... });  unsub();
+// notify('settings') — à appeler manuellement si on mute un objet imbriqué
+//   ex : state.settings.theme = 'dark'; notify('settings');
+
+const _observers = new Map();
+
+export function subscribe(key, callback) {
+    if (!_observers.has(key)) _observers.set(key, new Set());
+    _observers.get(key).add(callback);
+    return () => _observers.get(key).delete(callback);
+}
+
+export function notify(key) {
+    const subs = _observers.get(String(key));
+    if (subs) subs.forEach(cb => cb(_stateRaw[String(key)], String(key)));
+}
+
+// ─── State brut ───────────────────────────────────────────────────────────────
+
+const _stateRaw = {
     currentPage: 'home',
     memorizationData: [],
     tasks: [],
@@ -12,53 +31,56 @@ export const state = {
     todayDate: new Date().toISOString().split('T')[0],
     imageQuality: 'normal',
     user: null,
-    wardPlayer: null
+    wardPlayer: null,
 };
+
+// ─── Proxy : déclenche les observers sur toute affectation directe ────────────
+// state.user = x  →  tous les subscribers de 'user' sont notifiés
+
+export const state = new Proxy(_stateRaw, {
+    set(target, key, value) {
+        target[key] = value;
+        const subs = _observers.get(String(key));
+        if (subs) subs.forEach(cb => cb(value, String(key)));
+        return true;
+    },
+});
+
+// ─── Persistence localStorage ─────────────────────────────────────────────────
 
 export function loadData() {
     try {
-        // Load settings with SEPARATE KEY
         const savedSettings = localStorage.getItem(config.settingsKey);
-        state.settings = savedSettings ?
-            JSON.parse(savedSettings) :
-            { ...config.defaultSettings };
+        state.settings = savedSettings ? JSON.parse(savedSettings) : { ...config.defaultSettings };
 
-        // Apply debug mode from settings
         if (state.settings.debugMode !== undefined) {
             Logger.debugMode = state.settings.debugMode;
         }
 
-        // Load competition data
         const savedCompetition = localStorage.getItem(config.competitionKey);
-        state.competition = savedCompetition ?
-            JSON.parse(savedCompetition) :
-            {
-                userStats: {
-                    totalScore: 0,
-                    winStreak: 0,
-                    challengesWon: 0,
-                    challengesPlayed: 0,
-                    rank: 'bronze',
-                    history: []
-                },
-                activeChallenge: null,
-                leaderboard: []
-            };
+        state.competition = savedCompetition
+            ? JSON.parse(savedCompetition)
+            : {
+                  userStats: {
+                      totalScore: 0,
+                      winStreak: 0,
+                      challengesWon: 0,
+                      challengesPlayed: 0,
+                      rank: 'bronze',
+                      history: [],
+                  },
+                  activeChallenge: null,
+                  leaderboard: [],
+              };
 
-        // Load hifz data
         const savedHifz = localStorage.getItem(config.hifzKey);
-        state.hifz = savedHifz ?
-            JSON.parse(savedHifz) :
-            { currentSession: null, level: 1 };
+        state.hifz = savedHifz ? JSON.parse(savedHifz) : { currentSession: null, level: 1 };
 
         Logger.store('LOAD', config.settingsKey);
         Logger.state('settings', state.settings);
 
-        // Load memorization data with storage key
         const savedData = localStorage.getItem(config.storageKey);
-        state.memorizationData = savedData ?
-            JSON.parse(savedData) :
-            getDefaultMemorizationData();
+        state.memorizationData = savedData ? JSON.parse(savedData) : getDefaultMemorizationData();
 
         const savedTasks = localStorage.getItem(config.tasksKey);
         state.tasks = savedTasks ? JSON.parse(savedTasks) : [];
@@ -75,18 +97,10 @@ export function loadData() {
 
 export function saveData() {
     try {
-        // Save settings with SEPARATE KEY
         localStorage.setItem(config.settingsKey, JSON.stringify(state.settings));
-
-        // Save memorization data with storage key
         localStorage.setItem(config.storageKey, JSON.stringify(state.memorizationData));
-
-        // Save competition data
         localStorage.setItem(config.competitionKey, JSON.stringify(state.competition));
-
-        // Save hifz data
         localStorage.setItem(config.hifzKey, JSON.stringify(state.hifz));
-
         Logger.store('SAVE', 'all keys');
         Logger.log('APP', 'Data saved successfully');
     } catch (error) {
@@ -105,7 +119,7 @@ export function getDefaultMemorizationData() {
             status: 'mastered',
             dateAdded: '2024-01-01',
             lastReviewed: '2024-02-06',
-            reviewCount: 15
+            reviewCount: 15,
         },
         {
             id: 2,
@@ -116,7 +130,7 @@ export function getDefaultMemorizationData() {
             status: 'weak',
             dateAdded: '2024-01-15',
             lastReviewed: '2024-02-01',
-            reviewCount: 8
+            reviewCount: 8,
         },
         {
             id: 3,
@@ -127,7 +141,7 @@ export function getDefaultMemorizationData() {
             status: 'new',
             dateAdded: '2024-02-07',
             lastReviewed: null,
-            reviewCount: 0
-        }
+            reviewCount: 0,
+        },
     ];
 }
