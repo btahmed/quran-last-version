@@ -3,6 +3,7 @@ import { Logger } from '../core/logger.js';
 import { config, IS_DEMO_MODE } from '../core/config.js';
 import { state } from '../core/state.js';
 import { showNotification } from '../core/ui.js';
+import { Validators } from '../core/validators.js';
 import { buildNav } from '../core/NavManager.js';
 import * as SupabaseAuth from './supabase-auth.js';
 
@@ -277,11 +278,10 @@ export async function handleLogin(event) {
     const errorEl = document.getElementById('login-error');
     const submitBtn = document.getElementById('login-submit-btn');
 
-    console.log('[LOGIN] Attempting login for:', username);
-
-    if (!username || !password) {
+    const usernameCheck = Validators.username(username);
+    if (!username || !password || !usernameCheck.valid) {
         if (errorEl) {
-            errorEl.textContent = 'الرجاء إدخال اسم المستخدم وكلمة المرور';
+            errorEl.textContent = usernameCheck.error || 'الرجاء إدخال اسم المستخدم وكلمة المرور';
             errorEl.classList.remove('hidden');
         }
         return;

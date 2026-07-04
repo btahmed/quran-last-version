@@ -6,6 +6,7 @@ import { config }           from '../../core/config.js';
 import { showNotification } from '../../core/ui.js';
 import { Logger }           from '../../core/logger.js';
 import { apiCache }         from '../../core/apiCache.js';
+import { Validators }       from '../../core/validators.js';
 import * as supabaseTasks   from '../../services/supabase-tasks.js';
 import * as supabaseAdmin   from '../../services/supabase-admin.js';
 
@@ -244,11 +245,19 @@ export async function handleCreateTask(event) {
         }
     }
 
+    const title  = document.getElementById('task-title').value.trim();
+    const points = parseInt(document.getElementById('task-points').value) || 0;
+
+    const titleCheck  = Validators.text(title, { minLen: 2, maxLen: 200 });
+    const pointsCheck = Validators.points(points);
+    if (!titleCheck.valid) { showNotification(titleCheck.error, 'error'); return; }
+    if (!pointsCheck.valid) { showNotification(pointsCheck.error, 'error'); return; }
+
     const body = {
-        title:       document.getElementById('task-title').value.trim(),
+        title,
         description: document.getElementById('task-description').value.trim(),
         type:        document.getElementById('task-type').value,
-        points:      parseInt(document.getElementById('task-points').value) || 0,
+        points,
         due_date:    document.getElementById('task-due-date').value || null,
         assign_all:  assignMode === 'all',
         student_ids: studentIds,
