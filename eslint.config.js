@@ -91,6 +91,24 @@ export default [
         },
     },
     {
+        // Service Worker — environnement SW (self, caches, clients, Response, etc.)
+        files: ['frontend/sw.js'],
+        languageOptions: {
+            globals: {
+                self: 'readonly',
+                caches: 'readonly',
+                clients: 'readonly',
+                fetch: 'readonly',
+                Response: 'readonly',
+                Request: 'readonly',
+                URL: 'readonly',
+                console: 'readonly',
+                skipWaiting: 'readonly',
+                importScripts: 'readonly',
+            },
+        },
+    },
+    {
         // Tests E2E Playwright — environnement Node.js (pas browser)
         files: ['tests/e2e/**/*.js', 'playwright.config.js'],
         languageOptions: {

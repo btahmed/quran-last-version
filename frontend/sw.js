@@ -1,5 +1,5 @@
 // QuranReview — Service Worker (version ES Modules / Vercel)
-const CACHE_NAME = 'quranreview-frontend-v1';
+const CACHE_NAME = 'quranreview-frontend-v2';
 
 // Assets statiques à précacher
 const STATIC_ASSETS = [
@@ -100,6 +100,24 @@ self.addEventListener('fetch', (event) => {
                 .catch(() => new Response('Offline', { status: 503, statusText: 'Service Unavailable' }));
         })
     );
+});
+
+// ──────────────────────────────────────────────────
+// Background Sync — offline submission queue
+// ──────────────────────────────────────────────────
+
+// Déclenché par Chrome/Android quand la connectivité est restaurée.
+// Le SW ne peut pas accéder à Supabase (pas de token) → on demande au client de traiter.
+self.addEventListener('sync', event => {
+    if (event.tag === 'submission-sync') {
+        event.waitUntil(
+            self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
+                clientList.forEach(client => {
+                    client.postMessage({ type: 'SYNC_OFFLINE_QUEUE' });
+                });
+            })
+        );
+    }
 });
 
 // ──────────────────────────────────────────────────

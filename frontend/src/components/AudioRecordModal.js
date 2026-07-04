@@ -6,6 +6,7 @@ import { showNotification } from '../core/ui.js';
 import { Logger } from '../core/logger.js';
 import { apiCache } from '../core/apiCache.js';
 import * as supabaseSubmissions from '../services/supabase-submissions.js';
+import * as offlineQueue from '../services/offline-queue.js';
 
 // Variables module-level (remplacent this._recorder, this._recordBlob, etc.)
 let _recorder = null;
@@ -60,7 +61,7 @@ export async function toggleRecording() {
         _recordChunks = [];
         _recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
 
-        _recorder.ondataavailable = (e) => {
+        _recorder.ondataavailable = e => {
             if (e.data.size > 0) _recordChunks.push(e.data);
         };
 
@@ -72,7 +73,8 @@ export async function toggleRecording() {
             preview.src = url;
             preview.classList.remove('hidden');
             document.getElementById('recording-submit-btn').classList.remove('hidden');
-            document.getElementById('recording-status').textContent = 'تم التسجيل - يمكنك الاستماع أو الإرسال';
+            document.getElementById('recording-status').textContent =
+                'تم التسجيل - يمكنك الاستماع أو الإرسال';
         };
 
         _recorder.start();
@@ -82,7 +84,8 @@ export async function toggleRecording() {
 
         _recordTimer = setInterval(() => {
             _recordSeconds++;
-            if (_recordSeconds >= 300) { // 5 min max
+            if (_recordSeconds >= 300) {
+                // 5 min max
                 stopRecording(false);
                 return;
             }
@@ -122,7 +125,10 @@ export function stopRecording(cancel) {
  */
 export async function submitRecording() {
     if (!_recordBlob || !_recordTaskId) {
-        Logger.error('RECORDING', 'Missing blob or task ID', { blob: !!_recordBlob, taskId: _recordTaskId });
+        Logger.error('RECORDING', 'Missing blob or task ID', {
+            blob: !!_recordBlob,
+            taskId: _recordTaskId,
+        });
         return;
     }
 
@@ -147,7 +153,10 @@ export async function submitRecording() {
 
         // Migration Supabase : upload audio puis créer soumission
         Logger.log('RECORDING', 'Uploading audio to Supabase Storage...');
-        const { data: uploadData, error: uploadError } = await supabaseSubmissions.uploadAudio(_recordTaskId, _recordBlob);
+        const { data: uploadData, error: uploadError } = await supabaseSubmissions.uploadAudio(
+            _recordTaskId,
+            _recordBlob
+        );
 
         if (uploadError) {
             Logger.error('RECORDING', 'Upload failed', uploadError);
@@ -155,7 +164,10 @@ export async function submitRecording() {
         }
 
         Logger.log('RECORDING', 'Creating submission record...');
-        const { data: result, error: submitError } = await supabaseSubmissions.createSubmission(_recordTaskId, uploadData.url);
+        const { data: result, error: submitError } = await supabaseSubmissions.createSubmission(
+            _recordTaskId,
+            uploadData.url
+        );
 
         if (submitError) {
             Logger.error('RECORDING', 'Submission failed', submitError);
@@ -178,10 +190,31 @@ export async function submitRecording() {
             window.QuranReview.loadStudentDashboard();
         }
     } catch (error) {
-        showNotification(error.message, 'error');
+        // Hors-ligne : mettre en file d'attente plutôt que d'afficher une erreur sèche
+        if (!navigator.onLine || error?.message?.toLowerCase().includes('network')) {
+            try {
+                await offlineQueue.enqueue(_recordTaskId, _recordBlob);
+                showNotification(
+                    'أنت غير متصل — تم حفظ التسجيل وسيُرسل تلقائياً عند الاتصال',
+                    'warning'
+                );
+                const modal = document.getElementById('audio-record-modal');
+                if (modal) {
+                    modal.classList.remove('active');
+                    modal.classList.add('hidden');
+                }
+                _recordBlob = null;
+            } catch (_queueErr) {
+                showNotification(error.message, 'error');
+            }
+        } else {
+            showNotification(error.message, 'error');
+        }
     } finally {
         const submitBtn = document.getElementById('recording-submit-btn');
-        submitBtn.disabled = false;
-        submitBtn.classList.remove('btn-loading');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('btn-loading');
+        }
     }
 }
