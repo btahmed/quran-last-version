@@ -39,8 +39,8 @@ CREATE INDEX IF NOT EXISTS idx_points_log_student_id
 CREATE INDEX IF NOT EXISTS idx_class_members_class_id
     ON public.class_members (class_id);
 
-CREATE INDEX IF NOT EXISTS idx_class_members_user_id
-    ON public.class_members (user_id);
+CREATE INDEX IF NOT EXISTS idx_class_members_student_id
+    ON public.class_members (student_id);
 
 -- ─── profiles ────────────────────────────────────────────────
 -- Filtre par rôle (admins, teachers, students)
