@@ -25,9 +25,6 @@ CREATE INDEX IF NOT EXISTS idx_submissions_status
 CREATE INDEX IF NOT EXISTS idx_tasks_user_id
     ON public.tasks (user_id);
 
-CREATE INDEX IF NOT EXISTS idx_tasks_class_id
-    ON public.tasks (class_id) WHERE class_id IS NOT NULL;
-
 -- Tri par date limite (due_date)
 CREATE INDEX IF NOT EXISTS idx_tasks_due_date
     ON public.tasks (due_date) WHERE due_date IS NOT NULL;
