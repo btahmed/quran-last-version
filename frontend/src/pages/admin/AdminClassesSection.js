@@ -43,7 +43,7 @@ export function render() {
                             <option value="">-- اختر المعلم --</option>
                         </select>
                     </div>
-                    <button class="btn btn-glow btn-sm" onclick="window._adminCreateClass()">✅ إنشاء</button>
+                    <button id="btn-create-class" class="btn btn-glow btn-sm" onclick="window._adminCreateClass()">✅ إنشاء</button>
                     <button class="btn btn-outline-glow btn-sm" onclick="document.getElementById('admin-create-class-form').style.display='none'">إلغاء</button>
                 </div>
             </div>
@@ -147,6 +147,9 @@ async function createClass() {
     if (!name)      { alert('يرجى إدخال اسم الفصل'); return; }
     if (!teacherId) { alert('يرجى اختيار المعلم');   return; }
 
+    const submitBtn = document.getElementById('btn-create-class');
+    if (submitBtn) submitBtn.classList.add('btn-loading');
+
     try {
         const { data, error } = await supabaseAdmin.createClassWithTeacher(name, teacherId);
         if (error) throw error;
@@ -156,6 +159,8 @@ async function createClass() {
     } catch (err) {
         Logger.error('ADMIN-CLASSES', 'createClass error', err);
         alert('فشل إنشاء الفصل');
+    } finally {
+        if (submitBtn) submitBtn.classList.remove('btn-loading');
     }
 }
 

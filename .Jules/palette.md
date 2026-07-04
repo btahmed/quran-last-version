@@ -1,0 +1,3 @@
+## 2026-07-04 - [Added CSS-based Loading State to Button]
+**Learning:** Found an existing `btn-loading` CSS class in `style-pro.css` that provides an elegant, CSS-only loading spinner while maintaining button dimensions and hiding the original text via `color: transparent !important`. This pattern is already used in a few places in the app, but many async actions still lack this visual feedback.
+**Action:** Actively look for more instances of asynchronous form submissions or potentially slow actions (like API calls) that lack a loading state, and implement the `try { btn.classList.add('btn-loading') } finally { btn.classList.remove('btn-loading') }` pattern to improve perceived performance and prevent double-clicks.
