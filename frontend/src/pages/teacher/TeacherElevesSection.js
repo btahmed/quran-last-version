@@ -2,9 +2,9 @@
 // Section Élèves — extraite de TeacherPage.js (Task 9 : lazy-loading)
 // Responsabilités : liste des élèves, panneau de progression détaillée par élève
 import { showNotification } from '../../core/ui.js';
-import { Logger }           from '../../core/logger.js';
-import { apiCache }         from '../../core/apiCache.js';
-import * as supabaseAdmin   from '../../services/supabase-admin.js';
+import { Logger } from '../../core/logger.js';
+import { apiCache } from '../../core/apiCache.js';
+import * as supabaseAdmin from '../../services/supabase-admin.js';
 
 // ─── UTILS ───────────────────────────────────────────────────────────────────
 
@@ -68,7 +68,8 @@ async function _loadStudents() {
     } catch (err) {
         Logger.error('TEACHER-ELEVES', 'Erreur chargement élèves', err);
         if (studentsList) {
-            studentsList.innerHTML = '<p class="empty-state" style="color:var(--color-danger);">فشل تحميل قائمة الطلاب</p>';
+            studentsList.innerHTML =
+                '<p class="empty-state" style="color:var(--color-danger);">فشل تحميل قائمة الطلاب</p>';
         }
     }
 }
@@ -82,12 +83,13 @@ function _renderStudentsList(students) {
         return;
     }
 
-    studentsList.innerHTML = students.map(s => {
-        const safeName     = escapeHtml(s.first_name || s.username);
-        const safeNameAttr = escapeHtml(escapeJs(s.first_name || s.username));
-        const initial      = escapeHtml((s.first_name || s.username || '؟')[0]);
-        const sid          = escapeHtml(String(s.id));
-        return `
+    studentsList.innerHTML = students
+        .map(s => {
+            const safeName = escapeHtml(s.first_name || s.username);
+            const safeNameAttr = escapeHtml(escapeJs(s.first_name || s.username));
+            const initial = escapeHtml((s.first_name || s.username || '؟')[0]);
+            const sid = escapeHtml(String(s.id));
+            return `
         <div class="k-row" style="cursor:pointer"
             onclick="QuranReview.viewStudentProgress('${sid}','${safeNameAttr}')">
             <div class="rl">
@@ -102,20 +104,21 @@ function _renderStudentsList(students) {
             </div>
             <span style="color:var(--text-secondary)">←</span>
         </div>`;
-    }).join('');
+        })
+        .join('');
 }
 
 // ─── DÉTAIL DE PROGRESSION D'UN ÉLÈVE ────────────────────────────────────────
 
 export async function viewStudentProgress(studentId, studentName) {
-    const panel    = document.getElementById('student-detail-panel');
-    const nameEl   = document.getElementById('student-detail-name');
+    const panel = document.getElementById('student-detail-panel');
+    const nameEl = document.getElementById('student-detail-name');
     const contentEl = document.getElementById('student-detail-content');
 
     if (!panel || !nameEl || !contentEl) return;
 
-    nameEl.textContent   = `📊 تقدم الطالب: ${studentName}`;
-    contentEl.innerHTML  = '<p class="empty-state">جاري التحميل...</p>';
+    nameEl.textContent = `📊 تقدم الطالب: ${studentName}`;
+    contentEl.innerHTML = '<p class="empty-state">جاري التحميل...</p>';
     panel.classList.remove('hidden');
     panel.classList.add('active');
 
@@ -133,13 +136,14 @@ export async function viewStudentProgress(studentId, studentName) {
             html += '<div class="student-tasks-progress">';
             data.tasks.forEach(task => {
                 const typeLabel = task.type || 'مهمة';
-                let statusBadge = '';
+                let statusBadge;
                 if (task.submission_status === 'approved') {
                     statusBadge = '<span class="status-badge status-approved">مقبول ✓</span>';
                 } else if (task.submission_status === 'rejected') {
                     statusBadge = '<span class="status-badge status-rejected">مرفوض ✗</span>';
                 } else if (task.submission_status === 'submitted') {
-                    statusBadge = '<span class="status-badge status-pending">بانتظار التصحيح</span>';
+                    statusBadge =
+                        '<span class="status-badge status-pending">بانتظار التصحيح</span>';
                 } else {
                     statusBadge = '<span class="status-badge status-new">لم يُسلَّم</span>';
                 }
