@@ -78,7 +78,7 @@ export default [
         },
     },
     {
-        files: ['tests/**/*.js'],
+        files: ['tests/unit/**/*.js'],
         languageOptions: {
             globals: {
                 describe: 'readonly',
@@ -87,6 +87,17 @@ export default [
                 beforeEach: 'readonly',
                 afterEach: 'readonly',
                 vi: 'readonly',
+            },
+        },
+    },
+    {
+        // Tests E2E Playwright — environnement Node.js (pas browser)
+        files: ['tests/e2e/**/*.js', 'playwright.config.js'],
+        languageOptions: {
+            globals: {
+                process: 'readonly',
+                __dirname: 'readonly',
+                __filename: 'readonly',
             },
         },
     },

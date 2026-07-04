@@ -11,10 +11,15 @@
         "lint:fix": "eslint frontend/src tests --fix",
         "format": "prettier --write \"frontend/src/**/*.js\" \"tests/**/*.js\" \"*.json\"",
         "format:check": "prettier --check \"frontend/src/**/*.js\" \"tests/**/*.js\"",
+        "test:e2e": "playwright test",
+        "test:e2e:ui": "playwright test --ui",
+        "test:e2e:debug": "playwright test --debug",
+        "serve:frontend": "serve frontend -l 3456",
         "prepare": "husky"
     },
     "devDependencies": {
         "@eslint/js": "^10.0.1",
+        "@playwright/test": "^1.61.1",
         "@vitest/coverage-v8": "^1.6.0",
         "eslint": "^10.6.0",
         "eslint-config-prettier": "^10.1.8",
@@ -23,6 +28,7 @@
         "jsdom": "^24.0.0",
         "lint-staged": "^17.0.8",
         "prettier": "^3.9.4",
+        "serve": "^14.2.6",
         "vitest": "^1.6.0"
     },
     "lint-staged": {
