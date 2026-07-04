@@ -5,16 +5,31 @@ import { state, loadData, saveData } from './core/state.js';
 import { showNotification, setupAutoSave } from './core/ui.js';
 import { AudioManager, initAudioPlayer, initWardPlayer } from './components/AudioPlayer.js';
 import {
-    initAuth, updateAuthUI, showAuthModal, hideAuthModal,
-    showRegisterForm, showLoginForm, handleLogin, handleRegister,
-    performLogin, fetchMe, refreshToken, logout
+    initAuth,
+    updateAuthUI,
+    showAuthModal,
+    hideAuthModal,
+    showRegisterForm,
+    showLoginForm,
+    handleLogin,
+    handleRegister,
+    performLogin,
+    fetchMe,
+    refreshToken,
+    logout,
 } from './services/auth.js';
 import { loadTasksFromApi } from './services/tasks.js';
+import './services/offline-queue.js';
 import { hifzEngine } from './services/hifz.js';
 import { competitionManager } from './services/competition.js';
 import { navigateTo, renderPage, setupNavigation } from './core/router.js';
 import { render as renderModals, init as initModals } from './components/AuthModal.js';
-import { toggleRecording, stopRecording, submitRecording, openRecordModal } from './components/AudioRecordModal.js';
+import {
+    toggleRecording,
+    stopRecording,
+    submitRecording,
+    openRecordModal,
+} from './components/AudioRecordModal.js';
 import { openUserEditModal, closeUserEditModal } from './components/UserEditModal.js';
 
 import * as MemorizationPage from './pages/MemorizationPage.js';
@@ -24,10 +39,10 @@ import * as CompetitionPage from './pages/CompetitionPage.js';
 import * as HifzPage from './pages/HifzPage.js';
 import * as MyTasksPage from './pages/MyTasksPage.js';
 import * as TeacherPage from './pages/TeacherPage.js';
-import * as RevisionPage   from './pages/RevisionPage.js';
+import * as RevisionPage from './pages/RevisionPage.js';
 import * as SoumissionPage from './pages/SoumissionPage.js';
-import * as ProfilPage     from './pages/ProfilPage.js';
-import * as AdminPage      from './pages/AdminPage.js';
+import * as ProfilPage from './pages/ProfilPage.js';
+import * as AdminPage from './pages/AdminPage.js';
 import { buildNav, setActiveTab } from './core/NavManager.js';
 import { apiCache } from './core/apiCache.js';
 
@@ -56,7 +71,9 @@ async function init() {
     // Init auth
     await initAuth();
     const initRole = state.user
-        ? (state.user.role === 'admin' || state.user.is_superuser ? 'admin' : state.user.role)
+        ? state.user.role === 'admin' || state.user.is_superuser
+            ? 'admin'
+            : state.user.role
         : 'visitor';
     buildNav(initRole);
 
@@ -69,7 +86,7 @@ async function init() {
     // Fermer student-detail-panel sur clic overlay
     const studentPanel = document.getElementById('student-detail-panel');
     if (studentPanel) {
-        studentPanel.addEventListener('click', (e) => {
+        studentPanel.addEventListener('click', e => {
             if (e.target === studentPanel) {
                 studentPanel.classList.remove('active');
                 studentPanel.classList.add('hidden');
@@ -78,13 +95,13 @@ async function init() {
     }
 
     // Global click tracker
-    document.addEventListener('click', (e) => Logger.click(e.target), true);
+    document.addEventListener('click', e => Logger.click(e.target), true);
 
     // Global error handlers
-    window.addEventListener('error', (e) => {
+    window.addEventListener('error', e => {
         Logger.error('GLOBAL', `Application Error: ${e.message}`, e.error);
     });
-    window.addEventListener('unhandledrejection', (e) => {
+    window.addEventListener('unhandledrejection', e => {
         const msg = e?.reason?.message || 'Unhandled promise rejection';
         Logger.error('GLOBAL', msg, e.reason);
     });
@@ -191,7 +208,10 @@ window.QuranReview = {
     playFullSurah: WardPage.playWard,
 
     // SettingsPage — clearData (reset complet de l'état)
-    clearData: () => { state.data = loadData(); window.QuranReview.navigateTo('home'); },
+    clearData: () => {
+        state.data = loadData();
+        window.QuranReview.navigateTo('home');
+    },
 
     // TeacherPage
     handleCreateTask: TeacherPage.handleCreateTask,
@@ -201,7 +221,10 @@ window.QuranReview = {
     viewStudentProgress: TeacherPage.viewStudentProgress,
     closeStudentDetail: () => {
         const p = document.getElementById('student-detail-panel');
-        if (p) { p.classList.remove('active'); p.classList.add('hidden'); }
+        if (p) {
+            p.classList.remove('active');
+            p.classList.add('hidden');
+        }
     },
     approveSubmission: TeacherPage.approveSubmission,
     rejectSubmission: TeacherPage.rejectSubmission,
@@ -228,18 +251,18 @@ window.QuranReview = {
 
     // ProfilPage
     renderProfilPage: ProfilPage.render,
-    initProfilPage:   ProfilPage.init,
-    switchProfilTab:  ProfilPage.switchProfilTab,
+    initProfilPage: ProfilPage.init,
+    switchProfilTab: ProfilPage.switchProfilTab,
 
     // RevisionPage (alias pédagogique de WardPage — fonctions spécifiques seulement)
-    renderRevisionPage:         RevisionPage.render,
-    initRevisionPage:           RevisionPage.init,
-    setupWardControls:          RevisionPage.setupWardControls,
-    populateWardSurahSelect:    RevisionPage.populateWardSurahSelect,
+    renderRevisionPage: RevisionPage.render,
+    initRevisionPage: RevisionPage.init,
+    setupWardControls: RevisionPage.setupWardControls,
+    populateWardSurahSelect: RevisionPage.populateWardSurahSelect,
 
     // SoumissionPage (alias de MyTasksPage — points d'entrée explicites)
-    renderSoumissionPage:  SoumissionPage.render,
-    initSoumissionPage:    SoumissionPage.init,
+    renderSoumissionPage: SoumissionPage.render,
+    initSoumissionPage: SoumissionPage.init,
 
     // NavManager — accès façade pour tests et intégrations externes
     buildNav,
