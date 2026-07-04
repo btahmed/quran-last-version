@@ -252,68 +252,33 @@ export function initAudioPlayer() {
             if (window.QuranReview) window.QuranReview.showNotification('خطأ في تحميل الملف الصوتي', 'error');
         });
 
-        console.log('Audio player initialized');
+        Logger.audio('INIT', 'Audio player DOM bindings initialized');
     }
 }
 
-export function initWardPlayer() {
-    console.log('Initializing Ward Player...');
+function bindQuranReviewAction(elementId, actionName, logLabel) {
+    const element = document.getElementById(elementId);
+    if (!element) {
+        Logger.log('AUDIO', `${logLabel} button not found on current view`);
+        return false;
+    }
 
-    const playWardBtn = document.getElementById('play-ward-btn');
-    const playSurahBtn = document.getElementById('play-surah-btn');
-    const stopWardBtn = document.getElementById('stop-ward-btn');
-
-    console.log('DEBUG: Elements found:', {
-        playWardBtn: !!playWardBtn,
-        playSurahBtn: !!playSurahBtn,
-        stopWardBtn: !!stopWardBtn
+    element.addEventListener('click', () => {
+        Logger.audio('CLICK', logLabel);
+        window.QuranReview?.[actionName]?.();
     });
+    Logger.audio('BIND', `${logLabel} button`);
+    return true;
+}
 
-    if (playWardBtn) {
-        playWardBtn.addEventListener('click', () => {
-            console.log('DEBUG: Play Ward button clicked!');
-            if (window.QuranReview) window.QuranReview.playWard();
-        });
-        console.log('DEBUG: Play Ward button event attached');
-    } else {
-        console.info('DEBUG: Play Ward button not found on current view');
-    }
+export function initWardPlayer() {
+    Logger.audio('INIT', 'Initializing Ward player');
 
-    if (playSurahBtn) {
-        playSurahBtn.addEventListener('click', () => {
-            console.log('DEBUG: Play Surah button clicked!');
-            if (window.QuranReview) window.QuranReview.playFullSurah();
-        });
-        console.log('DEBUG: Play Surah button event attached');
-    } else {
-        console.info('DEBUG: Play Surah button not found on current view');
-    }
-
-    // Stop button
-    const stopBtn = document.getElementById('stop-ward-btn');
-    if (stopBtn) {
-        stopBtn.addEventListener('click', () => {
-            if (window.QuranReview) window.QuranReview.stopWardPlayback();
-        });
-        console.log('DEBUG: Stop Ward button event attached');
-    }
-
-    // Navigation buttons
-    const prevBtn = document.getElementById('prev-ayah-btn');
-    if (prevBtn) {
-        prevBtn.addEventListener('click', () => {
-            if (window.QuranReview) window.QuranReview.playPreviousAyah();
-        });
-        console.log('DEBUG: Previous Ayah button event attached');
-    }
-
-    const nextBtn = document.getElementById('next-ayah-btn');
-    if (nextBtn) {
-        nextBtn.addEventListener('click', () => {
-            if (window.QuranReview) window.QuranReview.playNextAyahManually();
-        });
-        console.log('DEBUG: Next Ayah button event attached');
-    }
+    bindQuranReviewAction('play-ward-btn', 'playWard', 'Play ward');
+    bindQuranReviewAction('play-surah-btn', 'playFullSurah', 'Play surah');
+    bindQuranReviewAction('stop-ward-btn', 'stopWardPlayback', 'Stop ward');
+    bindQuranReviewAction('prev-ayah-btn', 'playPreviousAyah', 'Previous ayah');
+    bindQuranReviewAction('next-ayah-btn', 'playNextAyahManually', 'Next ayah');
 
     // Initialize ward player state
     state.wardPlayer = {
@@ -327,5 +292,5 @@ export function initWardPlayer() {
     };
     saveData();
 
-    console.log('Ward player initialized successfully');
+    Logger.audio('INIT', 'Ward player state initialized');
 }

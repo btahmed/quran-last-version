@@ -223,7 +223,7 @@ export function setupWardControls() {
         });
     }
 
-    console.log('✅ Ward controls setup completed');
+    Logger.log('WARD', 'Ward controls setup completed');
 }
 
 export function populateWardSurahSelect() {
@@ -247,7 +247,7 @@ export function populateWardSurahSelect() {
     });
 
     surahSelect.appendChild(fragment);
-    console.log('📋 Ward surah select populated with 114 surahs');
+    Logger.log('WARD', `Ward surah select populated with ${config.surahs.length} surahs`);
 }
 
 function updateWardAyahLimits() {
@@ -271,7 +271,7 @@ function updateWardAyahLimits() {
     if (parseInt(fromAyahInput.value) > surah.ayahs) fromAyahInput.value = '';
     if (parseInt(toAyahInput.value) > surah.ayahs) toAyahInput.value = '';
 
-    console.log(`📊 Updated ward ayah limits for Surah ${surahId}: 1-${surah.ayahs}`);
+    Logger.log('WARD', `Updated ayah limits for Surah ${surahId}: 1-${surah.ayahs}`);
 }
 
 function updateWardReciter() {
@@ -279,7 +279,7 @@ function updateWardReciter() {
     if (reciterSelector && window.QuranAudio) {
         const selectedReciter = reciterSelector.value;
         QuranAudio.setReciter(selectedReciter);
-        console.log('🎵 Ward reciter updated to:', selectedReciter);
+        Logger.log('WARD', 'Ward reciter updated', selectedReciter);
         showNotification(`تم تغيير القارئ إلى: ${QuranAudio.getReciterName(selectedReciter)}`, 'success');
     }
 }
@@ -289,7 +289,7 @@ function updateWardAudioQuality() {
     if (audioQualitySelector) {
         state.settings.audioBitrate = parseInt(audioQualitySelector.value);
         saveData();
-        console.log('🎵 Ward audio quality updated to:', state.settings.audioBitrate);
+        Logger.log('WARD', 'Ward audio quality updated', state.settings.audioBitrate);
     }
 }
 
@@ -298,7 +298,7 @@ function updateWardAudioSource() {
     if (audioSourceSelector) {
         state.settings.audioSource = audioSourceSelector.value;
         saveData();
-        console.log('🎵 Ward audio source updated to:', state.settings.audioSource);
+        Logger.log('WARD', 'Ward audio source updated', state.settings.audioSource);
     }
 }
 
@@ -306,7 +306,7 @@ function updateWardImageQuality() {
     const imageQualitySelector = document.getElementById('ward-image-quality');
     if (imageQualitySelector) {
         state.imageQuality = imageQualitySelector.value;
-        console.log('🖼️ Ward image quality updated to:', state.imageQuality);
+        Logger.log('WARD', 'Ward image quality updated', state.imageQuality);
     }
 }
 
@@ -315,7 +315,7 @@ function updateWardAyahDelay() {
     if (ayahDelaySelector) {
         state.settings.ayahDelay = parseFloat(ayahDelaySelector.value);
         saveData();
-        console.log('⏱️ Ward ayah delay updated to:', state.settings.ayahDelay);
+        Logger.log('WARD', 'Ward ayah delay updated', state.settings.ayahDelay);
     }
 }
 
@@ -324,7 +324,7 @@ function updateWardAutoPlayNext() {
     if (autoPlayNextCheckbox) {
         state.settings.autoPlayNext = autoPlayNextCheckbox.checked;
         saveData();
-        console.log('🔄 Ward auto-play next updated to:', state.settings.autoPlayNext);
+        Logger.log('WARD', 'Ward auto-play next updated', state.settings.autoPlayNext);
     }
 }
 
@@ -333,7 +333,7 @@ function updateWardAutoPlayNext() {
 // ===================================
 
 export function playWard() {
-    console.log('🎵 Starting Ward playback - using AudioManager...');
+    Logger.audio('PLAY_WARD', 'Starting Ward playback via AudioManager');
 
     const surahSelect = document.getElementById('ward-surah-select');
     const fromAyahInput = document.getElementById('ward-from-ayah');
@@ -353,7 +353,7 @@ export function playWard() {
     // Validation : fromAyah doit être <= toAyah
     if (fromAyah > toAyah) {
         showNotification('❌ خطأ: من الآية يجب أن يكون أصغر أو يساوي إلى الآية', 'error');
-        console.error(`❌ Invalid ayah range: from ${fromAyah} > to ${toAyah}`);
+        Logger.error('WARD', `Invalid ayah range: from ${fromAyah} > to ${toAyah}`);
         return;
     }
 
@@ -363,11 +363,11 @@ export function playWard() {
     // Validation additionnelle contre le nombre d'ayahs de la sourate
     if (fromAyah < 1 || toAyah > surah.ayahs) {
         showNotification(`❌ خطأ: الآيات يجب أن تكون بين 1 و ${surah.ayahs}`, 'error');
-        console.error(`❌ Invalid ayah range: ${fromAyah}-${toAyah} for surah ${surahId} (max: ${surah.ayahs})`);
+        Logger.error('WARD', `Invalid ayah range: ${fromAyah}-${toAyah} for surah ${surahId} (max: ${surah.ayahs})`);
         return;
     }
 
-    console.log(`✅ Valid ayah range: ${fromAyah}-${toAyah} for surah ${surah.name}`);
+    Logger.log('WARD', `Valid ayah range: ${fromAyah}-${toAyah} for surah ${surah.name}`);
 
     // Initialiser l'état du ward player
     state.wardPlayer = {
@@ -384,7 +384,7 @@ export function playWard() {
     AudioManager.playWirdAyahSequence(surahId, fromAyah, toAyah);
 
     showNotification(`🎧 جاري تشغيل ورد ${surah.name} (${fromAyah}-${toAyah})`, 'success');
-    console.log('✅ Ward playback started successfully via AudioManager');
+    Logger.audio('PLAY_WARD', 'Ward playback started successfully');
 }
 
 export function toggleWardPlay() {
@@ -456,7 +456,7 @@ export function nextWardAyah() {
 }
 
 export function stopWardPlayback() {
-    console.log('⏹️ Stopping Ward playback - using AudioManager...');
+    Logger.audio('STOP_WARD', 'Stopping Ward playback via AudioManager');
 
     AudioManager.stopAll();
 
@@ -467,7 +467,7 @@ export function stopWardPlayback() {
     updateWardDisplay();
 
     showNotification('⏹️ تم إيقاف التشغيل', 'info');
-    console.log('✅ Ward playback stopped via AudioManager');
+    Logger.audio('STOP_WARD', 'Ward playback stopped');
 }
 
 export function updateWardDisplay() {
