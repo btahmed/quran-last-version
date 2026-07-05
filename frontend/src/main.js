@@ -1,7 +1,7 @@
 // frontend/src/main.js
 import { Logger } from './core/logger.js';
-import { config, IS_DEMO_MODE } from './core/config.js';
-import { state, loadData, saveData } from './core/state.js';
+import { config } from './core/config.js';
+import { state, loadData } from './core/state.js';
 import { showNotification, setupAutoSave } from './core/ui.js';
 import { AudioManager, initAudioPlayer, initWardPlayer } from './components/AudioPlayer.js';
 import {
@@ -14,8 +14,6 @@ import {
     handleLogin,
     handleRegister,
     performLogin,
-    fetchMe,
-    refreshToken,
     logout,
 } from './services/auth.js';
 import { loadTasksFromApi } from './services/tasks.js';
@@ -39,8 +37,6 @@ import * as CompetitionPage from './pages/CompetitionPage.js';
 import * as HifzPage from './pages/HifzPage.js';
 import * as MyTasksPage from './pages/MyTasksPage.js';
 import * as TeacherPage from './pages/TeacherPage.js';
-import * as RevisionPage from './pages/RevisionPage.js';
-import * as SoumissionPage from './pages/SoumissionPage.js';
 import * as ProfilPage from './pages/ProfilPage.js';
 import * as AdminPage from './pages/AdminPage.js';
 import { buildNav, setActiveTab } from './core/NavManager.js';
@@ -157,7 +153,6 @@ window.QuranReview = {
     // SettingsPage
     saveSettings: SettingsPage.saveSettings,
     setTheme: SettingsPage.setTheme,
-    toggleTheme: SettingsPage.toggleTheme,
     exportData: SettingsPage.exportData,
     importData: SettingsPage.importData,
     resetData: SettingsPage.resetData,
@@ -176,7 +171,6 @@ window.QuranReview = {
     // MyTasksPage
     switchTaskTab: MyTasksPage.switchTaskTab,
     loadStudentDashboard: MyTasksPage.loadStudentDashboard,
-    openAudioModal: openRecordModal,
     openRecordModal: openRecordModal,
 
     // MemorizationPage — fonctions manquantes de la façade
@@ -226,8 +220,6 @@ window.QuranReview = {
             p.classList.add('hidden');
         }
     },
-    approveSubmission: TeacherPage.approveSubmission,
-    rejectSubmission: TeacherPage.rejectSubmission,
     // Grade modal (approbation emoji)
     openGradeModal: TeacherPage.openGradeModal,
     closeGradeModal: TeacherPage.closeGradeModal,
@@ -238,9 +230,6 @@ window.QuranReview = {
     closeRejectModal: TeacherPage.closeRejectModal,
     confirmReject: TeacherPage.confirmReject,
     handleUpdateUser: TeacherPage.handleUpdateUser,
-    deleteUser: TeacherPage.deleteUser,
-    handleCreateTeacher: TeacherPage.handleCreateTeacher,
-    handlePromoteTeacher: TeacherPage.handlePromoteTeacher,
     openUserEditModal,
     closeUserEditModal,
 
@@ -250,19 +239,7 @@ window.QuranReview = {
     submitRecording,
 
     // ProfilPage
-    renderProfilPage: ProfilPage.render,
-    initProfilPage: ProfilPage.init,
     switchProfilTab: ProfilPage.switchProfilTab,
-
-    // RevisionPage (alias pédagogique de WardPage — fonctions spécifiques seulement)
-    renderRevisionPage: RevisionPage.render,
-    initRevisionPage: RevisionPage.init,
-    setupWardControls: RevisionPage.setupWardControls,
-    populateWardSurahSelect: RevisionPage.populateWardSurahSelect,
-
-    // SoumissionPage (alias de MyTasksPage — points d'entrée explicites)
-    renderSoumissionPage: SoumissionPage.render,
-    initSoumissionPage: SoumissionPage.init,
 
     // NavManager — accès façade pour tests et intégrations externes
     buildNav,
