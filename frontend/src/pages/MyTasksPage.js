@@ -91,14 +91,6 @@ export function render() {
             </section>
 
             <section class="k-section">
-                <h3 class="k-section-title">📤 تسليماتي</h3>
-                <div id="student-submissions-list" class="k-stack">
-                    <div class="skeleton skeleton-card"></div>
-                    <div class="skeleton skeleton-card"></div>
-                </div>
-            </section>
-
-            <section class="k-section">
                 <h3 class="k-section-title">📊 سجل النقاط</h3>
                 <div id="student-points-log" class="k-stack">
                     <p class="k-empty">لا توجد نقاط بعد</p>
@@ -255,68 +247,6 @@ function _applyStudentData(tasks, submissions, pointsData) {
         return !s || s.status !== 'approved';
     });
     switchTaskTab(hasPending ? 'pending' : 'completed');
-
-    // Liste des soumissions
-    const subsList = document.getElementById('student-submissions-list');
-    if (!submissions.length) {
-        subsList.innerHTML = '<p class="k-empty">لا توجد تسليمات بعد</p>';
-    } else {
-        subsList.innerHTML = submissions
-            .map(s => {
-                const isApproved = s.status === 'approved';
-                const isRejected = s.status === 'rejected';
-                const dot = isApproved
-                    ? 'k-dot--done'
-                    : isRejected
-                      ? 'k-dot--missed'
-                      : 'k-dot--pending';
-                const chipClass = isApproved
-                    ? 'k-chip--success'
-                    : isRejected
-                      ? 'k-chip--danger'
-                      : 'k-chip--warning';
-                const statusText = isApproved ? 'مقبول ✓' : isRejected ? 'مرفوض ✗' : '⏳ بانتظار';
-                const date = new Date(s.submitted_at).toLocaleDateString('ar-SA');
-                const taskTitle = s.task?.title || s.tasks?.title || 'مهمة';
-                // Validation stricte : l'URL audio doit commencer par https://
-                const rawAudioUrl = s.audio_url;
-                const safeAudioSrc =
-                    rawAudioUrl && rawAudioUrl.startsWith('https://')
-                        ? escapeHtml(rawAudioUrl)
-                        : null;
-
-                let feedbackHtml = '';
-                if (s.admin_feedback) {
-                    if (isApproved) {
-                        feedbackHtml = `<span class="k-chip k-chip--success">⭐ ${escapeHtml(s.admin_feedback)}</span>`;
-                    } else if (isRejected) {
-                        feedbackHtml = `<span class="k-chip k-chip--danger">💬 ${escapeHtml(s.admin_feedback)}</span>`;
-                    }
-                }
-
-                const audioHtml = safeAudioSrc
-                    ? `<audio controls preload="metadata" src="${safeAudioSrc}" style="width:100%;margin-top:var(--space-2);" onerror="this.outerHTML='<p style=\\'color:var(--color-text-secondary);font-size:0.85rem;\\'>الملف الصوتي غير متاح</p>'"></audio>`
-                    : '';
-
-                return `
-            <div class="k-task-card">
-                <div class="k-task-card-header">
-                    <div style="display:flex;align-items:center;gap:var(--space-2);">
-                        <span class="k-dot ${dot}"></span>
-                        <h3 class="k-task-card-title">${escapeHtml(taskTitle)}</h3>
-                    </div>
-                    <span class="k-chip ${chipClass}">${statusText}</span>
-                </div>
-                <div class="k-task-card-meta">
-                    <span>📅 ${date}</span>
-                    ${s.awarded_points ? `<span class="k-chip k-chip--primary">🏆 +${s.awarded_points}</span>` : ''}
-                    ${feedbackHtml}
-                </div>
-                ${audioHtml}
-            </div>`;
-            })
-            .join('');
-    }
 }
 
 // ===================================
@@ -400,6 +330,14 @@ export function switchTaskTab(tabName) {
                 }
             }
 
+            // Audio player pour les soumissions acceptées
+            const rawAudioUrl = sub?.audio_url;
+            const safeAudioSrc =
+                rawAudioUrl && rawAudioUrl.startsWith('https://') ? escapeHtml(rawAudioUrl) : null;
+            const audioHtml = safeAudioSrc
+                ? `<audio controls preload="metadata" src="${safeAudioSrc}" style="width:100%;margin-top:var(--space-2);" onerror="this.outerHTML='<p style=\\'color:var(--color-text-secondary);font-size:0.85rem;\\'>الملف الصوتي غير متاح</p>'"></audio>`
+                : '';
+
             return `
         <div class="k-task-card">
             <div class="k-task-card-header">
@@ -416,9 +354,11 @@ export function switchTaskTab(tabName) {
             <div class="k-task-card-meta">
                 <span class="k-type-badge">${escapeHtml(typeLabel)}</span>
                 <span>🏆 ${escapeHtml(String(task.points))} نقطة</span>
+                ${sub?.awarded_points ? `<span class="k-chip k-chip--primary">+${sub.awarded_points}</span>` : ''}
                 ${dueDate ? `<span>📅 ${dueDate}</span>` : ''}
                 ${feedbackHtml}
             </div>
+            ${audioHtml}
         </div>`;
         })
         .join('');
