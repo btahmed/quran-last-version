@@ -78,7 +78,7 @@ export default [
         },
     },
     {
-        files: ['tests/unit/**/*.js'],
+        files: ['tests/unit/**/*.js', 'tests/setup.js'],
         languageOptions: {
             globals: {
                 describe: 'readonly',
