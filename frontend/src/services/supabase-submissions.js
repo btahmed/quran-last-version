@@ -20,13 +20,30 @@ function validateAudio(audioBlob) {
     return { valid: true, error: null };
 }
 
-// Génère une signed URL fraîche (1h) pour un path Supabase Storage
-async function _freshSignedUrl(path) {
-    if (!path || path.startsWith('http')) return path; // URL déjà complète (legacy)
-    const { data } = await supabaseClient.storage
-        .from('audio-submissions')
-        .createSignedUrl(path, 3600);
-    return data?.signedUrl || null;
+// Génère une signed URL fraîche (1h) pour un path ou une ancienne signed URL Supabase
+async function _freshSignedUrl(audioUrl) {
+    if (!audioUrl) return null;
+
+    // Path storage direct (ne commence pas par http) → générer directement
+    if (!audioUrl.startsWith('http')) {
+        const { data } = await supabaseClient.storage
+            .from('audio-submissions')
+            .createSignedUrl(audioUrl, 3600);
+        return data?.signedUrl || null;
+    }
+
+    // Ancienne signed URL Supabase (stockée avant le fix) → extraire le path et régénérer
+    const match = audioUrl.match(/\/object\/sign\/audio-submissions\/(.+?)\?/);
+    if (match) {
+        const path = decodeURIComponent(match[1]);
+        const { data } = await supabaseClient.storage
+            .from('audio-submissions')
+            .createSignedUrl(path, 3600);
+        return data?.signedUrl || null;
+    }
+
+    // URL externe inconnue (Cloudinary legacy, etc.) — retourner telle quelle
+    return audioUrl;
 }
 
 export async function getMySubmissions() {
