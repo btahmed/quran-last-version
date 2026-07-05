@@ -24,42 +24,54 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
 
     <script>
-        // Enregistrer le plugin ScrollTrigger
-        gsap.registerPlugin(ScrollTrigger);
+        // GSAP optionnel — si le CDN est bloqué, la page s'affiche quand même
+        if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
+            gsap.registerPlugin(ScrollTrigger);
+        }
 
-        // Masquer l'écran de chargement avec animation GSAP
+        // Masquer l'écran de chargement (fonctionne avec ou sans GSAP)
         function hideLoadingScreen() {
             const loadingScreen = document.getElementById('loading-screen');
             if (!loadingScreen) return;
-            gsap.to(loadingScreen, {
-                opacity: 0,
-                duration: 0.4,
-                onComplete: () => {
-                    loadingScreen.classList.add('hidden');
-                    loadingScreen.style.display = 'none';
-                    initAnimations();
-                }
-            });
+            if (typeof gsap !== 'undefined') {
+                gsap.to(loadingScreen, {
+                    opacity: 0,
+                    duration: 0.4,
+                    onComplete: () => {
+                        loadingScreen.classList.add('hidden');
+                        loadingScreen.style.display = 'none';
+                        initAnimations();
+                    }
+                });
+            } else {
+                loadingScreen.classList.add('hidden');
+                loadingScreen.style.display = 'none';
+                initAnimations();
+            }
         }
 
         // Animer la barre de progression au chargement complet
         window.addEventListener('load', () => {
-            gsap.to('#loading-progress', {
-                width: '100%',
-                duration: 1.0,
-                ease: 'power2.inOut',
-                onComplete: () => setTimeout(hideLoadingScreen, 300)
-            });
+            if (typeof gsap !== 'undefined') {
+                gsap.to('#loading-progress', {
+                    width: '100%',
+                    duration: 1.0,
+                    ease: 'power2.inOut',
+                    onComplete: () => setTimeout(hideLoadingScreen, 300)
+                });
+            } else {
+                setTimeout(hideLoadingScreen, 300);
+            }
         });
 
-        // Fallback: masquer après 5 secondes maximum
+        // Fallback: masquer après 3 secondes maximum (réduit de 5s à 3s)
         setTimeout(() => {
             const loadingScreen = document.getElementById('loading-screen');
             if (loadingScreen && !loadingScreen.classList.contains('hidden')) {
                 console.warn('Loading screen timeout - forcing hide');
                 hideLoadingScreen();
             }
-        }, 5000);
+        }, 3000);
 
         // Afficher le badge démo si ouvert en mode file://
         if (window.location.protocol === 'file:') {
@@ -71,6 +83,8 @@
 
         // Animations de page (appelées après masquage du loading screen)
         function initAnimations() {
+            if (typeof gsap === 'undefined') return;
+
             // Animer les cartes de la page courante dans #app (si elles existent)
             const cards = document.querySelectorAll('#app .card-glass-pro');
             if (cards.length > 0) {
