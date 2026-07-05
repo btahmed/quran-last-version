@@ -7,8 +7,8 @@ window.API_BASE_URL = undefined;
 // Logger appelle console — on le silentise pour garder la sortie de test propre
 global.console = {
     ...console,
-    log:   vi.fn(),
-    warn:  vi.fn(),
+    log: vi.fn(),
+    warn: vi.fn(),
     error: vi.fn(),
     table: vi.fn(),
 };

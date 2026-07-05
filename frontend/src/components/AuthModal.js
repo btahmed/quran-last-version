@@ -144,7 +144,7 @@ export function render() {
 
 export function init() {
     // Fermeture du modal auth sur clic overlay (fond)
-    document.getElementById('auth-modal')?.addEventListener('click', (e) => {
+    document.getElementById('auth-modal')?.addEventListener('click', e => {
         if (e.target.id === 'auth-modal') hideAuthModal();
     });
 }

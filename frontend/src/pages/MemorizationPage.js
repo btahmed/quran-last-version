@@ -228,7 +228,7 @@ function getStatusBadge(status) {
     const badges = {
         mastered: '<span class="status-badge status-mastered">✓ متقن</span>',
         weak: '<span class="status-badge status-weak">⚠ ضعيف</span>',
-        new: '<span class="status-badge status-new">+ جديد</span>'
+        new: '<span class="status-badge status-new">+ جديد</span>',
     };
     return badges[status] || escapeHtml(status);
 }
@@ -282,18 +282,16 @@ function getTodayMemorizationData() {
     const today = state.todayDate;
 
     // Éléments maîtrisés mais pas à réviser aujourd'hui (pour consolidation)
-    const previouslyMemorized = state.memorizationData.filter(item =>
-        item.status === 'mastered' && !shouldReviewToday(item)
+    const previouslyMemorized = state.memorizationData.filter(
+        item => item.status === 'mastered' && !shouldReviewToday(item)
     );
 
     // Éléments à réviser aujourd'hui
-    const todayReview = state.memorizationData.filter(item =>
-        shouldReviewToday(item)
-    );
+    const todayReview = state.memorizationData.filter(item => shouldReviewToday(item));
 
     // Nouveaux ajouts du jour
-    const newMemorization = state.memorizationData.filter(item =>
-        item.status === 'new' && item.dateAdded === today
+    const newMemorization = state.memorizationData.filter(
+        item => item.status === 'new' && item.dateAdded === today
     );
 
     return { previouslyMemorized, todayReview, newMemorization };
@@ -426,7 +424,7 @@ export function handleAddMemorization(event) {
         status: 'new',
         dateAdded: state.todayDate,
         lastReviewed: null,
-        reviewCount: 0
+        reviewCount: 0,
     };
 
     state.memorizationData.push(newItem);

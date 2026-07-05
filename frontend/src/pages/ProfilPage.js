@@ -107,16 +107,18 @@ async function loadPointsChart() {
             type: 'line',
             data: {
                 labels,
-                datasets: [{
-                    label: 'النقاط التراكمية',
-                    data: cumulPoints,
-                    borderColor: lineColor,
-                    backgroundColor: fillColor,
-                    fill: true,
-                    tension: 0.4,
-                    pointRadius: 3,
-                    pointHoverRadius: 6,
-                }],
+                datasets: [
+                    {
+                        label: 'النقاط التراكمية',
+                        data: cumulPoints,
+                        borderColor: lineColor,
+                        backgroundColor: fillColor,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 3,
+                        pointHoverRadius: 6,
+                    },
+                ],
             },
             options: {
                 responsive: true,
@@ -166,12 +168,8 @@ async function refreshUserData() {
 
 export async function switchProfilTab(tab) {
     // Mettre à jour les onglets actifs
-    document.querySelectorAll('.profil-tab').forEach(t =>
-        t.classList.remove('profil-tab--active')
-    );
-    const activeTab = document.querySelector(
-        `.profil-tab[onclick*="'${tab}'"]`
-    );
+    document.querySelectorAll('.profil-tab').forEach(t => t.classList.remove('profil-tab--active'));
+    const activeTab = document.querySelector(`.profil-tab[onclick*="'${tab}'"]`);
     if (activeTab) activeTab.classList.add('profil-tab--active');
 
     // Charger le contenu du bon onglet
@@ -184,9 +182,10 @@ export async function switchProfilTab(tab) {
     } else if (tab === 'settings') {
         // SettingsPage expose render() et renderSettingsPage() — on préfère renderSettingsPage()
         // pour éviter toute ambiguïté avec le render() de ProfilPage
-        const settingsHtml = SettingsPage.renderSettingsPage?.()
-            ?? SettingsPage.render?.()
-            ?? '<p>Paramètres non disponibles</p>';
+        const settingsHtml =
+            SettingsPage.renderSettingsPage?.() ??
+            SettingsPage.render?.() ??
+            '<p>Paramètres non disponibles</p>';
         content.innerHTML = settingsHtml;
         if (SettingsPage.init) await SettingsPage.init();
     }

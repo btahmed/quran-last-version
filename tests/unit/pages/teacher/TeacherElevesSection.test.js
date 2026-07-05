@@ -9,13 +9,16 @@ vi.mock('../../../../frontend/src/core/apiCache.js', () => ({
     apiCache: { get: vi.fn(() => null), set: vi.fn(), clear: vi.fn() },
 }));
 vi.mock('../../../../frontend/src/services/supabase-admin.js', () => ({
-    getMyStudents:      vi.fn(),
+    getMyStudents: vi.fn(),
     getStudentProgress: vi.fn(),
 }));
 
 import * as supabaseAdmin from '../../../../frontend/src/services/supabase-admin.js';
-import { apiCache }       from '../../../../frontend/src/core/apiCache.js';
-import { init, viewStudentProgress } from '../../../../frontend/src/pages/teacher/TeacherElevesSection.js';
+import { apiCache } from '../../../../frontend/src/core/apiCache.js';
+import {
+    init,
+    viewStudentProgress,
+} from '../../../../frontend/src/pages/teacher/TeacherElevesSection.js';
 
 // ─── Helper DOM ───────────────────────────────────────────────────────────
 function setupDOM() {
@@ -47,8 +50,20 @@ describe('init — chargement liste élèves', () => {
 
     it('rend une ligne par élève avec son nom', async () => {
         const students = [
-            { id: 'u1', username: 'ali',   first_name: 'علي',  total_points: 50, submissions_count: 3 },
-            { id: 'u2', username: 'omar',  first_name: 'عمر', total_points: 30, submissions_count: 1 },
+            {
+                id: 'u1',
+                username: 'ali',
+                first_name: 'علي',
+                total_points: 50,
+                submissions_count: 3,
+            },
+            {
+                id: 'u2',
+                username: 'omar',
+                first_name: 'عمر',
+                total_points: 30,
+                submissions_count: 1,
+            },
         ];
         supabaseAdmin.getMyStudents.mockResolvedValue({ data: students, error: null });
 
@@ -59,7 +74,7 @@ describe('init — chargement liste élèves', () => {
         expect(list.innerHTML).toContain('عمر');
     });
 
-    it('affiche un message d\'erreur si getMyStudents échoue', async () => {
+    it("affiche un message d'erreur si getMyStudents échoue", async () => {
         supabaseAdmin.getMyStudents.mockRejectedValue(new Error('Network error'));
 
         await init();
@@ -87,7 +102,7 @@ describe('viewStudentProgress', () => {
         await expect(viewStudentProgress('u1', 'علي')).resolves.toBeUndefined();
     });
 
-    it('affiche le nom de l\'étudiant et son total de points', async () => {
+    it("affiche le nom de l'étudiant et son total de points", async () => {
         supabaseAdmin.getStudentProgress.mockResolvedValue({
             data: { totalPoints: 75, tasks: [] },
             error: null,
@@ -106,7 +121,9 @@ describe('viewStudentProgress', () => {
         supabaseAdmin.getStudentProgress.mockResolvedValue({
             data: {
                 totalPoints: 10,
-                tasks: [{ title: 'الفاتحة', type: 'حفظ', points: 10, submission_status: 'approved' }],
+                tasks: [
+                    { title: 'الفاتحة', type: 'حفظ', points: 10, submission_status: 'approved' },
+                ],
             },
             error: null,
         });
@@ -118,7 +135,7 @@ describe('viewStudentProgress', () => {
         expect(content).toContain('الفاتحة');
     });
 
-    it('affiche un message d\'erreur si getStudentProgress échoue', async () => {
+    it("affiche un message d'erreur si getStudentProgress échoue", async () => {
         supabaseAdmin.getStudentProgress.mockResolvedValue({
             data: null,
             error: { message: 'DB error' },

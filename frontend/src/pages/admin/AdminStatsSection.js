@@ -47,14 +47,17 @@ export async function loadOverview() {
         ]);
 
         if (!overviewRes.error) {
-            const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-            set('admin-total-tasks',   overviewRes.data?.total_tasks          ?? '—');
-            set('admin-pending-subs',  overviewRes.data?.pending_submissions  ?? '—');
+            const set = (id, v) => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = v;
+            };
+            set('admin-total-tasks', overviewRes.data?.total_tasks ?? '—');
+            set('admin-pending-subs', overviewRes.data?.pending_submissions ?? '—');
             set('admin-approved-subs', overviewRes.data?.approved_submissions ?? '—');
         }
 
         renderTeacherStats(statsRes.teacherStats || []);
-        renderAllTasks(statsRes.recentTasks     || []);
+        renderAllTasks(statsRes.recentTasks || []);
     } catch (err) {
         Logger.error('ADMIN-STATS', 'loadOverview error', err);
     }
@@ -66,11 +69,14 @@ function renderTeacherStats(teachers) {
     if (!el) return;
 
     if (!teachers.length) {
-        el.innerHTML = '<p style="text-align:center; color:var(--color-text-secondary);">لا يوجد معلمون</p>';
+        el.innerHTML =
+            '<p style="text-align:center; color:var(--color-text-secondary);">لا يوجد معلمون</p>';
         return;
     }
 
-    el.innerHTML = teachers.map(t => `
+    el.innerHTML = teachers
+        .map(
+            t => `
         <div class="k-task-card">
             <div class="k-task-card-header">
                 <div>
@@ -80,12 +86,16 @@ function renderTeacherStats(teachers) {
             </div>
             <div class="k-task-card-meta">
                 <span class="k-chip k-chip--info">${parseInt(t.assigned_tasks, 10) || 0} مهمة</span>
-                ${t.pending_submissions > 0
-                    ? `<span class="k-chip k-chip--warning">${parseInt(t.pending_submissions, 10)} انتظار</span>`
-                    : ''}
+                ${
+                    t.pending_submissions > 0
+                        ? `<span class="k-chip k-chip--warning">${parseInt(t.pending_submissions, 10)} انتظار</span>`
+                        : ''
+                }
             </div>
         </div>
-    `).join('');
+    `
+        )
+        .join('');
 }
 
 // ─── RENDU DERNIÈRES TÂCHES ───────────────────────────────────────────────────
@@ -99,22 +109,24 @@ function renderAllTasks(tasks) {
     }
 
     const dotClass = {
-        pending:   'k-dot--pending',
+        pending: 'k-dot--pending',
         submitted: 'k-dot--new',
         completed: 'k-dot--done',
-        approved:  'k-dot--done',
-        rejected:  'k-dot--missed',
+        approved: 'k-dot--done',
+        rejected: 'k-dot--missed',
     };
 
-    el.innerHTML = tasks.slice(0, 50).map(t => {
-        const dot      = dotClass[t.status] || 'k-dot--pending';
-        const teacher  = t.teacher ? '@' + escapeHtml(t.teacher.username) : '';
-        const student  = t.student ? escapeHtml(t.student.first_name || t.student.username) : '';
-        const route    = teacher && student ? `${teacher} ← ${student}` : teacher || student;
-        const pointsEl = t.points
-            ? `<span class="k-chip k-chip--primary">${parseInt(t.points, 10)}+</span>`
-            : '';
-        return `
+    el.innerHTML = tasks
+        .slice(0, 50)
+        .map(t => {
+            const dot = dotClass[t.status] || 'k-dot--pending';
+            const teacher = t.teacher ? '@' + escapeHtml(t.teacher.username) : '';
+            const student = t.student ? escapeHtml(t.student.first_name || t.student.username) : '';
+            const route = teacher && student ? `${teacher} ← ${student}` : teacher || student;
+            const pointsEl = t.points
+                ? `<span class="k-chip k-chip--primary">${parseInt(t.points, 10)}+</span>`
+                : '';
+            return `
         <div class="k-row">
             <div class="rl">
                 <span class="k-dot ${dot}"></span>
@@ -125,7 +137,8 @@ function renderAllTasks(tasks) {
             </div>
             ${pointsEl}
         </div>`;
-    }).join('');
+        })
+        .join('');
 
     if (tasks.length > 50) {
         el.innerHTML += `<p class="k-empty">عرض 50 من ${tasks.length}</p>`;

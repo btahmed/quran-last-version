@@ -28,37 +28,42 @@ export function renderWeekCalendar(tasks = []) {
 
         const dayTasks = tasks.filter(t => t.due_date && t.due_date.startsWith(iso));
         const hasTasks = dayTasks.length > 0;
-        const allDone = hasTasks && dayTasks.every(
-            t => t.status === 'graded' || t.status === 'approved'
-        );
+        const allDone =
+            hasTasks && dayTasks.every(t => t.status === 'graded' || t.status === 'approved');
 
         let status;
-        if (!hasTasks)       status = 'empty';
-        else if (allDone)    status = 'done';
+        if (!hasTasks) status = 'empty';
+        else if (allDone) status = 'done';
         else if (offset < 0) status = 'missed';
-        else                 status = 'pending';
+        else status = 'pending';
 
         days.push({
-            label:   DAY_LABELS_AR[d.getDay()],
-            date:    d.getDate(),
+            label: DAY_LABELS_AR[d.getDay()],
+            date: d.getDate(),
             isToday: offset === 0,
             status,
         });
     }
 
-    const dayHtml = days.map(({ label, date, isToday, status }) => {
-        const dot = status === 'done'    ? '✅'
-                  : status === 'missed'  ? '❌'
-                  : status === 'pending' ? '⏳'
-                  : '·';
-        const todayClass = isToday ? ' week-day--today' : '';
-        return `
+    const dayHtml = days
+        .map(({ label, date, isToday, status }) => {
+            const dot =
+                status === 'done'
+                    ? '✅'
+                    : status === 'missed'
+                      ? '❌'
+                      : status === 'pending'
+                        ? '⏳'
+                        : '·';
+            const todayClass = isToday ? ' week-day--today' : '';
+            return `
         <div class="week-day week-day--${status}${todayClass}" role="listitem">
             <span class="week-day-label">${label}</span>
             <span class="week-day-num">${date}</span>
             <span class="week-day-dot" aria-hidden="true">${dot}</span>
         </div>`;
-    }).join('');
+        })
+        .join('');
 
     return `<div class="week-calendar" dir="rtl" role="list" aria-label="أسبوعك">${dayHtml}</div>`;
 }

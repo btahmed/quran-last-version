@@ -1,23 +1,28 @@
 // Configuration centrale — extraite de frontend/script.js (lignes 383-552)
 
-export const API_BASE_URL = window.API_BASE_URL || (() => {
-    const port = window.location.port;
-    const host = window.location.hostname;
-    // Docker nginx sur port 80 → URL relative (nginx proxifie /api/)
-    if ((host === 'localhost' || host === '127.0.0.1') && (port === '' || port === '80')) {
-        return '';
-    }
-    // Dev local port 8000 ou 8080 → backend Django local
-    if ((host === 'localhost' || host === '127.0.0.1') && (port === '8000' || port === '8080')) {
-        return 'http://127.0.0.1:8000';
-    }
-    // Dev local autre port (ex: 3456 python http.server) → API Vercel prod
-    if (host === 'localhost' || host === '127.0.0.1') {
+export const API_BASE_URL =
+    window.API_BASE_URL ||
+    (() => {
+        const port = window.location.port;
+        const host = window.location.hostname;
+        // Docker nginx sur port 80 → URL relative (nginx proxifie /api/)
+        if ((host === 'localhost' || host === '127.0.0.1') && (port === '' || port === '80')) {
+            return '';
+        }
+        // Dev local port 8000 ou 8080 → backend Django local
+        if (
+            (host === 'localhost' || host === '127.0.0.1') &&
+            (port === '8000' || port === '8080')
+        ) {
+            return 'http://127.0.0.1:8000';
+        }
+        // Dev local autre port (ex: 3456 python http.server) → API Vercel prod
+        if (host === 'localhost' || host === '127.0.0.1') {
+            return 'https://quranreview-api.vercel.app';
+        }
+        // Production (Vercel)
         return 'https://quranreview-api.vercel.app';
-    }
-    // Production (Vercel)
-    return 'https://quranreview-api.vercel.app';
-})();
+    })();
 
 export const IS_FILE_PROTOCOL = window.location.protocol === 'file:';
 export const IS_DEMO_MODE = IS_FILE_PROTOCOL;
@@ -29,7 +34,7 @@ export const config = {
     storageKey: 'quranreview_data',
     tasksKey: 'quranreview_tasks',
     apiTokenKey: 'quranreview_api_token',
-    settingsKey: 'quranreview_settings',  // Ajouté clé séparée pour settings
+    settingsKey: 'quranreview_settings', // Ajouté clé séparée pour settings
     competitionKey: 'quranreview_competition',
     hifzKey: 'quranreview_hifz',
     themeKey: 'quranreview_theme',
@@ -42,7 +47,7 @@ export const config = {
         notifications: true,
         // Ward Player Settings
         ayahDelay: 0, // seconds between ayahs (default: instant)
-        autoPlayNext: true
+        autoPlayNext: true,
     },
 
     // Quran Data - Complete 114 Surahs
@@ -51,15 +56,15 @@ export const config = {
         { id: 2, name: 'البقرة', englishName: 'Al-Baqarah', ayahs: 286, type: 'medinan' },
         { id: 3, name: 'آل عمران', englishName: 'Aal-E-Imran', ayahs: 200, type: 'medinan' },
         { id: 4, name: 'النساء', englishName: 'An-Nisa', ayahs: 176, type: 'medinan' },
-        { id: 5, name: 'المائدة', englishName: 'Al-Ma\'idah', ayahs: 120, type: 'medinan' },
-        { id: 6, name: 'الأنعام', englishName: 'Al-An\'am', ayahs: 165, type: 'meccan' },
-        { id: 7, name: 'الأعراف', englishName: 'Al-A\'raf', ayahs: 206, type: 'meccan' },
+        { id: 5, name: 'المائدة', englishName: "Al-Ma'idah", ayahs: 120, type: 'medinan' },
+        { id: 6, name: 'الأنعام', englishName: "Al-An'am", ayahs: 165, type: 'meccan' },
+        { id: 7, name: 'الأعراف', englishName: "Al-A'raf", ayahs: 206, type: 'meccan' },
         { id: 8, name: 'الأنفال', englishName: 'Al-Anfal', ayahs: 75, type: 'medinan' },
         { id: 9, name: 'التوبة', englishName: 'At-Tawbah', ayahs: 129, type: 'medinan' },
         { id: 10, name: 'يونس', englishName: 'Yunus', ayahs: 109, type: 'meccan' },
         { id: 11, name: 'هود', englishName: 'Hud', ayahs: 123, type: 'meccan' },
         { id: 12, name: 'يوسف', englishName: 'Yusuf', ayahs: 111, type: 'meccan' },
-        { id: 13, name: 'الرعد', englishName: 'Ar-Ra\'d', ayahs: 43, type: 'medinan' },
+        { id: 13, name: 'الرعد', englishName: "Ar-Ra'd", ayahs: 43, type: 'medinan' },
         { id: 14, name: 'إبراهيم', englishName: 'Ibrahim', ayahs: 52, type: 'meccan' },
         { id: 15, name: 'الحجر', englishName: 'Al-Hijr', ayahs: 99, type: 'meccan' },
         { id: 16, name: 'النحل', englishName: 'An-Nahl', ayahs: 128, type: 'meccan' },
@@ -69,10 +74,10 @@ export const config = {
         { id: 20, name: 'طه', englishName: 'Ta-Ha', ayahs: 135, type: 'meccan' },
         { id: 21, name: 'الأنبياء', englishName: 'Al-Anbiya', ayahs: 112, type: 'meccan' },
         { id: 22, name: 'الحج', englishName: 'Al-Hajj', ayahs: 78, type: 'medinan' },
-        { id: 23, name: 'المؤمنون', englishName: 'Al-Mu\'minun', ayahs: 118, type: 'meccan' },
+        { id: 23, name: 'المؤمنون', englishName: "Al-Mu'minun", ayahs: 118, type: 'meccan' },
         { id: 24, name: 'النور', englishName: 'An-Nur', ayahs: 64, type: 'medinan' },
         { id: 25, name: 'الفرقان', englishName: 'Al-Furqan', ayahs: 77, type: 'meccan' },
-        { id: 26, name: 'الشعراء', englishName: 'Ash-Shu\'ara', ayahs: 227, type: 'meccan' },
+        { id: 26, name: 'الشعراء', englishName: "Ash-Shu'ara", ayahs: 227, type: 'meccan' },
         { id: 27, name: 'النمل', englishName: 'An-Naml', ayahs: 93, type: 'meccan' },
         { id: 28, name: 'القصص', englishName: 'Al-Qasas', ayahs: 88, type: 'meccan' },
         { id: 29, name: 'العنكبوت', englishName: 'Al-Ankabut', ayahs: 69, type: 'meccan' },
@@ -147,19 +152,19 @@ export const config = {
         { id: 98, name: 'البينة', englishName: 'Al-Bayyinah', ayahs: 8, type: 'medinan' },
         { id: 99, name: 'الزلزلة', englishName: 'Az-Zalzalah', ayahs: 8, type: 'medinan' },
         { id: 100, name: 'العاديات', englishName: 'Al-Adiyat', ayahs: 11, type: 'meccan' },
-        { id: 101, name: 'القارعة', englishName: 'Al-Qari\'ah', ayahs: 11, type: 'meccan' },
+        { id: 101, name: 'القارعة', englishName: "Al-Qari'ah", ayahs: 11, type: 'meccan' },
         { id: 102, name: 'التكاثر', englishName: 'At-Takathur', ayahs: 8, type: 'meccan' },
         { id: 103, name: 'العصر', englishName: 'Al-Asr', ayahs: 3, type: 'meccan' },
         { id: 104, name: 'الهمزة', englishName: 'Al-Humazah', ayahs: 9, type: 'meccan' },
         { id: 105, name: 'الفيل', englishName: 'Al-Fil', ayahs: 5, type: 'meccan' },
         { id: 106, name: 'قريش', englishName: 'Quraysh', ayahs: 4, type: 'meccan' },
-        { id: 107, name: 'الماعون', englishName: 'Al-Ma\'un', ayahs: 7, type: 'meccan' },
+        { id: 107, name: 'الماعون', englishName: "Al-Ma'un", ayahs: 7, type: 'meccan' },
         { id: 108, name: 'الكوثر', englishName: 'Al-Kawthar', ayahs: 3, type: 'meccan' },
         { id: 109, name: 'الكافرون', englishName: 'Al-Kafirun', ayahs: 6, type: 'meccan' },
         { id: 110, name: 'النصر', englishName: 'An-Nasr', ayahs: 3, type: 'medinan' },
         { id: 111, name: 'المسد', englishName: 'Al-Masad', ayahs: 5, type: 'meccan' },
         { id: 112, name: 'الإخلاص', englishName: 'Al-Ikhlas', ayahs: 4, type: 'meccan' },
         { id: 113, name: 'الفلق', englishName: 'Al-Falaq', ayahs: 5, type: 'meccan' },
-        { id: 114, name: 'الناس', englishName: 'An-Nas', ayahs: 6, type: 'meccan' }
-    ]
+        { id: 114, name: 'الناس', englishName: 'An-Nas', ayahs: 6, type: 'meccan' },
+    ],
 };

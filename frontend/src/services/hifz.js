@@ -15,7 +15,7 @@ export const hifzEngine = {
             word,
             index,
             difficulty: this.calculateDifficulty(word, index, words.length),
-            isHidden: false
+            isHidden: false,
         }));
     },
 
@@ -28,7 +28,7 @@ export const hifzEngine = {
         // If prompt says "Milieu = difficile", then score should be higher for middle.
         // Math.abs(position - middle) is 0 at middle. So this logic makes edges higher score.
         // I will invert it:
-        score += (total / 2) - Math.abs(position - middle);
+        score += total / 2 - Math.abs(position - middle);
 
         const complex = word.match(/[َُِّْٓۖۗ]/g);
         score += (complex ? complex.length : 0) * 3; // Tashkeel complexe
@@ -48,7 +48,7 @@ export const hifzEngine = {
         // Level 3: Show 40%
         // Level 4: Show 20%
         // Level 5: Show 0% (Hide all)
-        const fractionToShow = Math.max(0, 1 - (level * 0.2));
+        const fractionToShow = Math.max(0, 1 - level * 0.2);
         const wordsToShow = Math.ceil(totalWords * fractionToShow);
 
         // Sort by difficulty descending (Hardest first)
@@ -64,7 +64,7 @@ export const hifzEngine = {
 
         // Remettre dans l'ordre
         return analysis.sort((a, b) => a.index - b.index);
-    }
+    },
 };
 
 // ===================================
@@ -86,7 +86,7 @@ export function startHifzSession(surahId, fromAyah, toAyah) {
         currentAyah: fromAyah,
         level: 1,
         score: 0,
-        startTime: Date.now()
+        startTime: Date.now(),
     };
     saveData();
 
@@ -110,7 +110,8 @@ export async function loadAyahForHifz(surahId, ayahNumber) {
     const ayahText = await window.QuranReview.fetchAyahText(surahId, ayahNumber);
 
     if (!ayahText) {
-        container.innerHTML = '<div style="text-align:center; color:red;">❌ خطأ في تحميل الآية</div>';
+        container.innerHTML =
+            '<div style="text-align:center; color:red;">❌ خطأ في تحميل الآية</div>';
         return;
     }
 
@@ -173,7 +174,7 @@ export function attemptReveal(spanElement, correctWord) {
     } else {
         // Animation d'erreur
         spanElement.style.backgroundColor = '#f8d7da'; // Rouge clair
-        setTimeout(() => spanElement.style.backgroundColor = '', 500);
+        setTimeout(() => (spanElement.style.backgroundColor = ''), 500);
     }
 }
 
@@ -270,7 +271,7 @@ export function completeSession() {
         toAyah: session.toAyah,
         score: session.score,
         date: new Date().toISOString(),
-        timeTaken
+        timeTaken,
     });
 
     // Réinitialiser la session

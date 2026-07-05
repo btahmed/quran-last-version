@@ -5,7 +5,6 @@ import fc from 'fast-check';
 import '../../../frontend/src/components/AudioPlayer.js';
 
 describe('window.QuranAudio', () => {
-
     it('est défini après import du module', () => {
         expect(window.QuranAudio).toBeDefined();
         expect(typeof window.QuranAudio.surahAyahToGlobal).toBe('function');
@@ -35,12 +34,12 @@ describe('window.QuranAudio', () => {
         it('surahAyahToGlobal puis décodage retrouve surahId et ayah (100 runs)', () => {
             fc.assert(
                 fc.property(
-                    fc.integer({ min: 1, max: 114 }),   // surahId
-                    fc.integer({ min: 1, max: 286 }),   // ayah (max Al-Baqarah)
+                    fc.integer({ min: 1, max: 114 }), // surahId
+                    fc.integer({ min: 1, max: 286 }), // ayah (max Al-Baqarah)
                     (surahId, ayah) => {
                         const encoded = window.QuranAudio.surahAyahToGlobal(surahId, ayah);
                         const decodedSurah = Math.floor(encoded / 1000);
-                        const decodedAyah  = encoded % 1000;
+                        const decodedAyah = encoded % 1000;
                         return decodedSurah === surahId && decodedAyah === ayah;
                     }
                 ),
@@ -83,14 +82,11 @@ describe('window.QuranAudio', () => {
 
         it('PBT — URL sourate contient le numéro paddé pour toute sourate [1-114]', () => {
             fc.assert(
-                fc.property(
-                    fc.integer({ min: 1, max: 114 }),
-                    (surahId) => {
-                        const url = window.QuranAudio.getAudioUrl(surahId);
-                        const expected = String(surahId).padStart(3, '0');
-                        return url.includes(`${expected}.mp3`);
-                    }
-                ),
+                fc.property(fc.integer({ min: 1, max: 114 }), surahId => {
+                    const url = window.QuranAudio.getAudioUrl(surahId);
+                    const expected = String(surahId).padStart(3, '0');
+                    return url.includes(`${expected}.mp3`);
+                }),
                 { numRuns: 114 }
             );
         });

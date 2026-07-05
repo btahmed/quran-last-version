@@ -2,8 +2,8 @@
 // Fonctions de validation pures — aucune dépendance externe.
 // Retournent toujours { valid: boolean, error?: string }
 
-const ok  = () => ({ valid: true });
-const err = (msg) => ({ valid: false, error: msg });
+const ok = () => ({ valid: true });
+const err = msg => ({ valid: false, error: msg });
 
 export const Validators = {
     surahId(n) {
@@ -23,22 +23,19 @@ export const Validators = {
     username(s) {
         if (typeof s !== 'string' || s.trim().length < 2)
             return err('اسم المستخدم يجب أن يحتوي على حرفين على الأقل');
-        if (s.trim().length > 80)
-            return err('اسم المستخدم طويل جداً');
+        if (s.trim().length > 80) return err('اسم المستخدم طويل جداً');
         return ok();
     },
 
     email(s) {
         if (typeof s !== 'string') return err('بريد إلكتروني غير صالح');
         // RFC 5322 simplifié — suffisant pour une validation frontend
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s.trim()))
-            return err('بريد إلكتروني غير صالح');
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s.trim())) return err('بريد إلكتروني غير صالح');
         return ok();
     },
 
     role(s) {
-        if (!['student', 'teacher', 'admin'].includes(s))
-            return err('الدور غير معروف');
+        if (!['student', 'teacher', 'admin'].includes(s)) return err('الدور غير معروف');
         return ok();
     },
 

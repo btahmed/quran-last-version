@@ -8,7 +8,8 @@
 //   4. Créer la table push_subscriptions (voir supabase/functions/send-push/index.ts)
 //   5. Déployer l'Edge Function : supabase functions deploy send-push
 
-const VAPID_PUBLIC_KEY = 'BLop-qhihAdaTL33D13QgIAVPVn_byLmpi960I8qsjeihVXYm459ABDgOVk_fNjRp5QXxkA-U2QRb6UP_jb3D_Y';
+const VAPID_PUBLIC_KEY =
+    'BLop-qhihAdaTL33D13QgIAVPVn_byLmpi960I8qsjeihVXYm459ABDgOVk_fNjRp5QXxkA-U2QRb6UP_jb3D_Y';
 
 /**
  * Abonne l'utilisateur aux notifications push.
@@ -41,8 +42,10 @@ export async function subscribeToPush() {
 export async function savePushSubscription(supabaseClient, userId, subscription) {
     const { error } = await supabaseClient
         .from('push_subscriptions')
-        .upsert({ user_id: userId, subscription: subscription.toJSON() },
-                 { onConflict: 'user_id' });
+        .upsert(
+            { user_id: userId, subscription: subscription.toJSON() },
+            { onConflict: 'user_id' }
+        );
     if (error) throw new Error('[Push] Sauvegarde échouée : ' + error.message);
 }
 
@@ -62,7 +65,7 @@ export async function unsubscribeFromPush(supabaseClient, userId) {
 
 /** Convertit une clé VAPID base64url en Uint8Array */
 function urlBase64ToUint8Array(base64String) {
-    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
     const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
     const rawData = atob(base64);
     return new Uint8Array([...rawData].map(c => c.charCodeAt(0)));

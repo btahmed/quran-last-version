@@ -5,15 +5,15 @@
 
 // window.__SUPABASE_*__ sont définis dans index.html (fallback dev local)
 // ou écrasés par Vercel en prod
-const SUPABASE_URL = window.__SUPABASE_URL__
-const SUPABASE_ANON_KEY = window.__SUPABASE_ANON_KEY__
+const SUPABASE_URL = window.__SUPABASE_URL__;
+const SUPABASE_ANON_KEY = window.__SUPABASE_ANON_KEY__;
 
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  console.error('[Supabase] Variables manquantes — vérifier index.html ou Vercel env vars')
+    console.error('[Supabase] Variables manquantes — vérifier index.html ou Vercel env vars');
 }
 
-const { createClient } = supabase
-export const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+const { createClient } = supabase;
+export const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Exposer globalement pour app.js et autres scripts
-window.supabaseClient = supabaseClient
+window.supabaseClient = supabaseClient;

@@ -10,22 +10,22 @@ import * as supabaseAdmin from '../services/supabase-admin.js';
 // Injecter le CSS des onglets admin (une seule fois)
 if (!document.querySelector('link[href*="AdminPage.css"]')) {
     const link = document.createElement('link');
-    link.rel  = 'stylesheet';
+    link.rel = 'stylesheet';
     link.href = '/src/pages/AdminPage.css';
     document.head.appendChild(link);
 }
 
 // ─── MAPPAGE DES SECTIONS → MODULES ──────────────────────────────────────────
 const SECTION_MODULES = {
-    users:   () => import('./admin/AdminUsersSection.js'),
+    users: () => import('./admin/AdminUsersSection.js'),
     classes: () => import('./admin/AdminClassesSection.js'),
-    stats:   () => import('./admin/AdminStatsSection.js'),
+    stats: () => import('./admin/AdminStatsSection.js'),
 };
 
 // ─── ÉTAT INTERNE ─────────────────────────────────────────────────────────────
-let _activeSection  = 'users'; // section affichée
-let _sectionModule  = null;    // module ES actuellement chargé
-let _loading        = false;   // flag anti-concurrence (double-clic)
+let _activeSection = 'users'; // section affichée
+let _sectionModule = null; // module ES actuellement chargé
+let _loading = false; // flag anti-concurrence (double-clic)
 
 // ─── RENDER ──────────────────────────────────────────────────────────────────
 export function render() {
@@ -80,9 +80,9 @@ export async function init() {
 
     // Charger la section initiale selon la sous-route (admin-classes, admin-stats, etc.)
     const page = state.currentPage;
-    if (page === 'admin-classes')      await adminSwitchSection('classes');
-    else if (page === 'admin-stats')   await adminSwitchSection('stats');
-    else                               await adminSwitchSection('users');
+    if (page === 'admin-classes') await adminSwitchSection('classes');
+    else if (page === 'admin-stats') await adminSwitchSection('stats');
+    else await adminSwitchSection('users');
 
     // Charger les compteurs globaux en arrière-plan (ne bloque pas l'affichage)
     _loadGlobalCounters();
@@ -105,20 +105,24 @@ export async function adminSwitchSection(section) {
 
     // Afficher un squelette de chargement
     const container = document.getElementById('admin-section-content');
-    if (!container) { _loading = false; return; }
+    if (!container) {
+        _loading = false;
+        return;
+    }
     container.innerHTML = '<div class="skeleton skeleton-card"></div>'.repeat(3);
 
     // Charger le module correspondant à la section
     const loader = SECTION_MODULES[section];
     if (!loader) {
         Logger.warn('ADMIN', `Section inconnue : ${section}`);
-        container.innerHTML = '<p style="text-align:center; color:var(--color-danger);">Section introuvable</p>';
+        container.innerHTML =
+            '<p style="text-align:center; color:var(--color-danger);">Section introuvable</p>';
         _loading = false;
         return;
     }
 
     try {
-        _sectionModule     = await loader();
+        _sectionModule = await loader();
         container.innerHTML = _sectionModule.render();
         await _sectionModule.init();
     } catch (err) {
@@ -134,9 +138,12 @@ async function _loadGlobalCounters() {
     try {
         const { data, error } = await supabaseAdmin.getAdminOverview();
         if (error) return;
-        const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
-        set('admin-total-tasks',   data?.total_tasks          ?? '—');
-        set('admin-pending-subs',  data?.pending_submissions  ?? '—');
+        const set = (id, v) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = v;
+        };
+        set('admin-total-tasks', data?.total_tasks ?? '—');
+        set('admin-pending-subs', data?.pending_submissions ?? '—');
         set('admin-approved-subs', data?.approved_submissions ?? '—');
     } catch (err) {
         Logger.warn('ADMIN', 'Impossible de charger les compteurs globaux', err);

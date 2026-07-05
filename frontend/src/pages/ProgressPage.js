@@ -156,14 +156,14 @@ function getLast7DaysProgress() {
         date.setDate(date.getDate() - i);
         const dateString = date.toISOString().split('T')[0];
 
-        const count = state.memorizationData.filter(item =>
-            item.lastReviewed === dateString
+        const count = state.memorizationData.filter(
+            item => item.lastReviewed === dateString
         ).length;
 
         days.push({
             date: dateString,
             count,
-            percentage: Math.min((count / 5) * 100, 100)
+            percentage: Math.min((count / 5) * 100, 100),
         });
     }
 
@@ -189,7 +189,7 @@ function renderProgressStats() {
             'progress-total-surahs': stats.total,
             'status-strong-count': stats.mastered,
             'status-weak-count': stats.weak,
-            'status-new-count': stats.new
+            'status-new-count': stats.new,
         };
 
         Object.entries(elements).forEach(([id, value]) => {
@@ -211,8 +211,12 @@ function renderProgressChart() {
 
     const last7Days = getLast7DaysProgress();
 
-    chartContainer.innerHTML = last7Days.map(day => `
+    chartContainer.innerHTML = last7Days
+        .map(
+            day => `
         <div class="chart-bar" style="height: ${day.percentage}%" title="${day.date}: ${day.count} مراجعات">
         </div>
-    `).join('');
+    `
+        )
+        .join('');
 }

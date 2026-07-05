@@ -180,7 +180,7 @@ export function saveSettings(event) {
         dailyGoal: parseInt(document.getElementById('daily-goal').value),
         theme: state.settings.theme,
         notifications: document.getElementById('notifications').checked,
-        debugMode: document.getElementById('debug-mode')?.checked || false
+        debugMode: document.getElementById('debug-mode')?.checked || false,
     };
 
     // Appliquer le mode debug
@@ -238,7 +238,7 @@ export function exportData() {
             version: config.version,
             exportDate: new Date().toISOString(),
             settings: state.settings,
-            memorizationData: state.memorizationData
+            memorizationData: state.memorizationData,
         };
 
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -264,12 +264,12 @@ export function importData() {
         input.type = 'file';
         input.accept = '.json';
 
-        input.onchange = (e) => {
+        input.onchange = e => {
             const file = e.target.files[0];
             if (!file) return;
 
             const reader = new FileReader();
-            reader.onload = (event) => {
+            reader.onload = event => {
                 try {
                     const data = JSON.parse(event.target.result);
 

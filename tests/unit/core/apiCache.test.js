@@ -20,7 +20,7 @@ describe('apiCache', () => {
             expect(apiCache.get('tasks')).toEqual([1, 2, 3]);
         });
 
-        it('conserve la référence exacte de l\'objet stocké', () => {
+        it("conserve la référence exacte de l'objet stocké", () => {
             const data = { id: 1, name: 'test' };
             apiCache.set('my-students', data);
             expect(apiCache.get('my-students')).toBe(data);
@@ -106,7 +106,7 @@ describe('apiCache', () => {
             expect(apiCache.get('points')).toBeNull();
         });
 
-        it('n\'affecte pas les clés non mentionnées', () => {
+        it("n'affecte pas les clés non mentionnées", () => {
             apiCache.set('tasks', [1]);
             apiCache.set('my-students', [2]);
             apiCache.invalidate('tasks');
@@ -127,9 +127,12 @@ describe('apiCache', () => {
             expect(apiCache.get('points')).toBeNull();
         });
 
-        it('idempotent : clear() deux fois ne génère pas d\'erreur', () => {
+        it("idempotent : clear() deux fois ne génère pas d'erreur", () => {
             apiCache.set('tasks', []);
-            expect(() => { apiCache.clear(); apiCache.clear(); }).not.toThrow();
+            expect(() => {
+                apiCache.clear();
+                apiCache.clear();
+            }).not.toThrow();
         });
     });
 

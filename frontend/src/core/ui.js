@@ -36,7 +36,7 @@ export function updateTodayDate() {
             weekday: 'long',
             year: 'numeric',
             month: 'long',
-            day: 'numeric'
+            day: 'numeric',
         };
         todayDateElement.textContent = today.toLocaleDateString('ar-SA', options);
     }

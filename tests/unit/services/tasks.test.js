@@ -16,11 +16,11 @@ vi.mock('../../../frontend/src/core/ui.js', () => ({
 }));
 vi.mock('../../../frontend/src/services/supabase-tasks.js', () => ({
     getMyTasks: vi.fn(),
-    createTask:  vi.fn(),
+    createTask: vi.fn(),
 }));
 
-import { state }       from '../../../frontend/src/core/state.js';
-import { config }      from '../../../frontend/src/core/config.js';
+import { state } from '../../../frontend/src/core/state.js';
+import { config } from '../../../frontend/src/core/config.js';
 import * as SupabaseTasks from '../../../frontend/src/services/supabase-tasks.js';
 import { loadTasksFromApi } from '../../../frontend/src/services/tasks.js';
 
@@ -74,21 +74,23 @@ describe('loadTasksFromApi', () => {
             fc.asyncProperty(
                 fc.array(
                     fc.record({
-                        id:     fc.integer({ min: 1, max: 9999 }),
-                        title:  fc.string({ minLength: 1, maxLength: 50 }),
+                        id: fc.integer({ min: 1, max: 9999 }),
+                        title: fc.string({ minLength: 1, maxLength: 50 }),
                         status: fc.constantFrom('pending', 'approved', 'rejected'),
                         points: fc.integer({ min: 0, max: 100 }),
                     }),
                     { maxLength: 20 }
                 ),
-                async (tasks) => {
+                async tasks => {
                     SupabaseTasks.getMyTasks.mockResolvedValue({ data: tasks, error: null });
                     state.tasks = [];
 
                     await loadTasksFromApi();
 
-                    return state.tasks.length === tasks.length &&
-                        state.tasks.every((t, i) => t.id === tasks[i].id);
+                    return (
+                        state.tasks.length === tasks.length &&
+                        state.tasks.every((t, i) => t.id === tasks[i].id)
+                    );
                 }
             ),
             { numRuns: 50 }

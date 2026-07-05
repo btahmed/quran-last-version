@@ -2,27 +2,27 @@
 // Navigation dynamique par rôle — construit top nav + bottom bar selon state.user.role
 
 const NAV_CONFIG = {
-    visitor: [],  // pas de bottom bar pour les visiteurs
+    visitor: [], // pas de bottom bar pour les visiteurs
     student: [
-        { key: 'home',      icon: '🏠', label: 'الرئيسية', center: false },
-        { key: 'hifz',      icon: '📖', label: 'الحفظ',    center: false },
-        { key: 'soumettre', icon: '🎧', label: 'إرسال',    center: true  },
-        { key: 'revision',  icon: '🔁', label: 'المراجعة', center: false },
-        { key: 'profil',    icon: '👤', label: 'حسابي',   center: false },
+        { key: 'home', icon: '🏠', label: 'الرئيسية', center: false },
+        { key: 'hifz', icon: '📖', label: 'الحفظ', center: false },
+        { key: 'soumettre', icon: '🎧', label: 'إرسال', center: true },
+        { key: 'revision', icon: '🔁', label: 'المراجعة', center: false },
+        { key: 'profil', icon: '👤', label: 'حسابي', center: false },
     ],
     teacher: [
-        { key: 'home',        icon: '🏠', label: 'الرئيسية',  center: false },
-        { key: 'devoirs',     icon: '📋', label: 'الواجبات',  center: false },
-        { key: 'soumissions', icon: '🎧', label: 'التسليمات', center: true  },
-        { key: 'eleves',      icon: '👥', label: 'الطلاب',    center: false },
-        { key: 'profil',      icon: '👤', label: 'حسابي',    center: false },
+        { key: 'home', icon: '🏠', label: 'الرئيسية', center: false },
+        { key: 'devoirs', icon: '📋', label: 'الواجبات', center: false },
+        { key: 'soumissions', icon: '🎧', label: 'التسليمات', center: true },
+        { key: 'eleves', icon: '👥', label: 'الطلاب', center: false },
+        { key: 'profil', icon: '👤', label: 'حسابي', center: false },
     ],
     admin: [
-        { key: 'admin',         icon: '🏠', label: 'لوحة',       center: false },
-        { key: 'admin-users',   icon: '👥', label: 'المستخدمون', center: false },
-        { key: 'admin-classes', icon: '🏫', label: 'الفصول',     center: true  },
-        { key: 'admin-stats',   icon: '📊', label: 'الإحصاء',    center: false },
-        { key: 'profil',        icon: '⚙️', label: 'الإعدادات', center: false },
+        { key: 'admin', icon: '🏠', label: 'لوحة', center: false },
+        { key: 'admin-users', icon: '👥', label: 'المستخدمون', center: false },
+        { key: 'admin-classes', icon: '🏫', label: 'الفصول', center: true },
+        { key: 'admin-stats', icon: '📊', label: 'الإحصاء', center: false },
+        { key: 'profil', icon: '⚙️', label: 'الإعدادات', center: false },
     ],
 };
 

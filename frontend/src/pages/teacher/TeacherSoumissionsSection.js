@@ -1,10 +1,10 @@
 // frontend/src/pages/teacher/TeacherSoumissionsSection.js
 // Section Soumissions — extraite de TeacherPage.js (Task 9 : lazy-loading)
 // Responsabilités : lister les soumissions audio en attente, player audio, modal notation emoji, modal rejet
-import { config }           from '../../core/config.js';
+import { config } from '../../core/config.js';
 import { showNotification } from '../../core/ui.js';
-import { Logger }           from '../../core/logger.js';
-import { apiCache }         from '../../core/apiCache.js';
+import { Logger } from '../../core/logger.js';
+import { apiCache } from '../../core/apiCache.js';
 import * as supabaseSubmissions from '../../services/supabase-submissions.js';
 
 // ─── CONSTANTES ───────────────────────────────────────────────────────────────
@@ -20,7 +20,7 @@ const GRADE_LABELS = {
 // ─── ÉTAT LOCAL ───────────────────────────────────────────────────────────────
 
 let _pendingGradeSubmissionId = null;
-let _selectedGrade            = null;
+let _selectedGrade = null;
 let _pendingRejectSubmissionId = null;
 
 // ─── UTILS ───────────────────────────────────────────────────────────────────
@@ -55,13 +55,17 @@ export function render() {
                 <h3 style="font-size:1.2rem;font-weight:700;margin-bottom:0.5rem;">⭐ تقييم التسليم</h3>
                 <p id="grade-modal-subtitle" style="color:var(--color-text-secondary);margin-bottom:1.5rem;font-size:0.9rem;"></p>
                 <div style="display:flex;justify-content:center;gap:0.75rem;margin-bottom:1rem;">
-                    ${[1,2,3,4,5].map(g => `
+                    ${[1, 2, 3, 4, 5]
+                        .map(
+                            g => `
                         <button onclick="QuranReview.selectGrade(${g})" data-grade="${g}"
                             style="font-size:2rem;background:none;border:2px solid transparent;border-radius:12px;padding:8px;cursor:pointer;transition:all 0.2s;line-height:1;"
                             title="${GRADE_LABELS[g].text}">
                             ${GRADE_LABELS[g].emoji}
                         </button>
-                    `).join('')}
+                    `
+                        )
+                        .join('')}
                 </div>
                 <div id="grade-label" style="font-size:1rem;font-weight:600;min-height:1.5em;margin-bottom:1.5rem;color:var(--color-primary);"></div>
                 <div style="display:flex;gap:1rem;justify-content:center;">
@@ -120,7 +124,8 @@ async function _loadPendingSubmissions() {
     } catch (err) {
         Logger.error('TEACHER-SOUMISSIONS', 'Erreur chargement soumissions', err);
         if (pendingList) {
-            pendingList.innerHTML = '<p class="empty-state" style="color:var(--color-danger);">فشل تحميل التسليمات</p>';
+            pendingList.innerHTML =
+                '<p class="empty-state" style="color:var(--color-danger);">فشل تحميل التسليمات</p>';
         }
     }
 }
@@ -134,22 +139,24 @@ function _renderPendingList(pending) {
         return;
     }
 
-    pendingList.innerHTML = pending.map(s => {
-        const date        = new Date(s.submitted_at).toLocaleDateString('ar-SA');
-        const taskTitle   = s.task?.title || s.tasks?.title || 'تسليم';
-        const taskPoints  = s.task?.points || s.tasks?.points || 0;
-        const studentName = s.profiles?.first_name || s.profiles?.username || 'طالب';
-        const initial     = escapeHtml(studentName.charAt(0) || '؟');
-        const sid         = escapeHtml(String(s.id));
+    pendingList.innerHTML = pending
+        .map(s => {
+            const date = new Date(s.submitted_at).toLocaleDateString('ar-SA');
+            const taskTitle = s.task?.title || s.tasks?.title || 'تسليم';
+            const taskPoints = s.task?.points || s.tasks?.points || 0;
+            const studentName = s.profiles?.first_name || s.profiles?.username || 'طالب';
+            const initial = escapeHtml(studentName.charAt(0) || '؟');
+            const sid = escapeHtml(String(s.id));
 
-        // Construction de l'URL audio (Cloudinary ou backend local)
-        const audioSrc = s.audio_url
-            ? (s.audio_url.startsWith('http')
-                ? s.audio_url
-                : config.apiBaseUrl + (s.audio_url.startsWith('/') ? s.audio_url : '/' + s.audio_url))
-            : null;
+            // Construction de l'URL audio (Cloudinary ou backend local)
+            const audioSrc = s.audio_url
+                ? s.audio_url.startsWith('http')
+                    ? s.audio_url
+                    : config.apiBaseUrl +
+                      (s.audio_url.startsWith('/') ? s.audio_url : '/' + s.audio_url)
+                : null;
 
-        return `<div class="k-pending-card">
+            return `<div class="k-pending-card">
             <div class="k-pending-head">
                 <span class="k-avatar">${initial}</span>
                 <div style="flex:1;min-width:0">
@@ -162,7 +169,9 @@ function _renderPendingList(pending) {
                 <span>🏆 ${escapeHtml(String(taskPoints))} نقطة</span>
                 <span>📅 ${date}</span>
             </div>
-            ${audioSrc ? `
+            ${
+                audioSrc
+                    ? `
                 <div class="k-pending-audio">
                     <audio controls preload="metadata"
                         onerror="this.closest('.k-pending-audio').innerHTML='<p class=\\'k-empty\\' style=\\'padding:var(--space-2)\\'>الملف الصوتي غير متاح</p>'">
@@ -170,7 +179,9 @@ function _renderPendingList(pending) {
                         المتصفح لا يدعم تشغيل الصوت
                     </audio>
                 </div>
-            ` : '<p class="k-empty" style="padding:var(--space-2) var(--space-4)">لا يوجد ملف صوتي 🎙</p>'}
+            `
+                    : '<p class="k-empty" style="padding:var(--space-2) var(--space-4)">لا يوجد ملف صوتي 🎙</p>'
+            }
             <div class="k-pending-actions">
                 <button class="k-quickbtn k-quickbtn--primary"
                     onclick="QuranReview.openGradeModal(&quot;${sid}&quot;,&quot;${escapeHtml(escapeJs(studentName))}&quot;,&quot;${escapeHtml(escapeJs(taskTitle))}&quot;)">⭐ قبول وتقييم</button>
@@ -178,7 +189,8 @@ function _renderPendingList(pending) {
                     onclick="QuranReview.openRejectModal(&quot;${sid}&quot;,&quot;${escapeHtml(escapeJs(studentName))}&quot;)">✗ رفض</button>
             </div>
         </div>`;
-    }).join('');
+        })
+        .join('');
 }
 
 // ─── MODAL NOTATION EMOJI ─────────────────────────────────────────────────────
@@ -198,8 +210,8 @@ export function openGradeModal(submissionId, studentName, taskTitle) {
 
     // Réinitialiser les boutons emoji
     document.querySelectorAll('[data-grade]').forEach(btn => {
-        btn.style.border     = '2px solid transparent';
-        btn.style.transform  = 'scale(1)';
+        btn.style.border = '2px solid transparent';
+        btn.style.transform = 'scale(1)';
     });
 
     const modal = document.getElementById('grade-modal');
@@ -220,10 +232,10 @@ export function selectGrade(grade) {
     document.querySelectorAll('[data-grade]').forEach(btn => {
         const g = parseInt(btn.dataset.grade);
         if (g === grade) {
-            btn.style.border    = '2px solid var(--color-primary, #6366f1)';
+            btn.style.border = '2px solid var(--color-primary, #6366f1)';
             btn.style.transform = 'scale(1.2)';
         } else {
-            btn.style.border    = '2px solid transparent';
+            btn.style.border = '2px solid transparent';
             btn.style.transform = 'scale(1)';
         }
     });
@@ -249,11 +261,15 @@ export async function approveSubmission(submissionId, grade) {
     if (!token) return;
 
     const gradeInfo = grade ? GRADE_LABELS[grade] : null;
-    const feedback  = gradeInfo ? `${gradeInfo.emoji} ${gradeInfo.text} (${grade}/5)` : '';
+    const feedback = gradeInfo ? `${gradeInfo.emoji} ${gradeInfo.text} (${grade}/5)` : '';
 
     try {
         const points = grade ? grade * 2 : 10;
-        const { error } = await supabaseSubmissions.approveSubmission(submissionId, points, feedback);
+        const { error } = await supabaseSubmissions.approveSubmission(
+            submissionId,
+            points,
+            feedback
+        );
         if (error) throw new Error('فشل القبول');
 
         const gradeText = gradeInfo ? ` — ${gradeInfo.emoji} ${gradeInfo.text}` : '';

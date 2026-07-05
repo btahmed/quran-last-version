@@ -3,14 +3,14 @@ export const Logger = {
     _history: [],
     _maxHistory: 500,
     _styles: {
-        LOG:   'color: #2d5016; font-weight: bold;',
-        WARN:  'color: #ffc107; font-weight: bold;',
+        LOG: 'color: #2d5016; font-weight: bold;',
+        WARN: 'color: #ffc107; font-weight: bold;',
         ERROR: 'color: #dc3545; font-weight: bold;',
         CLICK: 'color: #6f42c1; font-weight: bold;',
-        API:   'color: #0d6efd; font-weight: bold;',
-        NAV:   'color: #20c997; font-weight: bold;',
+        API: 'color: #0d6efd; font-weight: bold;',
+        NAV: 'color: #20c997; font-weight: bold;',
         AUDIO: 'color: #fd7e14; font-weight: bold;',
-        AUTH:  'color: #e83e8c; font-weight: bold;',
+        AUTH: 'color: #e83e8c; font-weight: bold;',
         STATE: 'color: #6610f2; font-weight: bold;',
         STORE: 'color: #795548; font-weight: bold;',
     },
@@ -22,7 +22,7 @@ export const Logger = {
             level,
             category,
             message,
-            data: data || null
+            data: data || null,
         };
         this._history.push(entry);
         if (this._history.length > this._maxHistory) this._history.shift();
@@ -69,18 +69,31 @@ export const Logger = {
     async api(method, url, options = {}) {
         const start = performance.now();
         this._push('LOG', 'API', `→ ${method} ${url}`);
-        console.log(`%c[${new Date().toLocaleTimeString()}] [API] → ${method} ${url}`, this._styles.API);
+        console.log(
+            `%c[${new Date().toLocaleTimeString()}] [API] → ${method} ${url}`,
+            this._styles.API
+        );
         try {
             const response = await fetch(url, { method, ...options });
             const duration = Math.round(performance.now() - start);
             const statusEmoji = response.ok ? '✅' : '❌';
-            this._push(response.ok ? 'LOG' : 'ERROR', 'API', `← ${response.status} ${method} ${url} (${duration}ms)`);
-            console.log(`%c[${new Date().toLocaleTimeString()}] [API] ← ${statusEmoji} ${response.status} ${method} ${url} (${duration}ms)`, this._styles.API);
+            this._push(
+                response.ok ? 'LOG' : 'ERROR',
+                'API',
+                `← ${response.status} ${method} ${url} (${duration}ms)`
+            );
+            console.log(
+                `%c[${new Date().toLocaleTimeString()}] [API] ← ${statusEmoji} ${response.status} ${method} ${url} (${duration}ms)`,
+                this._styles.API
+            );
             return response;
         } catch (err) {
             const duration = Math.round(performance.now() - start);
             this._push('ERROR', 'API', `✗ NETWORK ${method} ${url} (${duration}ms)`, err.message);
-            console.error(`%c[${new Date().toLocaleTimeString()}] [API] ✗ NETWORK ERROR ${method} ${url} (${duration}ms): ${err.message}`, this._styles.ERROR);
+            console.error(
+                `%c[${new Date().toLocaleTimeString()}] [API] ✗ NETWORK ERROR ${method} ${url} (${duration}ms): ${err.message}`,
+                this._styles.ERROR
+            );
             throw err;
         }
     },
@@ -89,28 +102,41 @@ export const Logger = {
     nav(from, to) {
         if (!this.debugMode) return;
         this._push('LOG', 'NAV', `${from} → ${to}`);
-        console.log(`%c[${new Date().toLocaleTimeString()}] [NAV] 🧭 ${from} → ${to}`, this._styles.NAV);
+        console.log(
+            `%c[${new Date().toLocaleTimeString()}] [NAV] 🧭 ${from} → ${to}`,
+            this._styles.NAV
+        );
     },
 
     // --- AUDIO TRACKER ---
     audio(event, detail = '') {
         if (!this.debugMode) return;
         this._push('LOG', 'AUDIO', `${event} ${detail}`);
-        console.log(`%c[${new Date().toLocaleTimeString()}] [AUDIO] 🔊 ${event} ${detail}`, this._styles.AUDIO);
+        console.log(
+            `%c[${new Date().toLocaleTimeString()}] [AUDIO] 🔊 ${event} ${detail}`,
+            this._styles.AUDIO
+        );
     },
 
     // --- STATE TRACKER ---
     state(key, value) {
         if (!this.debugMode) return;
         this._push('LOG', 'STATE', `${key} changed`, value);
-        console.log(`%c[${new Date().toLocaleTimeString()}] [STATE] 📦 ${key} =`, this._styles.STATE, value);
+        console.log(
+            `%c[${new Date().toLocaleTimeString()}] [STATE] 📦 ${key} =`,
+            this._styles.STATE,
+            value
+        );
     },
 
     // --- STORAGE TRACKER ---
     store(action, key) {
         if (!this.debugMode) return;
         this._push('LOG', 'STORE', `${action} → ${key}`);
-        console.log(`%c[${new Date().toLocaleTimeString()}] [STORE] 💾 ${action} → ${key}`, this._styles.STORE);
+        console.log(
+            `%c[${new Date().toLocaleTimeString()}] [STORE] 💾 ${action} → ${key}`,
+            this._styles.STORE
+        );
     },
 
     // --- CONSOLE HELPERS ---
@@ -121,28 +147,40 @@ export const Logger = {
             const f = filter.toUpperCase();
             items = items.filter(e => e.category === f || e.level === f);
         }
-        console.table(items.map(e => ({ time: e.ts, level: e.level, cat: e.category, message: e.message })));
+        console.table(
+            items.map(e => ({ time: e.ts, level: e.level, cat: e.category, message: e.message }))
+        );
         return items;
     },
 
     // Usage in F12: Logger.errors()
-    errors() { return this.history('ERROR'); },
+    errors() {
+        return this.history('ERROR');
+    },
 
     // Usage in F12: Logger.clicks()
-    clicks() { return this.history('CLICK'); },
+    clicks() {
+        return this.history('CLICK');
+    },
 
     // Usage in F12: Logger.apis()
-    apis() { return this.history('API'); },
+    apis() {
+        return this.history('API');
+    },
 
     // Usage in F12: Logger.clear()
-    clear() { this._history = []; console.clear(); console.log('🧹 Logger history cleared'); },
+    clear() {
+        this._history = [];
+        console.clear();
+        console.log('🧹 Logger history cleared');
+    },
 
     // Usage in F12: Logger.dump() — export as JSON
     dump() {
         const json = JSON.stringify(this._history, null, 2);
         console.log(json);
         return json;
-    }
+    },
 };
 
 // Expose Logger globally for F12 console access
