@@ -71,9 +71,17 @@ export function render() {
             </section>
 
             <section class="k-section">
-                <div class="tabs" style="margin-bottom:var(--space-4);">
-                    <button class="tab active" onclick="QuranReview.switchTaskTab('pending')">قيد الانتظار</button>
-                    <button class="tab" onclick="QuranReview.switchTaskTab('completed')">مكتملة</button>
+                <div class="k-seg-tabs">
+                    <button class="k-seg-tab k-seg-tab--pending active" onclick="QuranReview.switchTaskTab('pending')">
+                        <span class="k-seg-tab-icon">⏳</span>
+                        <span class="k-seg-tab-label">قيد الانتظار</span>
+                        <span class="k-seg-tab-hint">واجبات لم تُسلَّم بعد</span>
+                    </button>
+                    <button class="k-seg-tab k-seg-tab--done" onclick="QuranReview.switchTaskTab('completed')">
+                        <span class="k-seg-tab-icon">✅</span>
+                        <span class="k-seg-tab-label">مكتملة</span>
+                        <span class="k-seg-tab-hint">تسليمات مقبولة</span>
+                    </button>
                 </div>
                 <div id="student-tasks-list" class="k-stack">
                     <div class="skeleton skeleton-card"></div>
@@ -317,10 +325,10 @@ function _applyStudentData(tasks, submissions, pointsData) {
 
 export function switchTaskTab(tabName) {
     // Mettre à jour les boutons onglet
-    document.querySelectorAll('#mytasks-page .tab').forEach(btn => {
+    document.querySelectorAll('#mytasks-page .k-seg-tab').forEach(btn => {
         btn.classList.remove('active');
     });
-    const activeBtn = document.querySelector(`#mytasks-page .tab[onclick*="${tabName}"]`);
+    const activeBtn = document.querySelector(`#mytasks-page .k-seg-tab[onclick*="${tabName}"]`);
     if (activeBtn) activeBtn.classList.add('active');
 
     const tasksList = document.getElementById('student-tasks-list');

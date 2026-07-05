@@ -57,7 +57,14 @@ function buildTopNav(role) {
         a.href = '#';
         a.className = 'nav-link-pro';
         a.dataset.page = tab.key;
-        a.textContent = tab.label;
+        const iconSpan = document.createElement('span');
+        iconSpan.className = 'nav-icon-top';
+        iconSpan.textContent = tab.icon;
+        const labelSpan = document.createElement('span');
+        labelSpan.className = 'nav-label-top';
+        labelSpan.textContent = tab.label;
+        a.appendChild(iconSpan);
+        a.appendChild(labelSpan);
         a.addEventListener('click', e => {
             e.preventDefault();
             if (window.QuranReview?.navigateTo) window.QuranReview.navigateTo(tab.key);
@@ -65,10 +72,23 @@ function buildTopNav(role) {
         nav.appendChild(a);
     });
 
-    // Bouton logout toujours présent pour les utilisateurs connectés
+    // Séparateur visuel
+    const sep = document.createElement('div');
+    sep.className = 'nav-sep';
+    nav.appendChild(sep);
+
+    // Bouton logout icône
     const logoutBtn = document.createElement('button');
-    logoutBtn.className = 'btn btn-outline-glow btn-sm';
-    logoutBtn.textContent = 'خروج';
+    logoutBtn.className = 'nav-logout-btn';
+    const logoutIcon = document.createElement('span');
+    logoutIcon.className = 'nav-icon-top';
+    logoutIcon.textContent = '🚪';
+    const logoutLabel = document.createElement('span');
+    logoutLabel.className = 'nav-label-top';
+    logoutLabel.textContent = 'خروج';
+    logoutBtn.appendChild(logoutIcon);
+    logoutBtn.appendChild(logoutLabel);
+    logoutBtn.title = 'تسجيل الخروج';
     logoutBtn.addEventListener('click', () => window.QuranReview?.logout());
     nav.appendChild(logoutBtn);
 }
