@@ -1,7 +1,6 @@
 // frontend/src/pages/HomePage.js
 // Page d'accueil intelligente : landing visiteur OU dashboard selon le rôle
 import { state } from '../core/state.js';
-import { config } from '../core/config.js';
 import { apiCache } from '../core/apiCache.js';
 import * as supabaseSubmissions from '../services/supabase-submissions.js';
 import * as supabaseAdmin from '../services/supabase-admin.js';
@@ -14,26 +13,34 @@ import * as supabaseTasks from '../services/supabase-tasks.js';
 // Rôle effectif : un superuser Django est toujours traité comme 'admin'
 function getEffectiveRole(user) {
     if (!user) return null;
-    return (user.role === 'admin' || user.is_superuser) ? 'admin' : user.role;
+    return user.role === 'admin' || user.is_superuser ? 'admin' : user.role;
 }
 
 export function render() {
     if (!state.user) return renderLanding();
     switch (getEffectiveRole(state.user)) {
-        case 'student': return renderDashboard('student');
-        case 'teacher': return renderDashboard('teacher');
-        case 'admin':   return renderDashboard('admin');
-        default:        return renderLanding(); // fallback rôle inconnu
+        case 'student':
+            return renderDashboard('student');
+        case 'teacher':
+            return renderDashboard('teacher');
+        case 'admin':
+            return renderDashboard('admin');
+        default:
+            return renderLanding(); // fallback rôle inconnu
     }
 }
 
 export function init() {
     if (!state.user) return initLanding();
     switch (getEffectiveRole(state.user)) {
-        case 'student': return initDashboard('student');
-        case 'teacher': return initDashboard('teacher');
-        case 'admin':   return initDashboard('admin');
-        default:        return initLanding();
+        case 'student':
+            return initDashboard('student');
+        case 'teacher':
+            return initDashboard('teacher');
+        case 'admin':
+            return initDashboard('admin');
+        default:
+            return initLanding();
     }
 }
 
@@ -114,18 +121,19 @@ function renderLanding() {
 
 function initLanding() {
     // Animation compteurs stats au scroll (IntersectionObserver)
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                animateCounter(entry.target);
-                observer.unobserve(entry.target);
-            }
-        });
-    }, { threshold: 0.5 });
-
-    document.querySelectorAll('.stat-number[data-target]').forEach(el =>
-        observer.observe(el)
+    const observer = new IntersectionObserver(
+        entries => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    animateCounter(entry.target);
+                    observer.unobserve(entry.target);
+                }
+            });
+        },
+        { threshold: 0.5 }
     );
+
+    document.querySelectorAll('.stat-number[data-target]').forEach(el => observer.observe(el));
 
     // Stats live depuis Supabase
     (async function fetchLiveStats() {
@@ -137,7 +145,7 @@ function initLanding() {
                 .eq('role', 'student');
             const el = document.querySelector('.stat-number[data-target="224"]');
             if (el && students != null) el.textContent = '+' + students;
-        } catch (e) {
+        } catch {
             // silently ignore — stats non critiques
         }
     })();
@@ -162,7 +170,7 @@ function renderDashboard(role) {
     const renderers = {
         student: renderStudentDashboard,
         teacher: renderTeacherDashboard,
-        admin:   renderAdminDashboard,
+        admin: renderAdminDashboard,
     };
     return (renderers[role] || renderLanding)();
 }
@@ -394,7 +402,7 @@ function _applyStudentLocalStats() {
     // hifzDone = ayats mémorisés, hifzTotal = nombre total dans les données
     const hifzDone = mastered;
     const hifzTotal = data.length;
-    const hifzPct = (hifzTotal > 0) ? Math.round((hifzDone / hifzTotal) * 100) : 0;
+    const hifzPct = hifzTotal > 0 ? Math.round((hifzDone / hifzTotal) * 100) : 0;
 
     setText('hifz-progress', hifzPct + '%');
     setText('revision-score', pct + '%');
@@ -432,16 +440,20 @@ async function initDashboard(role) {
             const { renderWeekCalendar } = await import('../components/WeekCalendar.js');
             const calContainer = document.getElementById('week-calendar-container');
             if (calContainer) calContainer.innerHTML = renderWeekCalendar(cached);
-            supabaseTasks.getMyTasks().then(async ({ data }) => {
-                if (data) {
-                    apiCache.set('tasks', data);
-                    renderStudentTasks(data);
-                    // Mise à jour du calendrier avec les données fraîches
-                    const { renderWeekCalendar: rwc } = await import('../components/WeekCalendar.js');
-                    const cal = document.getElementById('week-calendar-container');
-                    if (cal) cal.innerHTML = rwc(data);
-                }
-            }).catch(() => {});
+            supabaseTasks
+                .getMyTasks()
+                .then(async ({ data }) => {
+                    if (data) {
+                        apiCache.set('tasks', data);
+                        renderStudentTasks(data);
+                        // Mise à jour du calendrier avec les données fraîches
+                        const { renderWeekCalendar: rwc } =
+                            await import('../components/WeekCalendar.js');
+                        const cal = document.getElementById('week-calendar-container');
+                        if (cal) cal.innerHTML = rwc(data);
+                    }
+                })
+                .catch(() => {});
             return;
         }
         const { data, error } = await supabaseTasks.getMyTasks();
@@ -454,7 +466,7 @@ async function initDashboard(role) {
         // Rendu du calendrier hebdomadaire après chargement des tâches
         const { renderWeekCalendar } = await import('../components/WeekCalendar.js');
         const calContainer = document.getElementById('week-calendar-container');
-        if (calContainer) calContainer.innerHTML = renderWeekCalendar((!error && data) ? data : []);
+        if (calContainer) calContainer.innerHTML = renderWeekCalendar(!error && data ? data : []);
     }
 
     if (role === 'teacher') {
@@ -466,7 +478,9 @@ async function initDashboard(role) {
 
         if (!submissionsRes.error && submissionsRes.data) {
             apiCache.set('submissions', submissionsRes.data);
-            const pending = submissionsRes.data.filter(s => s.status === 'pending' || s.status === 'submitted' || !s.grade);
+            const pending = submissionsRes.data.filter(
+                s => s.status === 'pending' || s.status === 'submitted' || !s.grade
+            );
             renderTeacherSubmissions(pending);
             setText('t-pending', pending.length);
         } else {
@@ -496,10 +510,10 @@ async function initDashboard(role) {
     if (role === 'admin') {
         const cached = apiCache.get('admin-overview');
         if (cached) {
-            setText('a-users',    '+' + (cached.total_users    || 0));
-            setText('a-teachers',        cached.total_teachers || 0);
-            setText('a-students',        cached.total_students || 0);
-            setText('a-today',           cached.submissions_today || 0);
+            setText('a-users', '+' + (cached.total_users || 0));
+            setText('a-teachers', cached.total_teachers || 0);
+            setText('a-students', cached.total_students || 0);
+            setText('a-today', cached.submissions_today || 0);
             renderAdminActivity(cached);
             return;
         }
@@ -507,10 +521,10 @@ async function initDashboard(role) {
         const { data, error } = await supabaseAdmin.getAdminOverview();
         if (!error && data) {
             apiCache.set('admin-overview', data);
-            setText('a-users',    '+' + (data.total_users    || 0));
-            setText('a-teachers',        data.total_teachers || 0);
-            setText('a-students',        data.total_students || 0);
-            setText('a-today',           data.submissions_today || 0);
+            setText('a-users', '+' + (data.total_users || 0));
+            setText('a-teachers', data.total_teachers || 0);
+            setText('a-students', data.total_students || 0);
+            setText('a-today', data.submissions_today || 0);
             renderAdminActivity(data);
         } else {
             ['a-users', 'a-teachers', 'a-students', 'a-today'].forEach(id => setText(id, '—'));
@@ -530,11 +544,13 @@ function renderStudentTasks(tasks) {
         el.innerHTML = '<p class="k-empty">لا توجد واجبات اليوم 🎉</p>';
         return;
     }
-    el.innerHTML = tasks.slice(0, 3).map(t => {
-        const isRevision = t.task_type === 'revision';
-        const dotClass   = isRevision ? 'k-dot--pending' : 'k-dot--new';
-        const metaLabel  = isRevision ? 'مراجعة مجدولة' : 'حفظ جديد';
-        return `
+    el.innerHTML = tasks
+        .slice(0, 3)
+        .map(t => {
+            const isRevision = t.task_type === 'revision';
+            const dotClass = isRevision ? 'k-dot--pending' : 'k-dot--new';
+            const metaLabel = isRevision ? 'مراجعة مجدولة' : 'حفظ جديد';
+            return `
         <div class="k-row">
             <div class="rl">
                 <span class="k-dot ${dotClass}"></span>
@@ -547,7 +563,8 @@ function renderStudentTasks(tasks) {
                     onclick="QuranReview.navigateTo('soumettre')">إرسال 🎧</button>
         </div>
         `;
-    }).join('');
+        })
+        .join('');
 }
 
 function renderTeacherSubmissions(subs) {
@@ -557,11 +574,13 @@ function renderTeacherSubmissions(subs) {
         el.innerHTML = '<p class="k-empty">لا توجد تسليمات في الانتظار ✅</p>';
         return;
     }
-    el.innerHTML = subs.slice(0, 5).map(s => {
-        const name    = s.profiles?.first_name || s.profiles?.username || s.student_name || 'طالب';
-        const task    = s.tasks?.title || s.task_title || 'تسليم';
-        const initial = escapeHtml(name.charAt(0) || '؟');
-        return `
+    el.innerHTML = subs
+        .slice(0, 5)
+        .map(s => {
+            const name = s.profiles?.first_name || s.profiles?.username || s.student_name || 'طالب';
+            const task = s.tasks?.title || s.task_title || 'تسليم';
+            const initial = escapeHtml(name.charAt(0) || '؟');
+            return `
         <div class="k-row">
             <div class="rl">
                 <span class="k-avatar">${initial}</span>
@@ -573,7 +592,8 @@ function renderTeacherSubmissions(subs) {
             <span class="k-chip k-chip--warning">⏳ بانتظار</span>
         </div>
         `;
-    }).join('');
+        })
+        .join('');
 }
 
 function renderAdminActivity(data) {
@@ -581,11 +601,21 @@ function renderAdminActivity(data) {
     if (!el) return;
     const items = [];
     if (data?.submissions_today > 0)
-        items.push({ label: `${data.submissions_today} تسليم اليوم`, meta: 'تقييم مكتمل · آخر تحديث', dot: 'done' });
+        items.push({
+            label: `${data.submissions_today} تسليم اليوم`,
+            meta: 'تقييم مكتمل · آخر تحديث',
+            dot: 'done',
+        });
     if (data?.total_students > 0)
-        items.push({ label: `${data.total_students} طالب مسجّل`, meta: `${data.total_teachers || 0} معلم · حلقات نشطة`, dot: 'new' });
+        items.push({
+            label: `${data.total_students} طالب مسجّل`,
+            meta: `${data.total_teachers || 0} معلم · حلقات نشطة`,
+            dot: 'new',
+        });
     items.push({ label: 'النظام يعمل بكامل طاقته', meta: getArabicDate(), dot: 'pending' });
-    el.innerHTML = items.map(item => `
+    el.innerHTML = items
+        .map(
+            item => `
         <div class="k-row">
             <div class="rl">
                 <span class="k-dot k-dot--${item.dot}"></span>
@@ -595,7 +625,9 @@ function renderAdminActivity(data) {
                 </div>
             </div>
         </div>
-    `).join('');
+    `
+        )
+        .join('');
 }
 
 function setText(id, value) {

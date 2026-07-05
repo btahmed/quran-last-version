@@ -4,31 +4,30 @@
 //   TeacherPage ← lazy → teacher/TeacherDevoirsSection.js
 //                      → teacher/TeacherSoumissionsSection.js
 //                      → teacher/TeacherElevesSection.js
-import { Logger }           from '../core/logger.js';
-import { state }            from '../core/state.js';
-import { config }           from '../core/config.js';
+import { Logger } from '../core/logger.js';
+import { state } from '../core/state.js';
 import { showNotification } from '../core/ui.js';
-import * as supabaseAdmin   from '../services/supabase-admin.js';
+import * as supabaseAdmin from '../services/supabase-admin.js';
 
 // Injecter le CSS des onglets enseignant (une seule fois)
 if (!document.querySelector('link[href*="TeacherPage.css"]')) {
     const link = document.createElement('link');
-    link.rel  = 'stylesheet';
+    link.rel = 'stylesheet';
     link.href = '/src/pages/TeacherPage.css';
     document.head.appendChild(link);
 }
 
 // ─── MAPPAGE DES SECTIONS → MODULES ──────────────────────────────────────────
 const SECTION_MODULES = {
-    devoirs:     () => import('./teacher/TeacherDevoirsSection.js'),
+    devoirs: () => import('./teacher/TeacherDevoirsSection.js'),
     soumissions: () => import('./teacher/TeacherSoumissionsSection.js'),
-    eleves:      () => import('./teacher/TeacherElevesSection.js'),
+    eleves: () => import('./teacher/TeacherElevesSection.js'),
 };
 
 // ─── ÉTAT INTERNE ─────────────────────────────────────────────────────────────
 let _activeSection = 'devoirs'; // section affichée
-let _sectionModule = null;      // module ES actuellement chargé
-let _loading       = false;     // flag anti-concurrence (double-clic)
+let _sectionModule = null; // module ES actuellement chargé
+let _loading = false; // flag anti-concurrence (double-clic)
 
 // ─── RENDER ──────────────────────────────────────────────────────────────────
 export function render() {
@@ -64,9 +63,9 @@ export async function init() {
 
     // Charger la section initiale selon la sous-route (devoirs, soumissions, eleves)
     const page = state.currentPage;
-    if (page === 'soumissions')      await teacherSwitchSection('soumissions');
-    else if (page === 'eleves')      await teacherSwitchSection('eleves');
-    else                             await teacherSwitchSection('devoirs');
+    if (page === 'soumissions') await teacherSwitchSection('soumissions');
+    else if (page === 'eleves') await teacherSwitchSection('eleves');
+    else await teacherSwitchSection('devoirs');
 }
 
 // ─── CHANGEMENT DE SECTION (lazy-loading) ─────────────────────────────────────
@@ -86,25 +85,30 @@ export async function teacherSwitchSection(section) {
 
     // Afficher un squelette de chargement
     const container = document.getElementById('teacher-section-content');
-    if (!container) { _loading = false; return; }
+    if (!container) {
+        _loading = false;
+        return;
+    }
     container.innerHTML = '<div class="skeleton skeleton-card"></div>'.repeat(3);
 
     // Charger le module correspondant à la section
     const loader = SECTION_MODULES[section];
     if (!loader) {
         Logger.warn('TEACHER', `Section inconnue : ${section}`);
-        container.innerHTML = '<p style="text-align:center; color:var(--color-danger);">Section introuvable</p>';
+        container.innerHTML =
+            '<p style="text-align:center; color:var(--color-danger);">Section introuvable</p>';
         _loading = false;
         return;
     }
 
     try {
-        _sectionModule      = await loader();
+        _sectionModule = await loader();
         container.innerHTML = _sectionModule.render();
         await _sectionModule.init();
     } catch (err) {
         Logger.error('TEACHER', `Erreur chargement section ${section}`, err);
-        container.innerHTML = '<p style="text-align:center; padding:2rem; color:var(--color-danger);">خطأ في تحميل القسم</p>';
+        container.innerHTML =
+            '<p style="text-align:center; padding:2rem; color:var(--color-danger);">خطأ في تحميل القسم</p>';
     } finally {
         _loading = false; // toujours déverrouiller, même en cas d'erreur
     }
@@ -119,63 +123,41 @@ function _delegate(fn, ...args) {
     if (_sectionModule && typeof _sectionModule[fn] === 'function') {
         return _sectionModule[fn](...args);
     }
-    Logger.warn('TEACHER', `Fonction ${fn} non disponible dans le module actif (${_activeSection})`);
+    Logger.warn(
+        'TEACHER',
+        `Fonction ${fn} non disponible dans le module actif (${_activeSection})`
+    );
 }
 
 // ── Devoirs ──
-export const handleCreateTask     = (...args) => _delegate('handleCreateTask', ...args);
+export const handleCreateTask = (...args) => _delegate('handleCreateTask', ...args);
 export const handleDeleteAllTasks = (...args) => _delegate('handleDeleteAllTasks', ...args);
-export const handleDeleteBatch    = (...args) => _delegate('handleDeleteBatch', ...args);
-export const toggleAssignMode     = (...args) => _delegate('toggleAssignMode', ...args);
+export const handleDeleteBatch = (...args) => _delegate('handleDeleteBatch', ...args);
+export const toggleAssignMode = (...args) => _delegate('toggleAssignMode', ...args);
 
 // ── Soumissions ──
-export const openGradeModal   = (...args) => _delegate('openGradeModal', ...args);
-export const closeGradeModal  = (...args) => _delegate('closeGradeModal', ...args);
-export const selectGrade      = (...args) => _delegate('selectGrade', ...args);
-export const confirmGrade     = (...args) => _delegate('confirmGrade', ...args);
+export const openGradeModal = (...args) => _delegate('openGradeModal', ...args);
+export const closeGradeModal = (...args) => _delegate('closeGradeModal', ...args);
+export const selectGrade = (...args) => _delegate('selectGrade', ...args);
+export const confirmGrade = (...args) => _delegate('confirmGrade', ...args);
 export const approveSubmission = (...args) => _delegate('approveSubmission', ...args);
-export const openRejectModal  = (...args) => _delegate('openRejectModal', ...args);
+export const openRejectModal = (...args) => _delegate('openRejectModal', ...args);
 export const closeRejectModal = (...args) => _delegate('closeRejectModal', ...args);
-export const confirmReject    = (...args) => _delegate('confirmReject', ...args);
+export const confirmReject = (...args) => _delegate('confirmReject', ...args);
 export const rejectSubmission = (...args) => _delegate('rejectSubmission', ...args);
 
 // ── Élèves ──
 export const viewStudentProgress = (...args) => _delegate('viewStudentProgress', ...args);
 
-// ─── FONCTIONS ADMIN RÉSIDUELLES ──────────────────────────────────────────────
-// Ces fonctions étaient dans l'ancien TeacherPage.js monolithique.
-// Elles sont conservées ici pour compatibilité avec UserEditModal.js et main.js
-// qui les référencent via TeacherPage ou window.QuranReview.
-
-function escapeHtml(text) {
-    if (!text) return '';
-    return String(text)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-}
-
-function escapeJs(text) {
-    if (!text) return '';
-    return String(text)
-        .replace(/\\/g, '\\\\')
-        .replace(/'/g, "\\'")
-        .replace(/"/g, '\\"')
-        .replace(/\n/g, '\\n')
-        .replace(/\r/g, '\\r');
-}
-
 export async function handleUpdateUser(event) {
     event.preventDefault();
 
-    const userId     = document.getElementById('edit-user-id').value;
-    const firstName  = document.getElementById('edit-first-name').value.trim();
-    const lastName   = document.getElementById('edit-last-name').value.trim();
-    const role       = document.getElementById('edit-role').value;
+    const userId = document.getElementById('edit-user-id').value;
+    const firstName = document.getElementById('edit-first-name').value.trim();
+    const lastName = document.getElementById('edit-last-name').value.trim();
+    const role = document.getElementById('edit-role').value;
 
-    const errorEl   = document.getElementById('user-edit-error');
+    const errorEl = document.getElementById('user-edit-error');
     const successEl = document.getElementById('user-edit-success');
 
     errorEl?.classList.add('hidden');
@@ -184,7 +166,7 @@ export async function handleUpdateUser(event) {
     try {
         const { data, error } = await supabaseAdmin.updateUser(userId, {
             first_name: firstName,
-            last_name:  lastName,
+            last_name: lastName,
             role,
         });
 
@@ -211,7 +193,8 @@ export async function handleUpdateUser(event) {
 }
 
 export async function deleteUser(userId, username) {
-    if (!confirm(`هل أنت متأكد من حذف المستخدم "${username}"؟\nهذا الإجراء لا يمكن التراجع عنه.`)) return;
+    if (!confirm(`هل أنت متأكد من حذف المستخدم "${username}"؟\nهذا الإجراء لا يمكن التراجع عنه.`))
+        return;
 
     try {
         const { error } = await supabaseAdmin.deleteUser(userId);
@@ -227,9 +210,9 @@ export async function deleteUser(userId, username) {
 
 export async function handleCreateTeacher(event) {
     event.preventDefault();
-    const username  = document.getElementById('teacher-new-username').value.trim();
-    const password  = document.getElementById('teacher-new-password').value;
-    const errorEl   = document.getElementById('admin-create-error');
+    const username = document.getElementById('teacher-new-username').value.trim();
+    const password = document.getElementById('teacher-new-password').value;
+    const errorEl = document.getElementById('admin-create-error');
     const successEl = document.getElementById('admin-create-success');
 
     errorEl?.classList.add('hidden');
@@ -238,7 +221,7 @@ export async function handleCreateTeacher(event) {
     Logger.log('AUTH', `Admin creating teacher: ${username}`);
 
     try {
-        const { data, error } = await supabaseAdmin.createTeacher(null, password, username);
+        const { error } = await supabaseAdmin.createTeacher(null, password, username);
         if (error) throw new Error(error.message || 'خطأ في إنشاء الحساب');
 
         Logger.log('AUTH', `Teacher created: ${username}`);
@@ -259,8 +242,8 @@ export async function handleCreateTeacher(event) {
 
 export async function handlePromoteTeacher(event) {
     event.preventDefault();
-    const username  = document.getElementById('promote-username').value.trim();
-    const errorEl   = document.getElementById('admin-promote-error');
+    const username = document.getElementById('promote-username').value.trim();
+    const errorEl = document.getElementById('admin-promote-error');
     const successEl = document.getElementById('admin-promote-success');
 
     errorEl?.classList.add('hidden');

@@ -1,7 +1,6 @@
 // frontend/src/components/AudioPlayer.js
 import { Logger } from '../core/logger.js';
 import { state, saveData } from '../core/state.js';
-import { config } from '../core/config.js';
 
 // URLs audio Coran via EveryAyah CDN (Alafasy, qualité sélectionnée dans WardPage)
 window.QuranAudio = {
@@ -10,7 +9,7 @@ window.QuranAudio = {
     },
     getAyahAudioUrl(encoded) {
         const surahId = Math.floor(encoded / 1000);
-        const ayah    = encoded % 1000;
+        const ayah = encoded % 1000;
         const quality = document.getElementById('ward-audio-quality')?.value || '128';
         const s = String(surahId).padStart(3, '0');
         const a = String(ayah).padStart(3, '0');
@@ -18,18 +17,18 @@ window.QuranAudio = {
     },
     getAudioUrl(surahId) {
         return `https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/${String(surahId).padStart(3, '0')}.mp3`;
-    }
+    },
 };
 
 export const AudioManager = {
     audio: null,
-    mode: null,          // "wird" | "full" | "surah-local" | null
+    mode: null, // "wird" | "full" | "surah-local" | null
     timers: new Set(),
     onEnded: null,
-    currentAudio: null,  // For individual ayah audio elements
+    currentAudio: null, // For individual ayah audio elements
 
     init() {
-        this.audio = document.getElementById("audio-element");
+        this.audio = document.getElementById('audio-element');
         if (!this.audio) {
             Logger.warn('AUDIO', 'Audio element not found, creating fallback');
             this.audio = new Audio();
@@ -47,16 +46,20 @@ export const AudioManager = {
 
             // Remove ended handler
             if (this.onEnded) {
-                this.audio.removeEventListener("ended", this.onEnded);
+                this.audio.removeEventListener('ended', this.onEnded);
                 this.onEnded = null;
             }
 
             // Detach src to prevent weird reloads
-            if (this.audio.hasAttribute("src")) {
-                this.audio.removeAttribute("src");
+            if (this.audio.hasAttribute('src')) {
+                this.audio.removeAttribute('src');
                 // Only call load() if we actually removed a src to stop downloading
                 // Calling load() on empty src causes "Invalid URI" errors
-                try { this.audio.load(); } catch (e) { /* ignore */ }
+                try {
+                    this.audio.load();
+                } catch {
+                    /* ignore */
+                }
             }
         }
 
@@ -79,8 +82,8 @@ export const AudioManager = {
 
     playFullSurah(surahId) {
         this.stopAll();
-        this.mode = "full";
-        const src = `audio/${String(surahId).padStart(3, "0")}.mp3`;
+        this.mode = 'full';
+        const src = `audio/${String(surahId).padStart(3, '0')}.mp3`;
 
         Logger.audio('PLAY_SURAH', `Surah ${surahId} from ${src}`);
 
@@ -96,7 +99,7 @@ export const AudioManager = {
         if (!window.QuranAudio) return;
 
         this.stopAll();
-        this.mode = "full";
+        this.mode = 'full';
 
         const audioUrl = window.QuranAudio.getAudioUrl(surahId);
         Logger.audio('PLAY_CDN', `Surah ${surahId} from CDN: ${audioUrl}`);
@@ -109,7 +112,7 @@ export const AudioManager = {
 
     playWirdAyahSequence(surahId, fromAyah, toAyah) {
         this.stopAll();
-        this.mode = "wird";
+        this.mode = 'wird';
 
         if (!window.QuranAudio) {
             Logger.error('AUDIO', 'QuranAudio not available for Wird');
@@ -118,7 +121,6 @@ export const AudioManager = {
 
         Logger.audio('PLAY_WIRD', `Sequence ${surahId}:${fromAyah}-${toAyah}`);
 
-        let currentAyah = fromAyah;
         const urls = [];
 
         // Build URLs for ayah sequence
@@ -132,7 +134,7 @@ export const AudioManager = {
 
         const playNext = () => {
             // Guard: only continue if still in wird or surah mode
-            if (this.mode !== "wird" && this.mode !== "surah") {
+            if (this.mode !== 'wird' && this.mode !== 'surah') {
                 Logger.audio('CANCEL', 'Mode cancelled, stopping sequence');
                 return;
             }
@@ -164,7 +166,10 @@ export const AudioManager = {
 
             this.currentAudio.onended = () => {
                 Logger.audio('ENDED', `Ayah ${ayahNumber} finished`);
-                Logger.log('AUDIO', `State: autoPlayNext=${state.settings.autoPlayNext}, mode=${this.mode}, i=${i}/${urls.length}`);
+                Logger.log(
+                    'AUDIO',
+                    `State: autoPlayNext=${state.settings.autoPlayNext}, mode=${this.mode}, i=${i}/${urls.length}`
+                );
 
                 // Check if this is the last ayah
                 const isLastAyah = ayahNumber >= toAyah;
@@ -178,9 +183,15 @@ export const AudioManager = {
                 const rawAyahDelay = state.settings.ayahDelay;
                 const currentDelay = rawAyahDelay !== undefined ? parseFloat(rawAyahDelay) : 2.0;
                 const delay = currentDelay * 1000; // Convert to milliseconds
-                Logger.log('AUDIO', `Delay: raw=${rawAyahDelay}, computed=${currentDelay}s (${delay}ms)`);
+                Logger.log(
+                    'AUDIO',
+                    `Delay: raw=${rawAyahDelay}, computed=${currentDelay}s (${delay}ms)`
+                );
 
-                if (state.settings.autoPlayNext && (this.mode === "wird" || this.mode === "surah")) {
+                if (
+                    state.settings.autoPlayNext &&
+                    (this.mode === 'wird' || this.mode === 'surah')
+                ) {
                     Logger.audio('NEXT', `Auto-playing next ayah after ${delay}ms`);
                     const timer = setTimeout(() => {
                         playNext();
@@ -196,7 +207,7 @@ export const AudioManager = {
             this.currentAudio.onerror = () => {
                 Logger.error('AUDIO', `Error loading ayah ${ayahNumber}`);
                 // Continue to next ayah even if error
-                if (this.mode === "wird" || this.mode === "surah") {
+                if (this.mode === 'wird' || this.mode === 'surah') {
                     const timer = setTimeout(() => {
                         playNext();
                     }, 1000);
@@ -214,7 +225,7 @@ export const AudioManager = {
             this.currentAudio.play().catch(error => {
                 Logger.error('AUDIO', `Error playing ayah ${ayahNumber}`, error);
                 // Continue to next ayah
-                if (this.mode === "wird" || this.mode === "surah") {
+                if (this.mode === 'wird' || this.mode === 'surah') {
                     const timer = setTimeout(() => {
                         playNext();
                     }, 1000);
@@ -232,11 +243,11 @@ export const AudioManager = {
     },
 
     isPlaying() {
-        return this.mode !== null && (
-            (this.audio && !this.audio.paused) ||
-            (this.currentAudio && !this.currentAudio.paused)
+        return (
+            this.mode !== null &&
+            ((this.audio && !this.audio.paused) || (this.currentAudio && !this.currentAudio.paused))
         );
-    }
+    },
 };
 
 export function initAudioPlayer() {
@@ -249,7 +260,8 @@ export function initAudioPlayer() {
         });
 
         audioElement.addEventListener('error', () => {
-            if (window.QuranReview) window.QuranReview.showNotification('خطأ في تحميل الملف الصوتي', 'error');
+            if (window.QuranReview)
+                window.QuranReview.showNotification('خطأ في تحميل الملف الصوتي', 'error');
         });
 
         Logger.audio('INIT', 'Audio player DOM bindings initialized');
@@ -288,7 +300,7 @@ export function initWardPlayer() {
         mode: 'ward', // 'ward' or 'surah'
         surahId: null,
         fromAyah: null,
-        toAyah: null
+        toAyah: null,
     };
     saveData();
 

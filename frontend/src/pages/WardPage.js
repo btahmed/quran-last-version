@@ -280,7 +280,10 @@ function updateWardReciter() {
         const selectedReciter = reciterSelector.value;
         QuranAudio.setReciter(selectedReciter);
         Logger.log('WARD', 'Ward reciter updated', selectedReciter);
-        showNotification(`تم تغيير القارئ إلى: ${QuranAudio.getReciterName(selectedReciter)}`, 'success');
+        showNotification(
+            `تم تغيير القارئ إلى: ${QuranAudio.getReciterName(selectedReciter)}`,
+            'success'
+        );
     }
 }
 
@@ -363,7 +366,10 @@ export function playWard() {
     // Validation additionnelle contre le nombre d'ayahs de la sourate
     if (fromAyah < 1 || toAyah > surah.ayahs) {
         showNotification(`❌ خطأ: الآيات يجب أن تكون بين 1 و ${surah.ayahs}`, 'error');
-        Logger.error('WARD', `Invalid ayah range: ${fromAyah}-${toAyah} for surah ${surahId} (max: ${surah.ayahs})`);
+        Logger.error(
+            'WARD',
+            `Invalid ayah range: ${fromAyah}-${toAyah} for surah ${surahId} (max: ${surah.ayahs})`
+        );
         return;
     }
 
@@ -377,7 +383,7 @@ export function playWard() {
         mode: 'ward',
         surahId: surahId,
         fromAyah: fromAyah,
-        toAyah: toAyah
+        toAyah: toAyah,
     };
 
     updateWardDisplay();
@@ -473,7 +479,7 @@ export function stopWardPlayback() {
 export function updateWardDisplay() {
     if (!state.wardPlayer) return;
 
-    const { currentAyah, totalAyahs, isPlaying } = state.wardPlayer;
+    const { currentAyah, totalAyahs } = state.wardPlayer;
 
     const progressText = document.getElementById('ward-progress-text');
     const progressBar = document.getElementById('ward-progress-bar');
@@ -484,7 +490,7 @@ export function updateWardDisplay() {
     }
 
     if (progressBar) {
-        const progress = (currentAyah - state.wardPlayer.fromAyah + 1) / totalAyahs * 100;
+        const progress = ((currentAyah - state.wardPlayer.fromAyah + 1) / totalAyahs) * 100;
         progressBar.style.width = `${progress}%`;
     }
 

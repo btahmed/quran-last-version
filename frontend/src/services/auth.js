@@ -10,7 +10,7 @@ import * as SupabaseAuth from './supabase-auth.js';
 // Rôle effectif : un is_superuser Django est toujours traité comme 'admin' par la nav
 function getEffectiveRole(user) {
     if (!user) return 'visitor';
-    return (user.role === 'admin' || user.is_superuser) ? 'admin' : user.role;
+    return user.role === 'admin' || user.is_superuser ? 'admin' : user.role;
 }
 
 export async function initAuth() {
@@ -62,20 +62,29 @@ export function updateAuthUI(loggedIn) {
         loginBtn?.classList.add('hidden');
         userInfo?.classList.remove('hidden');
         if (usernameEl) {
-            const roleLabel = state.user.role === 'admin' || state.user.is_superuser ? '⚙️' : state.user.role === 'teacher' ? '👨‍🏫' : '🎓';
+            const roleLabel =
+                state.user.role === 'admin' || state.user.is_superuser
+                    ? '⚙️'
+                    : state.user.role === 'teacher'
+                      ? '👨‍🏫'
+                      : '🎓';
             usernameEl.textContent = `${roleLabel} ${state.user.first_name || state.user.username}`;
         }
         // Show/hide role-specific nav links
         const isAdmin = state.user.role === 'admin' || state.user.is_superuser;
         const isTeacher = state.user.role === 'teacher';
-        teacherLinks.forEach(el => el.style.display = isTeacher ? 'inline-block' : 'none');
-        studentLinks.forEach(el => el.style.display = (!isTeacher && !isAdmin) ? 'inline-block' : 'none');
-        document.querySelectorAll('.nav-admin-only').forEach(el => el.style.display = isAdmin ? 'inline-block' : 'none');
+        teacherLinks.forEach(el => (el.style.display = isTeacher ? 'inline-block' : 'none'));
+        studentLinks.forEach(
+            el => (el.style.display = !isTeacher && !isAdmin ? 'inline-block' : 'none')
+        );
+        document
+            .querySelectorAll('.nav-admin-only')
+            .forEach(el => (el.style.display = isAdmin ? 'inline-block' : 'none'));
     } else {
         loginBtn?.classList.remove('hidden');
         userInfo?.classList.add('hidden');
-        teacherLinks.forEach(el => el.style.display = 'none');
-        studentLinks.forEach(el => el.style.display = 'none');
+        teacherLinks.forEach(el => (el.style.display = 'none'));
+        studentLinks.forEach(el => (el.style.display = 'none'));
     }
 }
 
@@ -127,7 +136,7 @@ export async function performLogin(username, password) {
             last_name: 'تجريبي',
             email: 'demo@quranreview.live',
             role: 'student',
-            is_superuser: false
+            is_superuser: false,
         };
 
         // Stocker comme si c'était une vraie connexion
@@ -197,9 +206,30 @@ export async function performLogin(username, password) {
 // Charger des tâches de démo
 export function loadDemoTasks() {
     const demoTasks = [
-        { id: 1, title: 'حفظ سورة الفاتحة', description: 'من الآية 1 إلى 7', status: 'pending', points: 10, due_date: '2024-12-25' },
-        { id: 2, title: 'مراجعة سورة البقرة', description: 'من الآية 1 إلى 50', status: 'completed', points: 20, due_date: '2024-12-20' },
-        { id: 3, title: 'تعلم التجويد - المدود', description: 'دراسة أحكام المد', status: 'submitted', points: 15, due_date: '2024-12-22' }
+        {
+            id: 1,
+            title: 'حفظ سورة الفاتحة',
+            description: 'من الآية 1 إلى 7',
+            status: 'pending',
+            points: 10,
+            due_date: '2024-12-25',
+        },
+        {
+            id: 2,
+            title: 'مراجعة سورة البقرة',
+            description: 'من الآية 1 إلى 50',
+            status: 'completed',
+            points: 20,
+            due_date: '2024-12-20',
+        },
+        {
+            id: 3,
+            title: 'تعلم التجويد - المدود',
+            description: 'دراسة أحكام المد',
+            status: 'submitted',
+            points: 15,
+            due_date: '2024-12-22',
+        },
     ];
     state.tasks = demoTasks;
     localStorage.setItem(config.tasksKey, JSON.stringify(demoTasks));
@@ -210,8 +240,8 @@ export async function handleRegister(event) {
     event.preventDefault();
     const username = document.getElementById('reg-username').value.trim();
     const password = document.getElementById('reg-password').value;
-    const firstName = document.getElementById('reg-first-name').value.trim();
-    const lastName = document.getElementById('reg-last-name').value.trim();
+    const _firstName = document.getElementById('reg-first-name').value.trim();
+    const _lastName = document.getElementById('reg-last-name').value.trim();
     const errorEl = document.getElementById('reg-error');
     const submitBtn = document.getElementById('reg-submit-btn');
 
@@ -232,7 +262,7 @@ export async function handleRegister(event) {
 
     // Mode DÉMO
     if (IS_DEMO_MODE) {
-        Logger.log('AUTH', '🎮 Mode DÉMO: Simulation d\'inscription...');
+        Logger.log('AUTH', "🎮 Mode DÉMO: Simulation d'inscription...");
         await new Promise(resolve => setTimeout(resolve, 800));
 
         // Simuler un utilisateur enregistré puis connecté
@@ -247,7 +277,7 @@ export async function handleRegister(event) {
 
     // Mode normal avec Supabase
     try {
-        const { data, error } = await SupabaseAuth.createUser(null, password, username, 'student');
+        const { error } = await SupabaseAuth.createUser(null, password, username, 'student');
         if (error) throw new Error(error.message || 'خطأ في التسجيل');
 
         await performLogin(username, password);

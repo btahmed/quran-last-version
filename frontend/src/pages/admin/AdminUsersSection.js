@@ -66,25 +66,37 @@ export function render() {
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 export async function init() {
     // Exposer les fonctions globales nécessaires aux onclick inline
-    window._adminFilter  = (q) => { searchQuery = q.toLowerCase(); renderUsersList(); };
-    window._adminSort    = (k) => { sortKey = k; renderUsersList(); };
+    window._adminFilter = q => {
+        searchQuery = q.toLowerCase();
+        renderUsersList();
+    };
+    window._adminSort = k => {
+        sortKey = k;
+        renderUsersList();
+    };
     window._adminRefresh = async () => {
         const btn = document.querySelector('[onclick="window._adminRefresh()"]');
-        if (btn) { btn.disabled = true; btn.textContent = '⏳ ...'; }
+        if (btn) {
+            btn.disabled = true;
+            btn.textContent = '⏳ ...';
+        }
         try {
             await loadUsers();
         } finally {
-            if (btn) { btn.disabled = false; btn.textContent = '🔄 تحديث'; }
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = '🔄 تحديث';
+            }
         }
     };
-    window._adminOpenProfile    = openUserProfile;
-    window._adminCloseProfile   = closeProfile;
-    window._adminSaveEdit       = saveUserEdit;
-    window._adminDelete         = deleteUser;
-    window._adminToggleEdit     = _adminToggleEditFn;
+    window._adminOpenProfile = openUserProfile;
+    window._adminCloseProfile = closeProfile;
+    window._adminSaveEdit = saveUserEdit;
+    window._adminDelete = deleteUser;
+    window._adminToggleEdit = _adminToggleEditFn;
 
     // Délégation de clic sur les lignes utilisateur
-    document.getElementById('admin-users-list')?.addEventListener('click', (e) => {
+    document.getElementById('admin-users-list')?.addEventListener('click', e => {
         const row = e.target.closest('.admin-user-row');
         if (!row) return;
         const id = row.dataset.userId;
@@ -110,7 +122,9 @@ export async function loadUsers() {
     } catch (err) {
         Logger.error('ADMIN-USERS', 'loadUsers error', err);
         const el = document.getElementById('admin-users-list');
-        if (el) el.innerHTML = '<p style="color:var(--color-danger); text-align:center; padding:var(--space-6);">فشل تحميل المستخدمين</p>';
+        if (el)
+            el.innerHTML =
+                '<p style="color:var(--color-danger); text-align:center; padding:var(--space-6);">فشل تحميل المستخدمين</p>';
     }
 }
 
@@ -129,15 +143,16 @@ function roleOrder(u) {
 function getSortedFiltered() {
     let users = allUsers;
     if (searchQuery) {
-        users = users.filter(u =>
-            (u.username || '').toLowerCase().includes(searchQuery) ||
-            (u.first_name || '').toLowerCase().includes(searchQuery) ||
-            (u.last_name || '').toLowerCase().includes(searchQuery)
+        users = users.filter(
+            u =>
+                (u.username || '').toLowerCase().includes(searchQuery) ||
+                (u.first_name || '').toLowerCase().includes(searchQuery) ||
+                (u.last_name || '').toLowerCase().includes(searchQuery)
         );
     }
     return [...users].sort((a, b) => {
         if (sortKey === 'username') return (a.username || '').localeCompare(b.username || '');
-        if (sortKey === 'name')     return (a.first_name || '').localeCompare(b.first_name || '');
+        if (sortKey === 'name') return (a.first_name || '').localeCompare(b.first_name || '');
         const ro = roleOrder(a) - roleOrder(b);
         return ro !== 0 ? ro : (a.username || '').localeCompare(b.username || '');
     });
@@ -145,7 +160,7 @@ function getSortedFiltered() {
 
 // ─── RENDU LISTE ──────────────────────────────────────────────────────────────
 function renderUsersList() {
-    const el      = document.getElementById('admin-users-list');
+    const el = document.getElementById('admin-users-list');
     const countEl = document.getElementById('admin-users-count');
     if (!el) return;
 
@@ -153,20 +168,22 @@ function renderUsersList() {
     if (countEl) countEl.textContent = `${users.length} من ${allUsers.length} مستخدم`;
 
     if (!users.length) {
-        el.innerHTML = '<p style="text-align:center; color:var(--color-text-secondary); padding:var(--space-6);">لا توجد نتائج</p>';
+        el.innerHTML =
+            '<p style="text-align:center; color:var(--color-text-secondary); padding:var(--space-6);">لا توجد نتائج</p>';
         return;
     }
 
     const ROLE_CHIP = {
-        admin:   `<span class="k-chip k-chip--danger">⚙️ مدير</span>`,
+        admin: `<span class="k-chip k-chip--danger">⚙️ مدير</span>`,
         teacher: `<span class="k-chip k-chip--info">👨‍🏫 معلم</span>`,
         student: `<span class="k-chip k-chip--success">🎓 طالب</span>`,
     };
     const SUPER_CHIP = `<span class="k-chip k-chip--warning">★ super</span>`;
 
-    el.innerHTML = users.map(u => {
-        const initial = escapeHtml((u.first_name || u.username || '?')[0].toUpperCase());
-        return `
+    el.innerHTML = users
+        .map(u => {
+            const initial = escapeHtml((u.first_name || u.username || '?')[0].toUpperCase());
+            return `
         <div class="k-row admin-user-row" style="cursor:pointer" data-user-id="${escapeHtml(u.id)}">
             <div class="rl">
                 <span class="k-avatar">${initial}</span>
@@ -184,28 +201,32 @@ function renderUsersList() {
             <span style="color:var(--text-secondary);font-size:1.2rem">›</span>
         </div>
         `;
-    }).join('');
+        })
+        .join('');
 }
 
 // ─── MODAL PROFIL ─────────────────────────────────────────────────────────────
 async function openUserProfile(userId) {
-    const modal   = document.getElementById('admin-profile-modal');
+    const modal = document.getElementById('admin-profile-modal');
     const content = document.getElementById('admin-profile-content');
     if (!modal || !content) return;
 
     modal.style.display = 'block';
-    content.innerHTML = '<p style="text-align:center; color:#6b7280; padding:24px 0;">جارٍ التحميل...</p>';
+    content.innerHTML =
+        '<p style="text-align:center; color:#6b7280; padding:24px 0;">جارٍ التحميل...</p>';
 
     try {
         const { data: u, error } = await supabaseAdmin.getStudentProgress(userId);
         if (error || !u) throw new Error('Not found');
 
         const titleEl = document.getElementById('profile-modal-title');
-        if (titleEl) titleEl.textContent = `${u.first_name || ''} ${u.last_name || ''} (@${u.username})`.trim();
+        if (titleEl)
+            titleEl.textContent =
+                `${u.first_name || ''} ${u.last_name || ''} (@${u.username})`.trim();
 
-        const roleLabel   = { admin: '⚙️ مدير', teacher: '👨‍🏫 معلم', student: '🎓 طالب' };
+        const roleLabel = { admin: '⚙️ مدير', teacher: '👨‍🏫 معلم', student: '🎓 طالب' };
         const statusLabel = { pending: '⏳', submitted: '📤', approved: '✅', rejected: '❌' };
-        const isTeacher   = u.role === 'teacher';
+        const isTeacher = u.role === 'teacher';
 
         content.innerHTML = `
             <!-- Bouton Éditer -->
@@ -270,7 +291,9 @@ async function openUserProfile(userId) {
                     <div style="font-size:0.72rem; color:#6b7280; margin-bottom:4px;">تاريخ الانضمام</div>
                     <div style="font-size:0.82rem; color:#374151;">${u.created_at ? u.created_at.slice(0, 10) : '—'}</div>
                 </div>
-                ${!isTeacher ? `
+                ${
+                    !isTeacher
+                        ? `
                 <div style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:10px; padding:12px;">
                     <div style="font-size:0.72rem; color:#6b7280; margin-bottom:4px;">الفصل</div>
                     <div style="font-weight:600; color:#111827;">${escapeHtml(u.classe_info?.name || '—')}</div>
@@ -279,14 +302,22 @@ async function openUserProfile(userId) {
                     <div style="font-size:0.72rem; color:#6b7280; margin-bottom:4px;">المعلم</div>
                     <div style="font-weight:600; color:#111827;">${escapeHtml(u.classe_info?.teacher || '—')}</div>
                 </div>
-                ` : ''}
+                `
+                        : ''
+                }
             </div>
 
-            ${isTeacher ? `
+            ${
+                isTeacher
+                    ? `
                 <h4 style="font-size:0.88rem; font-weight:600; color:#111827; margin:0 0 10px;">📚 الواجبات المعطاة (${u.assigned_tasks_count ?? 0})</h4>
-                ${u.assigned_tasks && u.assigned_tasks.length ? `
+                ${
+                    u.assigned_tasks && u.assigned_tasks.length
+                        ? `
                     <div style="margin-bottom:16px;">
-                        ${u.assigned_tasks.map(t => `
+                        ${u.assigned_tasks
+                            .map(
+                                t => `
                             <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #f3f4f6; font-size:0.83rem; color:#374151;">
                                 <div>
                                     <span>${statusLabel[t.status] || ''} ${escapeHtml(t.title || '')}</span>
@@ -294,55 +325,87 @@ async function openUserProfile(userId) {
                                 </div>
                                 <span style="color:#d97706; flex-shrink:0; font-weight:600;">${t.points > 0 ? '+' + t.points : ''}</span>
                             </div>
-                        `).join('')}
+                        `
+                            )
+                            .join('')}
                     </div>
-                ` : '<p style="color:#9ca3af; font-size:0.83rem; margin-bottom:16px;">لا توجد واجبات معطاة</p>'}
-            ` : `
+                `
+                        : '<p style="color:#9ca3af; font-size:0.83rem; margin-bottom:16px;">لا توجد واجبات معطاة</p>'
+                }
+            `
+                    : `
                 <!-- Tâches élève : 3 groupes par statut -->
                 ${(() => {
-                    const tasks    = u.tasks || [];
-                    const accepted  = tasks.filter(t => t.status === 'approved');
+                    const tasks = u.tasks || [];
+                    const accepted = tasks.filter(t => t.status === 'approved');
                     const submitted = tasks.filter(t => t.status === 'submitted');
-                    const notDone   = tasks.filter(t => t.status === 'pending' || t.status === 'rejected');
+                    const notDone = tasks.filter(
+                        t => t.status === 'pending' || t.status === 'rejected'
+                    );
                     return `
                         <h4 style="font-size:0.88rem; font-weight:600; color:#10b981; margin:0 0 8px;">✅ مقبولة (${accepted.length})</h4>
-                        ${accepted.length ? `
+                        ${
+                            accepted.length
+                                ? `
                             <div style="margin-bottom:14px;">
-                                ${accepted.map(t => `
+                                ${accepted
+                                    .map(
+                                        t => `
                                     <div style="display:flex; justify-content:space-between; align-items:center; padding:7px 0; border-bottom:1px solid #f0fdf4; font-size:0.83rem; color:#374151;">
                                         <span>${escapeHtml(t.title || '')}</span>
                                         <span style="color:#10b981; flex-shrink:0; font-weight:700; background:#f0fdf4; padding:2px 8px; border-radius:99px;">${t.points > 0 ? '+' + t.points : '✓'}</span>
                                     </div>
-                                `).join('')}
+                                `
+                                    )
+                                    .join('')}
                             </div>
-                        ` : '<p style="color:#9ca3af; font-size:0.82rem; margin-bottom:12px;">—</p>'}
+                        `
+                                : '<p style="color:#9ca3af; font-size:0.82rem; margin-bottom:12px;">—</p>'
+                        }
 
                         <h4 style="font-size:0.88rem; font-weight:600; color:#3b82f6; margin:0 0 8px;">📤 مقدمة للتصحيح (${submitted.length})</h4>
-                        ${submitted.length ? `
+                        ${
+                            submitted.length
+                                ? `
                             <div style="margin-bottom:14px;">
-                                ${submitted.map(t => `
+                                ${submitted
+                                    .map(
+                                        t => `
                                     <div style="display:flex; justify-content:space-between; align-items:center; padding:7px 0; border-bottom:1px solid #eff6ff; font-size:0.83rem; color:#374151;">
                                         <span>${escapeHtml(t.title || '')}</span>
                                         <span style="color:#3b82f6; font-size:0.75rem;">انتظار</span>
                                     </div>
-                                `).join('')}
+                                `
+                                    )
+                                    .join('')}
                             </div>
-                        ` : '<p style="color:#9ca3af; font-size:0.82rem; margin-bottom:12px;">—</p>'}
+                        `
+                                : '<p style="color:#9ca3af; font-size:0.82rem; margin-bottom:12px;">—</p>'
+                        }
 
                         <h4 style="font-size:0.88rem; font-weight:600; color:#f59e0b; margin:0 0 8px;">⏳ لم تُنجز (${notDone.length})</h4>
-                        ${notDone.length ? `
+                        ${
+                            notDone.length
+                                ? `
                             <div style="margin-bottom:14px;">
-                                ${notDone.map(t => `
+                                ${notDone
+                                    .map(
+                                        t => `
                                     <div style="display:flex; justify-content:space-between; align-items:center; padding:7px 0; border-bottom:1px solid #fef9c3; font-size:0.83rem; color:#6b7280;">
                                         <span>${escapeHtml(t.title || '')}</span>
                                         ${t.status === 'rejected' ? '<span style="color:#ef4444; font-size:0.75rem;">مرفوض</span>' : ''}
                                     </div>
-                                `).join('')}
+                                `
+                                    )
+                                    .join('')}
                             </div>
-                        ` : '<p style="color:#9ca3af; font-size:0.82rem; margin-bottom:12px;">كل المهام مكتملة 🎉</p>'}
+                        `
+                                : '<p style="color:#9ca3af; font-size:0.82rem; margin-bottom:12px;">كل المهام مكتملة 🎉</p>'
+                        }
                     `;
                 })()}
-            `}
+            `
+            }
 
             <!-- Bouton Supprimer -->
             <div style="margin-top:20px; padding-top:16px; border-top:1px solid #fee2e2;">
@@ -355,8 +418,9 @@ async function openUserProfile(userId) {
                 </button>
             </div>
         `;
-    } catch (err) {
-        content.innerHTML = '<p style="color:#ef4444; text-align:center; padding:24px 0;">فشل تحميل الملف الشخصي</p>';
+    } catch {
+        content.innerHTML =
+            '<p style="color:#ef4444; text-align:center; padding:24px 0;">فشل تحميل الملف الشخصي</p>';
     }
 }
 
@@ -370,15 +434,15 @@ function _adminToggleEditFn(userId, firstName, lastName, role) {
     const form = document.getElementById('admin-edit-form');
     if (!form) return;
     document.getElementById('edit-first-name').value = firstName;
-    document.getElementById('edit-last-name').value  = lastName;
-    document.getElementById('edit-role').value       = role;
+    document.getElementById('edit-last-name').value = lastName;
+    document.getElementById('edit-role').value = role;
     form.style.display = form.style.display === 'none' ? 'block' : 'none';
 }
 
 async function saveUserEdit(userId) {
     const first_name = document.getElementById('edit-first-name').value.trim();
-    const last_name  = document.getElementById('edit-last-name').value.trim();
-    const role       = document.getElementById('edit-role').value;
+    const last_name = document.getElementById('edit-last-name').value.trim();
+    const role = document.getElementById('edit-role').value;
 
     try {
         const { error } = await supabaseAdmin.updateUser(userId, { first_name, last_name, role });

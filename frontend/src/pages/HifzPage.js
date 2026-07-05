@@ -1,7 +1,6 @@
 // frontend/src/pages/HifzPage.js
 import { competitionManager } from '../services/competition.js';
-import { hifzEngine } from '../services/hifz.js';
-import { state, saveData } from '../core/state.js';
+import { state } from '../core/state.js';
 import { config } from '../core/config.js';
 import { showNotification } from '../core/ui.js';
 
@@ -143,7 +142,7 @@ function _populateSurahSelect() {
 function _setupFormListener() {
     const form = document.getElementById('hifz-start-form');
     if (form && !form.dataset.listening) {
-        form.addEventListener('submit', (e) => {
+        form.addEventListener('submit', e => {
             e.preventDefault();
             const surahId = parseInt(document.getElementById('hifz-surah-select').value);
             const fromAyah = parseInt(document.getElementById('hifz-from-ayah').value);

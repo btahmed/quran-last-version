@@ -1,7 +1,6 @@
 // frontend/src/pages/teacher/TeacherElevesSection.js
 // Section Élèves — extraite de TeacherPage.js (Task 9 : lazy-loading)
 // Responsabilités : liste des élèves, panneau de progression détaillée par élève
-import { showNotification } from '../../core/ui.js';
 import { Logger } from '../../core/logger.js';
 import { apiCache } from '../../core/apiCache.js';
 import * as supabaseAdmin from '../../services/supabase-admin.js';

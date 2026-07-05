@@ -3,7 +3,6 @@
 import { state } from '../core/state.js';
 import { config } from '../core/config.js';
 import { showNotification } from '../core/ui.js';
-import { Logger } from '../core/logger.js';
 import { showAuthModal } from '../services/auth.js';
 import { apiCache } from '../core/apiCache.js';
 import * as supabaseTasks from '../services/supabase-tasks.js';
@@ -119,13 +118,14 @@ let _studentSubByTask = {};
 
 export async function loadStudentDashboard() {
     const token = localStorage.getItem(config.apiTokenKey);
-    if (!token) { showAuthModal(); return; }
+    if (!token) {
+        showAuthModal();
+        return;
+    }
     if (state.user && state.user.role === 'teacher') {
         window.QuranReview && window.QuranReview.navigateTo('teacher');
         return;
     }
-    const headers = { Authorization: `Bearer ${token}` };
-
     if (state.user) {
         const el = document.getElementById('student-welcome');
         if (el) el.textContent = `مرحباً ${state.user.first_name || state.user.username}`;
@@ -133,19 +133,19 @@ export async function loadStudentDashboard() {
 
     // Tenter le cache avant le fetch
     const cachedTasks = apiCache.get('tasks');
-    const cachedSubs  = apiCache.get('my-submissions');
-    const cachedPts   = apiCache.get('points');
+    const cachedSubs = apiCache.get('my-submissions');
+    const cachedPts = apiCache.get('points');
 
     if (cachedTasks && cachedSubs && cachedPts) {
         _applyStudentData(cachedTasks, cachedSubs, cachedPts);
-        _fetchAndCacheStudent(headers); // refresh silencieux
+        _fetchAndCacheStudent(); // refresh silencieux
         return;
     }
 
-    await _fetchAndCacheStudent(headers);
+    await _fetchAndCacheStudent();
 }
 
-async function _fetchAndCacheStudent(headers) {
+async function _fetchAndCacheStudent() {
     try {
         // Migration Supabase
         const [tasksResult, subsResult, pointsResult] = await Promise.all([
@@ -154,9 +154,9 @@ async function _fetchAndCacheStudent(headers) {
             supabaseLeaderboard.getMyPoints(),
         ]);
 
-        const tasks       = tasksResult.data || [];
+        const tasks = tasksResult.data || [];
         const submissions = subsResult.data || [];
-        const pointsData  = { total_points: pointsResult.data?.total || 0, logs: [] };
+        const pointsData = { total_points: pointsResult.data?.total || 0, logs: [] };
 
         apiCache.set('tasks', tasks);
         apiCache.set('my-submissions', submissions);
@@ -167,7 +167,9 @@ async function _fetchAndCacheStudent(headers) {
         console.error('Failed to load student dashboard:', error);
         showNotification('خطأ في تحميل البيانات', 'error');
         const tasksList = document.getElementById('student-tasks-list');
-        if (tasksList) tasksList.innerHTML = '<p class="empty-state" style="color:#ef4444;">❌ تعذّر تحميل المهام — تحقق من اتصالك</p>';
+        if (tasksList)
+            tasksList.innerHTML =
+                '<p class="empty-state" style="color:#ef4444;">❌ تعذّر تحميل المهام — تحقق من اتصالك</p>';
     }
 }
 
@@ -178,8 +180,8 @@ function _applyStudentData(tasks, submissions, pointsData) {
     // Construire le lookup soumissions par tâche
     const subByTask = {};
     submissions.forEach(s => {
-      const taskId = s.task_id || s.tasks?.id;
-      if (taskId) subByTask[taskId] = s;
+        const taskId = s.task_id || s.tasks?.id;
+        if (taskId) subByTask[taskId] = s;
     });
 
     const done = submissions.filter(s => s.status === 'approved').length;
@@ -198,14 +200,16 @@ function _applyStudentData(tasks, submissions, pointsData) {
     if (!logs.length) {
         pointsLogEl.innerHTML = '<p class="k-empty">لا توجد نقاط بعد</p>';
     } else {
-        pointsLogEl.innerHTML = logs.slice(0, 10).map(log => {
-            const date = new Date(log.created_at).toLocaleDateString('ar-SA');
-            const sign = log.delta > 0 ? '+' : '';
-            const isPositive = log.delta > 0;
-            const reason = log.reason
-                .replace(/^Tache approuvee:\s*/i, 'تمت الموافقة على: ')
-                .replace(/^Tache rejetee:\s*/i, 'تم رفض: ');
-            return `
+        pointsLogEl.innerHTML = logs
+            .slice(0, 10)
+            .map(log => {
+                const date = new Date(log.created_at).toLocaleDateString('ar-SA');
+                const sign = log.delta > 0 ? '+' : '';
+                const isPositive = log.delta > 0;
+                const reason = log.reason
+                    .replace(/^Tache approuvee:\s*/i, 'تمت الموافقة على: ')
+                    .replace(/^Tache rejetee:\s*/i, 'تم رفض: ');
+                return `
             <div class="k-row">
                 <div class="rl">
                     <span class="k-dot ${isPositive ? 'k-dot--done' : 'k-dot--missed'}"></span>
@@ -216,7 +220,8 @@ function _applyStudentData(tasks, submissions, pointsData) {
                 </div>
                 <span class="k-chip ${isPositive ? 'k-chip--success' : 'k-chip--danger'}">${sign}${log.delta}</span>
             </div>`;
-        }).join('');
+            })
+            .join('');
     }
 
     // Stocker les données dans l'état interne pour le re-rendu par onglet
@@ -227,12 +232,20 @@ function _applyStudentData(tasks, submissions, pointsData) {
     const pendingCount = tasks.filter(t => {
         const sub = subByTask[t.id];
         // En attente = pas de soumission, ou soumission rejetée/en cours de révision
-        return !sub || sub.status === 'pending' || sub.status === 'assigned' || sub.status === 'rejected';
+        return (
+            !sub ||
+            sub.status === 'pending' ||
+            sub.status === 'assigned' ||
+            sub.status === 'rejected'
+        );
     }).length;
     updateNavBadge('soumettre', pendingCount);
 
     // Détecter le bon onglet initial selon les statuts réels
-    const hasPending = tasks.some(t => { const s = subByTask[t.id]; return !s || s.status !== 'approved'; });
+    const hasPending = tasks.some(t => {
+        const s = subByTask[t.id];
+        return !s || s.status !== 'approved';
+    });
     switchTaskTab(hasPending ? 'pending' : 'completed');
 
     // Liste des soumissions
@@ -240,34 +253,48 @@ function _applyStudentData(tasks, submissions, pointsData) {
     if (!submissions.length) {
         subsList.innerHTML = '<p class="k-empty">لا توجد تسليمات بعد</p>';
     } else {
-        subsList.innerHTML = submissions.map(s => {
-            const isApproved = s.status === 'approved';
-            const isRejected = s.status === 'rejected';
-            const dot = isApproved ? 'k-dot--done' : isRejected ? 'k-dot--missed' : 'k-dot--pending';
-            const chipClass = isApproved ? 'k-chip--success' : isRejected ? 'k-chip--danger' : 'k-chip--warning';
-            const statusText = isApproved ? 'مقبول ✓' : isRejected ? 'مرفوض ✗' : '⏳ بانتظار';
-            const date = new Date(s.submitted_at).toLocaleDateString('ar-SA');
-            const taskTitle = s.task?.title || s.tasks?.title || 'مهمة';
-            const audioSrc = s.audio_url
-                ? (s.audio_url.startsWith('http') ? s.audio_url : config.apiBaseUrl + (s.audio_url.startsWith('/') ? s.audio_url : '/' + s.audio_url))
-                : '';
+        subsList.innerHTML = submissions
+            .map(s => {
+                const isApproved = s.status === 'approved';
+                const isRejected = s.status === 'rejected';
+                const dot = isApproved
+                    ? 'k-dot--done'
+                    : isRejected
+                      ? 'k-dot--missed'
+                      : 'k-dot--pending';
+                const chipClass = isApproved
+                    ? 'k-chip--success'
+                    : isRejected
+                      ? 'k-chip--danger'
+                      : 'k-chip--warning';
+                const statusText = isApproved ? 'مقبول ✓' : isRejected ? 'مرفوض ✗' : '⏳ بانتظار';
+                const date = new Date(s.submitted_at).toLocaleDateString('ar-SA');
+                const taskTitle = s.task?.title || s.tasks?.title || 'مهمة';
+                const audioSrc = s.audio_url
+                    ? s.audio_url.startsWith('http')
+                        ? s.audio_url
+                        : config.apiBaseUrl +
+                          (s.audio_url.startsWith('/') ? s.audio_url : '/' + s.audio_url)
+                    : '';
 
-            let feedbackHtml = '';
-            if (s.admin_feedback) {
-                if (isApproved) {
-                    feedbackHtml = `<span class="k-chip k-chip--success">⭐ ${escapeHtml(s.admin_feedback)}</span>`;
-                } else if (isRejected) {
-                    feedbackHtml = `<span class="k-chip k-chip--danger">💬 ${escapeHtml(s.admin_feedback)}</span>`;
+                let feedbackHtml = '';
+                if (s.admin_feedback) {
+                    if (isApproved) {
+                        feedbackHtml = `<span class="k-chip k-chip--success">⭐ ${escapeHtml(s.admin_feedback)}</span>`;
+                    } else if (isRejected) {
+                        feedbackHtml = `<span class="k-chip k-chip--danger">💬 ${escapeHtml(s.admin_feedback)}</span>`;
+                    }
                 }
-            }
 
-            const audioHtml = audioSrc ? `
+                const audioHtml = audioSrc
+                    ? `
                 <audio controls preload="metadata" style="width:100%;margin-top:var(--space-2);"
                     onerror="this.outerHTML='<p style=\\'color:var(--color-text-secondary);font-size:0.85rem;\\'>الملف الصوتي غير متاح</p>'">
                     <source src="${audioSrc}" type="audio/webm">
-                </audio>` : '';
+                </audio>`
+                    : '';
 
-            return `
+                return `
             <div class="k-task-card">
                 <div class="k-task-card-header">
                     <div style="display:flex;align-items:center;gap:var(--space-2);">
@@ -283,7 +310,8 @@ function _applyStudentData(tasks, submissions, pointsData) {
                 </div>
                 ${audioHtml}
             </div>`;
-        }).join('');
+            })
+            .join('');
     }
 }
 
@@ -329,43 +357,46 @@ export function switchTaskTab(tabName) {
     }
 
     // Re-rendre uniquement les tâches filtrées
-    tasksList.innerHTML = filtered.map(task => {
-        const sub = subByTask[task.id];
-        let dotClass = 'k-dot--pending';
-        let chipHtml  = '<span class="k-chip k-chip--info">لم يُسلَّم</span>';
-        const safeId    = escapeHtml(String(task.id));
-        const safeTitle = escapeHtml(escapeJs(task.title));
-        let actionBtn = `<button class="k-quickbtn k-quickbtn--primary" style="min-width:auto;padding:var(--space-1) var(--space-3);font-size:var(--text-xs)" onclick="QuranReview.openRecordModal('${safeId}', '${safeTitle}')">🎤 تسجيل</button>`;
+    tasksList.innerHTML = filtered
+        .map(task => {
+            const sub = subByTask[task.id];
+            let dotClass = 'k-dot--pending';
+            let chipHtml = '<span class="k-chip k-chip--info">لم يُسلَّم</span>';
+            const safeId = escapeHtml(String(task.id));
+            const safeTitle = escapeHtml(escapeJs(task.title));
+            let actionBtn = `<button class="k-quickbtn k-quickbtn--primary" style="min-width:auto;padding:var(--space-1) var(--space-3);font-size:var(--text-xs)" onclick="QuranReview.openRecordModal('${safeId}', '${safeTitle}')">🎤 تسجيل</button>`;
 
-        if (sub) {
-            if (sub.status === 'approved') {
-                dotClass  = 'k-dot--done';
-                chipHtml  = '<span class="k-chip k-chip--success">مقبول ✓</span>';
-                actionBtn = '';
-            } else if (sub.status === 'rejected') {
-                dotClass  = 'k-dot--missed';
-                chipHtml  = '<span class="k-chip k-chip--danger">مرفوض ✗</span>';
-                actionBtn = `<button class="k-quickbtn k-quickbtn--primary" style="min-width:auto;padding:var(--space-1) var(--space-3);font-size:var(--text-xs)" onclick="QuranReview.openRecordModal('${safeId}', '${safeTitle}')">🎤 إعادة التسجيل</button>`;
-            } else {
-                dotClass  = 'k-dot--new';
-                chipHtml  = '<span class="k-chip k-chip--warning">⏳ بانتظار</span>';
-                actionBtn = '';
+            if (sub) {
+                if (sub.status === 'approved') {
+                    dotClass = 'k-dot--done';
+                    chipHtml = '<span class="k-chip k-chip--success">مقبول ✓</span>';
+                    actionBtn = '';
+                } else if (sub.status === 'rejected') {
+                    dotClass = 'k-dot--missed';
+                    chipHtml = '<span class="k-chip k-chip--danger">مرفوض ✗</span>';
+                    actionBtn = `<button class="k-quickbtn k-quickbtn--primary" style="min-width:auto;padding:var(--space-1) var(--space-3);font-size:var(--text-xs)" onclick="QuranReview.openRecordModal('${safeId}', '${safeTitle}')">🎤 إعادة التسجيل</button>`;
+                } else {
+                    dotClass = 'k-dot--new';
+                    chipHtml = '<span class="k-chip k-chip--warning">⏳ بانتظار</span>';
+                    actionBtn = '';
+                }
             }
-        }
 
-        const typeLabel = task.type || 'مهمة';
-        const dueDate   = task.due_date ? new Date(task.due_date).toLocaleDateString('ar-SA') : '';
+            const typeLabel = task.type || 'مهمة';
+            const dueDate = task.due_date
+                ? new Date(task.due_date).toLocaleDateString('ar-SA')
+                : '';
 
-        let feedbackHtml = '';
-        if (sub?.admin_feedback) {
-            if (sub.status === 'approved') {
-                feedbackHtml = `<span class="k-chip k-chip--success">⭐ ${escapeHtml(sub.admin_feedback)}</span>`;
-            } else if (sub.status === 'rejected') {
-                feedbackHtml = `<span class="k-chip k-chip--danger">💬 ${escapeHtml(sub.admin_feedback)}</span>`;
+            let feedbackHtml = '';
+            if (sub?.admin_feedback) {
+                if (sub.status === 'approved') {
+                    feedbackHtml = `<span class="k-chip k-chip--success">⭐ ${escapeHtml(sub.admin_feedback)}</span>`;
+                } else if (sub.status === 'rejected') {
+                    feedbackHtml = `<span class="k-chip k-chip--danger">💬 ${escapeHtml(sub.admin_feedback)}</span>`;
+                }
             }
-        }
 
-        return `
+            return `
         <div class="k-task-card">
             <div class="k-task-card-header">
                 <div style="display:flex;align-items:center;gap:var(--space-2);">
@@ -385,5 +416,6 @@ export function switchTaskTab(tabName) {
                 ${feedbackHtml}
             </div>
         </div>`;
-    }).join('');
+        })
+        .join('');
 }

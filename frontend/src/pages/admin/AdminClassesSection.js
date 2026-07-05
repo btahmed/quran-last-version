@@ -14,8 +14,8 @@ function escapeHtml(str) {
 }
 
 // ─── ÉTAT LOCAL ───────────────────────────────────────────────────────────────
-let allClasses    = [];
-let currentClassId = null;
+let allClasses = [];
+let _currentClassId = null;
 
 // Cache des utilisateurs chargé depuis la section Users (si disponible)
 // ou rechargé depuis Supabase en standalone
@@ -59,13 +59,13 @@ export function render() {
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 export async function init() {
     // Exposer les fonctions globales nécessaires aux onclick inline
-    window._adminShowCreateClass         = showCreateClassForm;
-    window._adminCreateClass             = createClass;
-    window._adminDeleteClass             = deleteClass;
-    window._adminOpenClassModal          = openClassModal;
-    window._adminCloseClassModal         = closeClassModal;
-    window._adminAddStudentToClass       = addStudentToClass;
-    window._adminRemoveStudentFromClass  = removeStudentFromClass;
+    window._adminShowCreateClass = showCreateClassForm;
+    window._adminCreateClass = createClass;
+    window._adminDeleteClass = deleteClass;
+    window._adminOpenClassModal = openClassModal;
+    window._adminCloseClassModal = closeClassModal;
+    window._adminAddStudentToClass = addStudentToClass;
+    window._adminRemoveStudentFromClass = removeStudentFromClass;
 
     await loadClasses();
 }
@@ -83,7 +83,8 @@ async function loadClasses() {
         renderClassesList();
     } catch (err) {
         Logger.error('ADMIN-CLASSES', 'loadClasses error', err);
-        el.innerHTML = '<p style="color:var(--color-danger); text-align:center; padding:var(--space-6);">فشل تحميل الفصول</p>';
+        el.innerHTML =
+            '<p style="color:var(--color-danger); text-align:center; padding:var(--space-6);">فشل تحميل الفصول</p>';
     }
 }
 
@@ -93,16 +94,18 @@ function renderClassesList() {
     if (!el) return;
 
     if (!allClasses.length) {
-        el.innerHTML = '<p style="text-align:center; color:var(--color-text-secondary); padding:var(--space-6);">لا توجد فصول بعد. أنشئ فصلاً جديداً!</p>';
+        el.innerHTML =
+            '<p style="text-align:center; color:var(--color-text-secondary); padding:var(--space-6);">لا توجد فصول بعد. أنشئ فصلاً جديداً!</p>';
         return;
     }
 
-    el.innerHTML = allClasses.map(c => {
-        const teacherName  = c.profiles?.username || 'غير محدد';
-        const studentCount = parseInt(c.class_members?.[0]?.count || 0);
-        const cid          = escapeHtml(String(c.id));
+    el.innerHTML = allClasses
+        .map(c => {
+            const teacherName = c.profiles?.username || 'غير محدد';
+            const studentCount = parseInt(c.class_members?.[0]?.count || 0);
+            const cid = escapeHtml(String(c.id));
 
-        return `
+            return `
         <div class="k-row">
             <div class="rl">
                 <span class="k-avatar" style="border-radius:var(--radius-lg)">🏫</span>
@@ -119,21 +122,28 @@ function renderClassesList() {
             </div>
         </div>
         `;
-    }).join('');
+        })
+        .join('');
 }
 
 // ─── FORMULAIRE CRÉATION CLASSE ───────────────────────────────────────────────
 async function showCreateClassForm() {
-    const form          = document.getElementById('admin-create-class-form');
+    const form = document.getElementById('admin-create-class-form');
     const teacherSelect = document.getElementById('new-class-teacher');
     if (!form || !teacherSelect) return;
 
     // Charger la liste d'enseignants (depuis cache ou API)
-    const users    = await _getUsers();
+    const users = await _getUsers();
     const teachers = users.filter(u => u.role === 'teacher');
 
-    teacherSelect.innerHTML = '<option value="">-- اختر المعلم --</option>' +
-        teachers.map(t => `<option value="${t.id}">${escapeHtml(t.username)} (${escapeHtml(t.first_name || '')} ${escapeHtml(t.last_name || '')})</option>`).join('');
+    teacherSelect.innerHTML =
+        '<option value="">-- اختر المعلم --</option>' +
+        teachers
+            .map(
+                t =>
+                    `<option value="${t.id}">${escapeHtml(t.username)} (${escapeHtml(t.first_name || '')} ${escapeHtml(t.last_name || '')})</option>`
+            )
+            .join('');
 
     form.style.display = 'block';
     document.getElementById('new-class-name').value = '';
@@ -141,14 +151,20 @@ async function showCreateClassForm() {
 }
 
 async function createClass() {
-    const name      = document.getElementById('new-class-name').value.trim();
+    const name = document.getElementById('new-class-name').value.trim();
     const teacherId = document.getElementById('new-class-teacher').value;
 
-    if (!name)      { alert('يرجى إدخال اسم الفصل'); return; }
-    if (!teacherId) { alert('يرجى اختيار المعلم');   return; }
+    if (!name) {
+        alert('يرجى إدخال اسم الفصل');
+        return;
+    }
+    if (!teacherId) {
+        alert('يرجى اختيار المعلم');
+        return;
+    }
 
     try {
-        const { data, error } = await supabaseAdmin.createClassWithTeacher(name, teacherId);
+        const { error } = await supabaseAdmin.createClassWithTeacher(name, teacherId);
         if (error) throw error;
 
         document.getElementById('admin-create-class-form').style.display = 'none';
@@ -160,7 +176,8 @@ async function createClass() {
 }
 
 async function deleteClass(classId, className) {
-    if (!confirm(`هل أنت متأكد من حذف فصل "${className}"؟ سيتم إزالة جميع الطلاب من هذا الفصل.`)) return;
+    if (!confirm(`هل أنت متأكد من حذف فصل "${className}"؟ سيتم إزالة جميع الطلاب من هذا الفصل.`))
+        return;
 
     try {
         const { error } = await supabaseAdmin.deleteClass(classId);
@@ -174,7 +191,7 @@ async function deleteClass(classId, className) {
 
 // ─── MODAL GESTION D'UNE CLASSE ───────────────────────────────────────────────
 async function openClassModal(classId) {
-    currentClassId = classId;
+    _currentClassId = classId;
     const classData = allClasses.find(c => c.id === classId);
     if (!classData) return;
 
@@ -183,8 +200,11 @@ async function openClassModal(classId) {
     if (!modal) {
         modal = document.createElement('div');
         modal.id = 'admin-class-modal';
-        modal.style.cssText = 'display:none; position:fixed; top:0; left:0; right:0; bottom:0; width:100%; height:100%; background:rgba(0,0,0,0.65); z-index:9999; overflow-y:auto;';
-        modal.onclick = (e) => { if (e.target === modal) closeClassModal(); };
+        modal.style.cssText =
+            'display:none; position:fixed; top:0; left:0; right:0; bottom:0; width:100%; height:100%; background:rgba(0,0,0,0.65); z-index:9999; overflow-y:auto;';
+        modal.onclick = e => {
+            if (e.target === modal) closeClassModal();
+        };
         modal.innerHTML = `
             <div style="position:relative; margin:40px auto; width:calc(100% - 32px); max-width:600px; background:#fff; border-radius:16px; box-shadow:0 24px 64px rgba(0,0,0,0.35); overflow:hidden;" onclick="event.stopPropagation()">
                 <div style="padding:20px 24px 16px; border-bottom:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center;">
@@ -207,13 +227,16 @@ async function renderClassModalContent(classId) {
     const content = document.getElementById('class-modal-content');
     if (!content) return;
 
-    content.innerHTML = '<p style="text-align:center; color:#6b7280; padding:24px 0;">جارٍ التحميل...</p>';
+    content.innerHTML =
+        '<p style="text-align:center; color:#6b7280; padding:24px 0;">جارٍ التحميل...</p>';
 
     try {
-        const { data: students,         error: studentsError   } = await supabaseAdmin.getClassStudents(classId);
+        const { data: students, error: studentsError } =
+            await supabaseAdmin.getClassStudents(classId);
         if (studentsError) throw studentsError;
 
-        const { data: availableStudents, error: availableError } = await supabaseAdmin.getAllStudentsNotInClass(classId);
+        const { data: availableStudents, error: availableError } =
+            await supabaseAdmin.getAllStudentsNotInClass(classId);
         if (availableError) throw availableError;
 
         content.innerHTML = `
@@ -221,12 +244,20 @@ async function renderClassModalContent(classId) {
             <div style="margin-bottom:20px;">
                 <h4 style="font-size:0.9rem; font-weight:600; color:#111827; margin:0 0 12px;">🎓 الطلاب الحاليون (${students?.length || 0})</h4>
                 <div id="class-current-students" style="max-height:200px; overflow-y:auto; border:1px solid #e5e7eb; border-radius:10px; padding:8px;">
-                    ${students?.length ? students.map(s => `
+                    ${
+                        students?.length
+                            ? students
+                                  .map(
+                                      s => `
                         <div style="display:flex; align-items:center; justify-content:space-between; padding:8px; border-bottom:1px solid #f3f4f6;">
                             <span style="font-size:0.85rem;">${escapeHtml(s.first_name || '')} ${escapeHtml(s.last_name || '')} <span style="color:#9ca3af;">@${escapeHtml(s.username)}</span></span>
                             <button onclick="window._adminRemoveStudentFromClass('${s.id}', '${classId}')" style="background:#fef2f2; border:1px solid #fecaca; color:#ef4444; font-size:0.75rem; padding:4px 10px; border-radius:6px; cursor:pointer;">إزالة</button>
                         </div>
-                    `).join('') : '<p style="text-align:center; color:#9ca3af; padding:16px; font-size:0.85rem;">لا يوجد طلاب في هذا الفصل</p>'}
+                    `
+                                  )
+                                  .join('')
+                            : '<p style="text-align:center; color:#9ca3af; padding:16px; font-size:0.85rem;">لا يوجد طلاب في هذا الفصل</p>'
+                    }
                 </div>
             </div>
 
@@ -245,21 +276,25 @@ async function renderClassModalContent(classId) {
         `;
     } catch (err) {
         Logger.error('ADMIN-CLASSES', 'renderClassModalContent error', err);
-        content.innerHTML = '<p style="color:#ef4444; text-align:center; padding:24px 0;">فشل تحميل بيانات الفصل</p>';
+        content.innerHTML =
+            '<p style="color:#ef4444; text-align:center; padding:24px 0;">فشل تحميل بيانات الفصل</p>';
     }
 }
 
 function closeClassModal() {
     const modal = document.getElementById('admin-class-modal');
     if (modal) modal.style.display = 'none';
-    currentClassId = null;
+    _currentClassId = null;
 }
 
 async function addStudentToClass(classId) {
-    const select    = document.getElementById('add-student-select');
+    const select = document.getElementById('add-student-select');
     const studentId = select?.value;
 
-    if (!studentId) { alert('يرجى اختيار طالب'); return; }
+    if (!studentId) {
+        alert('يرجى اختيار طالب');
+        return;
+    }
 
     try {
         const { error } = await supabaseAdmin.assignStudentToClass(studentId, classId);

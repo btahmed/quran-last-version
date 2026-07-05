@@ -1,9 +1,6 @@
 // frontend/src/components/UserEditModal.js
 // Gestion du modal d'édition utilisateur (Admin)
 // handleUpdateUser est déjà extrait dans TeacherPage.js — on le réexporte ici pour centraliser.
-import { config } from '../core/config.js';
-import { showNotification } from '../core/ui.js';
-import { Logger } from '../core/logger.js';
 export { handleUpdateUser } from '../pages/TeacherPage.js';
 
 /**

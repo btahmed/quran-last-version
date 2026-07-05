@@ -105,7 +105,7 @@ export async function getStudentProgress(userId) {
                 .eq('student_id', userId)
                 .maybeSingle();
             if (!r.error) classRes = r;
-        } catch (_) {
+        } catch {
             /* class info non disponible, on continue */
         }
 
@@ -218,7 +218,7 @@ export async function getTeacherStatsAndTasks() {
         }));
 
         return { teacherStats, recentTasks };
-    } catch (error) {
+    } catch {
         return { teacherStats: [], recentTasks: [] };
     }
 }

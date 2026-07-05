@@ -1,14 +1,13 @@
 // frontend/src/pages/teacher/TeacherDevoirsSection.js
 // Section Devoirs — extraite de TeacherPage.js (Task 9 : lazy-loading)
 // Responsabilités : créer une tâche, lister les tâches assignées, supprimer par batch
-import { state }            from '../../core/state.js';
-import { config }           from '../../core/config.js';
+import { config } from '../../core/config.js';
 import { showNotification } from '../../core/ui.js';
-import { Logger }           from '../../core/logger.js';
-import { apiCache }         from '../../core/apiCache.js';
-import { Validators }       from '../../core/validators.js';
-import * as supabaseTasks   from '../../services/supabase-tasks.js';
-import * as supabaseAdmin   from '../../services/supabase-admin.js';
+import { Logger } from '../../core/logger.js';
+import { apiCache } from '../../core/apiCache.js';
+import { Validators } from '../../core/validators.js';
+import * as supabaseTasks from '../../services/supabase-tasks.js';
+import * as supabaseAdmin from '../../services/supabase-admin.js';
 
 // ─── UTILS ───────────────────────────────────────────────────────────────────
 
@@ -35,7 +34,7 @@ function escapeJs(text) {
 // ─── ÉTAT LOCAL ───────────────────────────────────────────────────────────────
 
 let _students = [];
-let _tasks    = [];
+let _tasks = [];
 
 // ─── RENDER ──────────────────────────────────────────────────────────────────
 
@@ -123,7 +122,7 @@ async function _loadData() {
         ]);
 
         _students = studentsResult.data || [];
-        _tasks    = tasksResult.data    || [];
+        _tasks = tasksResult.data || [];
 
         apiCache.set('my-students', _students);
         apiCache.set('tasks', _tasks);
@@ -147,12 +146,16 @@ function _renderStudentCheckboxes(students) {
         return;
     }
 
-    container.innerHTML = students.map(student => `
+    container.innerHTML = students
+        .map(
+            student => `
         <label class="student-checkbox-label">
             <input type="checkbox" name="student-ids" value="${student.id}">
             <span class="student-name">${escapeHtml(student.first_name || student.username)}</span>
         </label>
-    `).join('');
+    `
+        )
+        .join('');
 }
 
 // ─── RENDU DE LA LISTE DES TÂCHES ────────────────────────────────────────────
@@ -188,13 +191,18 @@ function _renderTaskList(tasks) {
         batches.get(key).ids.push(task.id);
     });
 
-    taskListEl.innerHTML = headerHtml + Array.from(batches.values()).map(({ task, count, ids }) => {
-        const typeLabel = task.type || '';
-        const dueDate   = task.due_date ? new Date(task.due_date).toLocaleDateString('ar-SA') : '';
-        const date      = new Date(task.created_at).toLocaleDateString('ar-SA');
-        const idsJson   = JSON.stringify(ids);
-        const safeTitle = escapeHtml(escapeJs(task.title));
-        return `<div class="k-task-card">
+    taskListEl.innerHTML =
+        headerHtml +
+        Array.from(batches.values())
+            .map(({ task, count, ids }) => {
+                const typeLabel = task.type || '';
+                const dueDate = task.due_date
+                    ? new Date(task.due_date).toLocaleDateString('ar-SA')
+                    : '';
+                const date = new Date(task.created_at).toLocaleDateString('ar-SA');
+                const idsJson = JSON.stringify(ids);
+                const safeTitle = escapeHtml(escapeJs(task.title));
+                return `<div class="k-task-card">
             <div class="k-task-card-header">
                 <h3 class="k-task-card-title">${escapeHtml(task.title)}</h3>
                 <div style="display:flex;align-items:center;gap:var(--space-2);flex-shrink:0">
@@ -213,7 +221,8 @@ function _renderTaskList(tasks) {
                 ${dueDate ? `<span>⏰ ${dueDate}</span>` : ''}
             </div>
         </div>`;
-    }).join('');
+            })
+            .join('');
 }
 
 // ─── ACTIONS EXPORTÉES (utilisées via TeacherPage.js ou main.js) ──────────────
@@ -245,21 +254,27 @@ export async function handleCreateTask(event) {
         }
     }
 
-    const title  = document.getElementById('task-title').value.trim();
+    const title = document.getElementById('task-title').value.trim();
     const points = parseInt(document.getElementById('task-points').value) || 0;
 
-    const titleCheck  = Validators.text(title, { minLen: 2, maxLen: 200 });
+    const titleCheck = Validators.text(title, { minLen: 2, maxLen: 200 });
     const pointsCheck = Validators.points(points);
-    if (!titleCheck.valid) { showNotification(titleCheck.error, 'error'); return; }
-    if (!pointsCheck.valid) { showNotification(pointsCheck.error, 'error'); return; }
+    if (!titleCheck.valid) {
+        showNotification(titleCheck.error, 'error');
+        return;
+    }
+    if (!pointsCheck.valid) {
+        showNotification(pointsCheck.error, 'error');
+        return;
+    }
 
     const body = {
         title,
         description: document.getElementById('task-description').value.trim(),
-        type:        document.getElementById('task-type').value,
+        type: document.getElementById('task-type').value,
         points,
-        due_date:    document.getElementById('task-due-date').value || null,
-        assign_all:  assignMode === 'all',
+        due_date: document.getElementById('task-due-date').value || null,
+        assign_all: assignMode === 'all',
         student_ids: studentIds,
     };
 
@@ -309,7 +324,11 @@ export async function handleDeleteBatch(ids, title, count) {
 }
 
 export async function handleDeleteAllTasks() {
-    if (!confirm('⚠️ تحذير خطير!\nهل أنت متأكد تماماً أنك تريد حذف جميع المهام؟\nهذا الإجراء سيحذف كل المهام وكل التسليمات المرتبطة بها ولا يمكن التراجع عنه.')) {
+    if (
+        !confirm(
+            '⚠️ تحذير خطير!\nهل أنت متأكد تماماً أنك تريد حذف جميع المهام؟\nهذا الإجراء سيحذف كل المهام وكل التسليمات المرتبطة بها ولا يمكن التراجع عنه.'
+        )
+    ) {
         return;
     }
 
@@ -318,7 +337,10 @@ export async function handleDeleteAllTasks() {
 
     try {
         const { data: students } = await supabaseAdmin.getMyStudents();
-        if (!students?.length) { showNotification('لا يوجد طلاب', 'error'); return; }
+        if (!students?.length) {
+            showNotification('لا يوجد طلاب', 'error');
+            return;
+        }
 
         const studentIds = students.map(s => s.id);
         const { error } = await supabaseTasks.deleteTasksByStudentIds(studentIds);

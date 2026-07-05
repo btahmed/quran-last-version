@@ -1,6 +1,5 @@
 // frontend/src/components/AudioRecordModal.js
 // Gestion de l'enregistrement audio des tâches étudiant
-import { state } from '../core/state.js';
 import { config } from '../core/config.js';
 import { showNotification } from '../core/ui.js';
 import { Logger } from '../core/logger.js';
@@ -93,7 +92,7 @@ export async function toggleRecording() {
             const secs = String(_recordSeconds % 60).padStart(2, '0');
             document.getElementById('recording-timer').textContent = `${mins}:${secs}`;
         }, 1000);
-    } catch (error) {
+    } catch {
         showNotification('لا يمكن الوصول إلى الميكروفون', 'error');
     }
 }
@@ -204,7 +203,7 @@ export async function submitRecording() {
                     modal.classList.add('hidden');
                 }
                 _recordBlob = null;
-            } catch (_queueErr) {
+            } catch {
                 showNotification(error.message, 'error');
             }
         } else {

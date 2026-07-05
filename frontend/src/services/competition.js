@@ -16,7 +16,7 @@ export const competitionManager = {
             type,
             difficulty,
             surahId: randomSurah,
-            startTime: Date.now()
+            startTime: Date.now(),
         };
     },
 
@@ -27,10 +27,11 @@ export const competitionManager = {
         window.QuranReview.renderCompetitionPage(); // Switch view
 
         const container = document.getElementById('competition-active');
-        container.innerHTML = '<div style="text-align:center; padding: 2rem;">⏳ جاري إعداد التحدي...</div>';
+        container.innerHTML =
+            '<div style="text-align:center; padding: 2rem;">⏳ جاري إعداد التحدي...</div>';
 
         // Route to specific game logic
-        switch(type) {
+        switch (type) {
             case 'speed_run':
                 this.startSpeedRun(container);
                 break;
@@ -48,12 +49,11 @@ export const competitionManager = {
     // ========================
     async startAyahHunt(container) {
         let score = 0;
-        let questionCount = 0;
         const maxQuestions = 10;
         const questions = [];
 
         // Pre-fetch questions
-        for(let i=0; i<maxQuestions; i++) {
+        for (let i = 0; i < maxQuestions; i++) {
             // Weighted random for better UX (focus on common surahs first?)
             // For now completely random
             const surahId = Math.floor(Math.random() * 114) + 1;
@@ -62,7 +62,7 @@ export const competitionManager = {
             questions.push({ surah, ayahNum });
         }
 
-        const renderQuestion = async (index) => {
+        const renderQuestion = async index => {
             if (index >= maxQuestions) {
                 this.endChallenge(score, 'ayah_hunt');
                 return;
@@ -73,7 +73,7 @@ export const competitionManager = {
 
             // Generate options (1 correct + 3 wrong)
             const options = [q.surah];
-            while(options.length < 4) {
+            while (options.length < 4) {
                 const randomS = config.surahs[Math.floor(Math.random() * 114)];
                 if (!options.find(o => o.id === randomS.id)) options.push(randomS);
             }
@@ -86,24 +86,35 @@ export const competitionManager = {
                         <span>السؤال ${index + 1}/${maxQuestions}</span>
                         <span>النقاط: ${score}</span>
                     </div>
-                    <div class="arabic-large" style="background:#f8f9fa; padding:2rem; border-radius:12px; margin-bottom:2rem;">
-                        ${text || 'جاري التحميل...'}
-                    </div>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
-                        ${options.map(opt => `
-                            <button class="btn btn-outline" style="width:100%; padding:1rem;"
-                                onclick="QuranReview.competitionManager.handleHuntAnswer(${opt.id === q.surah.id}, ${index}, ${score})">
-                                سورة ${opt.name}
-                            </button>
-                        `).join('')}
-                    </div>
-                    <button class="btn btn-danger" style="margin-top:2rem;" onclick="QuranReview.competitionManager.abortChallenge()">انسحاب</button>
+                    <div class="arabic-large" style="background:#f8f9fa; padding:2rem; border-radius:12px; margin-bottom:2rem;" id="hunt-ayah-text"></div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;" id="hunt-options"></div>
+                    <button class="btn btn-danger" style="margin-top:2rem;" id="hunt-abort">انسحاب</button>
                 </div>
             `;
+
+            // Use textContent to safely display API-sourced ayah text
+            document.getElementById('hunt-ayah-text').textContent = text || 'جاري التحميل...';
+
+            // Build option buttons via DOM to avoid onclick interpolation
+            const optionsEl = document.getElementById('hunt-options');
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'btn btn-outline';
+                btn.style.cssText = 'width:100%; padding:1rem;';
+                btn.textContent = `سورة ${opt.name}`;
+                btn.addEventListener('click', () => {
+                    this.handleHuntAnswer(opt.id === q.surah.id, index, score);
+                });
+                optionsEl.appendChild(btn);
+            });
+
+            document.getElementById('hunt-abort').addEventListener('click', () => {
+                this.abortChallenge();
+            });
         };
 
         // Global handler hack for the generated HTML
-        this.handleHuntAnswer = (isCorrect, currentIndex, currentScore) => {
+        this.handleHuntAnswer = (isCorrect, currentIndex, _currentScore) => {
             if (isCorrect) {
                 score += 100; // + Time bonus logic could be added
                 showNotification('إجابة صحيحة! +100', 'success');
@@ -145,24 +156,39 @@ export const competitionManager = {
             container.innerHTML = `
                 <div class="card">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-                        <h3>سورة ${surah.name} (${startAyah}-${endAyah})</h3>
+                        <h3 id="sr-surah-title"></h3>
                         <div style="font-size:1.5rem; font-weight:bold; color:var(--accent-red);" id="sr-timer">05:00</div>
                     </div>
-                    <div class="arabic-text" style="line-height:2.5; margin-bottom:2rem;">
-                        ${texts.map((t, i) => `<span style="display:block; margin-bottom:1rem;">(${startAyah+i}) ${t}</span>`).join('')}
-                    </div>
-                    <button class="btn btn-primary" style="width:100%;" onclick="QuranReview.competitionManager.startSpeedTest(${surahId}, ${startAyah}, ${endAyah})">
+                    <div class="arabic-text" style="line-height:2.5; margin-bottom:2rem;" id="sr-texts"></div>
+                    <button class="btn btn-primary" style="width:100%;" id="sr-start-test">
                         انتهيت من الحفظ - ابدأ الاختبار
                     </button>
                 </div>
             `;
 
+            document.getElementById('sr-surah-title').textContent =
+                `سورة ${surah.name} (${startAyah}-${endAyah})`;
+
+            const textsEl = document.getElementById('sr-texts');
+            texts.forEach((t, i) => {
+                const span = document.createElement('span');
+                span.style.cssText = 'display:block; margin-bottom:1rem;';
+                span.textContent = `(${startAyah + i}) ${t}`;
+                textsEl.appendChild(span);
+            });
+
+            document.getElementById('sr-start-test').addEventListener('click', () => {
+                this.startSpeedTest(surahId, startAyah, endAyah);
+            });
+
             timerInterval = setInterval(() => {
                 timeLeft--;
-                const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+                const m = Math.floor(timeLeft / 60)
+                    .toString()
+                    .padStart(2, '0');
                 const s = (timeLeft % 60).toString().padStart(2, '0');
                 const timerEl = document.getElementById('sr-timer');
-                if(timerEl) timerEl.textContent = `${m}:${s}`;
+                if (timerEl) timerEl.textContent = `${m}:${s}`;
 
                 if (timeLeft <= 0) {
                     clearInterval(timerInterval);
@@ -174,7 +200,7 @@ export const competitionManager = {
             this.activeTimer = timerInterval;
         };
 
-        this.startSpeedTest = async (sid, start, end) => {
+        this.startSpeedTest = async (_sid, _start, _end) => {
             clearInterval(this.activeTimer);
 
             // Test: Fill in the blanks (Mask 50% words)
@@ -194,13 +220,13 @@ export const competitionManager = {
             const testArea = document.getElementById('sr-test-area');
             let totalBlanks = 0;
 
-            texts.forEach((text, idx) => {
+            texts.forEach((text, _idx) => {
                 const words = text.split(' ');
                 const div = document.createElement('div');
                 div.className = 'arabic-text';
                 div.style.marginBottom = '1rem';
 
-                words.forEach((word, wIdx) => {
+                words.forEach((word, _wIdx) => {
                     // Mask random words (every ~3rd word)
                     if (Math.random() < 0.4) {
                         totalBlanks++;
@@ -282,7 +308,7 @@ export const competitionManager = {
             words: analysis,
             currentIndex: 0,
             errors: 0,
-            score: 0
+            score: 0,
         };
 
         this.renderPrecisionDisplay();
@@ -313,7 +339,10 @@ export const competitionManager = {
         const userWord = input.value;
         const currentItem = this.precisionData.words[this.precisionData.currentIndex];
 
-        if (competitionManager.normalizeArabic(userWord) === competitionManager.normalizeArabic(currentItem.word)) {
+        if (
+            competitionManager.normalizeArabic(userWord) ===
+            competitionManager.normalizeArabic(currentItem.word)
+        ) {
             // Correct
             this.precisionData.currentIndex++;
             this.precisionData.score += 20;
@@ -353,7 +382,7 @@ export const competitionManager = {
         stats.history.push({
             type,
             score,
-            date: new Date().toISOString()
+            date: new Date().toISOString(),
         });
 
         // Update Rank
@@ -380,7 +409,7 @@ export const competitionManager = {
     },
 
     abortChallenge() {
-        if(confirm('هل أنت متأكد من الانسحاب؟')) {
+        if (confirm('هل أنت متأكد من الانسحاب؟')) {
             clearInterval(this.activeTimer);
             state.competition.activeChallenge = null;
             window.QuranReview.renderCompetitionPage();
@@ -389,10 +418,10 @@ export const competitionManager = {
 
     // Système de rangs
     calculateRank(totalScore) {
-        if(totalScore >= 50000) return { name: 'شيخ', icon: '👑', level: 'diamond' };
-        if(totalScore >= 15000) return { name: 'أستاذ', icon: '💎', level: 'platinum' };
-        if(totalScore >= 5000) return { name: 'حافظ', icon: '🥇', level: 'gold' };
-        if(totalScore >= 1000) return { name: 'طالب', icon: '🥈', level: 'silver' };
+        if (totalScore >= 50000) return { name: 'شيخ', icon: '👑', level: 'diamond' };
+        if (totalScore >= 15000) return { name: 'أستاذ', icon: '💎', level: 'platinum' };
+        if (totalScore >= 5000) return { name: 'حافظ', icon: '🥇', level: 'gold' };
+        if (totalScore >= 1000) return { name: 'طالب', icon: '🥈', level: 'silver' };
         return { name: 'مبتدئ', icon: '🥉', level: 'bronze' };
     },
 
@@ -401,11 +430,11 @@ export const competitionManager = {
             name: state.settings.userName || 'أنت',
             score: score,
             date: new Date().toISOString(),
-            rank: this.calculateRank(state.competition.userStats.totalScore).name
+            rank: this.calculateRank(state.competition.userStats.totalScore).name,
         };
 
         // Add to local leaderboard for demo
-        let board = state.competition.leaderboard || [];
+        const board = state.competition.leaderboard || [];
         board.push(entry);
 
         try {
@@ -424,7 +453,6 @@ export const competitionManager = {
     },
 
     renderLocalLeaderboard() {
-        const list = document.getElementById('leaderboard-list');
         const board = state.competition.leaderboard || [];
         this.renderLeaderboardData(board);
     },
@@ -434,26 +462,57 @@ export const competitionManager = {
         if (!list) return;
 
         if (board.length === 0) {
-            list.innerHTML = '<div style="text-align:center; color:gray; padding:2rem;">لا توجد سجلات بعد</div>';
+            list.innerHTML =
+                '<div style="text-align:center; color:gray; padding:2rem;">لا توجد سجلات بعد</div>';
             return;
         }
 
-        list.innerHTML = board.map((entry, idx) => {
+        list.innerHTML = '';
+        board.forEach((entry, idx) => {
             const rankIcon = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}.`;
-            return `
-                <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem; border-bottom:1px solid var(--border-color); background: ${idx < 3 ? 'var(--bg-accent)' : 'transparent'};">
-                    <div style="display:flex; align-items:center; gap:0.5rem;">
-                        <span style="font-size:1.2rem;">${rankIcon}</span>
-                        <span style="font-weight:600;">${entry.name || 'مستخدم'}</span>
-                        ${entry.rank ? `<span class="user-badge ${entry.rank.toLowerCase()}">${entry.rank}</span>` : ''}
-                    </div>
-                    <div style="text-align:right;">
-                        <div style="font-weight:bold; color:var(--accent-green);">${entry.score || entry.total_points || 0}</div>
-                        <div style="font-size:0.8rem; color:var(--text-secondary);">نقطة</div>
-                    </div>
-                </div>
-            `;
-        }).join('');
+
+            const row = document.createElement('div');
+            row.style.cssText = `display:flex; justify-content:space-between; align-items:center; padding:0.75rem; border-bottom:1px solid var(--border-color); background: ${idx < 3 ? 'var(--bg-accent)' : 'transparent'};`;
+
+            const left = document.createElement('div');
+            left.style.cssText = 'display:flex; align-items:center; gap:0.5rem;';
+
+            const iconSpan = document.createElement('span');
+            iconSpan.style.fontSize = '1.2rem';
+            iconSpan.textContent = rankIcon;
+
+            const nameSpan = document.createElement('span');
+            nameSpan.style.fontWeight = '600';
+            nameSpan.textContent = entry.name || 'مستخدم';
+
+            left.appendChild(iconSpan);
+            left.appendChild(nameSpan);
+
+            if (entry.rank) {
+                const badge = document.createElement('span');
+                badge.className = `user-badge ${entry.rank.toLowerCase()}`;
+                badge.textContent = entry.rank;
+                left.appendChild(badge);
+            }
+
+            const right = document.createElement('div');
+            right.style.textAlign = 'right';
+
+            const scoreDiv = document.createElement('div');
+            scoreDiv.style.cssText = 'font-weight:bold; color:var(--accent-green);';
+            scoreDiv.textContent = entry.score || entry.total_points || 0;
+
+            const label = document.createElement('div');
+            label.style.cssText = 'font-size:0.8rem; color:var(--text-secondary);';
+            label.textContent = 'نقطة';
+
+            right.appendChild(scoreDiv);
+            right.appendChild(label);
+
+            row.appendChild(left);
+            row.appendChild(right);
+            list.appendChild(row);
+        });
     },
 
     async renderLeaderboard() {
@@ -500,7 +559,7 @@ export const competitionManager = {
             currentAyah: fromAyah,
             level: 1,
             score: 0,
-            startTime: Date.now()
+            startTime: Date.now(),
         };
         saveData();
 
@@ -522,11 +581,15 @@ export const competitionManager = {
         const ayahText = await window.QuranReview.fetchAyahText(surahId, ayahNumber);
 
         if (!ayahText) {
-            container.innerHTML = '<div style="text-align:center; color:red;">❌ خطأ في تحميل الآية</div>';
+            container.innerHTML =
+                '<div style="text-align:center; color:red;">❌ خطأ في تحميل الآية</div>';
             return;
         }
 
-        const analysis = window.QuranReview.hifzEngine.generateMaskLevel(ayahText, state.hifz.currentSession.level);
+        const analysis = window.QuranReview.hifzEngine.generateMaskLevel(
+            ayahText,
+            state.hifz.currentSession.level
+        );
         this.renderHifzDisplay(analysis);
         this.updateLevelDisplay();
     },
@@ -545,7 +608,7 @@ export const competitionManager = {
             span.dataset.word = item.word;
             span.dataset.index = idx; // Important for finding it later
 
-            if(item.isHidden) {
+            if (item.isHidden) {
                 span.onclick = () => this.attemptReveal(span, item.word);
             }
 
@@ -562,7 +625,7 @@ export const competitionManager = {
         const input = prompt('ما هذه الكلمة؟');
         if (input === null) return; // Cancelled
 
-        if(this.normalizeArabic(input) === this.normalizeArabic(correctWord)) {
+        if (this.normalizeArabic(input) === this.normalizeArabic(correctWord)) {
             // Correct
             spanElement.classList.remove('hidden');
             spanElement.classList.add('revealed');
@@ -573,7 +636,7 @@ export const competitionManager = {
             saveData();
 
             // Check if level complete
-            if(this.checkLevelComplete()) {
+            if (this.checkLevelComplete()) {
                 setTimeout(() => {
                     const feedback = document.getElementById('hifz-feedback');
                     feedback.classList.remove('hidden');
@@ -583,7 +646,7 @@ export const competitionManager = {
         } else {
             // Error animation
             spanElement.style.backgroundColor = '#f8d7da'; // Light red
-            setTimeout(() => spanElement.style.backgroundColor = '', 500);
+            setTimeout(() => (spanElement.style.backgroundColor = ''), 500);
         }
     },
 
@@ -598,13 +661,13 @@ export const competitionManager = {
     },
 
     showHint() {
-        if(this.hintsRemaining <= 0) {
+        if (this.hintsRemaining <= 0) {
             showNotification('نفذت التلميحات', 'warning');
             return;
         }
 
         const hiddenWords = document.querySelectorAll('.word.hidden');
-        if(hiddenWords.length === 0) return;
+        if (hiddenWords.length === 0) return;
 
         const randomWord = hiddenWords[Math.floor(Math.random() * hiddenWords.length)];
 
@@ -633,7 +696,7 @@ export const competitionManager = {
         setTimeout(() => feedback.classList.add('hidden'), 300);
 
         const session = state.hifz.currentSession;
-        if(session.level < 5) {
+        if (session.level < 5) {
             session.level++;
             showNotification(`المستوى ${session.level}`, 'success');
             this.loadAyahForHifz(session.surahId, session.currentAyah);
@@ -674,7 +737,7 @@ export const competitionManager = {
             toAyah: session.toAyah,
             score: session.score,
             date: new Date().toISOString(),
-            timeTaken
+            timeTaken,
         });
 
         // Reset session
@@ -694,5 +757,5 @@ export const competitionManager = {
             saveData();
             window.QuranReview.renderHifzPage();
         }
-    }
+    },
 };
