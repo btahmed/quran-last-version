@@ -2,12 +2,12 @@
 
 ## Architecture du projet
 
-| Déploiement | Fichiers | URL | Usage |
-|-------------|----------|-----|-------|
-| **Frontend Vercel** (prod) | `frontend/` | https://quranreview-frontend.vercel.app | Site live actif |
-| **Backend Vercel** (prod) | `backend/` | https://quranreview-api.vercel.app | API Django serverless |
-| **Dev local** (port 3456) | `frontend/` | http://localhost:3456 | python http.server → API Vercel |
-| **Dev local** (port 80) | Docker Compose | http://localhost:80 | nginx + Django + PostgreSQL |
+| Déploiement                | Fichiers       | URL                                     | Usage                           |
+| -------------------------- | -------------- | --------------------------------------- | ------------------------------- |
+| **Frontend Vercel** (prod) | `frontend/`    | https://quranreview-frontend.vercel.app | Site live actif                 |
+| **Backend Vercel** (prod)  | `backend/`     | https://quranreview-api.vercel.app      | API Django serverless           |
+| **Dev local** (port 3456)  | `frontend/`    | http://localhost:3456                   | python http.server → API Vercel |
+| **Dev local** (port 80)    | Docker Compose | http://localhost:80                     | nginx + Django + PostgreSQL     |
 
 > ✅ Branche active : **`main`** — worktree local : `.claude/worktrees/main-local/`
 
@@ -27,6 +27,7 @@
 ## Lancer l'application
 
 ### Dev frontend rapide (port 3456 → API Vercel prod)
+
 ```bash
 cd .claude/worktrees/main-local
 python -m http.server 3456 --directory frontend
@@ -35,6 +36,7 @@ python -m http.server 3456 --directory frontend
 ```
 
 ### Dev full-stack Docker (port 80, API locale)
+
 ```bash
 cd .claude/worktrees/main-local
 docker-compose up --build
@@ -43,6 +45,7 @@ docker-compose up --build
 ```
 
 ### Production
+
 ```bash
 # Déploiement automatique sur push vers main (GitHub → Vercel)
 ```
@@ -94,41 +97,44 @@ frontend/
 ## Navigation par rôle (`NavManager.js`)
 
 ### 🎓 Étudiant (`student`)
-| Icône | Label | Route | Note |
-|-------|-------|-------|------|
-| 🏠 | الرئيسية | `home` | Dashboard étudiant |
-| 📖 | الحفظ | `hifz` | Mémorisation |
-| 🎧 | **إرسال** | `soumettre` | **Bouton central** — envoi audio |
-| 🔁 | المراجعة | `revision` | Muraja'a (WardPage) |
-| 👤 | حسابي | `profil` | Progression + Paramètres |
+
+| Icône | Label     | Route       | Note                             |
+| ----- | --------- | ----------- | -------------------------------- |
+| 🏠    | الرئيسية  | `home`      | Dashboard étudiant               |
+| 📖    | الحفظ     | `hifz`      | Mémorisation                     |
+| 🎧    | **إرسال** | `soumettre` | **Bouton central** — envoi audio |
+| 🔁    | المراجعة  | `revision`  | Muraja'a (WardPage)              |
+| 👤    | حسابي     | `profil`    | Progression + Paramètres         |
 
 ### 👨‍🏫 Professeur (`teacher`)
-| Icône | Label | Route | Note |
-|-------|-------|-------|------|
-| 🏠 | الرئيسية | `home` | Dashboard enseignant |
-| 📋 | الواجبات | `devoirs` | Créer/gérer tâches |
-| 🎧 | **التسليمات** | `soumissions` | **Bouton central** — écoute + notation |
-| 👥 | الطلاب | `eleves` | Liste + progression élèves |
-| 👤 | حسابي | `profil` | Paramètres |
+
+| Icône | Label         | Route         | Note                                   |
+| ----- | ------------- | ------------- | -------------------------------------- |
+| 🏠    | الرئيسية      | `home`        | Dashboard enseignant                   |
+| 📋    | الواجبات      | `devoirs`     | Créer/gérer tâches                     |
+| 🎧    | **التسليمات** | `soumissions` | **Bouton central** — écoute + notation |
+| 👥    | الطلاب        | `eleves`      | Liste + progression élèves             |
+| 👤    | حسابي         | `profil`      | Paramètres                             |
 
 ### ⚙️ Admin
-| Icône | Label | Route |
-|-------|-------|-------|
-| 🏠 | لوحة | `admin` |
-| 👥 | المستخدمون | `admin-users` |
-| 🏫 | **الفصول** | `admin-classes` |
-| 📊 | الإحصاء | `admin-stats` |
-| ⚙️ | الإعدادات | `profil` |
+
+| Icône | Label      | Route           |
+| ----- | ---------- | --------------- |
+| 🏠    | لوحة       | `admin`         |
+| 👥    | المستخدمون | `admin-users`   |
+| 🏫    | **الفصول** | `admin-classes` |
+| 📊    | الإحصاء    | `admin-stats`   |
+| ⚙️    | الإعدادات  | `profil`        |
 
 ---
 
 ## Rôles utilisateurs
 
-| Rôle | Dashboard | Accès |
-|------|-----------|-------|
-| `student` | `home` (dashboard étudiant) | hifz, soumettre, revision, profil |
-| `teacher` | `home` (dashboard enseignant) | devoirs, soumissions, eleves, profil |
-| `admin` / `is_superuser` | `admin` | admin-users, admin-classes, admin-stats |
+| Rôle                     | Dashboard                     | Accès                                   |
+| ------------------------ | ----------------------------- | --------------------------------------- |
+| `student`                | `home` (dashboard étudiant)   | hifz, soumettre, revision, profil       |
+| `teacher`                | `home` (dashboard enseignant) | devoirs, soumissions, eleves, profil    |
+| `admin` / `is_superuser` | `admin`                       | admin-users, admin-classes, admin-stats |
 
 ---
 
@@ -176,15 +182,47 @@ CORS autorisé : `*.vercel.app`, `localhost:*` (tous ports — regex dans settin
 - **tasks.js** : seul `loadTasksFromApi` utilisé — `handleCreateTask`, `handleDeleteAllTasks`, `switchTaskTab` sont du code mort
 - **Service Worker** : toujours `return` après `event.respondWith()` — double appel = erreur silencieuse
 - **Audit façade** : `grep -rn "QuranReview\." src/ --include="*.js" | grep -oE "QuranReview\.[a-zA-Z_]+" | sort -u`
+- **GSAP CDN** : toujours garder `typeof gsap !== 'undefined'` avant tout appel GSAP — si le CDN est bloqué (ad-blocker), la page doit quand même s'afficher
+- **Signed URLs Supabase** : NE JAMAIS stocker une signed URL dans la DB — elle expire. Stocker le **path** Storage et générer une signed URL fraîche à l'affichage via `createSignedUrl(path, 3600)`
+- **MediaRecorder format** : NE PAS coder en dur `mimeType: 'audio/webm'` — Safari/iOS ne supporte que `audio/mp4`. Toujours détecter avec `MediaRecorder.isTypeSupported()` et laisser le navigateur choisir
+- **Audio src HTML** : NE PAS mettre `type="audio/webm"` dans `<source>` — ça bloque le navigateur si le format réel est différent. Utiliser `<audio src="...">` sans `type` ou avec plusieurs `<source>`
+- **URLs dans HTML** : toujours valider que l'URL commence par `https://` avant injection dans un attribut `src` — protège contre les URIs `javascript:`. Passer ensuite par `escapeHtml()` pour l'attribut
+
+---
+
+## Checklist avant de livrer une nouvelle feature
+
+> ⚠️ À vérifier systématiquement avant tout push vers `main`
+
+### Données temporaires / TTL
+
+- [ ] Si tu stockes quelque chose avec une expiration (signed URL, token, cache), as-tu prévu le renouvellement ?
+- [ ] Les URLs signées sont stockées en DB ? → **Non** — stocker le path, générer l'URL à l'affichage
+
+### Compatibilité navigateurs
+
+- [ ] La feature utilise une API Web (MediaRecorder, Notification, IndexedDB, etc.) ? → Vérifier la compatibilité Safari/iOS
+- [ ] Les formats de fichiers sont détectés dynamiquement (pas codés en dur) ?
+- [ ] Les CDN externes (GSAP, Chart.js) ont un fallback si bloqués ?
+
+### Sécurité (en plus des règles globales)
+
+- [ ] Toute URL externe injectée dans un attribut HTML est validée (`https://`) et échappée ?
+- [ ] Les données utilisateur affichées passent par `escapeHtml()` ou `textContent` ?
+
+### Test du flow complet
+
+- [ ] Le flow de bout en bout a été testé manuellement (pas juste des tests unitaires) ?
+- [ ] Testé sur Chrome ET Safari (ou simulé iOS) pour les features audio/media ?
 
 ---
 
 ## Docs utiles
 
-| Doc | Emplacement |
-|-----|-------------|
-| Plan refonte navigation | `docs/plans/2026-03-15-navigation-refonte.md` |
-| Design refonte navigation | `docs/plans/2026-03-15-navigation-refonte-design.md` |
-| Plan refactoring ES modules | `docs/plans/2026-03-12-frontend-refactoring.md` |
-| Guide déploiement | `docs/deployment.md` |
-| Audio CDN/local | `docs/audio-setup.md` |
+| Doc                         | Emplacement                                          |
+| --------------------------- | ---------------------------------------------------- |
+| Plan refonte navigation     | `docs/plans/2026-03-15-navigation-refonte.md`        |
+| Design refonte navigation   | `docs/plans/2026-03-15-navigation-refonte-design.md` |
+| Plan refactoring ES modules | `docs/plans/2026-03-12-frontend-refactoring.md`      |
+| Guide déploiement           | `docs/deployment.md`                                 |
+| Audio CDN/local             | `docs/audio-setup.md`                                |
