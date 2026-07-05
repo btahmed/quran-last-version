@@ -20,6 +20,15 @@ function validateAudio(audioBlob) {
     return { valid: true, error: null };
 }
 
+// Génère une signed URL fraîche (1h) pour un path Supabase Storage
+async function _freshSignedUrl(path) {
+    if (!path || path.startsWith('http')) return path; // URL déjà complète (legacy)
+    const { data } = await supabaseClient.storage
+        .from('audio-submissions')
+        .createSignedUrl(path, 3600);
+    return data?.signedUrl || null;
+}
+
 export async function getMySubmissions() {
     try {
         // Résoudre l'UUID Supabase depuis localStorage (Django JWT)
@@ -39,7 +48,16 @@ export async function getMySubmissions() {
             .eq('student_id', profile.id)
             .order('submitted_at', { ascending: false });
 
-        return { data, error };
+        if (error || !data) return { data, error };
+
+        // Générer des signed URLs fraîches pour les paths stockés en DB
+        const withUrls = await Promise.all(
+            data.map(async sub => ({
+                ...sub,
+                audio_url: await _freshSignedUrl(sub.audio_url),
+            }))
+        );
+        return { data: withUrls, error: null };
     } catch (error) {
         return { data: null, error };
     }
@@ -53,7 +71,16 @@ export async function getPendingSubmissions() {
             .eq('status', 'submitted')
             .order('submitted_at', { ascending: false });
 
-        return { data, error };
+        if (error || !data) return { data, error };
+
+        // Générer des signed URLs fraîches pour les paths stockés en DB
+        const withUrls = await Promise.all(
+            data.map(async sub => ({
+                ...sub,
+                audio_url: await _freshSignedUrl(sub.audio_url),
+            }))
+        );
+        return { data: withUrls, error: null };
     } catch (error) {
         return { data: null, error };
     }

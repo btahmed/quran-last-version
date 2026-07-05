@@ -270,12 +270,12 @@ function _applyStudentData(tasks, submissions, pointsData) {
                 const statusText = isApproved ? 'مقبول ✓' : isRejected ? 'مرفوض ✗' : '⏳ بانتظار';
                 const date = new Date(s.submitted_at).toLocaleDateString('ar-SA');
                 const taskTitle = s.task?.title || s.tasks?.title || 'مهمة';
-                const audioSrc = s.audio_url
-                    ? s.audio_url.startsWith('http')
-                        ? s.audio_url
-                        : config.apiBaseUrl +
-                          (s.audio_url.startsWith('/') ? s.audio_url : '/' + s.audio_url)
-                    : '';
+                // Validation stricte : l'URL audio doit commencer par https://
+                const rawAudioUrl = s.audio_url;
+                const safeAudioSrc =
+                    rawAudioUrl && rawAudioUrl.startsWith('https://')
+                        ? escapeHtml(rawAudioUrl)
+                        : null;
 
                 let feedbackHtml = '';
                 if (s.admin_feedback) {
@@ -286,12 +286,8 @@ function _applyStudentData(tasks, submissions, pointsData) {
                     }
                 }
 
-                const audioHtml = audioSrc
-                    ? `
-                <audio controls preload="metadata" style="width:100%;margin-top:var(--space-2);"
-                    onerror="this.outerHTML='<p style=\\'color:var(--color-text-secondary);font-size:0.85rem;\\'>الملف الصوتي غير متاح</p>'">
-                    <source src="${audioSrc}" type="audio/webm">
-                </audio>`
+                const audioHtml = safeAudioSrc
+                    ? `<audio controls preload="metadata" src="${safeAudioSrc}" style="width:100%;margin-top:var(--space-2);" onerror="this.outerHTML='<p style=\\'color:var(--color-text-secondary);font-size:0.85rem;\\'>الملف الصوتي غير متاح</p>'"></audio>`
                     : '';
 
                 return `

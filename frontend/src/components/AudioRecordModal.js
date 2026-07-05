@@ -58,7 +58,15 @@ export async function toggleRecording() {
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         _recordChunks = [];
-        _recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+        // Détection du format supporté (webm sur Chrome/FF, mp4 sur iOS Safari)
+        const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+            ? 'audio/webm;codecs=opus'
+            : MediaRecorder.isTypeSupported('audio/webm')
+              ? 'audio/webm'
+              : MediaRecorder.isTypeSupported('audio/mp4')
+                ? 'audio/mp4'
+                : '';
+        _recorder = new MediaRecorder(stream, mimeType ? { mimeType } : {});
 
         _recorder.ondataavailable = e => {
             if (e.data.size > 0) _recordChunks.push(e.data);
@@ -66,7 +74,7 @@ export async function toggleRecording() {
 
         _recorder.onstop = () => {
             stream.getTracks().forEach(t => t.stop());
-            _recordBlob = new Blob(_recordChunks, { type: 'audio/webm' });
+            _recordBlob = new Blob(_recordChunks, { type: _recorder.mimeType || 'audio/webm' });
             const url = URL.createObjectURL(_recordBlob);
             const preview = document.getElementById('recording-preview');
             preview.src = url;
@@ -163,9 +171,10 @@ export async function submitRecording() {
         }
 
         Logger.log('RECORDING', 'Creating submission record...');
+        // Stocker le PATH (pas la signed URL) — les URLs signées expirent après 7j
         const { data: result, error: submitError } = await supabaseSubmissions.createSubmission(
             _recordTaskId,
-            uploadData.url
+            uploadData.path
         );
 
         if (submitError) {

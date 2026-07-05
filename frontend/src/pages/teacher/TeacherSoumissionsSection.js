@@ -148,13 +148,9 @@ function _renderPendingList(pending) {
             const initial = escapeHtml(studentName.charAt(0) || '؟');
             const sid = escapeHtml(String(s.id));
 
-            // Construction de l'URL audio (Cloudinary ou backend local)
-            const audioSrc = s.audio_url
-                ? s.audio_url.startsWith('http')
-                    ? s.audio_url
-                    : config.apiBaseUrl +
-                      (s.audio_url.startsWith('/') ? s.audio_url : '/' + s.audio_url)
-                : null;
+            // Validation stricte : l'URL audio doit commencer par https://
+            const audioSrc =
+                s.audio_url && s.audio_url.startsWith('https://') ? escapeHtml(s.audio_url) : null;
 
             return `<div class="k-pending-card">
             <div class="k-pending-head">
@@ -173,10 +169,8 @@ function _renderPendingList(pending) {
                 audioSrc
                     ? `
                 <div class="k-pending-audio">
-                    <audio controls preload="metadata"
+                    <audio controls preload="metadata" src="${audioSrc}"
                         onerror="this.closest('.k-pending-audio').innerHTML='<p class=\\'k-empty\\' style=\\'padding:var(--space-2)\\'>الملف الصوتي غير متاح</p>'">
-                        <source src="${audioSrc}" type="audio/webm">
-                        المتصفح لا يدعم تشغيل الصوت
                     </audio>
                 </div>
             `
