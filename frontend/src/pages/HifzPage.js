@@ -4,6 +4,19 @@ import { state } from '../core/state.js';
 import { config } from '../core/config.js';
 import { showNotification } from '../core/ui.js';
 
+// Instance audio unique pour la lecture de l'ayah courante
+let _audio = null;
+
+function _stopAudio() {
+    if (_audio) {
+        _audio.pause();
+        _audio.src = '';
+        _audio = null;
+    }
+    const btn = document.getElementById('hifz-audio-btn');
+    if (btn) btn.innerHTML = '<span>🔊</span> استمع';
+}
+
 if (!document.querySelector('link[href*="HifzPage.css"]')) {
     const link = document.createElement('link');
     link.rel = 'stylesheet';
@@ -75,6 +88,10 @@ export function render() {
                     <button class="btn btn-glow" onclick="QuranReview.checkMemorization()">
                         <span>✓</span>
                         تحقق
+                    </button>
+                    <button class="btn btn-outline-glow" id="hifz-audio-btn" onclick="QuranReview.playHifzAudio()">
+                        <span>🔊</span>
+                        استمع
                     </button>
                     <button class="btn btn-outline-glow" onclick="QuranReview.nextLevel()">
                         <span>⏭️</span>
@@ -172,9 +189,37 @@ export function checkMemorization() {
 }
 
 export function nextLevel() {
+    _stopAudio();
     competitionManager.levelUp();
 }
 
 export function stopHifzSession() {
+    _stopAudio();
     competitionManager.stopSession();
+}
+
+// Lecture audio de l'ayah courante (everyayah.com — déjà dans le CSP media-src)
+export function playHifzAudio() {
+    const session = state.hifz.currentSession;
+    if (!session?.isActive) return;
+
+    // Toggle : si en cours de lecture → arrêter
+    if (_audio) {
+        _stopAudio();
+        return;
+    }
+
+    const surah = String(session.surahId).padStart(3, '0');
+    const ayah = String(session.currentAyah).padStart(3, '0');
+    const url = `https://everyayah.com/data/Abdul_Basit_Murattal_192kbps/${surah}${ayah}.mp3`;
+
+    const btn = document.getElementById('hifz-audio-btn');
+    _audio = new Audio(url);
+    if (btn) btn.innerHTML = '<span>⏸️</span> إيقاف';
+
+    _audio.play().catch(() => {
+        showNotification('تعذر تشغيل الصوت 🎧', 'error');
+        _stopAudio();
+    });
+    _audio.addEventListener('ended', _stopAudio);
 }

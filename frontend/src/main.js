@@ -166,6 +166,7 @@ window.QuranReview = {
     checkMemorization: HifzPage.checkMemorization,
     nextLevel: HifzPage.nextLevel,
     stopHifzSession: HifzPage.stopHifzSession,
+    playHifzAudio: HifzPage.playHifzAudio,
     renderHifzPage: () => navigateTo('hifz'),
 
     // MyTasksPage
