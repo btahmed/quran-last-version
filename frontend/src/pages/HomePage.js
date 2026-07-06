@@ -434,8 +434,9 @@ async function initDashboard(role) {
         _applyStudentLocalStats();
 
         const cached = apiCache.get('tasks');
+        const cachedSubs = apiCache.get('my-submissions');
         if (cached) {
-            renderStudentTasks(cached);
+            renderStudentTasks(cached, _buildSubByTask(cachedSubs || []));
             // Rendu du calendrier hebdomadaire depuis le cache
             const { renderWeekCalendar } = await import('../components/WeekCalendar.js');
             const calContainer = document.getElementById('week-calendar-container');
@@ -445,7 +446,10 @@ async function initDashboard(role) {
                 .then(async ({ data }) => {
                     if (data) {
                         apiCache.set('tasks', data);
-                        renderStudentTasks(data);
+                        renderStudentTasks(
+                            data,
+                            _buildSubByTask(apiCache.get('my-submissions') || [])
+                        );
                         // Mise à jour du calendrier avec les données fraîches
                         const { renderWeekCalendar: rwc } =
                             await import('../components/WeekCalendar.js');
@@ -456,17 +460,21 @@ async function initDashboard(role) {
                 .catch(() => {});
             return;
         }
-        const { data, error } = await supabaseTasks.getMyTasks();
-        if (!error && data) {
-            apiCache.set('tasks', data);
-            renderStudentTasks(data);
-        } else {
-            renderStudentTasks([]);
-        }
+        // Premier chargement : tâches + soumissions en parallèle
+        const [tasksRes, subsRes] = await Promise.all([
+            supabaseTasks.getMyTasks(),
+            supabaseSubmissions.getMySubmissions(),
+        ]);
+        const data = tasksRes.data || [];
+        const error = tasksRes.error;
+        const subs = subsRes.data || [];
+        if (!error) apiCache.set('tasks', data);
+        if (!subsRes.error) apiCache.set('my-submissions', subs);
+        renderStudentTasks(data, _buildSubByTask(subs));
         // Rendu du calendrier hebdomadaire après chargement des tâches
         const { renderWeekCalendar } = await import('../components/WeekCalendar.js');
         const calContainer = document.getElementById('week-calendar-container');
-        if (calContainer) calContainer.innerHTML = renderWeekCalendar(!error && data ? data : []);
+        if (calContainer) calContainer.innerHTML = renderWeekCalendar(data);
     }
 
     if (role === 'teacher') {
@@ -537,7 +545,16 @@ async function initDashboard(role) {
 // HELPERS DE RENDU
 // ══════════════════════════════════════════════════════════════
 
-function renderStudentTasks(tasks) {
+function _buildSubByTask(submissions) {
+    const map = {};
+    (submissions || []).forEach(s => {
+        const id = s.task_id || s.tasks?.id;
+        if (id) map[id] = s;
+    });
+    return map;
+}
+
+function renderStudentTasks(tasks, subByTask = {}) {
     const el = document.getElementById('student-tasks-list');
     if (!el) return;
     if (!tasks.length) {
@@ -547,9 +564,33 @@ function renderStudentTasks(tasks) {
     el.innerHTML = tasks
         .slice(0, 3)
         .map(t => {
-            const isRevision = t.task_type === 'revision';
-            const dotClass = isRevision ? 'k-dot--pending' : 'k-dot--new';
-            const metaLabel = isRevision ? 'مراجعة مجدولة' : 'حفظ جديد';
+            const sub = subByTask[t.id];
+            const status = sub?.status;
+            let dotClass, metaLabel, actionHtml;
+
+            if (status === 'approved') {
+                dotClass = 'k-dot--done';
+                metaLabel = 'مقبول ✓';
+                actionHtml =
+                    '<span class="k-chip k-chip--success" style="flex:none;font-size:0.75rem;">✅ مقبول</span>';
+            } else if (status === 'pending' || status === 'submitted') {
+                dotClass = 'k-dot--pending';
+                metaLabel = 'بانتظار المراجعة';
+                actionHtml =
+                    '<span class="k-chip k-chip--warning" style="flex:none;font-size:0.75rem;">⏳ بانتظار</span>';
+            } else if (status === 'rejected') {
+                dotClass = 'k-dot--missed';
+                metaLabel = 'مرفوض — أعد الإرسال';
+                actionHtml =
+                    '<button class="k-quickbtn" style="min-width:auto;flex:none;padding:var(--space-2) var(--space-4);background:var(--color-danger,#e53e3e);color:#fff;" onclick="QuranReview.navigateTo(\'soumettre\')">🔄 إعادة</button>';
+            } else {
+                const isRevision = t.task_type === 'revision';
+                dotClass = isRevision ? 'k-dot--pending' : 'k-dot--new';
+                metaLabel = isRevision ? 'مراجعة مجدولة' : 'حفظ جديد';
+                actionHtml =
+                    '<button class="k-quickbtn" style="min-width:auto;flex:none;padding:var(--space-2) var(--space-4)" onclick="QuranReview.navigateTo(\'soumettre\')">إرسال 🎧</button>';
+            }
+
             return `
         <div class="k-row">
             <div class="rl">
@@ -559,8 +600,7 @@ function renderStudentTasks(tasks) {
                     <div class="meta">${metaLabel}</div>
                 </div>
             </div>
-            <button class="k-quickbtn" style="min-width:auto;flex:none;padding:var(--space-2) var(--space-4)"
-                    onclick="QuranReview.navigateTo('soumettre')">إرسال 🎧</button>
+            ${actionHtml}
         </div>
         `;
         })
