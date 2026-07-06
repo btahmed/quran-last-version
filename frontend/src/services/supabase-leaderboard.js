@@ -29,13 +29,16 @@ export async function getMyPoints() {
 
         const { data, error } = await supabaseClient
             .from('points_log')
-            .select('delta')
-            .eq('student_id', profile.id);
+            .select('delta, reason, created_at')
+            .eq('student_id', profile.id)
+            .order('created_at', { ascending: false })
+            .limit(20);
 
         if (error) return { data: null, error };
 
-        const total = (data || []).reduce((sum, row) => sum + (row.delta || 0), 0);
-        return { data: { total }, error: null };
+        const logs = data || [];
+        const total = logs.reduce((sum, row) => sum + (row.delta || 0), 0);
+        return { data: { total, logs }, error: null };
     } catch (error) {
         return { data: null, error };
     }

@@ -156,7 +156,10 @@ async function _fetchAndCacheStudent() {
 
         const tasks = tasksResult.data || [];
         const submissions = subsResult.data || [];
-        const pointsData = { total_points: pointsResult.data?.total || 0, logs: [] };
+        const pointsData = {
+            total_points: pointsResult.data?.total || 0,
+            logs: pointsResult.data?.logs || [],
+        };
 
         apiCache.set('tasks', tasks);
         apiCache.set('my-submissions', submissions);
