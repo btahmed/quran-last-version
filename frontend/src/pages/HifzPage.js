@@ -47,7 +47,7 @@ export function render() {
             </div>
 
             <!-- Hifz Active Game Container -->
-            <div class="card-glass-pro" id="hifz-active-container" style="display:none;">
+            <div class="card-glass-pro hidden" id="hifz-active-container">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-4);">
                     <div style="display:flex;gap:var(--space-2);">
                         <span class="k-chip k-chip--primary" id="hifz-score">النقاط: 0</span>
