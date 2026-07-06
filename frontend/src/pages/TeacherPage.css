@@ -1,40 +1,54 @@
 /* frontend/src/pages/TeacherPage.css — Styles des onglets enseignant */
 /* Identique à AdminPage.css pour la cohérence visuelle */
 
-/* ─── Onglets navigation enseignant ─────────────────────────────────────────── */
+/* ─── Onglets navigation enseignant (segment control) ───────────────────────── */
+/* Utiliser .teacher-tabs .teacher-tab pour surpasser style.css (spécificité 0,3,0) */
 .teacher-tabs {
     display: flex;
     gap: var(--space-2);
     margin-bottom: var(--space-6);
-    border-bottom: 2px solid var(--color-border);
+    padding: var(--space-2);
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: var(--radius-xl, 1rem);
+    border-bottom: none;
     overflow-x: auto;
-    padding-bottom: 0;
-    scrollbar-width: none; /* Firefox */
+    scrollbar-width: none;
 }
 .teacher-tabs::-webkit-scrollbar {
-    display: none; /* Chrome/Safari */
+    display: none;
 }
 
-.teacher-tab {
-    padding: var(--space-2) var(--space-4);
-    background: none;
+.teacher-tabs .teacher-tab {
+    flex: 1;
+    padding: var(--space-3) var(--space-4);
+    background: transparent;
     border: none;
-    border-bottom: 3px solid transparent;
-    margin-bottom: -2px;
+    border-radius: var(--radius-lg, 0.75rem);
+    margin-bottom: 0;
     font-weight: 500;
     font-size: 0.9rem;
     color: var(--color-text-secondary);
     cursor: pointer;
     white-space: nowrap;
+    text-align: center;
+    outline: none;
+    box-shadow: none;
     transition:
-        color var(--transition-fast),
-        border-color var(--transition-fast);
+        background 0.2s,
+        color 0.2s,
+        box-shadow 0.2s;
 }
 
-.teacher-tab.active,
-.teacher-tab:hover {
-    color: var(--color-primary, #10b981);
-    border-bottom-color: var(--color-primary, #10b981);
+.teacher-tabs .teacher-tab.active {
+    background: var(--color-primary, #2d5016);
+    color: #fff;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(45, 80, 22, 0.3);
+}
+
+.teacher-tabs .teacher-tab:not(.active):hover {
+    background: rgba(45, 80, 22, 0.08);
+    color: var(--color-text);
 }
 
 /* ─── Squelette de chargement (partagé avec AdminPage.css) ───────────────────
