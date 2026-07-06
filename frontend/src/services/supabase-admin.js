@@ -80,6 +80,7 @@ export async function getStudentProgress(userId) {
             };
         }
 
+        // 3 requêtes parallèles — submissions : seulement les champs nécessaires (pas audio_url)
         const [tasksRes, submissionsRes, pointsRes] = await Promise.all([
             supabaseClient
                 .from('tasks')
@@ -88,26 +89,13 @@ export async function getStudentProgress(userId) {
                 .order('created_at', { ascending: false }),
             supabaseClient
                 .from('submissions')
-                .select('*')
+                .select('task_id, status, awarded_points, admin_feedback')
                 .eq('student_id', userId)
                 .order('submitted_at', { ascending: false }),
             supabaseClient.from('points_log').select('delta').eq('student_id', userId),
         ]);
         if (tasksRes.error) return { data: null, error: tasksRes.error };
         if (submissionsRes.error) return { data: null, error: submissionsRes.error };
-
-        // class_members optionnel — non-bloquant pour éviter d'échouer si la FK n'existe pas
-        let classRes = { data: null };
-        try {
-            const r = await supabaseClient
-                .from('class_members')
-                .select('classes(name, profiles!teacher_id(username, first_name, last_name))')
-                .eq('student_id', userId)
-                .maybeSingle();
-            if (!r.error) classRes = r;
-        } catch {
-            /* class info non disponible, on continue */
-        }
 
         const totalPoints = (pointsRes.data || []).reduce((sum, row) => sum + (row.delta || 0), 0);
         const submissionsByTaskId = {};
@@ -122,18 +110,6 @@ export async function getStudentProgress(userId) {
             admin_feedback: submissionsByTaskId[t.id]?.admin_feedback ?? null,
         }));
 
-        const classData = classRes.data?.classes;
-        const teacherProfile = classData?.profiles;
-        const classe_info = classData
-            ? {
-                  name: classData.name || null,
-                  teacher: teacherProfile
-                      ? `${teacherProfile.first_name || ''} ${teacherProfile.last_name || ''}`.trim() ||
-                        teacherProfile.username
-                      : null,
-              }
-            : null;
-
         return {
             data: {
                 ...profile,
@@ -141,7 +117,6 @@ export async function getStudentProgress(userId) {
                 submissions: submissionsRes.data || [],
                 totalPoints,
                 total_points: totalPoints,
-                classe_info,
             },
             error: null,
         };

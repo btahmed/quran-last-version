@@ -122,8 +122,15 @@ export async function viewStudentProgress(studentId, studentName) {
     panel.classList.add('active');
 
     try {
-        const { data, error } = await supabaseAdmin.getStudentProgress(studentId);
-        if (error) throw new Error('فشل تحميل بيانات الطالب');
+        // Cache 60 s — évite les re-fetch quand le prof consulte plusieurs fois le même élève
+        const cacheKey = `student-progress-${studentId}`;
+        let data = apiCache.get(cacheKey);
+        if (!data) {
+            const result = await supabaseAdmin.getStudentProgress(studentId);
+            if (result.error) throw new Error('فشل تحميل بيانات الطالب');
+            data = result.data;
+            apiCache.set(cacheKey, data);
+        }
 
         let html = `<div class="student-detail-stats">
             <div class="stat-mini"><strong>🏆</strong> ${data.totalPoints ?? 0} نقطة</div>
