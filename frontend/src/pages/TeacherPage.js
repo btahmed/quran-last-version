@@ -59,6 +59,13 @@ export function render() {
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 export async function init() {
+    // Le DOM vient d'être réécrit par renderPage → réinitialiser l'état interne
+    // pour que teacherSwitchSection ne court-circuite pas avec le guard anti-concurrence
+    // (les modules ES restent en cache navigateur, donc le re-import est instantané)
+    _activeSection = 'devoirs';
+    _sectionModule = null;
+    _loading = false;
+
     Logger.log('TEACHER', 'init — chargement section par défaut');
 
     // Charger la section initiale selon la sous-route (devoirs, soumissions, eleves)
