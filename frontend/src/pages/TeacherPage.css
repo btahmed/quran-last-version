@@ -9,6 +9,10 @@
     border-bottom: 2px solid var(--color-border);
     overflow-x: auto;
     padding-bottom: 0;
+    scrollbar-width: none; /* Firefox */
+}
+.teacher-tabs::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
 }
 
 .teacher-tab {
@@ -22,7 +26,9 @@
     color: var(--color-text-secondary);
     cursor: pointer;
     white-space: nowrap;
-    transition: color var(--transition-fast), border-color var(--transition-fast);
+    transition:
+        color var(--transition-fast),
+        border-color var(--transition-fast);
 }
 
 .teacher-tab.active,
@@ -37,7 +43,7 @@
     background: linear-gradient(
         90deg,
         var(--color-surface) 25%,
-        var(--color-border)  50%,
+        var(--color-border) 50%,
         var(--color-surface) 75%
     );
     background-size: 200% 100%;
@@ -51,6 +57,10 @@
 }
 
 @keyframes skeleton-shimmer {
-    0%   { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
 }

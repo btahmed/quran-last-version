@@ -118,6 +118,8 @@ export async function getStudentProgress(userId) {
             ...t,
             status: submissionsByTaskId[t.id]?.status || t.status || 'pending',
             submission_status: submissionsByTaskId[t.id]?.status || null,
+            awarded_points: submissionsByTaskId[t.id]?.awarded_points ?? null,
+            admin_feedback: submissionsByTaskId[t.id]?.admin_feedback ?? null,
         }));
 
         const classData = classRes.data?.classes;
@@ -267,7 +269,32 @@ export async function getMyStudents() {
                 .select('*')
                 .eq('role', 'student')
                 .order('username', { ascending: true });
-            return { data, error };
+            if (error || !data || data.length === 0) return { data, error };
+            const fallbackIds = data.map(s => s.id);
+            const [pRes, sRes] = await Promise.all([
+                supabaseClient
+                    .from('points_log')
+                    .select('student_id, delta')
+                    .in('student_id', fallbackIds),
+                supabaseClient
+                    .from('submissions')
+                    .select('student_id')
+                    .in('student_id', fallbackIds)
+                    .eq('status', 'approved'),
+            ]);
+            const pb = {};
+            (pRes.data || []).forEach(p => {
+                pb[p.student_id] = (pb[p.student_id] || 0) + (p.delta || 0);
+            });
+            const sb = {};
+            (sRes.data || []).forEach(s => {
+                sb[s.student_id] = (sb[s.student_id] || 0) + 1;
+            });
+            data.forEach(s => {
+                s.total_points = pb[s.id] || 0;
+                s.submissions_count = sb[s.id] || 0;
+            });
+            return { data, error: null };
         }
 
         if (!classMembers || classMembers.length === 0) {
@@ -282,7 +309,34 @@ export async function getMyStudents() {
             .in('id', studentIds)
             .order('username', { ascending: true });
 
-        return { data, error };
+        if (error || !data) return { data, error };
+
+        // Enrichir avec total_points et submissions_count en 2 requêtes batch
+        const [pointsRes, subsRes] = await Promise.all([
+            supabaseClient
+                .from('points_log')
+                .select('student_id, delta')
+                .in('student_id', studentIds),
+            supabaseClient
+                .from('submissions')
+                .select('student_id')
+                .in('student_id', studentIds)
+                .eq('status', 'approved'),
+        ]);
+        const pointsByStudent = {};
+        (pointsRes.data || []).forEach(p => {
+            pointsByStudent[p.student_id] = (pointsByStudent[p.student_id] || 0) + (p.delta || 0);
+        });
+        const subsByStudent = {};
+        (subsRes.data || []).forEach(s => {
+            subsByStudent[s.student_id] = (subsByStudent[s.student_id] || 0) + 1;
+        });
+        data.forEach(s => {
+            s.total_points = pointsByStudent[s.id] || 0;
+            s.submissions_count = subsByStudent[s.id] || 0;
+        });
+
+        return { data, error: null };
     } catch (error) {
         return { data: null, error };
     }

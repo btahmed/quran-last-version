@@ -58,10 +58,10 @@ async function _loadStudents() {
     if (!studentsList) return;
 
     try {
-        const cachedStudents = apiCache.get('my-students');
-        const students = cachedStudents || (await supabaseAdmin.getMyStudents()).data || [];
-
-        if (!cachedStudents) apiCache.set('my-students', students);
+        // Toujours récupérer des données fraîches — les points/soumissions changent souvent
+        const { data: freshStudents } = await supabaseAdmin.getMyStudents();
+        const students = freshStudents || [];
+        apiCache.set('my-students', students);
 
         _renderStudentsList(students);
     } catch (err) {
@@ -147,11 +147,23 @@ export async function viewStudentProgress(studentId, studentName) {
                     statusBadge = '<span class="status-badge status-new">لم يُسلَّم</span>';
                 }
 
+                // Points réels attribués (awarded_points) ou max de la tâche si pas encore noté
+                let pointsHtml;
+                if (task.submission_status === 'approved' && task.awarded_points != null) {
+                    // Extraire l'emoji de notation depuis admin_feedback (ex: "🌟 ممتاز (5/5)")
+                    const gradeEmoji = task.admin_feedback
+                        ? escapeHtml(task.admin_feedback.split(' ')[0])
+                        : '';
+                    pointsHtml = `<span style="font-weight:600;color:var(--color-success)">🏆 ${escapeHtml(String(task.awarded_points))} نقطة${gradeEmoji ? ' ' + gradeEmoji : ''}</span>`;
+                } else {
+                    pointsHtml = `<span style="color:var(--color-text-secondary)">🏆 ${escapeHtml(String(task.points))} نقطة</span>`;
+                }
+
                 html += `<div class="student-task-row">
                     <div class="student-task-info">
                         <span class="task-type-badge">${escapeHtml(typeLabel)}</span>
                         <strong>${escapeHtml(task.title)}</strong>
-                        <span>🏆 ${escapeHtml(String(task.points))}</span>
+                        ${pointsHtml}
                     </div>
                     ${statusBadge}
                 </div>`;
