@@ -130,61 +130,102 @@ async function _loadPendingSubmissions() {
     }
 }
 
-function _renderPendingList(pending) {
-    const pendingList = document.getElementById('teacher-tasks-list');
-    if (!pendingList) return;
+function _cardHtml(s, showActions) {
+    const date = new Date(s.submitted_at).toLocaleDateString('ar-SA');
+    const taskTitle = s.task?.title || s.tasks?.title || 'تسليم';
+    const taskPoints = s.task?.points || s.tasks?.points || 0;
+    const studentName = s.profiles?.first_name || s.profiles?.username || 'طالب';
+    const initial = escapeHtml(studentName.charAt(0) || '؟');
+    const sid = escapeHtml(String(s.id));
+    const audioSrc =
+        s.audio_url && s.audio_url.startsWith('https://') ? escapeHtml(s.audio_url) : null;
 
-    if (!pending.length) {
-        pendingList.innerHTML = '<p class="empty-state">لا توجد تسليمات بانتظار التصحيح 🎉</p>';
+    let statusBadge;
+    let extraMeta = '';
+    if (s.status === 'approved') {
+        const awardedPts = s.awarded_points ?? taskPoints;
+        const gradeEmoji = s.admin_feedback ? escapeHtml(s.admin_feedback.split(' ')[0]) : '✅';
+        const feedbackText = s.admin_feedback ? escapeHtml(s.admin_feedback) : '';
+        statusBadge = `<span class="k-chip k-chip--success">✅ مقبول</span>`;
+        extraMeta = `<span style="color:var(--color-success);font-weight:600">🏆 ${escapeHtml(String(awardedPts))} نقطة ${gradeEmoji}</span>`;
+        if (feedbackText) {
+            extraMeta += ` <span style="color:var(--color-text-secondary);font-size:var(--text-xs)">${feedbackText}</span>`;
+        }
+    } else if (s.status === 'rejected') {
+        statusBadge = `<span class="k-chip k-chip--danger">✗ مرفوض</span>`;
+        if (s.admin_feedback) {
+            extraMeta = `<span style="color:var(--color-danger);font-size:var(--text-xs)">${escapeHtml(s.admin_feedback)}</span>`;
+        }
+    } else {
+        statusBadge = `<span class="k-chip k-chip--warning">⏳ بانتظار</span>`;
+    }
+
+    return `<div class="k-pending-card">
+        <div class="k-pending-head">
+            <span class="k-avatar">${initial}</span>
+            <div style="flex:1;min-width:0">
+                <div style="font-weight:600;font-size:var(--text-sm)">${escapeHtml(studentName)}</div>
+                <div style="font-size:var(--text-xs);color:var(--text-secondary)">${escapeHtml(taskTitle)}</div>
+            </div>
+            ${statusBadge}
+        </div>
+        <div class="k-pending-meta">
+            <span>🏆 ${escapeHtml(String(taskPoints))} نقطة</span>
+            <span>📅 ${date}</span>
+            ${extraMeta}
+        </div>
+        ${
+            audioSrc
+                ? `<div class="k-pending-audio">
+                <audio controls preload="metadata" src="${audioSrc}"
+                    onerror="this.closest('.k-pending-audio').innerHTML='<p class=\\'k-empty\\' style=\\'padding:var(--space-2)\\'>الملف الصوتي غير متاح</p>'">
+                </audio>
+            </div>`
+                : '<p class="k-empty" style="padding:var(--space-2) var(--space-4)">لا يوجد ملف صوتي 🎙</p>'
+        }
+        ${
+            showActions
+                ? `<div class="k-pending-actions">
+            <button class="k-quickbtn k-quickbtn--primary"
+                onclick="QuranReview.openGradeModal(&quot;${sid}&quot;,&quot;${escapeHtml(escapeJs(studentName))}&quot;,&quot;${escapeHtml(escapeJs(taskTitle))}&quot;)">⭐ قبول وتقييم</button>
+            <button class="k-quickbtn k-quickbtn--danger"
+                onclick="QuranReview.openRejectModal(&quot;${sid}&quot;,&quot;${escapeHtml(escapeJs(studentName))}&quot;)">✗ رفض</button>
+        </div>`
+                : ''
+        }
+    </div>`;
+}
+
+function _renderPendingList(allSubmissions) {
+    const container = document.getElementById('teacher-tasks-list');
+    if (!container) return;
+
+    const pending = allSubmissions.filter(s => s.status === 'submitted');
+    const corrected = allSubmissions.filter(
+        s => s.status === 'approved' || s.status === 'rejected'
+    );
+
+    if (!pending.length && !corrected.length) {
+        container.innerHTML = '<p class="empty-state">لا توجد تسليمات 🎉</p>';
         return;
     }
 
-    pendingList.innerHTML = pending
-        .map(s => {
-            const date = new Date(s.submitted_at).toLocaleDateString('ar-SA');
-            const taskTitle = s.task?.title || s.tasks?.title || 'تسليم';
-            const taskPoints = s.task?.points || s.tasks?.points || 0;
-            const studentName = s.profiles?.first_name || s.profiles?.username || 'طالب';
-            const initial = escapeHtml(studentName.charAt(0) || '؟');
-            const sid = escapeHtml(String(s.id));
+    let html = '';
 
-            // Validation stricte : l'URL audio doit commencer par https://
-            const audioSrc =
-                s.audio_url && s.audio_url.startsWith('https://') ? escapeHtml(s.audio_url) : null;
+    if (pending.length) {
+        html += `<h4 style="margin:0 0 var(--space-3);color:var(--color-text-secondary);font-size:0.9rem;font-weight:600">⏳ بانتظار التصحيح (${pending.length})</h4>`;
+        html += pending.map(s => _cardHtml(s, true)).join('');
+    } else {
+        html +=
+            '<p class="empty-state" style="padding:var(--space-3) 0">لا توجد تسليمات بانتظار التصحيح 🎉</p>';
+    }
 
-            return `<div class="k-pending-card">
-            <div class="k-pending-head">
-                <span class="k-avatar">${initial}</span>
-                <div style="flex:1;min-width:0">
-                    <div style="font-weight:600;font-size:var(--text-sm)">${escapeHtml(studentName)}</div>
-                    <div style="font-size:var(--text-xs);color:var(--text-secondary)">${escapeHtml(taskTitle)}</div>
-                </div>
-                <span class="k-chip k-chip--warning">⏳ بانتظار</span>
-            </div>
-            <div class="k-pending-meta">
-                <span>🏆 ${escapeHtml(String(taskPoints))} نقطة</span>
-                <span>📅 ${date}</span>
-            </div>
-            ${
-                audioSrc
-                    ? `
-                <div class="k-pending-audio">
-                    <audio controls preload="metadata" src="${audioSrc}"
-                        onerror="this.closest('.k-pending-audio').innerHTML='<p class=\\'k-empty\\' style=\\'padding:var(--space-2)\\'>الملف الصوتي غير متاح</p>'">
-                    </audio>
-                </div>
-            `
-                    : '<p class="k-empty" style="padding:var(--space-2) var(--space-4)">لا يوجد ملف صوتي 🎙</p>'
-            }
-            <div class="k-pending-actions">
-                <button class="k-quickbtn k-quickbtn--primary"
-                    onclick="QuranReview.openGradeModal(&quot;${sid}&quot;,&quot;${escapeHtml(escapeJs(studentName))}&quot;,&quot;${escapeHtml(escapeJs(taskTitle))}&quot;)">⭐ قبول وتقييم</button>
-                <button class="k-quickbtn k-quickbtn--danger"
-                    onclick="QuranReview.openRejectModal(&quot;${sid}&quot;,&quot;${escapeHtml(escapeJs(studentName))}&quot;)">✗ رفض</button>
-            </div>
-        </div>`;
-        })
-        .join('');
+    if (corrected.length) {
+        html += `<h4 style="margin:var(--space-6) 0 var(--space-3);color:var(--color-text-secondary);font-size:0.9rem;font-weight:600">✅ تم التصحيح (${corrected.length})</h4>`;
+        html += corrected.map(s => _cardHtml(s, false)).join('');
+    }
+
+    container.innerHTML = html;
 }
 
 // ─── MODAL NOTATION EMOJI ─────────────────────────────────────────────────────

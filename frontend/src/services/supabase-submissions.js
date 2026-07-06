@@ -85,7 +85,7 @@ export async function getPendingSubmissions() {
         const { data, error } = await supabaseClient
             .from('submissions')
             .select('*, tasks(*), profiles!student_id(*)')
-            .eq('status', 'submitted')
+            .in('status', ['submitted', 'approved', 'rejected'])
             .order('submitted_at', { ascending: false });
 
         if (error || !data) return { data, error };
