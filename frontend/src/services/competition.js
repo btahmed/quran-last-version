@@ -619,34 +619,102 @@ export const competitionManager = {
     },
 
     attemptReveal(spanElement, correctWord) {
-        // Prevent clicking already revealed words (if class not updated yet)
         if (!spanElement.classList.contains('hidden')) return;
 
-        const input = prompt('ما هذه الكلمة؟');
-        if (input === null) return; // Cancelled
+        if (this.mode === 'qcm') {
+            this._showQCMChoices(spanElement, correctWord);
+        } else {
+            // Mode récitation : révéler directement (mode confiance)
+            this._revealWord(spanElement, correctWord);
+        }
+    },
 
-        if (this.normalizeArabic(input) === this.normalizeArabic(correctWord)) {
-            // Correct
-            spanElement.classList.remove('hidden');
-            spanElement.classList.add('revealed');
-            spanElement.textContent = correctWord;
-            spanElement.onclick = null; // Remove handler
-
-            state.hifz.currentSession.score += 10;
-            saveData();
-
-            // Check if level complete
-            if (this.checkLevelComplete()) {
-                setTimeout(() => {
-                    const feedback = document.getElementById('hifz-feedback');
+    _revealWord(spanElement, correctWord) {
+        spanElement.classList.remove('hidden', 'word-selected');
+        spanElement.classList.add('revealed');
+        spanElement.textContent = correctWord;
+        spanElement.onclick = null;
+        state.hifz.currentSession.score += 10;
+        saveData();
+        if (this.checkLevelComplete()) {
+            setTimeout(() => {
+                const feedback = document.getElementById('hifz-feedback');
+                if (feedback) {
                     feedback.classList.remove('hidden');
                     feedback.classList.add('show');
-                }, 500);
-            }
+                }
+            }, 400);
+        }
+    },
+
+    _showQCMChoices(spanElement, correctWord) {
+        this._qcmSpan = spanElement;
+        this._qcmCorrect = correctWord;
+
+        document
+            .querySelectorAll('.word.word-selected')
+            .forEach(el => el.classList.remove('word-selected'));
+        spanElement.classList.add('word-selected');
+
+        // Collecter des distracteurs depuis les mots de l'ayah courante
+        const allWords = [
+            ...new Set(
+                [...document.querySelectorAll('.word')].map(el => el.dataset.word).filter(Boolean)
+            ),
+        ];
+        const distractors = allWords
+            .filter(w => this.normalizeArabic(w) !== this.normalizeArabic(correctWord))
+            .sort(() => Math.random() - 0.5)
+            .slice(0, 3);
+
+        // Compléter si l'ayah a moins de 4 mots uniques
+        const fallback = ['الله', 'في', 'من', 'على', 'هو', 'ما', 'لا', 'إن'];
+        let fi = 0;
+        while (distractors.length < 3) {
+            const w = fallback[fi++ % fallback.length];
+            if (
+                this.normalizeArabic(w) !== this.normalizeArabic(correctWord) &&
+                !distractors.includes(w)
+            )
+                distractors.push(w);
+        }
+
+        const choices = [correctWord, ...distractors].sort(() => Math.random() - 0.5);
+
+        const panel = document.getElementById('hifz-qcm-panel');
+        if (!panel) return;
+        panel.innerHTML = '';
+        panel.style.display = 'flex';
+
+        choices.forEach(w => {
+            const btn = document.createElement('button');
+            btn.className = 'btn btn-outline-glow hifz-qcm-choice';
+            btn.textContent = w; // textContent — aucun risque XSS
+            btn.onclick = () => this._checkQCMChoice(btn, w);
+            panel.appendChild(btn);
+        });
+    },
+
+    _checkQCMChoice(btnEl, chosen) {
+        const span = this._qcmSpan;
+        const correct = this._qcmCorrect;
+        if (!span || !correct) return;
+
+        if (this.normalizeArabic(chosen) === this.normalizeArabic(correct)) {
+            btnEl.classList.add('qcm-correct');
+            setTimeout(() => {
+                const panel = document.getElementById('hifz-qcm-panel');
+                if (panel) panel.style.display = 'none';
+                this._qcmSpan = null;
+                this._qcmCorrect = null;
+                this._revealWord(span, correct);
+            }, 500);
         } else {
-            // Error animation
-            spanElement.style.backgroundColor = '#f8d7da'; // Light red
-            setTimeout(() => (spanElement.style.backgroundColor = ''), 500);
+            // Mauvaise réponse — flash rouge, −3 pts
+            btnEl.classList.add('qcm-wrong');
+            state.hifz.currentSession.score = Math.max(0, state.hifz.currentSession.score - 3);
+            saveData();
+            setTimeout(() => btnEl.classList.remove('qcm-wrong'), 600);
         }
     },
 
@@ -690,6 +758,15 @@ export const competitionManager = {
     },
 
     levelUp() {
+        // Fermer le panel QCM et réinitialiser l'état en suspens
+        const panel = document.getElementById('hifz-qcm-panel');
+        if (panel) panel.style.display = 'none';
+        this._qcmSpan = null;
+        this._qcmCorrect = null;
+        document
+            .querySelectorAll('.word.word-selected')
+            .forEach(el => el.classList.remove('word-selected'));
+
         // Hide feedback
         const feedback = document.getElementById('hifz-feedback');
         feedback.classList.remove('show');

@@ -52,6 +52,15 @@ export function render() {
                         </div>
                     </div>
 
+                    <!-- Sélecteur de mode (listeners attachés dans init()) -->
+                    <div class="hifz-mode-selector" style="margin-bottom:var(--space-4);">
+                        <p style="font-size:0.85rem;color:var(--color-text-secondary);margin-bottom:var(--space-2);text-align:center;">وضع التمرين</p>
+                        <div class="hifz-mode-seg">
+                            <button type="button" class="hifz-mode-btn active" data-mode="recitation">🎙️ تلاوة</button>
+                            <button type="button" class="hifz-mode-btn" data-mode="qcm">🔤 اختيار</button>
+                        </div>
+                    </div>
+
                     <button type="submit" class="btn btn-glow btn-full">
                         <span>🎮</span>
                         ابدأ التمرين
@@ -62,9 +71,11 @@ export function render() {
             <!-- Hifz Active Game Container -->
             <div class="card-glass-pro hidden" id="hifz-active-container">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-4);">
-                    <div style="display:flex;gap:var(--space-2);">
+                    <div style="display:flex;gap:var(--space-2);flex-wrap:wrap;">
                         <span class="k-chip k-chip--primary" id="hifz-score">النقاط: 0</span>
                         <span class="k-chip" id="hints-count">تلميحات: 3</span>
+                        <!-- Chip toggle mode — listener attaché dans init() -->
+                        <span class="k-chip hifz-mode-toggle" id="hifz-mode-chip" style="cursor:pointer" title="تغيير الوضع">🎙️ تلاوة</span>
                     </div>
                     <span class="k-chip k-chip--warning" id="hifz-level">المستوى: ⭐⭐⭐</span>
                 </div>
@@ -79,6 +90,9 @@ export function render() {
 
                 <!-- Feedback Area -->
                 <div id="hifz-feedback" style="text-align:center;margin:var(--space-4) 0;min-height:30px;"></div>
+
+                <!-- Panel QCM — affiché uniquement en mode اختيار (listener attaché dans init()) -->
+                <div id="hifz-qcm-panel" style="display:none;flex-wrap:wrap;gap:var(--space-2);justify-content:center;padding:var(--space-3);margin-bottom:var(--space-2);background:rgba(0,0,0,0.04);border-radius:var(--radius-lg);"></div>
 
                 <div style="display:flex;gap:var(--space-3);justify-content:center;flex-wrap:wrap;">
                     <button class="btn btn-outline-glow" onclick="QuranReview.showHint()">
@@ -114,10 +128,15 @@ export function init() {
 
     if (!selectionDiv || !containerDiv) return;
 
+    // Initialiser le mode par défaut si pas encore défini
+    if (!competitionManager.mode) competitionManager.mode = 'recitation';
+
+    _setupModeListeners();
+
     if (session && session.isActive) {
         selectionDiv.classList.add('hidden');
         containerDiv.classList.remove('hidden');
-        // Recharger l'affichage si nécessaire
+        _updateModeChip();
         if (!containerDiv.querySelector('.ayah-line')) {
             competitionManager.loadAyahForHifz(session.surahId, session.currentAyah);
         }
@@ -126,6 +145,47 @@ export function init() {
         containerDiv.classList.add('hidden');
         _populateSurahSelect();
         _setupFormListener();
+    }
+}
+
+// ─── GESTION DES MODES (récitation / QCM) ────────────────────────────────────
+
+function _updateModeChip() {
+    const chip = document.getElementById('hifz-mode-chip');
+    if (chip) chip.textContent = competitionManager.mode === 'qcm' ? '🔤 اختيار' : '🎙️ تلاوة';
+}
+
+function _setupModeListeners() {
+    // Boutons du formulaire de démarrage
+    document.querySelectorAll('.hifz-mode-btn').forEach(btn => {
+        if (btn.dataset.modeListening) return;
+        btn.dataset.modeListening = 'true';
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.hifz-mode-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            competitionManager.mode = btn.dataset.mode || 'recitation';
+            _updateModeChip();
+        });
+    });
+
+    // Chip toggle dans le jeu
+    const chip = document.getElementById('hifz-mode-chip');
+    if (chip && !chip.dataset.modeListening) {
+        chip.dataset.modeListening = 'true';
+        chip.addEventListener('click', () => {
+            competitionManager.mode = competitionManager.mode === 'qcm' ? 'recitation' : 'qcm';
+            if (competitionManager.mode === 'recitation') {
+                // Fermer le panel QCM ouvert
+                const panel = document.getElementById('hifz-qcm-panel');
+                if (panel) panel.style.display = 'none';
+                document
+                    .querySelectorAll('.word.word-selected')
+                    .forEach(el => el.classList.remove('word-selected'));
+                competitionManager._qcmSpan = null;
+                competitionManager._qcmCorrect = null;
+            }
+            _updateModeChip();
+        });
     }
 }
 
