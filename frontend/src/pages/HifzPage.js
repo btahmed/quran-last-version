@@ -4,6 +4,7 @@ import { state, saveData } from '../core/state.js';
 import { config } from '../core/config.js';
 import { showNotification } from '../core/ui.js';
 import { apiCache } from '../core/apiCache.js';
+import { getMyTasks } from '../services/supabase-tasks.js';
 
 // Instance audio unique pour la lecture de l'ayah courante
 let _audio = null;
@@ -109,7 +110,7 @@ export function render() {
     </div>`;
 }
 
-export function init() {
+export async function init() {
     const session = state.hifz.currentSession;
     const selectionDiv = document.getElementById('hifz-selection');
     const containerDiv = document.getElementById('hifz-active-container');
@@ -129,6 +130,15 @@ export function init() {
         containerDiv.classList.add('hidden');
         _populateSurahSelect();
         _setupFormListener();
+        // Charger les tâches depuis Supabase si cache vide (accès direct à la page)
+        if (!apiCache.get('tasks')) {
+            try {
+                const { data } = await getMyTasks();
+                if (data) apiCache.set('tasks', data);
+            } catch (_) {
+                /* silencieux — on affiche quand même les devoirs en pause */
+            }
+        }
         _showHomeworkShortcuts();
     }
 }

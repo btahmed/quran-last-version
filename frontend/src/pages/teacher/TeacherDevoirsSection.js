@@ -344,14 +344,34 @@ export async function handleCreateTask(event) {
     let description = document.getElementById('task-description').value.trim();
     if (taskType === 'hifz') {
         const hifzSurahId = parseInt(document.getElementById('hifz-task-surah')?.value || '0');
-        const hifzFrom = parseInt(document.getElementById('hifz-task-from')?.value || '1');
-        const hifzTo = parseInt(document.getElementById('hifz-task-to')?.value || '1');
-        if (hifzSurahId) {
-            description = JSON.stringify({
-                _hifz: { surah_id: hifzSurahId, from_ayah: hifzFrom, to_ayah: hifzTo },
-                text: description,
-            });
+        const hifzFrom = parseInt(document.getElementById('hifz-task-from')?.value || '0');
+        const hifzTo = parseInt(document.getElementById('hifz-task-to')?.value || '0');
+
+        if (!hifzSurahId) {
+            showNotification('يرجى اختيار السورة للواجب', 'error');
+            return;
         }
+        const hifzSurah = config.surahs.find(s => s.id === hifzSurahId);
+        if (!hifzFrom || !hifzTo || hifzFrom < 1 || hifzTo < 1) {
+            showNotification('أرقام الآيات غير صحيحة', 'error');
+            return;
+        }
+        if (hifzFrom > hifzTo) {
+            showNotification('الآية الأولى يجب أن تكون أصغر من أو تساوي الآية الأخيرة', 'error');
+            return;
+        }
+        if (hifzSurah && hifzTo > hifzSurah.ayahs) {
+            showNotification(
+                `سورة ${hifzSurah.name} تحتوي على ${hifzSurah.ayahs} آية فقط`,
+                'error'
+            );
+            return;
+        }
+
+        description = JSON.stringify({
+            _hifz: { surah_id: hifzSurahId, from_ayah: hifzFrom, to_ayah: hifzTo },
+            text: description,
+        });
     }
     const body = {
         title,
