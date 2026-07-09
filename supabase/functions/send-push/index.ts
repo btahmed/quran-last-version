@@ -82,8 +82,10 @@ Deno.serve(async (req: Request): Promise<Response> => {
             status: 200,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
-    } catch (err) {
-        console.error('[send-push] Erreur:', err);
+    } catch (err: unknown) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const e = err as any;
+        console.error('[send-push] Erreur:', e?.message, 'status:', e?.statusCode);
         return new Response('Erreur serveur', { status: 500, headers: corsHeaders });
     }
 });
