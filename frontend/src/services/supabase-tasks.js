@@ -202,7 +202,15 @@ export async function notifyStudentNewTask(studentId, taskTitle, taskType) {
 }
 
 // Notifie le prof via push quand l'élève complète un devoir hifz
-export async function notifyTeacherHifzComplete(taskId, studentName, surahName, score) {
+export async function notifyTeacherHifzComplete(
+    taskId,
+    studentName,
+    surahName,
+    score,
+    completedAyahs = [],
+    fromAyah,
+    toAyah
+) {
     try {
         const { data: task } = await supabaseClient
             .from('tasks')
@@ -212,11 +220,17 @@ export async function notifyTeacherHifzComplete(taskId, studentName, surahName, 
 
         if (!task?.assigned_by) return;
 
+        const ayahDetail = completedAyahs.length
+            ? `الآيات ${completedAyahs.join('،')}`
+            : fromAyah && toAyah
+              ? `${fromAyah}-${toAyah}`
+              : '';
+
         await supabaseClient.functions.invoke('send-push', {
             body: {
                 user_id: task.assigned_by,
                 title: '✅ أتم الطالب الحفظ',
-                body: `${studentName} أتم حفظ سورة ${surahName} — النقاط: ${score}`,
+                body: `${studentName} — ${surahName}${ayahDetail ? ' ' + ayahDetail : ''} — النقاط: ${score}`,
                 url: '/eleves',
             },
         });

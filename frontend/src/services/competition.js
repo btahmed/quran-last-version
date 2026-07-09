@@ -557,6 +557,27 @@ export const competitionManager = {
     _hifzBismillah: null, // texte bismillah extrait de l'ayah (affiché en déco, pas testé)
     _hifzLinkedTaskId: null, // ID du devoir lié (pour notifier le prof)
 
+    _updateAyahTracker() {
+        const tracker = document.getElementById('hifz-ayah-tracker');
+        if (!tracker) return;
+        const session = state.hifz.currentSession;
+        if (!session?.isActive) return;
+
+        tracker.replaceChildren();
+        for (let ayah = session.fromAyah; ayah <= session.toAyah; ayah++) {
+            const chip = document.createElement('span');
+            const done = (session.completedAyahs || []).includes(ayah);
+            const current = ayah === session.currentAyah;
+            chip.className = done
+                ? 'hifz-tracker-chip hifz-tracker-chip--done'
+                : current
+                  ? 'hifz-tracker-chip hifz-tracker-chip--current'
+                  : 'hifz-tracker-chip hifz-tracker-chip--pending';
+            chip.textContent = done ? `${ayah} ✅` : current ? `${ayah} 🔄` : `${ayah} ⬜`;
+            tracker.appendChild(chip);
+        }
+    },
+
     startHifzSession(surahId, fromAyah, toAyah) {
         state.hifz.currentSession = {
             isActive: true,
@@ -565,6 +586,7 @@ export const competitionManager = {
             toAyah,
             currentAyah: fromAyah,
             score: 0,
+            completedAyahs: [],
             startTime: Date.now(),
             linkedTaskId: this._hifzLinkedTaskId || null, // persisté pour permettre le resume
         };
@@ -631,6 +653,7 @@ export const competitionManager = {
             ...(nextText ? _clean(nextText).split(/\s+/).filter(Boolean) : []),
         ];
         this._showMemorizePhase();
+        this._updateAyahTracker();
 
         // Stopper l'audio précédent puis jouer la nouvelle ayah
         window.QuranReview.stopHifzAudio?.();
@@ -967,6 +990,15 @@ export const competitionManager = {
 
     _onAyahComplete() {
         const session = state.hifz.currentSession;
+
+        // Enregistrer l'ayah comme complète
+        if (!session.completedAyahs) session.completedAyahs = [];
+        if (!session.completedAyahs.includes(session.currentAyah)) {
+            session.completedAyahs.push(session.currentAyah);
+        }
+        saveData();
+        this._updateAyahTracker();
+
         const display = document.getElementById('hifz-ayah-display');
         const quizPhase = document.getElementById('hifz-quiz-phase');
         const memPhase = document.getElementById('hifz-memorize-phase');
@@ -1061,7 +1093,10 @@ export const competitionManager = {
                 linkedTaskId,
                 studentName,
                 surah?.name || '',
-                session.score
+                session.score,
+                session.completedAyahs || [],
+                session.fromAyah,
+                session.toAyah
             );
             this._hifzLinkedTaskId = null;
         }
@@ -1076,16 +1111,19 @@ export const competitionManager = {
     stopSession() {
         const session = state.hifz.currentSession;
         if (session?.isActive && (session.linkedTaskId || this._hifzLinkedTaskId)) {
-            // Devoir en cours : mettre en pause pour permettre la reprise
-            state.hifz.currentSession = {
-                ...session,
-                isActive: false,
-                paused: true,
-                linkedTaskId: session.linkedTaskId || this._hifzLinkedTaskId,
-            };
-        } else {
-            state.hifz.currentSession = { isActive: false };
+            const linkedId = session.linkedTaskId || this._hifzLinkedTaskId;
+            const paused = { ...session, isActive: false, paused: true, linkedTaskId: linkedId };
+            if (!state.hifz.pausedSessions) state.hifz.pausedSessions = [];
+            // Remplacer si le même devoir est déjà en pause, sinon ajouter
+            const idx = state.hifz.pausedSessions.findIndex(p => p.linkedTaskId === linkedId);
+            if (idx >= 0) {
+                state.hifz.pausedSessions[idx] = paused;
+            } else {
+                state.hifz.pausedSessions.push(paused);
+            }
         }
+        state.hifz.currentSession = { isActive: false };
+        this._hifzLinkedTaskId = null;
         saveData();
         window.QuranReview.stopHifzAudio?.();
         window.QuranReview.renderHifzPage();

@@ -74,7 +74,20 @@ export function loadData() {
               };
 
         const savedHifz = localStorage.getItem(config.hifzKey);
-        state.hifz = savedHifz ? JSON.parse(savedHifz) : { currentSession: null, level: 1 };
+        if (savedHifz) {
+            const parsed = JSON.parse(savedHifz);
+            // Migration : ancien format stockait la session pausée dans currentSession
+            if (!parsed.pausedSessions) {
+                parsed.pausedSessions = [];
+                if (parsed.currentSession?.paused) {
+                    parsed.pausedSessions.push(parsed.currentSession);
+                    parsed.currentSession = { isActive: false };
+                }
+            }
+            state.hifz = parsed;
+        } else {
+            state.hifz = { currentSession: { isActive: false }, level: 1, pausedSessions: [] };
+        }
 
         Logger.store('LOAD', config.settingsKey);
         Logger.state('settings', state.settings);

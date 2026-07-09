@@ -218,6 +218,54 @@
     justify-content: center;
 }
 
+/* ─── Tracker de progression par ayah ───────────────────── */
+.hifz-ayah-tracker {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+    justify-content: center;
+    margin: 0 0 var(--space-3);
+    min-height: 28px;
+}
+
+.hifz-tracker-chip {
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 2px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
+    direction: ltr;
+}
+
+.hifz-tracker-chip--done {
+    background: rgba(34, 197, 94, 0.15);
+    color: var(--color-success, #16a34a);
+    border: 1px solid rgba(34, 197, 94, 0.35);
+}
+
+.hifz-tracker-chip--current {
+    background: rgba(59, 130, 246, 0.15);
+    color: #2563eb;
+    border: 1px solid rgba(59, 130, 246, 0.4);
+    animation: hifz-pulse 1.5s ease-in-out infinite;
+}
+
+.hifz-tracker-chip--pending {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--color-text-secondary);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+@keyframes hifz-pulse {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.55;
+    }
+}
+
 /* ─── Phase 3 : remise en ordre ──────────────────────────── */
 #hifz-ordering-choices .hifz-choice-btn:disabled {
     opacity: 0.22;

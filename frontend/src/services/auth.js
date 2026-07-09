@@ -188,6 +188,9 @@ export async function performLogin(username, password) {
         buildNav(getEffectiveRole(state.user));
         window.QuranReview.loadTasksFromApi();
 
+        // Abonnement push non-bloquant — profite du geste utilisateur (bouton login)
+        _tryAutoSubscribePush(state.user.id);
+
         if (state.user.role === 'admin' || state.user.is_superuser) {
             window.QuranReview.navigateTo('admin');
         } else if (state.user.role === 'teacher') {
@@ -200,6 +203,37 @@ export async function performLogin(username, password) {
     } catch (error) {
         Logger.error('AUTH', 'Login process error', error);
         throw error;
+    }
+}
+
+async function _tryAutoSubscribePush(userId) {
+    if (!userId) return;
+    if (
+        !('serviceWorker' in navigator) ||
+        !('PushManager' in window) ||
+        !('Notification' in window)
+    )
+        return;
+    if (Notification.permission === 'denied') return;
+    try {
+        const reg = await navigator.serviceWorker.ready;
+        const existing = await reg.pushManager.getSubscription();
+        const { subscribeToPush, savePushSubscription } = await import('./push-notifications.js');
+        const { supabaseClient } = await import('./supabase-client.js');
+        if (existing) {
+            // Déjà abonné — ré-enregistrer en base si nécessaire (ex: rechargement)
+            await savePushSubscription(supabaseClient, userId, existing);
+            return;
+        }
+        // Demander la permission si pas encore accordée
+        if (Notification.permission === 'default') {
+            const perm = await Notification.requestPermission();
+            if (perm !== 'granted') return;
+        }
+        const sub = await subscribeToPush();
+        if (sub) await savePushSubscription(supabaseClient, userId, sub);
+    } catch (_) {
+        // Silencieux — ne jamais bloquer le login à cause des notifs
     }
 }
 

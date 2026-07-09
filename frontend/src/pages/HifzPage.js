@@ -72,6 +72,9 @@ export function render() {
                     <button class="k-chip hifz-audio-chip" id="hifz-audio-btn">🔊 استمع</button>
                 </div>
 
+                <!-- Tracker de progression par ayah (✅ done / 🔄 current / ⬜ pending) -->
+                <div id="hifz-ayah-tracker" class="hifz-ayah-tracker"></div>
+
                 <!-- Affichage de l'ayah mot par mot -->
                 <div class="hifz-ayah-box" id="hifz-ayah-display"></div>
 
@@ -225,39 +228,32 @@ function _showHomeworkShortcuts() {
         }
     }
 
-    // Détecter une session mise en pause (devoir arrêté à mi-chemin)
-    // Fait avant le check hifzTasks pour que le bouton "متابعة" s'affiche même si le cache est vide
-    const rawSession = state.hifz.currentSession;
-    // Ignorer les sessions invalides (fromAyah > toAyah ou currentAyah > toAyah)
-    const isValidPause =
-        rawSession &&
-        !rawSession.isActive &&
-        rawSession.paused &&
-        rawSession.fromAyah <= rawSession.toAyah &&
-        rawSession.currentAyah <= rawSession.toAyah;
-    const pausedSession = isValidPause ? rawSession : null;
-
-    // Auto-nettoyer les sessions pausées invalides (fromAyah > toAyah — créées avant la validation)
-    if (rawSession?.paused && !isValidPause) {
-        state.hifz.currentSession = { isActive: false };
+    // Lire toutes les sessions en pause depuis pausedSessions[]
+    const rawPaused = state.hifz.pausedSessions || [];
+    // Valider et auto-nettoyer les entrées invalides (fromAyah > toAyah)
+    const validPaused = rawPaused.filter(
+        s => s.paused && s.fromAyah <= s.toAyah && s.currentAyah <= s.toAyah
+    );
+    if (validPaused.length !== rawPaused.length) {
+        state.hifz.pausedSessions = validPaused;
         saveData();
     }
 
-    if (!hifzTasks.length && !pausedSession) {
+    if (!hifzTasks.length && !validPaused.length) {
         container.style.display = 'none';
         return;
     }
 
     container.style.display = '';
-    container.replaceChildren(); // vide le conteneur sans innerHTML
+    container.replaceChildren();
 
     const label = document.createElement('p');
     label.className = 'hifz-homework-label';
     label.textContent = 'واجباتك';
     container.appendChild(label);
 
-    // Bouton "متابعة" basé uniquement sur la session pausée (indépendant du cache)
-    if (pausedSession) {
+    // Un bouton "متابعة" par session en pause
+    for (const pausedSession of validPaused) {
         const surah = config.surahs.find(s => s.id === pausedSession.surahId);
         const surahName = surah?.name || `سورة ${pausedSession.surahId}`;
         const resumeBtn = document.createElement('button');
@@ -266,15 +262,20 @@ function _showHomeworkShortcuts() {
         resumeBtn.addEventListener('click', () => {
             competitionManager._hifzLinkedTaskId = pausedSession.linkedTaskId || null;
             state.hifz.currentSession = { ...pausedSession, isActive: true, paused: false };
+            // Retirer cette session du tableau des sessions pausées
+            state.hifz.pausedSessions = (state.hifz.pausedSessions || []).filter(
+                p => p.linkedTaskId !== pausedSession.linkedTaskId
+            );
             saveData();
             window.QuranReview.renderHifzPage();
         });
         container.appendChild(resumeBtn);
     }
 
-    // Devoirs disponibles (on saute celui déjà en pause pour éviter le doublon)
+    // Devoirs disponibles — sauter ceux déjà en pause (éviter le doublon)
+    const pausedTaskIds = new Set(validPaused.map(p => p.linkedTaskId).filter(Boolean));
     for (const { task, meta } of hifzTasks) {
-        if (pausedSession?.linkedTaskId === task.id) continue;
+        if (pausedTaskIds.has(task.id)) continue;
         const surah = config.surahs.find(s => s.id === meta.surah_id);
         const surahName = surah?.name || `سورة ${meta.surah_id}`;
         const btn = document.createElement('button');
