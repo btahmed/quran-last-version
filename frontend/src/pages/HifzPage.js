@@ -87,6 +87,12 @@ export function render() {
                     <div class="hifz-choices-grid" id="hifz-choices"></div>
                 </div>
 
+                <!-- Phase 3 : Remise en ordre -->
+                <div id="hifz-ordering-phase" style="display:none;text-align:center;padding:var(--space-3) 0;">
+                    <p class="hifz-instruction">رتّب الكلمات بالترتيب الصحيح ✨</p>
+                    <div class="hifz-choices-grid" id="hifz-ordering-choices"></div>
+                </div>
+
                 <!-- Retour visuel (bravo / erreur) -->
                 <div id="hifz-feedback" class="hifz-feedback" aria-live="polite"></div>
 

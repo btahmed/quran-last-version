@@ -551,6 +551,8 @@ export const competitionManager = {
     _hifzWords: null,
     _hifzCurrentIdx: 0,
     _hifzReadyAction: 'quiz', // 'quiz' | 'next-ayah'
+    _hifzDistractorPool: [], // mots des ayahs voisines pour les distracteurs
+    _hifzOrdering: null, // état de la phase 3 (remise en ordre)
 
     startHifzSession(surahId, fromAyah, toAyah) {
         state.hifz.currentSession = {
@@ -577,8 +579,17 @@ export const competitionManager = {
                 '<div style="text-align:center;padding:2rem;font-size:1.4rem;">⏳</div>';
         if (info) info.textContent = `الآية ${ayahNum}`;
         if (bar) bar.style.display = 'none';
+        this._hifzOrdering = null;
 
-        const text = await window.QuranReview.fetchAyahText(surahId, ayahNum);
+        // Charger l'ayah + les voisines en parallèle (mots des voisines = meilleurs distracteurs)
+        const [text, prevText, nextText] = await Promise.all([
+            window.QuranReview.fetchAyahText(surahId, ayahNum),
+            ayahNum > 1
+                ? window.QuranReview.fetchAyahText(surahId, ayahNum - 1)
+                : Promise.resolve(''),
+            window.QuranReview.fetchAyahText(surahId, ayahNum + 1),
+        ]);
+
         if (!text) {
             if (display)
                 display.innerHTML =
@@ -587,6 +598,10 @@ export const competitionManager = {
         }
 
         this._hifzWords = text.trim().split(/\s+/).filter(Boolean);
+        this._hifzDistractorPool = [
+            ...(prevText ? prevText.trim().split(/\s+/).filter(Boolean) : []),
+            ...(nextText ? nextText.trim().split(/\s+/).filter(Boolean) : []),
+        ];
         this._showMemorizePhase();
 
         // Stopper l'audio précédent puis jouer la nouvelle ayah
@@ -600,12 +615,14 @@ export const competitionManager = {
 
         const memPhase = document.getElementById('hifz-memorize-phase');
         const quizPhase = document.getElementById('hifz-quiz-phase');
+        const orderingPhase = document.getElementById('hifz-ordering-phase');
         const feedback = document.getElementById('hifz-feedback');
         const bar = document.getElementById('hifz-progress-bar');
         const readyBtn = document.getElementById('hifz-ready-btn');
 
         if (memPhase) memPhase.style.display = 'block';
         if (quizPhase) quizPhase.style.display = 'none';
+        if (orderingPhase) orderingPhase.style.display = 'none';
         if (feedback) {
             feedback.textContent = '';
             feedback.className = 'hifz-feedback';
@@ -655,7 +672,7 @@ export const competitionManager = {
     _showQuizWord(idx) {
         const words = this._hifzWords;
         if (!words || idx >= words.length) {
-            this._onAyahComplete();
+            this._startOrdering();
             return;
         }
 
@@ -681,22 +698,44 @@ export const competitionManager = {
 
     _buildChoices(correctWord, allWords) {
         const normCorrect = this.normalizeArabic(correctWord);
-        const distractors = [
-            ...new Set(allWords.filter(w => this.normalizeArabic(w) !== normCorrect)),
-        ]
-            .sort(() => Math.random() - 0.5)
-            .slice(0, 3);
+        const seen = new Set([normCorrect]);
 
-        // Compléter si l'ayah a moins de 4 mots uniques
+        // Pool : ayahs voisines en priorité → distracteurs plus variés et plus difficiles
+        const pool = [];
+        for (const w of [...(this._hifzDistractorPool || []), ...allWords]) {
+            const norm = this.normalizeArabic(w);
+            if (!seen.has(norm)) {
+                seen.add(norm);
+                pool.push(w);
+            }
+        }
+
+        // Fisher-Yates sur le pool (élimine le biais de sort(() => Math.random() - 0.5))
+        for (let i = pool.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [pool[i], pool[j]] = [pool[j], pool[i]];
+        }
+        const distractors = pool.slice(0, 3);
+
+        // Compléter avec des mots de fallback si pas assez de distracteurs uniques
         const fallback = ['الله', 'في', 'من', 'على', 'هو', 'ما', 'لا', 'إن', 'كان'];
         let fi = 0;
         while (distractors.length < 3) {
             const w = fallback[fi++ % fallback.length];
-            if (this.normalizeArabic(w) !== normCorrect && !distractors.includes(w))
+            const norm = this.normalizeArabic(w);
+            if (!seen.has(norm)) {
+                seen.add(norm);
                 distractors.push(w);
+            }
         }
 
-        return [correctWord, ...distractors].sort(() => Math.random() - 0.5);
+        // Fisher-Yates sur les 4 choix finaux pour une vraie distribution uniforme
+        const arr = [correctWord, ...distractors];
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
     },
 
     _renderChoices(choices, correctWord) {
@@ -759,6 +798,137 @@ export const competitionManager = {
         }
     },
 
+    _startOrdering() {
+        const words = this._hifzWords;
+        if (!words || words.length === 0) {
+            this._onAyahComplete();
+            return;
+        }
+
+        // Fisher-Yates sur les mots de l'ayah
+        const scrambled = words.map(word => ({ word, used: false }));
+        for (let i = scrambled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [scrambled[i], scrambled[j]] = [scrambled[j], scrambled[i]];
+        }
+        // S'assurer que l'ordre mélangé ≠ l'ordre original
+        if (scrambled.length > 1 && scrambled.every((item, i) => item.word === words[i])) {
+            [scrambled[0], scrambled[1]] = [scrambled[1], scrambled[0]];
+        }
+
+        this._hifzOrdering = { words, scrambled, nextIdx: 0 };
+        this._renderOrderingPhase();
+    },
+
+    _renderOrderingPhase() {
+        const { words, scrambled, nextIdx } = this._hifzOrdering;
+
+        // Afficher les mots déjà placés (verts) + les blancs restants dans la boîte de l'ayah
+        const display = document.getElementById('hifz-ayah-display');
+        if (display) {
+            display.innerHTML = '';
+            words.forEach((w, i) => {
+                const span = document.createElement('span');
+                if (i < nextIdx) {
+                    span.className = 'hifz-word hifz-word--found';
+                    span.textContent = w;
+                } else {
+                    span.className = 'hifz-word hifz-word--hidden';
+                    span.textContent = '░░░░';
+                }
+                display.appendChild(span);
+            });
+        }
+
+        // Barre de progression
+        const fill = document.getElementById('hifz-progress-fill');
+        const bar = document.getElementById('hifz-progress-bar');
+        if (bar) bar.style.display = 'block';
+        if (fill) fill.style.width = `${Math.round((nextIdx / words.length) * 100)}%`;
+
+        // Cacher les autres phases
+        const memPhase = document.getElementById('hifz-memorize-phase');
+        const quizPhase = document.getElementById('hifz-quiz-phase');
+        if (memPhase) memPhase.style.display = 'none';
+        if (quizPhase) quizPhase.style.display = 'none';
+
+        // Afficher la phase de remise en ordre
+        const orderingPhase = document.getElementById('hifz-ordering-phase');
+        if (orderingPhase) orderingPhase.style.display = 'block';
+
+        // Vider le feedback
+        const feedback = document.getElementById('hifz-feedback');
+        if (feedback) {
+            feedback.textContent = '';
+            feedback.className = 'hifz-feedback';
+        }
+
+        // Construire les boutons des mots mélangés
+        const container = document.getElementById('hifz-ordering-choices');
+        if (!container) return;
+        container.innerHTML = '';
+        scrambled.forEach((item, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'hifz-choice-btn';
+            btn.textContent = item.word; // textContent — sûr XSS
+            btn.disabled = item.used;
+            if (!item.used) {
+                btn.addEventListener('click', () => this._onOrderingChoice(btn, item.word, idx));
+            }
+            container.appendChild(btn);
+        });
+    },
+
+    _onOrderingChoice(btnEl, word, scrambledIdx) {
+        const { words, nextIdx } = this._hifzOrdering;
+        const expected = words[nextIdx];
+        const feedback = document.getElementById('hifz-feedback');
+        const session = state.hifz.currentSession;
+
+        if (this.normalizeArabic(word) === this.normalizeArabic(expected)) {
+            // Désactiver tous les boutons pendant la transition
+            document.querySelectorAll('#hifz-ordering-choices .hifz-choice-btn').forEach(b => {
+                b.disabled = true;
+            });
+            btnEl.classList.add('hifz-choice--correct');
+            if (feedback) {
+                feedback.textContent = '✅ أحسنت!';
+                feedback.className = 'hifz-feedback hifz-feedback--success';
+            }
+
+            this._hifzOrdering.scrambled[scrambledIdx].used = true;
+            this._hifzOrdering.nextIdx++;
+            session.score += 5;
+            saveData();
+            const scoreEl = document.getElementById('hifz-score');
+            if (scoreEl) scoreEl.textContent = `النقاط: ${session.score}`;
+
+            if (this._hifzOrdering.nextIdx >= words.length) {
+                setTimeout(() => this._onAyahComplete(), 600);
+            } else {
+                setTimeout(() => this._renderOrderingPhase(), 400);
+            }
+        } else {
+            btnEl.classList.add('hifz-choice--wrong');
+            if (feedback) {
+                feedback.textContent = '❌ حاول مرة أخرى';
+                feedback.className = 'hifz-feedback hifz-feedback--error';
+            }
+            session.score = Math.max(0, session.score - 3);
+            saveData();
+            const scoreEl = document.getElementById('hifz-score');
+            if (scoreEl) scoreEl.textContent = `النقاط: ${session.score}`;
+
+            setTimeout(() => {
+                btnEl.classList.remove('hifz-choice--wrong');
+                if (feedback) {
+                    feedback.textContent = '';
+                    feedback.className = 'hifz-feedback';
+                }
+            }, 500);
+        }
+    },
+
     _onAyahComplete() {
         const session = state.hifz.currentSession;
         const display = document.getElementById('hifz-ayah-display');
@@ -785,6 +955,8 @@ export const competitionManager = {
         if (fill) fill.style.width = '100%';
 
         if (quizPhase) quizPhase.style.display = 'none';
+        const orderingPhaseEl = document.getElementById('hifz-ordering-phase');
+        if (orderingPhaseEl) orderingPhaseEl.style.display = 'none';
 
         if (session.currentAyah < session.toAyah) {
             if (feedback) {
