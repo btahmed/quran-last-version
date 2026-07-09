@@ -226,30 +226,34 @@ function _showHomeworkShortcuts() {
     label.textContent = 'واجباتك';
     container.appendChild(label);
 
+    // Bouton "متابعة" basé uniquement sur la session pausée (indépendant du cache)
+    if (pausedSession) {
+        const surah = config.surahs.find(s => s.id === pausedSession.surahId);
+        const surahName = surah?.name || `سورة ${pausedSession.surahId}`;
+        const resumeBtn = document.createElement('button');
+        resumeBtn.className = 'btn btn-glow hifz-homework-btn btn-full';
+        resumeBtn.textContent = `▶️ متابعة — ${surahName} (من الآية ${pausedSession.currentAyah})`;
+        resumeBtn.addEventListener('click', () => {
+            competitionManager._hifzLinkedTaskId = pausedSession.linkedTaskId || null;
+            state.hifz.currentSession = { ...pausedSession, isActive: true, paused: false };
+            saveData();
+            window.QuranReview.renderHifzPage();
+        });
+        container.appendChild(resumeBtn);
+    }
+
+    // Devoirs disponibles (on saute celui déjà en pause pour éviter le doublon)
     for (const { task, meta } of hifzTasks) {
+        if (pausedSession?.linkedTaskId === task.id) continue;
         const surah = config.surahs.find(s => s.id === meta.surah_id);
         const surahName = surah?.name || `سورة ${meta.surah_id}`;
         const btn = document.createElement('button');
         btn.className = 'btn btn-outline-glow hifz-homework-btn btn-full';
-
-        const isResuming = pausedSession?.linkedTaskId === task.id;
-
-        if (isResuming) {
-            // Afficher un bouton "متابعة" avec l'ayah en cours
-            btn.textContent = `▶️ متابعة — ${surahName} (من الآية ${pausedSession.currentAyah})`;
-            btn.addEventListener('click', () => {
-                competitionManager._hifzLinkedTaskId = pausedSession.linkedTaskId;
-                state.hifz.currentSession = { ...pausedSession, isActive: true, paused: false };
-                saveData();
-                window.QuranReview.renderHifzPage();
-            });
-        } else {
-            btn.textContent = `📚 ${task.title} — ${surahName} (${meta.from_ayah}-${meta.to_ayah})`;
-            btn.addEventListener('click', () => {
-                competitionManager._hifzLinkedTaskId = task.id;
-                competitionManager.startHifzSession(meta.surah_id, meta.from_ayah, meta.to_ayah);
-            });
-        }
+        btn.textContent = `📚 ${task.title} — ${surahName} (${meta.from_ayah}-${meta.to_ayah})`;
+        btn.addEventListener('click', () => {
+            competitionManager._hifzLinkedTaskId = task.id;
+            competitionManager.startHifzSession(meta.surah_id, meta.from_ayah, meta.to_ayah);
+        });
         container.appendChild(btn);
     }
 }
