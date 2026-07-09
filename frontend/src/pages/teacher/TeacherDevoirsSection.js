@@ -373,12 +373,18 @@ export async function handleCreateTask(event) {
                 );
                 const failed = results.filter(r => r.error).length;
                 if (failed) showNotification(`فشل إنشاء ${failed} مهمة`, 'error');
+                // Envoyer UNE notification push par élève
+                students.forEach(s =>
+                    supabaseTasks.notifyStudentNewTask(s.id, body.title, body.type)
+                );
             }
         } else {
             // Créer pour les étudiants sélectionnés
             for (const studentId of studentIds) {
                 const { error } = await supabaseTasks.createTask({ ...body, user_id: studentId });
                 if (error) throw new Error(error.message || 'خطأ في إنشاء المهمة');
+                // Envoyer UNE notification push à cet élève
+                supabaseTasks.notifyStudentNewTask(studentId, body.title, body.type);
             }
         }
 

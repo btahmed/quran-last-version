@@ -566,6 +566,7 @@ export const competitionManager = {
             currentAyah: fromAyah,
             score: 0,
             startTime: Date.now(),
+            linkedTaskId: this._hifzLinkedTaskId || null, // persisté pour permettre le resume
         };
         saveData();
         // renderHifzPage() appelle init() qui appellera _loadAyahWords
@@ -1050,12 +1051,14 @@ export const competitionManager = {
         });
 
         // Notifier le prof si la session était liée à un devoir
-        if (this._hifzLinkedTaskId) {
+        // _hifzLinkedTaskId peut être null si la page a été rechargée → fallback sur session.linkedTaskId
+        const linkedTaskId = this._hifzLinkedTaskId || session.linkedTaskId || null;
+        if (linkedTaskId) {
             const surah = config.surahs.find(s => s.id === session.surahId);
             const localUser = JSON.parse(localStorage.getItem('quranreview_user') || '{}');
             const studentName = localUser.first_name || localUser.username || '';
             supabaseTasks.notifyTeacherHifzComplete(
-                this._hifzLinkedTaskId,
+                linkedTaskId,
                 studentName,
                 surah?.name || '',
                 session.score
@@ -1071,7 +1074,18 @@ export const competitionManager = {
     },
 
     stopSession() {
-        state.hifz.currentSession = { isActive: false };
+        const session = state.hifz.currentSession;
+        if (session?.isActive && (session.linkedTaskId || this._hifzLinkedTaskId)) {
+            // Devoir en cours : mettre en pause pour permettre la reprise
+            state.hifz.currentSession = {
+                ...session,
+                isActive: false,
+                paused: true,
+                linkedTaskId: session.linkedTaskId || this._hifzLinkedTaskId,
+            };
+        } else {
+            state.hifz.currentSession = { isActive: false };
+        }
         saveData();
         window.QuranReview.stopHifzAudio?.();
         window.QuranReview.renderHifzPage();

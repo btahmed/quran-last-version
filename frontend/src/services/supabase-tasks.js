@@ -184,6 +184,23 @@ export async function deleteTask(id) {
     }
 }
 
+// Notifie l'élève via push quand le prof lui assigne un devoir
+export async function notifyStudentNewTask(studentId, taskTitle, taskType) {
+    try {
+        const typeLabel = taskType === 'hifz' ? 'حفظ' : 'مراجعة';
+        await supabaseClient.functions.invoke('send-push', {
+            body: {
+                user_id: studentId,
+                title: '📚 واجب جديد',
+                body: `${taskTitle} (${typeLabel})`,
+                url: '/hifz',
+            },
+        });
+    } catch (err) {
+        console.warn('[NewTask] Notification élève non envoyée:', err);
+    }
+}
+
 // Notifie le prof via push quand l'élève complète un devoir hifz
 export async function notifyTeacherHifzComplete(taskId, studentName, surahName, score) {
     try {
