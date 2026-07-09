@@ -554,6 +554,7 @@ export const competitionManager = {
     _hifzReadyAction: 'quiz', // 'quiz' | 'next-ayah'
     _hifzDistractorPool: [], // mots des ayahs voisines pour les distracteurs
     _hifzOrdering: null, // état de la phase 3 (remise en ordre)
+    _hifzBismillah: null, // texte bismillah extrait de l'ayah (affiché en déco, pas testé)
     _hifzLinkedTaskId: null, // ID du devoir lié (pour notifier le prof)
 
     startHifzSession(surahId, fromAyah, toAyah) {
@@ -599,10 +600,34 @@ export const competitionManager = {
             return;
         }
 
-        this._hifzWords = text.trim().split(/\s+/).filter(Boolean);
+        // Nettoyer les caractères zero-width qui peuvent couper des mots arabes (U+200B etc.)
+        const _clean = s =>
+            s
+                .replace(/\u200B/g, '') // zero-width space
+                .replace(/\u200C/g, '') // zero-width non-joiner
+                .replace(/\u200D/g, '') // zero-width joiner
+                .replace(/\uFEFF/g, '') // BOM
+                .trim();
+
+        const words = _clean(text).split(/\s+/).filter(Boolean);
+
+        // Détecter la Bismillah au début de l'ayah (API l'inclut pour ayah 1 de chaque sourate)
+        const BISMILLAH_NORMS = ['بسم', 'الله', 'الرحمن', 'الرحيم'];
+        const hasBismillah =
+            words.length >= 4 &&
+            BISMILLAH_NORMS.every((bw, i) => this.normalizeArabic(words[i]) === bw);
+
+        if (hasBismillah) {
+            this._hifzBismillah = words.slice(0, 4).join(' ');
+            this._hifzWords = words.slice(4);
+        } else {
+            this._hifzBismillah = null;
+            this._hifzWords = words;
+        }
+
         this._hifzDistractorPool = [
-            ...(prevText ? prevText.trim().split(/\s+/).filter(Boolean) : []),
-            ...(nextText ? nextText.trim().split(/\s+/).filter(Boolean) : []),
+            ...(prevText ? _clean(prevText).split(/\s+/).filter(Boolean) : []),
+            ...(nextText ? _clean(nextText).split(/\s+/).filter(Boolean) : []),
         ];
         this._showMemorizePhase();
 
@@ -640,6 +665,14 @@ export const competitionManager = {
         const display = document.getElementById('hifz-ayah-display');
         if (!display || !this._hifzWords) return;
         display.innerHTML = '';
+
+        // Bismillah affichée en déco au-dessus de l'ayah (non testée)
+        if (this._hifzBismillah) {
+            const bsEl = document.createElement('div');
+            bsEl.className = 'hifz-bismillah';
+            bsEl.textContent = this._hifzBismillah;
+            display.appendChild(bsEl);
+        }
 
         this._hifzWords.forEach((w, i) => {
             const span = document.createElement('span');
@@ -941,9 +974,15 @@ export const competitionManager = {
         const fill = document.getElementById('hifz-progress-fill');
         const bar = document.getElementById('hifz-progress-bar');
 
-        // Afficher tous les mots en vert
+        // Afficher tous les mots en vert (avec bismillah si présente)
         if (display && this._hifzWords) {
             display.innerHTML = '';
+            if (this._hifzBismillah) {
+                const bsEl = document.createElement('div');
+                bsEl.className = 'hifz-bismillah';
+                bsEl.textContent = this._hifzBismillah;
+                display.appendChild(bsEl);
+            }
             this._hifzWords.forEach(w => {
                 const span = document.createElement('span');
                 span.className = 'hifz-word hifz-word--found';
@@ -990,7 +1029,7 @@ export const competitionManager = {
         if (!text) return '';
         return text
             .replace(/[ً-ٰٟـ]/g, '') // tashkeel
-            .replace(/[إأآا]/g, 'ا')
+            .replace(/[إأآاٱ]/g, 'ا') // toutes variantes alef dont ٱ (wasla uthmani)
             .replace(/ى/g, 'ي')
             .replace(/ة/g, 'ه')
             .trim();
