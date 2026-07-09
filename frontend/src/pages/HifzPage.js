@@ -225,15 +225,28 @@ function _showHomeworkShortcuts() {
         }
     }
 
-    if (!hifzTasks.length) {
+    // Détecter une session mise en pause (devoir arrêté à mi-chemin)
+    // Fait avant le check hifzTasks pour que le bouton "متابعة" s'affiche même si le cache est vide
+    const rawSession = state.hifz.currentSession;
+    // Ignorer les sessions invalides (fromAyah > toAyah ou currentAyah > toAyah)
+    const isValidPause =
+        rawSession &&
+        !rawSession.isActive &&
+        rawSession.paused &&
+        rawSession.fromAyah <= rawSession.toAyah &&
+        rawSession.currentAyah <= rawSession.toAyah;
+    const pausedSession = isValidPause ? rawSession : null;
+
+    // Auto-nettoyer les sessions pausées invalides (fromAyah > toAyah — créées avant la validation)
+    if (rawSession?.paused && !isValidPause) {
+        state.hifz.currentSession = { isActive: false };
+        saveData();
+    }
+
+    if (!hifzTasks.length && !pausedSession) {
         container.style.display = 'none';
         return;
     }
-
-    // Détecter une session mise en pause (devoir arrêté à mi-chemin)
-    const rawSession = state.hifz.currentSession;
-    const pausedSession =
-        rawSession && !rawSession.isActive && rawSession.paused ? rawSession : null;
 
     container.style.display = '';
     container.replaceChildren(); // vide le conteneur sans innerHTML
