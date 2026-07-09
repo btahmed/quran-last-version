@@ -544,270 +544,289 @@ export const competitionManager = {
     },
 
     // ===================================
-    // HIFZ SESSION MANAGEMENT
+    // HIFZ SESSION MANAGEMENT v2 — enfants
     // ===================================
 
-    startHifzSession(surahId, fromAyah, toAyah) {
-        console.log(`Starting Hifz: ${surahId}:${fromAyah}-${toAyah}`);
+    // État interne du jeu hifz
+    _hifzWords: null,
+    _hifzCurrentIdx: 0,
+    _hifzReadyAction: 'quiz', // 'quiz' | 'next-ayah'
 
-        // Update state
+    startHifzSession(surahId, fromAyah, toAyah) {
         state.hifz.currentSession = {
             isActive: true,
             surahId,
             fromAyah,
             toAyah,
             currentAyah: fromAyah,
-            level: 1,
             score: 0,
             startTime: Date.now(),
         };
         saveData();
-
-        // Reset UI
-        this.hintsRemaining = 3;
-        document.getElementById('hints-count').textContent = this.hintsRemaining;
-
-        // Render
+        // renderHifzPage() appelle init() qui appellera _loadAyahWords
         window.QuranReview.renderHifzPage();
-
-        // Load content
-        this.loadAyahForHifz(surahId, fromAyah);
     },
 
-    async loadAyahForHifz(surahId, ayahNumber) {
-        const container = document.getElementById('hifz-display');
-        container.innerHTML = '<div style="text-align:center;">⏳ جاري التحميل...</div>';
+    async _loadAyahWords(surahId, ayahNum) {
+        const display = document.getElementById('hifz-ayah-display');
+        const info = document.getElementById('hifz-ayah-info');
+        const bar = document.getElementById('hifz-progress-bar');
 
-        const ayahText = await window.QuranReview.fetchAyahText(surahId, ayahNumber);
+        if (display)
+            display.innerHTML =
+                '<div style="text-align:center;padding:2rem;font-size:1.4rem;">⏳</div>';
+        if (info) info.textContent = `الآية ${ayahNum}`;
+        if (bar) bar.style.display = 'none';
 
-        if (!ayahText) {
-            container.innerHTML =
-                '<div style="text-align:center; color:red;">❌ خطأ في تحميل الآية</div>';
+        const text = await window.QuranReview.fetchAyahText(surahId, ayahNum);
+        if (!text) {
+            if (display)
+                display.innerHTML =
+                    '<div style="text-align:center;color:red;padding:1rem;">❌ خطأ في تحميل الآية</div>';
             return;
         }
 
-        const analysis = window.QuranReview.hifzEngine.generateMaskLevel(
-            ayahText,
-            state.hifz.currentSession.level
-        );
-        this.renderHifzDisplay(analysis);
-        this.updateLevelDisplay();
+        this._hifzWords = text.trim().split(/\s+/).filter(Boolean);
+        this._showMemorizePhase();
+
+        // Stopper l'audio précédent puis jouer la nouvelle ayah
+        window.QuranReview.stopHifzAudio?.();
+        window.QuranReview.playHifzAudio();
     },
 
-    renderHifzDisplay(wordAnalysis) {
-        const container = document.getElementById('hifz-display');
-        container.innerHTML = '';
+    _showMemorizePhase() {
+        this._hifzReadyAction = 'quiz';
+        this._renderAyahDisplay(null);
 
-        const line = document.createElement('div');
-        line.className = 'ayah-line';
+        const memPhase = document.getElementById('hifz-memorize-phase');
+        const quizPhase = document.getElementById('hifz-quiz-phase');
+        const feedback = document.getElementById('hifz-feedback');
+        const bar = document.getElementById('hifz-progress-bar');
+        const readyBtn = document.getElementById('hifz-ready-btn');
 
-        wordAnalysis.forEach((item, idx) => {
+        if (memPhase) memPhase.style.display = 'block';
+        if (quizPhase) quizPhase.style.display = 'none';
+        if (feedback) {
+            feedback.textContent = '';
+            feedback.className = 'hifz-feedback';
+        }
+        if (bar) bar.style.display = 'none';
+        if (readyBtn) readyBtn.textContent = '✓ حفظتها، ابدأ الاختبار';
+
+        const scoreEl = document.getElementById('hifz-score');
+        if (scoreEl) scoreEl.textContent = `النقاط: ${state.hifz.currentSession.score}`;
+    },
+
+    _renderAyahDisplay(hiddenIdx) {
+        const display = document.getElementById('hifz-ayah-display');
+        if (!display || !this._hifzWords) return;
+        display.innerHTML = '';
+
+        this._hifzWords.forEach((w, i) => {
             const span = document.createElement('span');
-            span.className = `word ${item.isHidden ? 'hidden' : 'revealed'}`;
-            span.textContent = item.isHidden ? '____' : item.word;
-            span.dataset.word = item.word;
-            span.dataset.index = idx; // Important for finding it later
-
-            if (item.isHidden) {
-                span.onclick = () => this.attemptReveal(span, item.word);
+            if (i === hiddenIdx) {
+                span.className = 'hifz-word hifz-word--hidden';
+                span.textContent = '░░░░';
+            } else if (hiddenIdx !== null && i < hiddenIdx) {
+                // Mots déjà trouvés → verts
+                span.className = 'hifz-word hifz-word--found';
+                span.textContent = w;
+            } else {
+                span.className = 'hifz-word hifz-word--shown';
+                span.textContent = w;
             }
-
-            line.appendChild(span);
+            display.appendChild(span);
         });
 
-        container.appendChild(line);
-    },
-
-    attemptReveal(spanElement, correctWord) {
-        if (!spanElement.classList.contains('hidden')) return;
-
-        if (this.mode === 'qcm') {
-            this._showQCMChoices(spanElement, correctWord);
-        } else {
-            // Mode récitation : révéler directement (mode confiance)
-            this._revealWord(spanElement, correctWord);
+        // Barre de progression
+        if (hiddenIdx !== null && this._hifzWords.length > 0) {
+            const fill = document.getElementById('hifz-progress-fill');
+            const bar = document.getElementById('hifz-progress-bar');
+            const pct = Math.round((hiddenIdx / this._hifzWords.length) * 100);
+            if (bar) bar.style.display = 'block';
+            if (fill) fill.style.width = `${pct}%`;
         }
     },
 
-    _revealWord(spanElement, correctWord) {
-        spanElement.classList.remove('hidden', 'word-selected');
-        spanElement.classList.add('revealed');
-        spanElement.textContent = correctWord;
-        spanElement.onclick = null;
-        state.hifz.currentSession.score += 10;
-        saveData();
-        if (this.checkLevelComplete()) {
-            setTimeout(() => {
-                const feedback = document.getElementById('hifz-feedback');
-                if (feedback) {
-                    feedback.classList.remove('hidden');
-                    feedback.classList.add('show');
-                }
-            }, 400);
-        }
+    _startQuiz() {
+        this._showQuizWord(0);
     },
 
-    _showQCMChoices(spanElement, correctWord) {
-        this._qcmSpan = spanElement;
-        this._qcmCorrect = correctWord;
+    _showQuizWord(idx) {
+        const words = this._hifzWords;
+        if (!words || idx >= words.length) {
+            this._onAyahComplete();
+            return;
+        }
 
-        document
-            .querySelectorAll('.word.word-selected')
-            .forEach(el => el.classList.remove('word-selected'));
-        spanElement.classList.add('word-selected');
+        this._hifzCurrentIdx = idx;
+        const correctWord = words[idx];
 
-        // Collecter des distracteurs depuis les mots de l'ayah courante
-        const allWords = [
-            ...new Set(
-                [...document.querySelectorAll('.word')].map(el => el.dataset.word).filter(Boolean)
-            ),
-        ];
-        const distractors = allWords
-            .filter(w => this.normalizeArabic(w) !== this.normalizeArabic(correctWord))
+        this._renderAyahDisplay(idx);
+
+        const memPhase = document.getElementById('hifz-memorize-phase');
+        const quizPhase = document.getElementById('hifz-quiz-phase');
+        const feedback = document.getElementById('hifz-feedback');
+
+        if (memPhase) memPhase.style.display = 'none';
+        if (quizPhase) quizPhase.style.display = 'block';
+        if (feedback) {
+            feedback.textContent = '';
+            feedback.className = 'hifz-feedback';
+        }
+
+        const choices = this._buildChoices(correctWord, words);
+        this._renderChoices(choices, correctWord);
+    },
+
+    _buildChoices(correctWord, allWords) {
+        const normCorrect = this.normalizeArabic(correctWord);
+        const distractors = [
+            ...new Set(allWords.filter(w => this.normalizeArabic(w) !== normCorrect)),
+        ]
             .sort(() => Math.random() - 0.5)
             .slice(0, 3);
 
         // Compléter si l'ayah a moins de 4 mots uniques
-        const fallback = ['الله', 'في', 'من', 'على', 'هو', 'ما', 'لا', 'إن'];
+        const fallback = ['الله', 'في', 'من', 'على', 'هو', 'ما', 'لا', 'إن', 'كان'];
         let fi = 0;
         while (distractors.length < 3) {
             const w = fallback[fi++ % fallback.length];
-            if (
-                this.normalizeArabic(w) !== this.normalizeArabic(correctWord) &&
-                !distractors.includes(w)
-            )
+            if (this.normalizeArabic(w) !== normCorrect && !distractors.includes(w))
                 distractors.push(w);
         }
 
-        const choices = [correctWord, ...distractors].sort(() => Math.random() - 0.5);
+        return [correctWord, ...distractors].sort(() => Math.random() - 0.5);
+    },
 
-        const panel = document.getElementById('hifz-qcm-panel');
-        if (!panel) return;
-        panel.innerHTML = '';
-        panel.style.display = 'flex';
+    _renderChoices(choices, correctWord) {
+        const container = document.getElementById('hifz-choices');
+        if (!container) return;
+        container.innerHTML = '';
 
         choices.forEach(w => {
             const btn = document.createElement('button');
-            btn.className = 'btn btn-outline-glow hifz-qcm-choice';
-            btn.textContent = w; // textContent — aucun risque XSS
-            btn.onclick = () => this._checkQCMChoice(btn, w);
-            panel.appendChild(btn);
+            btn.className = 'hifz-choice-btn';
+            btn.textContent = w; // textContent — sûr contre XSS
+            btn.addEventListener('click', () => this._onChoiceClick(btn, w, correctWord));
+            container.appendChild(btn);
         });
     },
 
-    _checkQCMChoice(btnEl, chosen) {
-        const span = this._qcmSpan;
-        const correct = this._qcmCorrect;
-        if (!span || !correct) return;
+    _onChoiceClick(btnEl, chosen, correct) {
+        document.querySelectorAll('.hifz-choice-btn').forEach(b => {
+            b.disabled = true;
+        });
+
+        const feedback = document.getElementById('hifz-feedback');
+        const session = state.hifz.currentSession;
 
         if (this.normalizeArabic(chosen) === this.normalizeArabic(correct)) {
-            btnEl.classList.add('qcm-correct');
-            setTimeout(() => {
-                const panel = document.getElementById('hifz-qcm-panel');
-                if (panel) panel.style.display = 'none';
-                this._qcmSpan = null;
-                this._qcmCorrect = null;
-                this._revealWord(span, correct);
-            }, 500);
-        } else {
-            // Mauvaise réponse — flash rouge, −3 pts
-            btnEl.classList.add('qcm-wrong');
-            state.hifz.currentSession.score = Math.max(0, state.hifz.currentSession.score - 3);
+            // ✅ Bonne réponse
+            btnEl.classList.add('hifz-choice--correct');
+            if (feedback) {
+                feedback.textContent = '✅ أحسنت!';
+                feedback.className = 'hifz-feedback hifz-feedback--success';
+            }
+            session.score += 10;
             saveData();
-            setTimeout(() => btnEl.classList.remove('qcm-wrong'), 600);
+            const scoreEl = document.getElementById('hifz-score');
+            if (scoreEl) scoreEl.textContent = `النقاط: ${session.score}`;
+
+            setTimeout(() => this._showQuizWord(this._hifzCurrentIdx + 1), 700);
+        } else {
+            // ❌ Mauvaise réponse
+            btnEl.classList.add('hifz-choice--wrong');
+            if (feedback) {
+                feedback.textContent = '❌ حاول مرة أخرى';
+                feedback.className = 'hifz-feedback hifz-feedback--error';
+            }
+            session.score = Math.max(0, session.score - 3);
+            saveData();
+            const scoreEl = document.getElementById('hifz-score');
+            if (scoreEl) scoreEl.textContent = `النقاط: ${session.score}`;
+
+            setTimeout(() => {
+                btnEl.classList.remove('hifz-choice--wrong');
+                if (feedback) {
+                    feedback.textContent = '';
+                    feedback.className = 'hifz-feedback';
+                }
+                document.querySelectorAll('.hifz-choice-btn').forEach(b => {
+                    b.disabled = false;
+                });
+            }, 700);
         }
+    },
+
+    _onAyahComplete() {
+        const session = state.hifz.currentSession;
+        const display = document.getElementById('hifz-ayah-display');
+        const quizPhase = document.getElementById('hifz-quiz-phase');
+        const memPhase = document.getElementById('hifz-memorize-phase');
+        const feedback = document.getElementById('hifz-feedback');
+        const readyBtn = document.getElementById('hifz-ready-btn');
+        const fill = document.getElementById('hifz-progress-fill');
+        const bar = document.getElementById('hifz-progress-bar');
+
+        // Afficher tous les mots en vert
+        if (display && this._hifzWords) {
+            display.innerHTML = '';
+            this._hifzWords.forEach(w => {
+                const span = document.createElement('span');
+                span.className = 'hifz-word hifz-word--found';
+                span.textContent = w;
+                display.appendChild(span);
+            });
+        }
+
+        // Barre 100%
+        if (bar) bar.style.display = 'block';
+        if (fill) fill.style.width = '100%';
+
+        if (quizPhase) quizPhase.style.display = 'none';
+
+        if (session.currentAyah < session.toAyah) {
+            if (feedback) {
+                feedback.textContent = '🎉 أحسنت! اضغط للانتقال للآية التالية';
+                feedback.className = 'hifz-feedback hifz-feedback--success';
+            }
+            // Le listener sur hifz-ready-btn vérifie _hifzReadyAction pour savoir quoi faire
+            this._hifzReadyAction = 'next-ayah';
+            if (memPhase) memPhase.style.display = 'block';
+            if (readyBtn) readyBtn.textContent = '← الآية التالية';
+        } else {
+            if (feedback) {
+                feedback.textContent = '🌟 ما شاء الله! أتممت الحفظ بنجاح!';
+                feedback.className = 'hifz-feedback hifz-feedback--success';
+            }
+            if (memPhase) memPhase.style.display = 'none';
+            setTimeout(() => this.completeSession(), 2500);
+        }
+    },
+
+    async _advanceToNextAyah() {
+        const session = state.hifz.currentSession;
+        session.currentAyah++;
+        saveData();
+        await this._loadAyahWords(session.surahId, session.currentAyah);
     },
 
     normalizeArabic(text) {
         if (!text) return '';
         return text
-            .replace(/[\u064B-\u065F\u0670\u0640]/g, '') // Remove tashkeel
+            .replace(/[ً-ٰٟـ]/g, '') // tashkeel
             .replace(/[إأآا]/g, 'ا')
             .replace(/ى/g, 'ي')
             .replace(/ة/g, 'ه')
             .trim();
     },
 
-    showHint() {
-        if (this.hintsRemaining <= 0) {
-            showNotification('نفذت التلميحات', 'warning');
-            return;
-        }
-
-        const hiddenWords = document.querySelectorAll('.word.hidden');
-        if (hiddenWords.length === 0) return;
-
-        const randomWord = hiddenWords[Math.floor(Math.random() * hiddenWords.length)];
-
-        // Reveal it visually as a hint
-        randomWord.classList.remove('hidden');
-        randomWord.classList.add('revealed-hint');
-        randomWord.textContent = randomWord.dataset.word;
-        randomWord.onclick = null; // No need to guess anymore
-
-        this.hintsRemaining--;
-        document.getElementById('hints-count').textContent = this.hintsRemaining;
-
-        // Penalty
-        state.hifz.currentSession.score = Math.max(0, state.hifz.currentSession.score - 5);
-        saveData();
-    },
-
-    checkLevelComplete() {
-        return document.querySelectorAll('.word.hidden').length === 0;
-    },
-
-    levelUp() {
-        // Fermer le panel QCM et réinitialiser l'état en suspens
-        const panel = document.getElementById('hifz-qcm-panel');
-        if (panel) panel.style.display = 'none';
-        this._qcmSpan = null;
-        this._qcmCorrect = null;
-        document
-            .querySelectorAll('.word.word-selected')
-            .forEach(el => el.classList.remove('word-selected'));
-
-        // Hide feedback
-        const feedback = document.getElementById('hifz-feedback');
-        feedback.classList.remove('show');
-        setTimeout(() => feedback.classList.add('hidden'), 300);
-
-        const session = state.hifz.currentSession;
-        if (session.level < 5) {
-            session.level++;
-            showNotification(`المستوى ${session.level}`, 'success');
-            this.loadAyahForHifz(session.surahId, session.currentAyah);
-        } else {
-            // Next Ayah or Finish
-            if (session.currentAyah < session.toAyah) {
-                session.currentAyah++;
-                session.level = 1;
-                showNotification(`الآية التالية: ${session.currentAyah}`, 'success');
-                this.loadAyahForHifz(session.surahId, session.currentAyah);
-            } else {
-                this.completeSession();
-            }
-        }
-        saveData();
-    },
-
-    updateLevelDisplay() {
-        const dots = document.querySelectorAll('.level-dots .dot');
-        const level = state.hifz.currentSession.level;
-        dots.forEach((dot, idx) => {
-            if (idx < level) dot.classList.add('active');
-            else dot.classList.remove('active');
-        });
-    },
-
     completeSession() {
         const session = state.hifz.currentSession;
         const timeTaken = (Date.now() - session.startTime) / 1000;
 
-        // Save completion
-        // Ensure history exists
         if (!state.hifz.history) state.hifz.history = [];
-
         state.hifz.history.push({
             surahId: session.surahId,
             fromAyah: session.fromAyah,
@@ -817,22 +836,17 @@ export const competitionManager = {
             timeTaken,
         });
 
-        // Reset session
         state.hifz.currentSession = { isActive: false };
         saveData();
 
-        // Show Feedback
-        alert(`🎉 أحسنت! أكملت الجلسة بنجاح.\nالنقاط: ${session.score}`);
-
-        // Return to selection
+        window.QuranReview.stopHifzAudio?.();
         window.QuranReview.renderHifzPage();
     },
 
     stopSession() {
-        if (confirm('هل أنت متأكد من إنهاء الجلسة؟ سيتم فقدان التقدم الحالي.')) {
-            state.hifz.currentSession = { isActive: false };
-            saveData();
-            window.QuranReview.renderHifzPage();
-        }
+        state.hifz.currentSession = { isActive: false };
+        saveData();
+        window.QuranReview.stopHifzAudio?.();
+        window.QuranReview.renderHifzPage();
     },
 };

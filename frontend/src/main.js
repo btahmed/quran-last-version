@@ -162,10 +162,8 @@ window.QuranReview = {
     renderCompetitionPage: () => navigateTo('competition'),
 
     // HifzPage
-    showHint: HifzPage.showHint,
-    checkMemorization: HifzPage.checkMemorization,
-    nextLevel: HifzPage.nextLevel,
     stopHifzSession: HifzPage.stopHifzSession,
+    stopHifzAudio: HifzPage.stopHifzAudio,
     playHifzAudio: HifzPage.playHifzAudio,
     renderHifzPage: () => navigateTo('hifz'),
 
