@@ -9,7 +9,7 @@
 //   5. Déployer l'Edge Function : supabase functions deploy send-push
 
 const VAPID_PUBLIC_KEY =
-    'BLop-qhihAdaTL33D13QgIAVPVn_byLmpi960I8qsjeihVXYm459ABDgOVk_fNjRp5QXxkA-U2QRb6UP_jb3D_Y';
+    'BGD-aR40-hJiIU4p06uq7mi3mnJCeFPRaGzj-BQW-Eoa5YBf2Pf6RTIfDjtCz14ZLnToSXue6XOsDQJdbtymQyg';
 
 /**
  * Abonne l'utilisateur aux notifications push.
