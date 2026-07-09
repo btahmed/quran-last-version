@@ -123,6 +123,13 @@ export async function init() {
         }
         selectionDiv.classList.add('hidden');
         containerDiv.classList.remove('hidden');
+        // GSAP scroll-reveal laisse opacity:0 en inline style sur les éléments display:none
+        // → les nettoyer pour que le container soit visible dès l'affichage
+        containerDiv.style.removeProperty('opacity');
+        containerDiv.style.removeProperty('transform');
+        containerDiv.style.removeProperty('translate');
+        containerDiv.style.removeProperty('rotate');
+        containerDiv.style.removeProperty('scale');
         _attachGameListeners();
         competitionManager._loadAyahWords(session.surahId, session.currentAyah);
     } else {
