@@ -3,6 +3,7 @@ import { competitionManager } from '../services/competition.js';
 import { state } from '../core/state.js';
 import { config } from '../core/config.js';
 import { showNotification } from '../core/ui.js';
+import { apiCache } from '../core/apiCache.js';
 
 // Instance audio unique pour la lecture de l'ayah courante
 let _audio = null;
@@ -28,6 +29,9 @@ export function render() {
     return `<div id="hifz-page" class="page active">
         <section class="k-section">
             <h2 class="k-section-title" style="text-align:center;margin-bottom:var(--space-6);">📖 وضع الحفظ</h2>
+
+            <!-- Raccourcis devoirs hifz -->
+            <div id="hifz-homework-shortcuts" class="hifz-homework-section" style="display:none;"></div>
 
             <!-- Formulaire de démarrage -->
             <div class="card-glass-pro" id="hifz-selection" style="margin-bottom:var(--space-6);">
@@ -121,6 +125,7 @@ export function init() {
         containerDiv.classList.add('hidden');
         _populateSurahSelect();
         _setupFormListener();
+        _showHomeworkShortcuts();
     }
 }
 
@@ -178,6 +183,60 @@ function _setupFormListener() {
             }
         });
         form.dataset.listening = 'true';
+    }
+}
+
+function _showHomeworkShortcuts() {
+    const container = document.getElementById('hifz-homework-shortcuts');
+    if (!container) return;
+
+    const tasks = (apiCache.get('tasks') || []).filter(
+        t => t.type === 'hifz' && typeof t.description === 'string' && t.description.startsWith('{')
+    );
+
+    const hifzTasks = [];
+    for (const task of tasks) {
+        try {
+            const parsed = JSON.parse(task.description);
+            if (parsed?._hifz) hifzTasks.push({ task, meta: parsed._hifz });
+        } catch (_) {
+            /* description non-JSON, ignorer */
+        }
+    }
+
+    if (!hifzTasks.length) {
+        container.style.display = 'none';
+        return;
+    }
+
+    container.style.display = '';
+    container.replaceChildren(); // vide le conteneur sans innerHTML
+
+    const label = document.createElement('p');
+    label.className = 'hifz-homework-label';
+    label.textContent = 'واجباتك';
+    container.appendChild(label);
+
+    for (const { task, meta } of hifzTasks) {
+        const surah = config.surahs.find(s => s.id === meta.surah_id);
+        const surahName = surah?.name || `سورة ${meta.surah_id}`;
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-outline-glow hifz-homework-btn btn-full';
+        btn.textContent = `📚 ${task.title} — ${surahName} (${meta.from_ayah}-${meta.to_ayah})`;
+        btn.addEventListener('click', () => {
+            const surahSelect = document.getElementById('hifz-surah-select');
+            const fromInput = document.getElementById('hifz-from-ayah');
+            const toInput = document.getElementById('hifz-to-ayah');
+            if (!surahSelect || !fromInput || !toInput) return;
+            surahSelect.value = meta.surah_id;
+            fromInput.value = meta.from_ayah;
+            fromInput.max = surah?.ayahs || 286;
+            toInput.value = meta.to_ayah;
+            toInput.max = surah?.ayahs || 286;
+            competitionManager._hifzLinkedTaskId = task.id;
+            competitionManager.startHifzSession(meta.surah_id, meta.from_ayah, meta.to_ayah);
+        });
+        container.appendChild(btn);
     }
 }
 

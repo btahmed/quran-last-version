@@ -183,3 +183,27 @@ export async function deleteTask(id) {
         return { data: null, error };
     }
 }
+
+// Notifie le prof via push quand l'élève complète un devoir hifz
+export async function notifyTeacherHifzComplete(taskId, studentName, surahName, score) {
+    try {
+        const { data: task } = await supabaseClient
+            .from('tasks')
+            .select('assigned_by, title')
+            .eq('id', taskId)
+            .maybeSingle();
+
+        if (!task?.assigned_by) return;
+
+        await supabaseClient.functions.invoke('send-push', {
+            body: {
+                user_id: task.assigned_by,
+                title: '✅ أتم الطالب الحفظ',
+                body: `${studentName} أتم حفظ سورة ${surahName} — النقاط: ${score}`,
+                url: '/eleves',
+            },
+        });
+    } catch (err) {
+        console.warn('[HifzComplete] Notification non envoyée:', err);
+    }
+}

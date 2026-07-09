@@ -31,6 +31,17 @@ function escapeJs(text) {
         .replace(/\r/g, '\\r');
 }
 
+function _parseTaskDescription(desc) {
+    if (!desc) return { text: '', hifz: null };
+    try {
+        const parsed = JSON.parse(desc);
+        if (parsed?._hifz) return { text: parsed.text || '', hifz: parsed._hifz };
+    } catch (_) {
+        /* description non-JSON */
+    }
+    return { text: desc, hifz: null };
+}
+
 // ─── ÉTAT LOCAL ───────────────────────────────────────────────────────────────
 
 let _students = [];
@@ -64,6 +75,25 @@ export function render() {
                     <div class="form-floating">
                         <input type="number" id="task-points" min="0" value="10" placeholder=" ">
                         <label for="task-points">النقاط</label>
+                    </div>
+                </div>
+                <!-- Options spécifiques au type hifz -->
+                <div id="hifz-task-options" style="display:none;margin-bottom:var(--space-4);">
+                    <div class="form-floating" style="margin-bottom:var(--space-3);">
+                        <select id="hifz-task-surah">
+                            <option value="">-- اختر السورة --</option>
+                        </select>
+                        <label for="hifz-task-surah">السورة (للحفظ)</label>
+                    </div>
+                    <div class="k-grid2">
+                        <div class="form-floating">
+                            <input type="number" id="hifz-task-from" min="1" value="1" placeholder=" ">
+                            <label for="hifz-task-from">من الآية</label>
+                        </div>
+                        <div class="form-floating">
+                            <input type="number" id="hifz-task-to" min="1" value="7" placeholder=" ">
+                            <label for="hifz-task-to">إلى الآية</label>
+                        </div>
                     </div>
                 </div>
                 <div class="form-floating" style="margin-bottom: var(--space-4);">
@@ -110,6 +140,40 @@ export function render() {
 export async function init() {
     Logger.log('TEACHER-DEVOIRS', 'init');
     await _loadData();
+    _initHifzForm();
+}
+
+function _initHifzForm() {
+    const surahSelect = document.getElementById('hifz-task-surah');
+    if (!surahSelect || surahSelect.options.length > 1) return;
+
+    config.surahs.forEach(surah => {
+        const option = document.createElement('option');
+        option.value = surah.id;
+        option.textContent = `${surah.name} (${surah.ayahs} آيات)`;
+        surahSelect.appendChild(option);
+    });
+
+    const typeSelect = document.getElementById('task-type');
+    const hifzOptions = document.getElementById('hifz-task-options');
+    if (!typeSelect || !hifzOptions) return;
+
+    const _toggleHifzFields = () => {
+        hifzOptions.style.display = typeSelect.value === 'hifz' ? '' : 'none';
+    };
+    typeSelect.addEventListener('change', _toggleHifzFields);
+    _toggleHifzFields();
+
+    surahSelect.addEventListener('change', () => {
+        const surahId = parseInt(surahSelect.value);
+        const surah = config.surahs.find(s => s.id === surahId);
+        const fromInput = document.getElementById('hifz-task-from');
+        const toInput = document.getElementById('hifz-task-to');
+        if (surah && fromInput && toInput) {
+            fromInput.max = surah.ayahs;
+            toInput.max = surah.ayahs;
+        }
+    });
 }
 
 // ─── CHARGEMENT DES DONNÉES ───────────────────────────────────────────────────
@@ -213,7 +277,15 @@ function _renderTaskList(tasks) {
                         title="حذف هذه المهمة">🗑 حذف</button>
                 </div>
             </div>
-            ${task.description ? `<p class="k-task-card-desc">${escapeHtml(task.description)}</p>` : ''}
+            ${(() => {
+                const { text, hifz } = _parseTaskDescription(task.description);
+                const surahName = hifz
+                    ? config.surahs.find(s => s.id === hifz.surah_id)?.name || ''
+                    : '';
+                const display =
+                    text + (hifz ? ` — سورة ${surahName} (${hifz.from_ayah}-${hifz.to_ayah})` : '');
+                return display ? `<p class="k-task-card-desc">${escapeHtml(display)}</p>` : '';
+            })()}
             <div class="k-task-card-meta">
                 <span>🏆 ${escapeHtml(String(task.points))} نقطة</span>
                 <span>👥 ${count} طالب</span>
@@ -268,10 +340,23 @@ export async function handleCreateTask(event) {
         return;
     }
 
+    const taskType = document.getElementById('task-type').value;
+    let description = document.getElementById('task-description').value.trim();
+    if (taskType === 'hifz') {
+        const hifzSurahId = parseInt(document.getElementById('hifz-task-surah')?.value || '0');
+        const hifzFrom = parseInt(document.getElementById('hifz-task-from')?.value || '1');
+        const hifzTo = parseInt(document.getElementById('hifz-task-to')?.value || '1');
+        if (hifzSurahId) {
+            description = JSON.stringify({
+                _hifz: { surah_id: hifzSurahId, from_ayah: hifzFrom, to_ayah: hifzTo },
+                text: description,
+            });
+        }
+    }
     const body = {
         title,
-        description: document.getElementById('task-description').value.trim(),
-        type: document.getElementById('task-type').value,
+        description,
+        type: taskType,
         points,
         due_date: document.getElementById('task-due-date').value || null,
         assign_all: assignMode === 'all',

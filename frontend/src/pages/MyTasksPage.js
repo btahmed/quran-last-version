@@ -28,6 +28,17 @@ function escapeJs(str) {
         .replace(/\r/g, '\\r');
 }
 
+function _parseTaskDesc(desc) {
+    if (!desc) return { text: '', hifz: null };
+    try {
+        const parsed = JSON.parse(desc);
+        if (parsed?._hifz) return { text: parsed.text || '', hifz: parsed._hifz };
+    } catch (_) {
+        /* description non-JSON */
+    }
+    return { text: desc, hifz: null };
+}
+
 // Injection CSS
 if (!document.querySelector('link[href*="MyTasksPage.css"]')) {
     const link = document.createElement('link');
@@ -324,6 +335,16 @@ export function switchTaskTab(tabName) {
                 ? new Date(task.due_date).toLocaleDateString('ar-SA')
                 : '';
 
+            const { text: _descText, hifz: _hifzMeta } = _parseTaskDesc(task.description);
+            const _surahName = _hifzMeta
+                ? config.surahs.find(s => s.id === _hifzMeta.surah_id)?.name || ''
+                : '';
+            const _descDisplay =
+                _descText +
+                (_hifzMeta
+                    ? ` — سورة ${_surahName} (${_hifzMeta.from_ayah}-${_hifzMeta.to_ayah})`
+                    : '');
+
             let feedbackHtml = '';
             if (sub?.admin_feedback) {
                 if (sub.status === 'approved') {
@@ -353,7 +374,7 @@ export function switchTaskTab(tabName) {
                     ${actionBtn}
                 </div>
             </div>
-            ${task.description ? `<p class="k-task-card-desc">${escapeHtml(task.description)}</p>` : ''}
+            ${_descDisplay ? `<p class="k-task-card-desc">${escapeHtml(_descDisplay)}</p>` : ''}
             <div class="k-task-card-meta">
                 <span class="k-type-badge">${escapeHtml(typeLabel)}</span>
                 <span>🏆 ${escapeHtml(String(task.points))} نقطة</span>

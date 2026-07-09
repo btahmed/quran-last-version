@@ -4,6 +4,7 @@ import { config } from '../core/config.js';
 import { state, saveData } from '../core/state.js';
 import { showNotification } from '../core/ui.js';
 import * as supabaseLeaderboard from './supabase-leaderboard.js';
+import * as supabaseTasks from './supabase-tasks.js';
 
 export const competitionManager = {
     // Générer un défi
@@ -553,6 +554,7 @@ export const competitionManager = {
     _hifzReadyAction: 'quiz', // 'quiz' | 'next-ayah'
     _hifzDistractorPool: [], // mots des ayahs voisines pour les distracteurs
     _hifzOrdering: null, // état de la phase 3 (remise en ordre)
+    _hifzLinkedTaskId: null, // ID du devoir lié (pour notifier le prof)
 
     startHifzSession(surahId, fromAyah, toAyah) {
         state.hifz.currentSession = {
@@ -1007,6 +1009,20 @@ export const competitionManager = {
             date: new Date().toISOString(),
             timeTaken,
         });
+
+        // Notifier le prof si la session était liée à un devoir
+        if (this._hifzLinkedTaskId) {
+            const surah = config.surahs.find(s => s.id === session.surahId);
+            const localUser = JSON.parse(localStorage.getItem('quranreview_user') || '{}');
+            const studentName = localUser.first_name || localUser.username || '';
+            supabaseTasks.notifyTeacherHifzComplete(
+                this._hifzLinkedTaskId,
+                studentName,
+                surah?.name || '',
+                session.score
+            );
+            this._hifzLinkedTaskId = null;
+        }
 
         state.hifz.currentSession = { isActive: false };
         saveData();

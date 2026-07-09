@@ -179,6 +179,33 @@
     width: 0%;
 }
 
+/* ─── Raccourcis devoirs ──────────────────────────────────── */
+.hifz-homework-section {
+    margin-bottom: var(--space-4);
+}
+
+.hifz-homework-label {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-text-secondary);
+    margin-bottom: var(--space-2);
+    text-align: right;
+    direction: rtl;
+}
+
+.hifz-homework-btn {
+    border-left: 4px solid var(--color-primary, #2d5016) !important;
+    border-radius: var(--radius-lg) !important;
+    font-size: 1rem !important;
+    margin-bottom: var(--space-2);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    justify-content: center;
+}
+
 /* ─── Phase 3 : remise en ordre ──────────────────────────── */
 #hifz-ordering-choices .hifz-choice-btn:disabled {
     opacity: 0.22;
