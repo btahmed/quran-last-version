@@ -216,22 +216,32 @@ async function _tryAutoSubscribePush(userId) {
         return;
     if (Notification.permission === 'denied') return;
     try {
+        const { subscribeToPush, savePushSubscription, VAPID_PUBLIC_KEY } =
+            await import('./push-notifications.js');
+        const { supabaseClient } = await import('./supabase-client.js');
         const reg = await navigator.serviceWorker.ready;
         const existing = await reg.pushManager.getSubscription();
-        const { subscribeToPush, savePushSubscription } = await import('./push-notifications.js');
-        const { supabaseClient } = await import('./supabase-client.js');
-        if (existing) {
-            // Déjà abonné — ré-enregistrer en base si nécessaire (ex: rechargement)
+
+        // Forcer un re-subscribe si la clé VAPID a changé
+        const storedKey = localStorage.getItem('vapid_key');
+        if (existing && storedKey !== VAPID_PUBLIC_KEY) {
+            await existing.unsubscribe();
+        } else if (existing) {
+            // Clé inchangée — ré-enregistrer en base (ex: rechargement)
             await savePushSubscription(supabaseClient, userId, existing);
             return;
         }
+
         // Demander la permission si pas encore accordée
         if (Notification.permission === 'default') {
             const perm = await Notification.requestPermission();
             if (perm !== 'granted') return;
         }
         const sub = await subscribeToPush();
-        if (sub) await savePushSubscription(supabaseClient, userId, sub);
+        if (sub) {
+            await savePushSubscription(supabaseClient, userId, sub);
+            localStorage.setItem('vapid_key', VAPID_PUBLIC_KEY);
+        }
     } catch (_) {
         // Silencieux — ne jamais bloquer le login à cause des notifs
     }

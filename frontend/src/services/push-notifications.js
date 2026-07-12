@@ -9,7 +9,7 @@
 //   5. Déployer l'Edge Function : supabase functions deploy send-push
 
 // Clé publique VAPID — doit correspondre exactement à VAPID_PUBLIC_KEY dans Supabase secrets
-const VAPID_PUBLIC_KEY =
+export const VAPID_PUBLIC_KEY =
     'BE34JexsKmLk4q2vo2DLbwfQzLr9J5AA-GEQc5QGiVt92S3zcJuAOVyZeb9l0zBUybwq5l5plFd5j68RxnLj-co';
 
 /**
