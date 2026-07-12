@@ -85,8 +85,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     } catch (err: unknown) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const e = err as any;
-        const detail = { message: e?.message, statusCode: e?.statusCode, body: e?.body ? String(e.body).slice(0, 300) : undefined };
-        console.error('[send-push] Erreur:', JSON.stringify(detail));
-        return new Response(JSON.stringify({ error: detail }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        console.error('[send-push] Erreur:', e?.message, 'status:', e?.statusCode);
+        return new Response('Erreur serveur', { status: 500, headers: corsHeaders });
     }
 });
