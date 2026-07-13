@@ -247,6 +247,8 @@ export async function notifyTeacherHifzComplete(
                 '):',
                 error.message
             );
+        } else {
+            console.log('[Push] ✅ Notification envoyée au prof (hifz complet)');
         }
     } catch (err) {
         console.warn('[HifzComplete] Notification non envoyée:', err);

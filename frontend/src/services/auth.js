@@ -243,9 +243,12 @@ async function _tryAutoSubscribePush(userId) {
         if (sub) {
             await savePushSubscription(supabaseClient, userId, sub);
             localStorage.setItem('vapid_key', VAPID_PUBLIC_KEY);
+            console.log('[Push] ✅ Abonnement push enregistré (FCM endpoint actif)');
+        } else {
+            console.warn('[Push] ⚠️ subscribeToPush() a retourné null');
         }
-    } catch (_) {
-        // Silencieux — ne jamais bloquer le login à cause des notifs
+    } catch (err) {
+        console.warn('[Push] ⚠️ Échec abonnement push:', err?.message ?? err);
     }
 }
 
