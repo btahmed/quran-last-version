@@ -188,7 +188,7 @@ export async function deleteTask(id) {
 export async function notifyStudentNewTask(studentId, taskTitle, taskType) {
     try {
         const typeLabel = taskType === 'hifz' ? 'حفظ' : 'مراجعة';
-        await supabaseClient.functions.invoke('send-push', {
+        const { error } = await supabaseClient.functions.invoke('send-push', {
             body: {
                 user_id: studentId,
                 title: '📚 واجب جديد',
@@ -196,6 +196,10 @@ export async function notifyStudentNewTask(studentId, taskTitle, taskType) {
                 url: '/hifz',
             },
         });
+        // 404 = cet élève n'a pas de subscription push — comportement attendu
+        if (error && error.context?.status !== 404) {
+            console.warn('[NewTask] Notification élève non envoyée:', error);
+        }
     } catch (err) {
         console.warn('[NewTask] Notification élève non envoyée:', err);
     }
@@ -226,7 +230,7 @@ export async function notifyTeacherHifzComplete(
               ? `${fromAyah}-${toAyah}`
               : '';
 
-        await supabaseClient.functions.invoke('send-push', {
+        const { error } = await supabaseClient.functions.invoke('send-push', {
             body: {
                 user_id: task.assigned_by,
                 title: '✅ أتم الطالب الحفظ',
@@ -234,6 +238,16 @@ export async function notifyTeacherHifzComplete(
                 url: '/eleves',
             },
         });
+        if (error) {
+            const status = error.context?.status;
+            // 404 = prof sans subscription push (s'auto-résorbe au prochain login)
+            console.warn(
+                '[HifzComplete] Notification non envoyée (status',
+                status ?? '?',
+                '):',
+                error.message
+            );
+        }
     } catch (err) {
         console.warn('[HifzComplete] Notification non envoyée:', err);
     }

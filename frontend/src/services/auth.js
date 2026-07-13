@@ -33,6 +33,8 @@ export async function initAuth() {
         localStorage.setItem(config.apiTokenKey, data.session.access_token);
         updateAuthUI(true);
         buildNav(getEffectiveRole(user));
+        // Ré-enregistrer l'abonnement push si session restaurée sans re-login
+        _tryAutoSubscribePush(user.id);
     } catch {
         updateAuthUI(false);
     }
