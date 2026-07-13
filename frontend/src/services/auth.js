@@ -121,6 +121,14 @@ export function showLoginForm(event) {
 }
 
 export async function performLogin(username, password) {
+    // Lancer la demande de permission push AVANT tout await — Chrome exige un geste utilisateur direct.
+    // Le clic sur le bouton login EST ce geste. Après le premier await, le contexte est perdu.
+    if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission()
+            .then(p => console.log('[Push] Permission accordée lors du login:', p))
+            .catch(() => {});
+    }
+
     Logger.log('AUTH', `Attempting login for user: ${username}`);
 
     // Mode DÉMO - Simulation locale sans serveur
