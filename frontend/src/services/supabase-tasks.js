@@ -230,11 +230,28 @@ export async function notifyTeacherHifzComplete(
               ? `${fromAyah}-${toAyah}`
               : '';
 
+        const notifTitle = '✅ أتم الطالب الحفظ';
+        const notifBody = `${studentName} — ${surahName}${ayahDetail ? ' ' + ayahDetail : ''} — النقاط: ${score}`;
+
+        // Sauvegarder la notification en base (in-app notification center)
+        supabaseClient
+            .from('notifications')
+            .insert({
+                user_id: task.assigned_by,
+                type: 'hifz_complete',
+                title: notifTitle,
+                body: notifBody,
+                url: '/eleves',
+            })
+            .then(({ error: dbErr }) => {
+                if (dbErr) console.warn('[Notif] Erreur sauvegarde DB:', dbErr.message);
+            });
+
         const { error } = await supabaseClient.functions.invoke('send-push', {
             body: {
                 user_id: task.assigned_by,
-                title: '✅ أتم الطالب الحفظ',
-                body: `${studentName} — ${surahName}${ayahDetail ? ' ' + ayahDetail : ''} — النقاط: ${score}`,
+                title: notifTitle,
+                body: notifBody,
                 url: '/eleves',
             },
         });

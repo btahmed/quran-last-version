@@ -6,6 +6,7 @@ import { showNotification } from '../core/ui.js';
 import { Validators } from '../core/validators.js';
 import { buildNav } from '../core/NavManager.js';
 import * as SupabaseAuth from './supabase-auth.js';
+import { initNotificationCenter, destroyNotificationCenter } from './notification-center.js';
 
 // Rôle effectif : un is_superuser Django est toujours traité comme 'admin' par la nav
 function getEffectiveRole(user) {
@@ -35,6 +36,7 @@ export async function initAuth() {
         buildNav(getEffectiveRole(user));
         // Ré-enregistrer l'abonnement push si session restaurée sans re-login
         _tryAutoSubscribePush(user.id);
+        initNotificationCenter(user.id);
     } catch {
         updateAuthUI(false);
     }
@@ -200,6 +202,7 @@ export async function performLogin(username, password) {
 
         // Abonnement push non-bloquant — profite du geste utilisateur (bouton login)
         _tryAutoSubscribePush(state.user.id);
+        initNotificationCenter(state.user.id);
 
         if (state.user.role === 'admin' || state.user.is_superuser) {
             window.QuranReview.navigateTo('admin');
@@ -417,6 +420,7 @@ export async function refreshToken() {
 }
 
 export async function logout() {
+    destroyNotificationCenter();
     await SupabaseAuth.signOut();
     localStorage.removeItem(config.apiTokenKey);
     localStorage.removeItem('quranreview_refresh_token');

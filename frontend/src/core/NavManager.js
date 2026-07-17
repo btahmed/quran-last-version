@@ -1,5 +1,9 @@
 // frontend/src/core/NavManager.js
 // Navigation dynamique par rôle — construit top nav + bottom bar selon state.user.role
+import {
+    initNotificationCenter,
+    destroyNotificationCenter,
+} from '../services/notification-center.js';
 
 const NAV_CONFIG = {
     visitor: [], // pas de bottom bar pour les visiteurs
@@ -34,6 +38,11 @@ const NAV_CONFIG = {
 export function buildNav(role = 'visitor') {
     buildTopNav(role);
     buildBottomBar(role);
+    if (role !== 'visitor') {
+        // userId sera défini dans state après login — initNotificationCenter sera rappelé depuis auth.js
+    } else {
+        destroyNotificationCenter();
+    }
 }
 
 function buildTopNav(role) {
@@ -76,6 +85,33 @@ function buildTopNav(role) {
     const sep = document.createElement('div');
     sep.className = 'nav-sep';
     nav.appendChild(sep);
+
+    // Bouton cloche — centre de notifications
+    const bellWrapper = document.createElement('div');
+    bellWrapper.className = 'nav-bell-wrapper';
+
+    const bellBtn = document.createElement('button');
+    bellBtn.id = 'notif-bell-btn';
+    bellBtn.className = 'nav-bell-btn';
+    bellBtn.title = 'الإشعارات';
+    bellBtn.textContent = '🔔';
+
+    const bellBadge = document.createElement('span');
+    bellBadge.id = 'notif-bell-badge';
+    bellBadge.className = 'notif-bell-badge';
+    bellBadge.style.display = 'none';
+    bellBtn.appendChild(bellBadge);
+
+    bellBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        document.dispatchEvent(
+            new CustomEvent('notif-toggle', {
+                detail: { rect: bellBtn.getBoundingClientRect() },
+            })
+        );
+    });
+    bellWrapper.appendChild(bellBtn);
+    nav.appendChild(bellWrapper);
 
     // Bouton logout icône
     const logoutBtn = document.createElement('button');
