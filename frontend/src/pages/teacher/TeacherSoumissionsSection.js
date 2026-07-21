@@ -60,7 +60,7 @@ export function render() {
                             g => `
                         <button onclick="QuranReview.selectGrade(${g})" data-grade="${g}"
                             style="font-size:2rem;background:none;border:2px solid transparent;border-radius:12px;padding:8px;cursor:pointer;transition:all 0.2s;line-height:1;"
-                            title="${GRADE_LABELS[g].text}">
+                            aria-label="${GRADE_LABELS[g].text}" title="${GRADE_LABELS[g].text}">
                             ${GRADE_LABELS[g].emoji}
                         </button>
                     `
@@ -85,7 +85,7 @@ export function render() {
                     style="width:100%;min-height:80px;border-radius:8px;padding:10px;border:1px solid var(--color-border);background:var(--glass-bg);color:var(--color-text);resize:vertical;font-family:inherit;font-size:0.95rem;"></textarea>
                 <div style="display:flex;gap:1rem;justify-content:center;margin-top:1rem;">
                     <button class="btn btn-outline-glow btn-sm" onclick="QuranReview.closeRejectModal()">إلغاء</button>
-                    <button class="btn btn-danger btn-sm" onclick="QuranReview.confirmReject()">✗ تأكيد الرفض</button>
+                    <button class="btn btn-danger btn-sm" id="reject-confirm-btn" onclick="QuranReview.confirmReject()">✗ تأكيد الرفض</button>
                 </div>
             </div>
         </div>
@@ -285,10 +285,25 @@ export function selectGrade(grade) {
 
 export async function confirmGrade() {
     if (!_pendingGradeSubmissionId || !_selectedGrade) return;
+
+    const submitBtn = document.getElementById('grade-confirm-btn');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.classList.add('btn-loading');
+    }
+
     const submissionId = _pendingGradeSubmissionId;
     const grade = _selectedGrade;
-    closeGradeModal();
-    await approveSubmission(submissionId, grade);
+
+    try {
+        await approveSubmission(submissionId, grade);
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('btn-loading');
+        }
+        closeGradeModal();
+    }
 }
 
 export async function approveSubmission(submissionId, grade) {
@@ -339,10 +354,25 @@ export function closeRejectModal() {
 
 export async function confirmReject() {
     if (!_pendingRejectSubmissionId) return;
+
+    const submitBtn = document.getElementById('reject-confirm-btn');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.classList.add('btn-loading');
+    }
+
     const submissionId = _pendingRejectSubmissionId;
     const feedback = document.getElementById('reject-feedback')?.value?.trim() || '';
-    closeRejectModal();
-    await rejectSubmission(submissionId, feedback);
+
+    try {
+        await rejectSubmission(submissionId, feedback);
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('btn-loading');
+        }
+        closeRejectModal();
+    }
 }
 
 export async function rejectSubmission(submissionId, feedback) {
