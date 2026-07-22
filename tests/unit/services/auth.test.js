@@ -17,6 +17,10 @@ vi.mock('../../../frontend/src/core/ui.js', () => ({
 vi.mock('../../../frontend/src/core/NavManager.js', () => ({
     buildNav: vi.fn(),
 }));
+vi.mock('../../../frontend/src/services/notification-center.js', () => ({
+    initNotificationCenter: vi.fn(),
+    destroyNotificationCenter: vi.fn(),
+}));
 vi.mock('../../../frontend/src/services/supabase-auth.js', () => ({
     getSession: vi.fn(),
     getCurrentUser: vi.fn(),
