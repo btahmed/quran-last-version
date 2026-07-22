@@ -314,6 +314,12 @@ export async function handleCreateTask(event) {
     const token = localStorage.getItem(config.apiTokenKey);
     if (!token) return;
 
+    const submitBtn = document.querySelector('#teacher-create-task-form button[type="submit"]');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.classList.add('btn-loading');
+    }
+
     const assignMode = document.querySelector('input[name="assign-mode"]:checked')?.value || 'all';
     const studentIds = [];
     if (assignMode === 'select') {
@@ -322,6 +328,10 @@ export async function handleCreateTask(event) {
         });
         if (!studentIds.length) {
             showNotification('يرجى اختيار طالب واحد على الأقل', 'error');
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('btn-loading');
+            }
             return;
         }
     }
@@ -333,10 +343,18 @@ export async function handleCreateTask(event) {
     const pointsCheck = Validators.points(points);
     if (!titleCheck.valid) {
         showNotification(titleCheck.error, 'error');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('btn-loading');
+        }
         return;
     }
     if (!pointsCheck.valid) {
         showNotification(pointsCheck.error, 'error');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('btn-loading');
+        }
         return;
     }
 
@@ -349,15 +367,27 @@ export async function handleCreateTask(event) {
 
         if (!hifzSurahId) {
             showNotification('يرجى اختيار السورة للواجب', 'error');
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('btn-loading');
+            }
             return;
         }
         const hifzSurah = config.surahs.find(s => s.id === hifzSurahId);
         if (!hifzFrom || !hifzTo || hifzFrom < 1 || hifzTo < 1) {
             showNotification('أرقام الآيات غير صحيحة', 'error');
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('btn-loading');
+            }
             return;
         }
         if (hifzFrom > hifzTo) {
             showNotification('الآية الأولى يجب أن تكون أصغر من أو تساوي الآية الأخيرة', 'error');
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('btn-loading');
+            }
             return;
         }
         if (hifzSurah && hifzTo > hifzSurah.ayahs) {
@@ -365,6 +395,10 @@ export async function handleCreateTask(event) {
                 `سورة ${hifzSurah.name} تحتوي على ${hifzSurah.ayahs} آية فقط`,
                 'error'
             );
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('btn-loading');
+            }
             return;
         }
 
@@ -416,6 +450,11 @@ export async function handleCreateTask(event) {
         await init();
     } catch (error) {
         showNotification(error.message, 'error');
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('btn-loading');
+        }
     }
 }
 
