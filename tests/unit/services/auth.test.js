@@ -25,6 +25,10 @@ vi.mock('../../../frontend/src/services/supabase-auth.js', () => ({
     onAuthStateChange: vi.fn(),
     createUser: vi.fn(),
 }));
+vi.mock('../../../frontend/src/services/notification-center.js', () => ({
+    initNotificationCenter: vi.fn(),
+    destroyNotificationCenter: vi.fn(),
+}));
 
 import { state } from '../../../frontend/src/core/state.js';
 import * as SupabaseAuth from '../../../frontend/src/services/supabase-auth.js';
