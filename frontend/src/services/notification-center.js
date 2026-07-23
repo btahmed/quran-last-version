@@ -32,7 +32,6 @@ function _onToggle(e) {
         // Positionner sous la cloche
         const rect = e.detail?.rect;
         if (rect) {
-            const panelWidth = 320;
             const rightEdge = window.innerWidth - rect.right;
             _panel.style.top = rect.bottom + 8 + 'px';
             _panel.style.right = Math.max(8, rightEdge) + 'px';
