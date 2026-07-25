@@ -85,7 +85,7 @@ export function render() {
                     style="width:100%;min-height:80px;border-radius:8px;padding:10px;border:1px solid var(--color-border);background:var(--glass-bg);color:var(--color-text);resize:vertical;font-family:inherit;font-size:0.95rem;"></textarea>
                 <div style="display:flex;gap:1rem;justify-content:center;margin-top:1rem;">
                     <button class="btn btn-outline-glow btn-sm" onclick="QuranReview.closeRejectModal()">إلغاء</button>
-                    <button class="btn btn-danger btn-sm" onclick="QuranReview.confirmReject()">✗ تأكيد الرفض</button>
+                    <button class="btn btn-danger btn-sm" id="reject-confirm-btn" onclick="QuranReview.confirmReject()">✗ تأكيد الرفض</button>
                 </div>
             </div>
         </div>
@@ -287,8 +287,22 @@ export async function confirmGrade() {
     if (!_pendingGradeSubmissionId || !_selectedGrade) return;
     const submissionId = _pendingGradeSubmissionId;
     const grade = _selectedGrade;
-    closeGradeModal();
-    await approveSubmission(submissionId, grade);
+
+    const btn = document.getElementById('grade-confirm-btn');
+    if (btn) {
+        btn.classList.add('btn-loading');
+        btn.disabled = true;
+    }
+
+    try {
+        await approveSubmission(submissionId, grade);
+        closeGradeModal();
+    } finally {
+        if (btn) {
+            btn.classList.remove('btn-loading');
+            btn.disabled = false;
+        }
+    }
 }
 
 export async function approveSubmission(submissionId, grade) {
@@ -341,8 +355,22 @@ export async function confirmReject() {
     if (!_pendingRejectSubmissionId) return;
     const submissionId = _pendingRejectSubmissionId;
     const feedback = document.getElementById('reject-feedback')?.value?.trim() || '';
-    closeRejectModal();
-    await rejectSubmission(submissionId, feedback);
+
+    const btn = document.getElementById('reject-confirm-btn');
+    if (btn) {
+        btn.classList.add('btn-loading');
+        btn.disabled = true;
+    }
+
+    try {
+        await rejectSubmission(submissionId, feedback);
+        closeRejectModal();
+    } finally {
+        if (btn) {
+            btn.classList.remove('btn-loading');
+            btn.disabled = false;
+        }
+    }
 }
 
 export async function rejectSubmission(submissionId, feedback) {
