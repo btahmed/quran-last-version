@@ -13,7 +13,7 @@ global.supabase = {
             signInWithPassword: vi.fn(),
             signOut: vi.fn(),
             onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } })),
-            signUp: vi.fn()
+            signUp: vi.fn(),
         },
         from: vi.fn(() => ({
             select: vi.fn(),
@@ -21,15 +21,15 @@ global.supabase = {
             update: vi.fn(),
             delete: vi.fn(),
             eq: vi.fn(),
-            in: vi.fn()
+            in: vi.fn(),
         })),
         channel: vi.fn(() => ({
             on: vi.fn(() => ({
-                subscribe: vi.fn()
+                subscribe: vi.fn(),
             })),
-            unsubscribe: vi.fn()
-        }))
-    }))
+            unsubscribe: vi.fn(),
+        })),
+    })),
 };
 
 // Logger appelle console — on le silentise pour garder la sortie de test propre
