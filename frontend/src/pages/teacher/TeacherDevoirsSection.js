@@ -121,7 +121,7 @@ export function render() {
                         <p class="empty-state">جاري تحميل الطلاب...</p>
                     </div>
                 </div>
-                <button type="submit" class="btn btn-glow btn-full">إنشاء المهمة</button>
+                <button type="submit" id="create-task-submit-btn" class="btn btn-glow btn-full">إنشاء المهمة</button>
             </form>
         </div>
 
@@ -383,6 +383,12 @@ export async function handleCreateTask(event) {
         student_ids: studentIds,
     };
 
+    const submitBtn = document.getElementById('create-task-submit-btn');
+    if (submitBtn) {
+        submitBtn.classList.add('btn-loading');
+        submitBtn.disabled = true;
+    }
+
     try {
         if (body.assign_all) {
             // Créer pour tous les étudiants
@@ -416,6 +422,11 @@ export async function handleCreateTask(event) {
         await init();
     } catch (error) {
         showNotification(error.message, 'error');
+    } finally {
+        if (submitBtn) {
+            submitBtn.classList.remove('btn-loading');
+            submitBtn.disabled = false;
+        }
     }
 }
 
