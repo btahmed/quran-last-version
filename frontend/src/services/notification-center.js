@@ -29,13 +29,21 @@ function _onToggle(e) {
     if (!_panel) return;
     const isHidden = _panel.classList.contains('hidden');
     if (isHidden) {
-        // Positionner sous la cloche
         const rect = e.detail?.rect;
         if (rect) {
             const panelWidth = 320;
-            const rightEdge = window.innerWidth - rect.right;
+            const margin = 8;
+            // Aligner le panneau sous la cloche, bord gauche = bord gauche de la cloche
+            let left = rect.left;
+            // Ne pas déborder à droite
+            if (left + panelWidth > window.innerWidth - margin) {
+                left = window.innerWidth - panelWidth - margin;
+            }
+            // Ne pas déborder à gauche
+            left = Math.max(margin, left);
             _panel.style.top = rect.bottom + 8 + 'px';
-            _panel.style.right = Math.max(8, rightEdge) + 'px';
+            _panel.style.left = left + 'px';
+            _panel.style.right = 'auto';
         }
         _panel.classList.remove('hidden');
     } else {
