@@ -520,12 +520,16 @@ a.nav-link-pro,
     font-weight: 600;
     color: var(--color-text, #1a1a1a);
     line-height: 1.3;
+    word-break: break-word;
+    overflow-wrap: break-word;
 }
 
 .notif-item-body {
     font-size: 0.8rem;
     color: var(--color-text-secondary, #555);
     line-height: 1.4;
+    word-break: break-word;
+    overflow-wrap: break-word;
 }
 
 .notif-item-time {
