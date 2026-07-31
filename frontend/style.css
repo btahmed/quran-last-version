@@ -1847,8 +1847,6 @@ body {
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
     gap: 0.5rem;
-    overflow: hidden;
-    min-width: 0;
 }
 
 .student-task-info {
@@ -1858,13 +1856,12 @@ body {
     flex-wrap: wrap;
     min-width: 0;
     flex: 1;
-    overflow: hidden;
 }
 
-.student-task-info strong {
+.student-task-info strong,
+.student-task-info span {
     word-break: break-word;
     overflow-wrap: break-word;
-    min-width: 0;
 }
 
 /* Clickable card */
