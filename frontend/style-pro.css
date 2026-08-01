@@ -877,7 +877,7 @@ body {
 /* ===================================
    17. STATUS BADGES
    =================================== */
-.status-badge {
+.memorization-item .status-badge {
     display: inline-block;
     width: 12px;
     height: 12px;
