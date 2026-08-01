@@ -167,12 +167,12 @@ export async function viewStudentProgress(studentId, studentName) {
                 }
 
                 html += `<div class="student-task-row">
-                    ${statusBadge}
                     <div class="student-task-info">
                         <span class="task-type-badge">${escapeHtml(typeLabel)}</span>
                         <strong>${escapeHtml(task.title)}</strong>
                         ${pointsHtml}
                     </div>
+                    ${statusBadge}
                 </div>`;
             });
             html += '</div>';
