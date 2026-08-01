@@ -141,7 +141,13 @@ export async function viewStudentProgress(studentId, studentName) {
         } else {
             html += '<div class="student-tasks-progress">';
             data.tasks.forEach(task => {
-                const typeLabel = task.type || 'مهمة';
+                const TYPE_LABELS = {
+                    hifz: 'حفظ',
+                    tasmi: 'تسميع',
+                    muraja: 'مراجعة',
+                    tilawa: 'تلاوة',
+                };
+                const typeLabel = TYPE_LABELS[task.type] || task.type || 'مهمة';
                 let statusBadge;
                 if (task.submission_status === 'approved') {
                     statusBadge = '<span class="status-badge status-approved">مقبول ✓</span>';

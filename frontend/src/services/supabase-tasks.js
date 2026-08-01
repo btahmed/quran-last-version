@@ -187,7 +187,8 @@ export async function deleteTask(id) {
 // Notifie l'élève via push quand le prof lui assigne un devoir
 export async function notifyStudentNewTask(studentId, taskTitle, taskType) {
     try {
-        const typeLabel = taskType === 'hifz' ? 'حفظ' : 'مراجعة';
+        const TYPE_LABELS = { hifz: 'حفظ', tasmi: 'تسميع', muraja: 'مراجعة', tilawa: 'تلاوة' };
+        const typeLabel = TYPE_LABELS[taskType] || taskType || 'مهمة';
         const { error } = await supabaseClient.functions.invoke('send-push', {
             body: {
                 user_id: studentId,

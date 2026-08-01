@@ -330,7 +330,8 @@ export function switchTaskTab(tabName) {
                 }
             }
 
-            const typeLabel = task.type || 'مهمة';
+            const TYPE_LABELS = { hifz: 'حفظ', tasmi: 'تسميع', muraja: 'مراجعة', tilawa: 'تلاوة' };
+            const typeLabel = TYPE_LABELS[task.type] || task.type || 'مهمة';
             const dueDate = task.due_date
                 ? new Date(task.due_date).toLocaleDateString('ar-SA')
                 : '';

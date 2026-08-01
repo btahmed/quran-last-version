@@ -67,6 +67,7 @@ export function render() {
                     <div class="form-floating">
                         <select id="task-type">
                             <option value="hifz">حفظ</option>
+                            <option value="tasmi">تسميع</option>
                             <option value="muraja">مراجعة</option>
                             <option value="tilawa">تلاوة</option>
                         </select>
