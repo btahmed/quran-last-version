@@ -1855,13 +1855,18 @@ body {
     gap: 0.5rem;
     flex-wrap: wrap;
     min-width: 0;
-    flex: 1;
+    flex: 1 1 0;
 }
 
 .student-task-info strong,
 .student-task-info span {
     word-break: break-word;
-    overflow-wrap: break-word;
+    overflow-wrap: anywhere;
+    min-width: 0;
+}
+
+.student-task-row .status-badge {
+    flex-shrink: 0;
 }
 
 /* Clickable card */
