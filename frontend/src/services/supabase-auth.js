@@ -3,14 +3,17 @@ import { supabaseClient } from './supabase-client.js';
 
 function buildEmail(username) {
     const normalized = (username || '').trim().toLowerCase();
-    return `${normalized}@quranreview.local`;
+    return `${normalized}@quranreview.app`;
 }
 
 export async function signIn(username, password) {
     try {
         const email = buildEmail(username);
         const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-        return { data, error };
+        if (!error) return { data, error };
+        // Fallback pour les anciens comptes créés avec le domaine .local
+        const legacy = email.replace('@quranreview.app', '@quranreview.local');
+        return await supabaseClient.auth.signInWithPassword({ email: legacy, password });
     } catch (error) {
         return { data: null, error };
     }
