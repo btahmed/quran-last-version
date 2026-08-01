@@ -884,17 +884,17 @@ body {
     border-radius: 50%;
 }
 
-.status-strong {
+.memorization-item .status-strong {
     background: var(--color-success);
     box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
 }
 
-.status-weak {
+.memorization-item .status-weak {
     background: var(--color-warning);
     box-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
 }
 
-.status-new {
+.memorization-item .status-new {
     background: var(--color-info);
     box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
 }
