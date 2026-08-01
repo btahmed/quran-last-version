@@ -1841,12 +1841,13 @@ body {
 
 .student-task-row {
     display: grid;
-    grid-template-columns: 1fr auto;
+    grid-template-columns: auto 1fr;
     align-items: center;
     padding: 0.6rem 0.75rem;
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
     gap: 0.5rem;
+    overflow: hidden;
 }
 
 .student-task-info {
