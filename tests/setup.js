@@ -8,9 +8,9 @@ global.supabase = {
     createClient: vi.fn(() => ({
         channel: vi.fn(() => ({
             on: vi.fn(() => ({
-                subscribe: vi.fn()
-            }))
-        }))
+                subscribe: vi.fn(),
+            })),
+        })),
     })),
 };
 
