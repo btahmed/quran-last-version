@@ -1851,6 +1851,8 @@ body {
 }
 
 .student-task-row .status-badge {
+    width: auto;
+    height: auto;
     direction: rtl;
     text-align: center;
     white-space: nowrap;
