@@ -122,39 +122,5 @@ export function saveData() {
 }
 
 export function getDefaultMemorizationData() {
-    return [
-        {
-            id: 1,
-            surahId: 1,
-            surahName: 'الفاتحة',
-            fromAyah: 1,
-            toAyah: 7,
-            status: 'mastered',
-            dateAdded: '2024-01-01',
-            lastReviewed: '2024-02-06',
-            reviewCount: 15,
-        },
-        {
-            id: 2,
-            surahId: 2,
-            surahName: 'البقرة',
-            fromAyah: 1,
-            toAyah: 5,
-            status: 'weak',
-            dateAdded: '2024-01-15',
-            lastReviewed: '2024-02-01',
-            reviewCount: 8,
-        },
-        {
-            id: 3,
-            surahId: 3,
-            surahName: 'آل عمران',
-            fromAyah: 1,
-            toAyah: 3,
-            status: 'new',
-            dateAdded: '2024-02-07',
-            lastReviewed: null,
-            reviewCount: 0,
-        },
-    ];
+    return [];
 }
