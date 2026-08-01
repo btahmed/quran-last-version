@@ -36,7 +36,7 @@ function _parseTaskDescription(desc) {
     try {
         const parsed = JSON.parse(desc);
         if (parsed?._hifz) return { text: parsed.text || '', hifz: parsed._hifz };
-    } catch (_) {
+    } catch {
         /* description non-JSON */
     }
     return { text: desc, hifz: null };
