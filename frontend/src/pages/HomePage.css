@@ -4,12 +4,20 @@
    Mobile-first, RTL
    ============================================================ */
 
-/* ── Landing page — pleine largeur (échappe le padding body) ── */
+/* ── Landing page — pleine largeur ──────────────────────────── */
+/* body:has() neutralise le flex-centering du body (conçu pour phone frame)
+   quand la landing est affichée — sans toucher aux dashboards */
+body:has(.landing-page) {
+    display: block;
+    padding: 0;
+}
+
+body:has(.landing-page) #app {
+    width: 100%;
+}
+
 .landing-page {
-    width: calc(100% + 32px);
-    margin-left: -16px;
-    margin-right: -16px;
-    margin-top: -24px;
+    width: 100%;
 }
 
 /* ── Landing Hero ─────────────────────────────────────────── */
