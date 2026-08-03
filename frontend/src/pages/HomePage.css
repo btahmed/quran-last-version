@@ -4,6 +4,14 @@
    Mobile-first, RTL
    ============================================================ */
 
+/* ── Landing page — pleine largeur (échappe le padding body) ── */
+.landing-page {
+    width: calc(100% + 32px);
+    margin-left: -16px;
+    margin-right: -16px;
+    margin-top: -24px;
+}
+
 /* ── Landing Hero ─────────────────────────────────────────── */
 .landing-hero {
     position: relative;
@@ -12,12 +20,7 @@
     align-items: center;
     justify-content: center;
     text-align: center;
-    background: linear-gradient(
-        135deg,
-        #0d2d0d 0%,
-        #1a3d1a 40%,
-        #0a0a1a 100%
-    );
+    background: linear-gradient(135deg, #0d2d0d 0%, #1a3d1a 40%, #0a0a1a 100%);
     padding: 2rem 1rem;
 }
 
@@ -63,8 +66,14 @@
 }
 
 @keyframes fade-in-down {
-    from { opacity: 0; transform: translateY(-16px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(-16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* ── Features ─────────────────────────────────────────────── */
@@ -80,7 +89,9 @@
     border-radius: 1rem;
     padding: clamp(1.5rem, 3vw, 2.5rem);
     text-align: center;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
 .feature-card:hover {
@@ -247,7 +258,9 @@
     background: var(--color-surface, #1a1a2e);
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: var(--color-text, #fff);
-    transition: background 0.2s ease, transform 0.1s ease;
+    transition:
+        background 0.2s ease,
+        transform 0.1s ease;
     font-family: inherit;
     text-align: center;
 }
@@ -296,7 +309,9 @@
     cursor: pointer;
     font-size: 0.9rem;
     font-family: inherit;
-    transition: color 0.2s, background 0.2s;
+    transition:
+        color 0.2s,
+        background 0.2s;
 }
 
 .profil-tab--active,
@@ -380,8 +395,9 @@
 .hero-bg-pattern {
     position: absolute;
     inset: 0;
-    background-image: radial-gradient(circle at 20% 50%, rgba(45, 80, 22, 0.05) 0%, transparent 50%),
-                      radial-gradient(circle at 80% 20%, rgba(212, 165, 116, 0.07) 0%, transparent 40%);
+    background-image:
+        radial-gradient(circle at 20% 50%, rgba(45, 80, 22, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(212, 165, 116, 0.07) 0%, transparent 40%);
     pointer-events: none;
 }
 
@@ -470,8 +486,8 @@
 
 /* ── KStat cards (Claude Design) ──────────────────────────── */
 .k-stat-card {
-    background: var(--surface-card, rgba(255,255,255,0.08));
-    border: 1px solid var(--border-subtle, rgba(45,80,22,0.12));
+    background: var(--surface-card, rgba(255, 255, 255, 0.08));
+    border: 1px solid var(--border-subtle, rgba(45, 80, 22, 0.12));
     border-radius: var(--radius-lg, 12px);
     padding: var(--space-4, 1rem);
     text-align: center;
@@ -480,14 +496,18 @@
     flex-direction: column;
     align-items: center;
     gap: 4px;
-    transition: transform var(--transition-fast, 0.15s ease),
-                box-shadow var(--transition-fast, 0.15s ease);
+    transition:
+        transform var(--transition-fast, 0.15s ease),
+        box-shadow var(--transition-fast, 0.15s ease);
 }
 .k-stat-card:hover {
     transform: translateY(-2px);
     box-shadow: var(--shadow-md);
 }
-.k-stat-icon  { font-size: 1.5rem; line-height: 1; }
+.k-stat-icon {
+    font-size: 1.5rem;
+    line-height: 1;
+}
 .k-stat-value {
     font-size: var(--text-2xl, 1.5rem);
     font-weight: 800;
@@ -502,8 +522,13 @@
 }
 
 /* Greeting block */
-.k-greeting { margin-bottom: var(--space-5, 1.25rem); }
-.k-greeting h2 { margin: 0 0 4px; font-size: var(--text-xl, 1.25rem); }
+.k-greeting {
+    margin-bottom: var(--space-5, 1.25rem);
+}
+.k-greeting h2 {
+    margin: 0 0 4px;
+    font-size: var(--text-xl, 1.25rem);
+}
 .k-greeting .date {
     margin: 0;
     font-size: var(--text-sm, 0.75rem);
