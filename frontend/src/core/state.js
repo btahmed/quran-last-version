@@ -93,7 +93,13 @@ export function loadData() {
         Logger.state('settings', state.settings);
 
         const savedData = localStorage.getItem(config.storageKey);
-        state.memorizationData = savedData ? JSON.parse(savedData) : getDefaultMemorizationData();
+        let parsedData = savedData ? JSON.parse(savedData) : [];
+        // Migration: supprimer les données de démo (identifiables par dateAdded '2024-01-01')
+        if (parsedData.some(x => x.dateAdded === '2024-01-01')) {
+            parsedData = [];
+            localStorage.removeItem(config.storageKey);
+        }
+        state.memorizationData = parsedData;
 
         const savedTasks = localStorage.getItem(config.tasksKey);
         state.tasks = savedTasks ? JSON.parse(savedTasks) : [];
