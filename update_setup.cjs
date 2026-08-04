@@ -1,24 +1,9 @@
-// Globals nécessaires aux modules frontend (jsdom environment)
-import { vi } from 'vitest';
+const fs = require('fs');
 
-// config.js lit window.API_BASE_URL — on le fixe à undefined pour utiliser la détection auto
-window.API_BASE_URL = undefined;
+const filePath = 'tests/setup.js';
+let content = fs.readFileSync(filePath, 'utf8');
 
-// Logger appelle console — on le silentise pour garder la sortie de test propre
-global.console = {
-    ...console,
-    log: vi.fn(),
-    warn: vi.fn(),
-    error: vi.fn(),
-    table: vi.fn(),
-};
-
-// Nettoyer localStorage entre chaque test
-beforeEach(() => {
-    localStorage.clear();
-});
-// Mock Supabase
-global.supabase = {
+const replacement = `global.supabase = {
     createClient: vi.fn(() => ({
         auth: {
             getUser: vi.fn(),
@@ -37,8 +22,14 @@ global.supabase = {
             limit: vi.fn().mockReturnThis(),
             single: vi.fn().mockReturnThis(),
             maybeSingle: vi.fn().mockReturnThis(),
+        })),
+        channel: vi.fn(() => ({
+            on: vi.fn().mockReturnThis(),
+            subscribe: vi.fn().mockReturnThis()
         }))
     }))
-};
-global.window.__SUPABASE_URL__ = 'http://localhost:54321';
-global.window.__SUPABASE_ANON_KEY__ = 'test-key';
+};`;
+
+content = content.replace(/global\.supabase = \{[\s\S]*?\}\)\n\};\n/, replacement + '\n');
+fs.writeFileSync(filePath, content, 'utf8');
+console.log("updated");

@@ -1,7 +1,6 @@
 // frontend/src/core/NavManager.js
 // Navigation dynamique par rôle — construit top nav + bottom bar selon state.user.role
 import {
-    initNotificationCenter,
     destroyNotificationCenter,
 } from '../services/notification-center.js';
 
