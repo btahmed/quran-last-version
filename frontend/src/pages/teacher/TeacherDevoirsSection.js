@@ -315,6 +315,19 @@ export async function handleCreateTask(event) {
     const token = localStorage.getItem(config.apiTokenKey);
     if (!token) return;
 
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    if (submitBtn) {
+        submitBtn.classList.add('btn-loading');
+        submitBtn.disabled = true;
+    }
+
+    const restoreBtn = () => {
+        if (submitBtn) {
+            submitBtn.classList.remove('btn-loading');
+            submitBtn.disabled = false;
+        }
+    };
+
     const assignMode = document.querySelector('input[name="assign-mode"]:checked')?.value || 'all';
     const studentIds = [];
     if (assignMode === 'select') {
@@ -323,6 +336,7 @@ export async function handleCreateTask(event) {
         });
         if (!studentIds.length) {
             showNotification('يرجى اختيار طالب واحد على الأقل', 'error');
+            restoreBtn();
             return;
         }
     }
@@ -334,10 +348,12 @@ export async function handleCreateTask(event) {
     const pointsCheck = Validators.points(points);
     if (!titleCheck.valid) {
         showNotification(titleCheck.error, 'error');
+        restoreBtn();
         return;
     }
     if (!pointsCheck.valid) {
         showNotification(pointsCheck.error, 'error');
+        restoreBtn();
         return;
     }
 
@@ -350,15 +366,18 @@ export async function handleCreateTask(event) {
 
         if (!hifzSurahId) {
             showNotification('يرجى اختيار السورة للواجب', 'error');
+            restoreBtn();
             return;
         }
         const hifzSurah = config.surahs.find(s => s.id === hifzSurahId);
         if (!hifzFrom || !hifzTo || hifzFrom < 1 || hifzTo < 1) {
             showNotification('أرقام الآيات غير صحيحة', 'error');
+            restoreBtn();
             return;
         }
         if (hifzFrom > hifzTo) {
             showNotification('الآية الأولى يجب أن تكون أصغر من أو تساوي الآية الأخيرة', 'error');
+            restoreBtn();
             return;
         }
         if (hifzSurah && hifzTo > hifzSurah.ayahs) {
@@ -366,6 +385,7 @@ export async function handleCreateTask(event) {
                 `سورة ${hifzSurah.name} تحتوي على ${hifzSurah.ayahs} آية فقط`,
                 'error'
             );
+            restoreBtn();
             return;
         }
 
@@ -417,6 +437,8 @@ export async function handleCreateTask(event) {
         await init();
     } catch (error) {
         showNotification(error.message, 'error');
+    } finally {
+        restoreBtn();
     }
 }
 
