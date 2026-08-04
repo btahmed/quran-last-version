@@ -252,24 +252,45 @@ function _showHomeworkShortcuts() {
     label.textContent = 'واجباتك';
     container.appendChild(label);
 
-    // Un bouton "متابعة" par session en pause
-    for (const pausedSession of validPaused) {
+    // Un bouton "متابعة" + bouton ✕ par session en pause
+    for (const [idx, pausedSession] of validPaused.entries()) {
         const surah = config.surahs.find(s => s.id === pausedSession.surahId);
         const surahName = surah?.name || `سورة ${pausedSession.surahId}`;
+
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex;gap:8px;align-items:center;';
+
         const resumeBtn = document.createElement('button');
-        resumeBtn.className = 'btn btn-glow hifz-homework-btn btn-full';
+        resumeBtn.className = 'btn btn-glow hifz-homework-btn';
+        resumeBtn.style.flex = '1';
         resumeBtn.textContent = `▶️ متابعة — ${surahName} (من الآية ${pausedSession.currentAyah})`;
         resumeBtn.addEventListener('click', () => {
             competitionManager._hifzLinkedTaskId = pausedSession.linkedTaskId || null;
             state.hifz.currentSession = { ...pausedSession, isActive: true, paused: false };
-            // Retirer cette session du tableau des sessions pausées
             state.hifz.pausedSessions = (state.hifz.pausedSessions || []).filter(
-                p => p.linkedTaskId !== pausedSession.linkedTaskId
+                (_, i) => i !== idx
             );
             saveData();
             window.QuranReview.renderHifzPage();
         });
-        container.appendChild(resumeBtn);
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'btn btn-outline-glow';
+        deleteBtn.style.cssText =
+            'min-width:44px;width:44px;padding:0;flex-shrink:0;font-size:1.1rem;';
+        deleteBtn.title = 'حذف هذه الجلسة';
+        deleteBtn.textContent = '✕';
+        deleteBtn.addEventListener('click', () => {
+            state.hifz.pausedSessions = (state.hifz.pausedSessions || []).filter(
+                (_, i) => i !== idx
+            );
+            saveData();
+            window.QuranReview.renderHifzPage();
+        });
+
+        row.appendChild(resumeBtn);
+        row.appendChild(deleteBtn);
+        container.appendChild(row);
     }
 
     // Devoirs disponibles — sauter ceux déjà en pause (éviter le doublon)
