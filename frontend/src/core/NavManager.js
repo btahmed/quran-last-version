@@ -55,7 +55,7 @@ function buildTopNav(role) {
         loginBtn.type = 'button';
         loginBtn.className = 'btn btn-glow btn-sm';
         loginBtn.textContent = 'تسجيل الدخول';
-        loginBtn.addEventListener('click', () => window.QuranReview?.showAuthModal?.());
+        loginBtn.addEventListener('click', () => window.QuranReview?.showLoginForm?.());
         nav.appendChild(loginBtn);
         return;
     }
