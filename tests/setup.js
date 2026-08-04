@@ -18,6 +18,7 @@ beforeEach(() => {
     localStorage.clear();
 });
 // Mock Supabase
+// Mock Supabase
 global.supabase = {
     createClient: vi.fn(() => ({
         auth: {
@@ -37,8 +38,13 @@ global.supabase = {
             limit: vi.fn().mockReturnThis(),
             single: vi.fn().mockReturnThis(),
             maybeSingle: vi.fn().mockReturnThis(),
-        }))
-    }))
+        })),
+        channel: vi.fn(() => ({
+            on: vi.fn().mockReturnThis(),
+            subscribe: vi.fn().mockReturnThis(),
+            unsubscribe: vi.fn().mockReturnThis(),
+        })),
+    })),
 };
 global.window.__SUPABASE_URL__ = 'http://localhost:54321';
 global.window.__SUPABASE_ANON_KEY__ = 'test-key';
