@@ -116,6 +116,7 @@ export function showRegisterForm(event) {
 
 export function showLoginForm(event) {
     if (event) event.preventDefault();
+    showAuthModal();
     document.getElementById('auth-register-form')?.classList.add('hidden');
     document.getElementById('auth-register-form')?.classList.remove('active');
     document.getElementById('auth-login-form')?.classList.remove('hidden');

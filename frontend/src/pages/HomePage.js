@@ -61,7 +61,7 @@ function renderLanding() {
                 <p class="hero-subtitle">منصة متكاملة تجمع المعلم والطالب — حفظ، مراجعة، إرسال تلاوة، ومتابعة التقدم يومياً</p>
                 <div class="hero-actions">
                     <button class="btn btn-glow btn-lg" onclick="QuranReview.showRegisterForm()">ابدأ الآن — مجاناً</button>
-                    <button class="btn btn-ghost btn-lg" onclick="QuranReview.showAuthModal()">تسجيل الدخول</button>
+                    <button class="btn btn-ghost btn-lg" onclick="QuranReview.showLoginForm()">تسجيل الدخول</button>
                 </div>
                 <p class="hero-social-proof">انضم إلى <strong>+224</strong> طالب يراجعون يومياً</p>
             </div>
