@@ -319,6 +319,7 @@ export async function handleRegister(event) {
     errorEl?.classList.add('hidden');
     if (submitBtn) {
         submitBtn.disabled = true;
+        submitBtn.classList.add('btn-loading');
         submitBtn.innerHTML = '<span>⏳</span> جاري التسجيل...';
     }
 
@@ -332,6 +333,7 @@ export async function handleRegister(event) {
 
         if (submitBtn) {
             submitBtn.disabled = false;
+            submitBtn.classList.remove('btn-loading');
             submitBtn.innerHTML = '<span>✨</span> إنشاء الحساب';
         }
         return;
@@ -356,6 +358,7 @@ export async function handleRegister(event) {
     } finally {
         if (submitBtn) {
             submitBtn.disabled = false;
+            submitBtn.classList.remove('btn-loading');
             submitBtn.innerHTML = '<span>✨</span> إنشاء الحساب';
         }
     }
