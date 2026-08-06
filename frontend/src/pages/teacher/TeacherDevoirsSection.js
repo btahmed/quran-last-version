@@ -384,6 +384,12 @@ export async function handleCreateTask(event) {
         student_ids: studentIds,
     };
 
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    if (submitBtn) {
+        submitBtn.classList.add('btn-loading');
+        submitBtn.disabled = true;
+    }
+
     try {
         if (body.assign_all) {
             // Créer pour tous les étudiants
@@ -417,6 +423,11 @@ export async function handleCreateTask(event) {
         await init();
     } catch (error) {
         showNotification(error.message, 'error');
+    } finally {
+        if (submitBtn) {
+            submitBtn.classList.remove('btn-loading');
+            submitBtn.disabled = false;
+        }
     }
 }
 
