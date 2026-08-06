@@ -384,7 +384,14 @@ export async function handleCreateTask(event) {
         student_ids: studentIds,
     };
 
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+
     try {
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.classList.add('btn-loading');
+        }
+
         if (body.assign_all) {
             // Créer pour tous les étudiants
             const { data: students } = await supabaseAdmin.getMyStudents();
@@ -417,6 +424,11 @@ export async function handleCreateTask(event) {
         await init();
     } catch (error) {
         showNotification(error.message, 'error');
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('btn-loading');
+        }
     }
 }
 
