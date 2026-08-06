@@ -36,7 +36,7 @@ function _parseTaskDescription(desc) {
     try {
         const parsed = JSON.parse(desc);
         if (parsed?._hifz) return { text: parsed.text || '', hifz: parsed._hifz };
-    } catch (_) {
+    } catch {
         /* description non-JSON */
     }
     return { text: desc, hifz: null };
@@ -384,6 +384,12 @@ export async function handleCreateTask(event) {
         student_ids: studentIds,
     };
 
+    const submitBtn = document.querySelector('#teacher-create-task-form button[type="submit"]');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.classList.add('btn-loading');
+    }
+
     try {
         if (body.assign_all) {
             // Créer pour tous les étudiants
@@ -417,6 +423,11 @@ export async function handleCreateTask(event) {
         await init();
     } catch (error) {
         showNotification(error.message, 'error');
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('btn-loading');
+        }
     }
 }
 

@@ -1,3 +1,19 @@
+global.supabase = {
+    createClient: () => ({
+        auth: {
+            getUser: vi.fn(),
+            signInWithPassword: vi.fn(),
+            signOut: vi.fn(),
+            onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } })),
+        },
+        channel: vi.fn(() => ({
+            on: vi.fn(() => ({
+                subscribe: vi.fn(),
+            })),
+        })),
+    }),
+};
+
 // Globals nécessaires aux modules frontend (jsdom environment)
 import { vi } from 'vitest';
 
