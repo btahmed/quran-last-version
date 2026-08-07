@@ -1117,6 +1117,12 @@ export const competitionManager = {
                     .catch(err => console.warn('[Hifz] Soumission non enregistrée:', err?.message));
             }
 
+            // Masquer ce devoir dans la liste (évite de le revoir après complétion)
+            if (!state.hifz.completedTaskIds) state.hifz.completedTaskIds = [];
+            if (!state.hifz.completedTaskIds.includes(linkedTaskId)) {
+                state.hifz.completedTaskIds.push(linkedTaskId);
+            }
+
             this._hifzLinkedTaskId = null;
         }
 

@@ -293,10 +293,11 @@ function _showHomeworkShortcuts() {
         container.appendChild(row);
     }
 
-    // Devoirs disponibles — sauter ceux déjà en pause (éviter le doublon)
+    // Devoirs disponibles — sauter ceux déjà en pause ou déjà complétés
     const pausedTaskIds = new Set(validPaused.map(p => p.linkedTaskId).filter(Boolean));
+    const completedTaskIds = new Set(state.hifz.completedTaskIds || []);
     for (const { task, meta } of hifzTasks) {
-        if (pausedTaskIds.has(task.id)) continue;
+        if (pausedTaskIds.has(task.id) || completedTaskIds.has(task.id)) continue;
         const surah = config.surahs.find(s => s.id === meta.surah_id);
         const surahName = surah?.name || `سورة ${meta.surah_id}`;
         const btn = document.createElement('button');

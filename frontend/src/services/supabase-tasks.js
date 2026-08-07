@@ -184,25 +184,38 @@ export async function deleteTask(id) {
     }
 }
 
-// Notifie l'élève via push quand le prof lui assigne un devoir
+// Notifie l'élève via push + in-app quand le prof lui assigne un devoir
 export async function notifyStudentNewTask(studentId, taskTitle, taskType) {
-    try {
-        const TYPE_LABELS = { hifz: 'حفظ', tasmi: 'تسميع', muraja: 'مراجعة', tilawa: 'تلاوة' };
-        const typeLabel = TYPE_LABELS[taskType] || taskType || 'مهمة';
-        const { error } = await supabaseClient.functions.invoke('send-push', {
-            body: {
-                user_id: studentId,
-                title: '📚 واجب جديد',
-                body: `${taskTitle} (${typeLabel})`,
-                url: '/hifz',
-            },
+    const TYPE_LABELS = { hifz: 'حفظ', tasmi: 'تسميع', muraja: 'مراجعة', tilawa: 'تلاوة' };
+    const typeLabel = TYPE_LABELS[taskType] || taskType || 'مهمة';
+    const notifTitle = '📚 واجب جديد';
+    const notifBody = `${taskTitle} (${typeLabel})`;
+    const notifUrl = '/hifz';
+
+    // Notification in-app (centre de notifications)
+    supabaseClient
+        .from('notifications')
+        .insert({
+            user_id: studentId,
+            type: 'new_task',
+            title: notifTitle,
+            body: notifBody,
+            url: notifUrl,
+        })
+        .then(({ error }) => {
+            if (error) console.warn('[NewTask] Notif in-app non sauvegardée:', error.message);
         });
-        // 404 = cet élève n'a pas de subscription push — comportement attendu
+
+    // Push notification (non bloquant — 404 = pas de subscription)
+    try {
+        const { error } = await supabaseClient.functions.invoke('send-push', {
+            body: { user_id: studentId, title: notifTitle, body: notifBody, url: notifUrl },
+        });
         if (error && error.context?.status !== 404) {
-            console.warn('[NewTask] Notification élève non envoyée:', error);
+            console.warn('[NewTask] Push non envoyé:', error);
         }
     } catch (err) {
-        console.warn('[NewTask] Notification élève non envoyée:', err);
+        console.warn('[NewTask] Push non envoyé:', err);
     }
 }
 
