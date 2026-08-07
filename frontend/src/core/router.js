@@ -16,6 +16,7 @@ import * as AdminPage from '../pages/AdminPage.js';
 import * as RevisionPage from '../pages/RevisionPage.js';
 import * as SoumissionPage from '../pages/SoumissionPage.js';
 import * as ProfilPage from '../pages/ProfilPage.js';
+import * as NotificationsPage from '../pages/NotificationsPage.js';
 import { setActiveTab } from './NavManager.js';
 
 const pages = {
@@ -39,6 +40,9 @@ const pages = {
     'admin-users': AdminPage,
     'admin-classes': AdminPage,
     'admin-stats': AdminPage,
+
+    // ── Notifications ──
+    notifications: NotificationsPage,
 
     // ── Aliases rétrocompatibilité ──
     memorization: MemorizationPage,
