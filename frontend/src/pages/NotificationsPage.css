@@ -3,7 +3,7 @@
 .notif-page-section {
     max-width: 520px;
     margin: 0 auto;
-    padding: var(--space-4, 1rem);
+    padding: var(--space-6, 1.5rem) var(--space-4, 1rem) var(--space-4, 1rem);
 }
 
 .notif-page-header {

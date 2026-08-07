@@ -135,6 +135,12 @@ main,
     min-height: 100vh;
 }
 
+/* Dégager le header fixe (~46px) — body a déjà padding-top:24px,
+   on ajoute 36px pour arriver à 60px total au-dessus du header */
+.main-content-pro {
+    padding-top: 36px;
+}
+
 /* Typographie fluide */
 h1,
 .hero-title {
