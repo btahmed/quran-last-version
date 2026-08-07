@@ -55,6 +55,9 @@ const pages = {
 export function navigateTo(pageName) {
     Logger.nav(state.currentPage, pageName);
     AudioManager.stopAll();
+    if (state.currentPage && state.currentPage !== pageName) {
+        state.previousPage = state.currentPage;
+    }
 
     document.querySelectorAll('.nav-link, .nav-link-pro').forEach(link => {
         link.classList.remove('active');
