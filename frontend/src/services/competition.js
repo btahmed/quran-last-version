@@ -1114,7 +1114,20 @@ export const competitionManager = {
                         session.toAyah,
                         session.completedAyahs || []
                     )
-                    .catch(err => console.warn('[Hifz] Soumission non enregistrée:', err?.message));
+                    .then(({ data, error }) => {
+                        if (error)
+                            console.warn(
+                                '[Hifz] Soumission non enregistrée:',
+                                error?.message,
+                                error
+                            );
+                        else console.log('[Hifz] Soumission enregistrée ✓', data?.id);
+                    })
+                    .catch(err =>
+                        console.warn('[Hifz] Soumission non enregistrée (exception):', err?.message)
+                    );
+            } else {
+                console.warn('[Hifz] state.user.id manquant — soumission ignorée', state.user);
             }
 
             // Masquer ce devoir dans la liste (évite de le revoir après complétion)

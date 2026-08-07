@@ -40,61 +40,6 @@ export function render() {
                     </div>
                 </div>
 
-                <div class="k-grid2" style="margin-bottom:var(--space-4);">
-                    <div class="form-floating">
-                        <select id="ward-reciter-selector">
-                            <option value="alafasy">مشاري بن راشد العفاسي</option>
-                        </select>
-                        <label for="ward-reciter-selector">القارئ</label>
-                    </div>
-                    <div class="form-floating">
-                        <select id="ward-audio-quality">
-                            <option value="192">عالية (192 kbps)</option>
-                            <option value="128" selected>متوسطة (128 kbps)</option>
-                            <option value="64">منخفضة (64 kbps)</option>
-                        </select>
-                        <label for="ward-audio-quality">جودة الصوت</label>
-                    </div>
-                </div>
-
-                <div class="k-grid2" style="margin-bottom:var(--space-4);">
-                    <div class="form-floating">
-                        <select id="ward-audio-source">
-                            <option value="cdn" selected>الخادم المباشر</option>
-                            <option value="api">API</option>
-                        </select>
-                        <label for="ward-audio-source">مصدر الصوت</label>
-                    </div>
-                    <div class="form-floating">
-                        <select id="ward-image-quality">
-                            <option value="high" selected>عالية</option>
-                            <option value="medium">متوسطة</option>
-                            <option value="low">منخفضة</option>
-                        </select>
-                        <label for="ward-image-quality">جودة الصورة</label>
-                    </div>
-                </div>
-
-                <div class="form-floating" style="margin-bottom:var(--space-4);">
-                    <select id="ward-ayah-delay">
-                        <option value="0" selected>بدون تأخير</option>
-                        <option value="0.5">0.5 ثانية</option>
-                        <option value="1">1 ثانية</option>
-                        <option value="2">2 ثوان</option>
-                        <option value="3">3 ثوان</option>
-                        <option value="5">5 ثوان</option>
-                    </select>
-                    <label for="ward-ayah-delay">تأخير بين الآيات</label>
-                </div>
-
-                <div style="margin-bottom:var(--space-4);">
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="ward-autoplay-next" checked>
-                        <span class="toggle-slider"></span>
-                        <span style="margin-right:var(--space-3);">التشغيل التلقائي للآية التالية</span>
-                    </label>
-                </div>
-
                 <button class="btn btn-glow btn-full" onclick="QuranReview.playWard()">
                     <span>▶️</span>
                     تشغيل الورد
@@ -175,53 +120,13 @@ export function setupWardControls() {
         });
     }
 
-    // Sélecteur de récitateur
-    const reciterSelector = document.getElementById('ward-reciter-selector');
-    if (reciterSelector) {
-        reciterSelector.addEventListener('change', () => {
-            updateWardReciter();
-        });
-    }
-
-    // Sélecteur de qualité audio
-    const audioQualitySelector = document.getElementById('ward-audio-quality');
-    if (audioQualitySelector) {
-        audioQualitySelector.addEventListener('change', () => {
-            updateWardAudioQuality();
-        });
-    }
-
-    // Sélecteur de source audio
-    const audioSourceSelector = document.getElementById('ward-audio-source');
-    if (audioSourceSelector) {
-        audioSourceSelector.addEventListener('change', () => {
-            updateWardAudioSource();
-        });
-    }
-
-    // Sélecteur de qualité image
-    const imageQualitySelector = document.getElementById('ward-image-quality');
-    if (imageQualitySelector) {
-        imageQualitySelector.addEventListener('change', () => {
-            updateWardImageQuality();
-        });
-    }
-
-    // Sélecteur de délai entre ayahs
-    const ayahDelaySelector = document.getElementById('ward-ayah-delay');
-    if (ayahDelaySelector) {
-        ayahDelaySelector.addEventListener('change', () => {
-            updateWardAyahDelay();
-        });
-    }
-
-    // Case à cocher lecture automatique suivante
-    const autoPlayNextCheckbox = document.getElementById('ward-autoplay-next');
-    if (autoPlayNextCheckbox) {
-        autoPlayNextCheckbox.addEventListener('change', () => {
-            updateWardAutoPlayNext();
-        });
-    }
+    // Appliquer les valeurs par défaut (options avancées supprimées du formulaire)
+    if (!state.settings) state.settings = {};
+    state.settings.audioBitrate = state.settings.audioBitrate || 128;
+    state.settings.audioSource = state.settings.audioSource || 'cdn';
+    state.settings.autoPlayNext = state.settings.autoPlayNext !== false;
+    state.settings.ayahDelay = state.settings.ayahDelay || 0;
+    state.imageQuality = state.imageQuality || 'high';
 
     Logger.log('WARD', 'Ward controls setup completed');
 }
