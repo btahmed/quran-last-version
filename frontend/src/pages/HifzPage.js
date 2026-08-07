@@ -279,6 +279,7 @@ function _showHomeworkShortcuts() {
         deleteBtn.style.cssText =
             'min-width:44px;width:44px;padding:0;flex-shrink:0;font-size:1.1rem;';
         deleteBtn.title = 'حذف هذه الجلسة';
+        deleteBtn.setAttribute('aria-label', 'حذف هذه الجلسة');
         deleteBtn.textContent = '✕';
         deleteBtn.addEventListener('click', () => {
             state.hifz.pausedSessions = (state.hifz.pausedSessions || []).filter(
