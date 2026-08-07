@@ -14,6 +14,7 @@ export function render() {
     return `<div id="notifications-page" class="page active">
         <section class="k-section notif-page-section">
             <div class="notif-page-header">
+                <button class="btn btn-outline-glow btn-sm notif-page-back-btn" id="notif-page-back" title="رجوع">&#8592;</button>
                 <h2 class="k-section-title" style="margin:0;">🔔 الإشعارات</h2>
                 <button class="btn btn-outline-glow btn-sm" id="notif-page-mark-all">قراءة الكل</button>
             </div>
@@ -28,6 +29,7 @@ export async function init() {
     const userId = state.user?.id;
     if (!userId) return;
 
+    document.getElementById('notif-page-back')?.addEventListener('click', () => history.back());
     document.getElementById('notif-page-mark-all')?.addEventListener('click', _markAllRead);
     await _loadAndRender(userId);
 }
