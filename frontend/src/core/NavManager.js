@@ -50,6 +50,9 @@ function buildTopNav(role) {
     if (!nav) return;
     nav.innerHTML = '';
 
+    // Toujours nettoyer la cloche mobile de l'état précédent
+    document.getElementById('notif-bell-mobile-wrapper')?.remove();
+
     if (role === 'visitor') {
         const loginBtn = document.createElement('button');
         loginBtn.type = 'button';
@@ -127,6 +130,38 @@ function buildTopNav(role) {
     logoutBtn.title = 'تسجيل الخروج';
     logoutBtn.addEventListener('click', () => window.QuranReview?.logout());
     nav.appendChild(logoutBtn);
+
+    // Cloche mobile — injectée en dehors de .top-nav-links (cachée sur mobile)
+    // et visible uniquement sur mobile via CSS .nav-bell-mobile-wrapper
+    const navContainer = nav.parentElement;
+    if (navContainer) {
+        const mobileWrapper = document.createElement('div');
+        mobileWrapper.id = 'notif-bell-mobile-wrapper';
+        mobileWrapper.className = 'nav-bell-mobile-wrapper';
+
+        const mobileBellBtn = document.createElement('button');
+        mobileBellBtn.id = 'notif-bell-mobile-btn';
+        mobileBellBtn.className = 'nav-bell-btn';
+        mobileBellBtn.title = 'الإشعارات';
+        mobileBellBtn.textContent = '🔔';
+
+        const mobileBadge = document.createElement('span');
+        mobileBadge.className = 'notif-bell-badge';
+        mobileBadge.style.display = 'none';
+        mobileBellBtn.appendChild(mobileBadge);
+
+        mobileBellBtn.addEventListener('click', e => {
+            e.stopPropagation();
+            document.dispatchEvent(
+                new CustomEvent('notif-toggle', {
+                    detail: { rect: mobileBellBtn.getBoundingClientRect() },
+                })
+            );
+        });
+
+        mobileWrapper.appendChild(mobileBellBtn);
+        navContainer.appendChild(mobileWrapper);
+    }
 }
 
 function buildBottomBar(role) {

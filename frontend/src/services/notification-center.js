@@ -52,14 +52,14 @@ function _onToggle(e) {
 }
 
 function _updateBadge() {
-    const badge = document.getElementById('notif-bell-badge');
-    if (!badge) return;
-    if (_unreadCount > 0) {
-        badge.textContent = _unreadCount > 99 ? '99+' : String(_unreadCount);
-        badge.style.display = 'flex';
-    } else {
-        badge.style.display = 'none';
-    }
+    document.querySelectorAll('.notif-bell-badge').forEach(badge => {
+        if (_unreadCount > 0) {
+            badge.textContent = _unreadCount > 99 ? '99+' : String(_unreadCount);
+            badge.style.display = 'flex';
+        } else {
+            badge.style.display = 'none';
+        }
+    });
 }
 
 function _createPanel() {
@@ -217,10 +217,11 @@ function _onNewNotif(notif) {
     _unreadCount++;
     _updateBadge();
 
-    // Pulse la cloche
-    const badge = document.getElementById('notif-bell-badge');
-    badge?.classList.add('notif-pulse');
-    setTimeout(() => badge?.classList.remove('notif-pulse'), 1500);
+    // Pulse toutes les cloches (desktop + mobile)
+    document.querySelectorAll('.notif-bell-badge').forEach(b => {
+        b.classList.add('notif-pulse');
+        setTimeout(() => b.classList.remove('notif-pulse'), 1500);
+    });
 
     const list = document.getElementById('notif-list');
     if (!list) return;

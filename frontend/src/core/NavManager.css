@@ -546,3 +546,15 @@ a.nav-link-pro,
         max-height: 60vh;
     }
 }
+
+/* ── Cloche mobile — visible uniquement sur mobile ───────────── */
+.nav-bell-mobile-wrapper {
+    display: none; /* caché sur desktop (la cloche dans .top-nav-links prend le relais) */
+}
+
+@media (max-width: 768px) {
+    .nav-bell-mobile-wrapper {
+        display: flex;
+        align-items: center;
+    }
+}
