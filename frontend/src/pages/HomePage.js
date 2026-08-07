@@ -486,9 +486,7 @@ async function initDashboard(role) {
 
         if (!submissionsRes.error && submissionsRes.data) {
             apiCache.set('submissions', submissionsRes.data);
-            const pending = submissionsRes.data.filter(
-                s => s.status === 'pending' || s.status === 'submitted' || !s.grade
-            );
+            const pending = submissionsRes.data.filter(s => s.status === 'submitted');
             renderTeacherSubmissions(pending);
             setText('t-pending', pending.length);
         } else {
