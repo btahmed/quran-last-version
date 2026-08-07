@@ -306,7 +306,7 @@ export async function notifyTeacherHifzComplete(
                 type: 'hifz_complete',
                 title: notifTitle,
                 body: notifBody,
-                url: '/eleves',
+                url: '/soumissions',
             })
             .then(({ error: dbErr }) => {
                 if (dbErr) console.warn('[Notif] Erreur sauvegarde DB:', dbErr.message);
