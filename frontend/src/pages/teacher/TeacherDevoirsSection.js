@@ -310,10 +310,18 @@ export function toggleAssignMode(mode) {
     }
 }
 
+let _creating = false;
 export async function handleCreateTask(event) {
     event.preventDefault();
+    if (_creating) return; // protection double-clic
     const token = localStorage.getItem(config.apiTokenKey);
     if (!token) return;
+    _creating = true;
+    const submitBtn = event.target?.querySelector('[type="submit"]');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = '⏳ جاري الإنشاء...';
+    }
 
     const assignMode = document.querySelector('input[name="assign-mode"]:checked')?.value || 'all';
     const studentIds = [];
@@ -413,10 +421,15 @@ export async function handleCreateTask(event) {
         document.getElementById('teacher-create-task-form').reset();
         document.getElementById('student-select-container')?.classList.add('hidden');
         apiCache.invalidate('tasks', 'my-students');
-        // Recharger la section
         await init();
     } catch (error) {
         showNotification(error.message, 'error');
+    } finally {
+        _creating = false;
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'إنشاء المهمة';
+        }
     }
 }
 
