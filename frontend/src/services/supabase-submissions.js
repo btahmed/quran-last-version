@@ -248,6 +248,45 @@ export async function approveSubmission(submissionId, points, feedback = '') {
     }
 }
 
+// studentId = state.user.id (UUID Supabase — fourni par l'appelant, jamais lu depuis localStorage ici)
+export async function createHifzSubmission(
+    taskId,
+    studentId,
+    score,
+    surahName,
+    fromAyah,
+    toAyah,
+    completedAyahs
+) {
+    if (!studentId) return { data: null, error: new Error('studentId requis') };
+
+    try {
+        const ayahRange = completedAyahs?.length
+            ? completedAyahs.join('،')
+            : `${fromAyah}-${toAyah}`;
+        const details = `${surahName} — الآيات ${ayahRange}`;
+
+        const { data, error } = await supabaseClient
+            .from('submissions')
+            .insert({
+                task_id: taskId,
+                student_id: studentId,
+                audio_url: null,
+                status: 'approved',
+                type: 'hifz',
+                awarded_points: score,
+                admin_feedback: details,
+                validated_at: new Date().toISOString(),
+            })
+            .select()
+            .single();
+
+        return { data, error };
+    } catch (error) {
+        return { data: null, error };
+    }
+}
+
 export async function rejectSubmission(submissionId, feedback = '') {
     try {
         const { data, error } = await supabaseClient

@@ -90,11 +90,19 @@ export function render() {
             </div>
         </div>
 
-        <!-- Liste des soumissions en attente -->
+        <!-- التسميع — soumissions audio -->
         <section class="k-section">
-            <h3 class="k-section-title">📥 تسليمات الطلاب</h3>
+            <h3 class="k-section-title">🎙 تسليمات التسميع</h3>
             <div id="teacher-tasks-list" class="k-stack">
                 <div class="skeleton skeleton-card"></div>
+                <div class="skeleton skeleton-card"></div>
+            </div>
+        </section>
+
+        <!-- حفظ — résultats d'exercices -->
+        <section class="k-section" style="margin-top:var(--space-6)">
+            <h3 class="k-section-title">📖 نتائج تمارين الحفظ</h3>
+            <div id="teacher-hifz-list" class="k-stack">
                 <div class="skeleton skeleton-card"></div>
             </div>
         </section>
@@ -197,35 +205,70 @@ function _cardHtml(s, showActions) {
 }
 
 function _renderPendingList(allSubmissions) {
-    const container = document.getElementById('teacher-tasks-list');
-    if (!container) return;
+    const tasmiSubmissions = allSubmissions.filter(s => (s.type || 'tasmi') === 'tasmi');
+    const hifzSubmissions = allSubmissions.filter(s => s.type === 'hifz');
 
-    const pending = allSubmissions.filter(s => s.status === 'submitted');
-    const corrected = allSubmissions.filter(
-        s => s.status === 'approved' || s.status === 'rejected'
-    );
+    // ── Section التسميع ──
+    const tasmiContainer = document.getElementById('teacher-tasks-list');
+    if (tasmiContainer) {
+        const pending = tasmiSubmissions.filter(s => s.status === 'submitted');
+        const corrected = tasmiSubmissions.filter(
+            s => s.status === 'approved' || s.status === 'rejected'
+        );
 
-    if (!pending.length && !corrected.length) {
-        container.innerHTML = '<p class="empty-state">لا توجد تسليمات 🎉</p>';
-        return;
+        if (!pending.length && !corrected.length) {
+            tasmiContainer.innerHTML = '<p class="empty-state">لا توجد تسليمات صوتية 🎉</p>';
+        } else {
+            let html = '';
+            if (pending.length) {
+                html += `<h4 style="margin:0 0 var(--space-3);color:var(--color-text-secondary);font-size:0.9rem;font-weight:600">⏳ بانتظار التصحيح (${pending.length})</h4>`;
+                html += pending.map(s => _cardHtml(s, true)).join('');
+            } else {
+                html +=
+                    '<p class="empty-state" style="padding:var(--space-3) 0">لا توجد تسليمات بانتظار التصحيح 🎉</p>';
+            }
+            if (corrected.length) {
+                html += `<h4 style="margin:var(--space-6) 0 var(--space-3);color:var(--color-text-secondary);font-size:0.9rem;font-weight:600">✅ تم التصحيح (${corrected.length})</h4>`;
+                html += corrected.map(s => _cardHtml(s, false)).join('');
+            }
+            tasmiContainer.innerHTML = html;
+        }
     }
 
-    let html = '';
-
-    if (pending.length) {
-        html += `<h4 style="margin:0 0 var(--space-3);color:var(--color-text-secondary);font-size:0.9rem;font-weight:600">⏳ بانتظار التصحيح (${pending.length})</h4>`;
-        html += pending.map(s => _cardHtml(s, true)).join('');
-    } else {
-        html +=
-            '<p class="empty-state" style="padding:var(--space-3) 0">لا توجد تسليمات بانتظار التصحيح 🎉</p>';
+    // ── Section حفظ ──
+    const hifzContainer = document.getElementById('teacher-hifz-list');
+    if (hifzContainer) {
+        if (!hifzSubmissions.length) {
+            hifzContainer.innerHTML = '<p class="empty-state">لا توجد تمارين حفظ مكتملة 📖</p>';
+        } else {
+            hifzContainer.innerHTML = hifzSubmissions.map(_hifzCardHtml).join('');
+        }
     }
+}
 
-    if (corrected.length) {
-        html += `<h4 style="margin:var(--space-6) 0 var(--space-3);color:var(--color-text-secondary);font-size:0.9rem;font-weight:600">✅ تم التصحيح (${corrected.length})</h4>`;
-        html += corrected.map(s => _cardHtml(s, false)).join('');
-    }
+function _hifzCardHtml(s) {
+    const date = new Date(s.submitted_at || s.validated_at).toLocaleDateString('ar-SA');
+    const studentName = s.profiles?.first_name || s.profiles?.username || 'طالب';
+    const initial = escapeHtml(studentName.charAt(0) || '؟');
+    const taskTitle = s.task?.title || s.tasks?.title || 'تمرين حفظ';
+    const score = s.awarded_points ?? 0;
+    const details = s.admin_feedback ? escapeHtml(s.admin_feedback) : '';
 
-    container.innerHTML = html;
+    return `<div class="k-pending-card">
+        <div class="k-pending-head">
+            <span class="k-avatar">${initial}</span>
+            <div style="flex:1;min-width:0">
+                <div style="font-weight:600;font-size:var(--text-sm)">${escapeHtml(studentName)}</div>
+                <div style="font-size:var(--text-xs);color:var(--text-secondary)">${escapeHtml(taskTitle)}</div>
+            </div>
+            <span class="k-chip k-chip--success">✅ مكتمل</span>
+        </div>
+        <div class="k-pending-meta">
+            <span>🏆 ${escapeHtml(String(score))} نقطة</span>
+            <span>📅 ${date}</span>
+            ${details ? `<span style="color:var(--color-text-secondary)">${details}</span>` : ''}
+        </div>
+    </div>`;
 }
 
 // ─── MODAL NOTATION EMOJI ─────────────────────────────────────────────────────

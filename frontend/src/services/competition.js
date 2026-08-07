@@ -5,6 +5,7 @@ import { state, saveData } from '../core/state.js';
 import { showNotification } from '../core/ui.js';
 import * as supabaseLeaderboard from './supabase-leaderboard.js';
 import * as supabaseTasks from './supabase-tasks.js';
+import * as supabaseSubmissions from './supabase-submissions.js';
 
 export const competitionManager = {
     // Générer un défi
@@ -1089,15 +1090,33 @@ export const competitionManager = {
             const surah = config.surahs.find(s => s.id === session.surahId);
             const localUser = JSON.parse(localStorage.getItem('quranreview_user') || '{}');
             const studentName = localUser.first_name || localUser.username || '';
+            const surahName = surah?.name || '';
+
             supabaseTasks.notifyTeacherHifzComplete(
                 linkedTaskId,
                 studentName,
-                surah?.name || '',
+                surahName,
                 session.score,
                 session.completedAyahs || [],
                 session.fromAyah,
                 session.toAyah
             );
+
+            // Enregistrer la session hifz dans submissions (visible prof)
+            if (state.user?.id) {
+                supabaseSubmissions
+                    .createHifzSubmission(
+                        linkedTaskId,
+                        state.user.id,
+                        session.score,
+                        surahName,
+                        session.fromAyah,
+                        session.toAyah,
+                        session.completedAyahs || []
+                    )
+                    .catch(err => console.warn('[Hifz] Soumission non enregistrée:', err?.message));
+            }
+
             this._hifzLinkedTaskId = null;
         }
 
