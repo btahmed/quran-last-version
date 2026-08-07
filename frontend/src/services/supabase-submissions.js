@@ -272,7 +272,7 @@ export async function createHifzSubmission(
                 task_id: taskId,
                 student_id: studentId,
                 audio_url: null,
-                status: 'approved',
+                status: 'submitted',
                 type: 'hifz',
                 awarded_points: score,
                 admin_feedback: details,
