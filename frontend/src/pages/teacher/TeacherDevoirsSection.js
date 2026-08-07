@@ -313,21 +313,17 @@ export function toggleAssignMode(mode) {
 let _creating = false;
 export async function handleCreateTask(event) {
     event.preventDefault();
-    if (_creating) return; // protection double-clic
+    if (_creating) return;
+
     const token = localStorage.getItem(config.apiTokenKey);
     if (!token) return;
-    _creating = true;
-    const submitBtn = event.target?.querySelector('[type="submit"]');
-    if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.textContent = '⏳ جاري الإنشاء...';
-    }
 
+    // ── Validation complète AVANT de bloquer le bouton ──────────────────────
     const assignMode = document.querySelector('input[name="assign-mode"]:checked')?.value || 'all';
     const studentIds = [];
     if (assignMode === 'select') {
         document.querySelectorAll('input[name="student-ids"]:checked').forEach(cb => {
-            studentIds.push(cb.value); // UUID string, pas parseInt
+            studentIds.push(cb.value);
         });
         if (!studentIds.length) {
             showNotification('يرجى اختيار طالب واحد على الأقل', 'error');
@@ -339,11 +335,12 @@ export async function handleCreateTask(event) {
     const points = parseInt(document.getElementById('task-points').value) || 0;
 
     const titleCheck = Validators.text(title, { minLen: 2, maxLen: 200 });
-    const pointsCheck = Validators.points(points);
     if (!titleCheck.valid) {
         showNotification(titleCheck.error, 'error');
         return;
     }
+
+    const pointsCheck = Validators.points(points);
     if (!pointsCheck.valid) {
         showNotification(pointsCheck.error, 'error');
         return;
@@ -355,12 +352,10 @@ export async function handleCreateTask(event) {
         const hifzSurahId = parseInt(document.getElementById('hifz-task-surah')?.value || '0');
         const hifzFrom = parseInt(document.getElementById('hifz-task-from')?.value || '0');
         const hifzTo = parseInt(document.getElementById('hifz-task-to')?.value || '0');
-
         if (!hifzSurahId) {
             showNotification('يرجى اختيار السورة للواجب', 'error');
             return;
         }
-        const hifzSurah = config.surahs.find(s => s.id === hifzSurahId);
         if (!hifzFrom || !hifzTo || hifzFrom < 1 || hifzTo < 1) {
             showNotification('أرقام الآيات غير صحيحة', 'error');
             return;
@@ -369,6 +364,7 @@ export async function handleCreateTask(event) {
             showNotification('الآية الأولى يجب أن تكون أصغر من أو تساوي الآية الأخيرة', 'error');
             return;
         }
+        const hifzSurah = config.surahs.find(s => s.id === hifzSurahId);
         if (hifzSurah && hifzTo > hifzSurah.ayahs) {
             showNotification(
                 `سورة ${hifzSurah.name} تحتوي على ${hifzSurah.ayahs} آية فقط`,
@@ -376,12 +372,20 @@ export async function handleCreateTask(event) {
             );
             return;
         }
-
         description = JSON.stringify({
             _hifz: { surah_id: hifzSurahId, from_ayah: hifzFrom, to_ayah: hifzTo },
             text: description,
         });
     }
+
+    // ── Validation OK → bloquer le bouton et envoyer ────────────────────────
+    _creating = true;
+    const submitBtn = event.target?.querySelector('[type="submit"]');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = '⏳ جاري الإنشاء...';
+    }
+
     const body = {
         title,
         description,

@@ -219,6 +219,57 @@ export async function notifyStudentNewTask(studentId, taskTitle, taskType) {
     }
 }
 
+// Notifie le prof via in-app + push quand l'élève soumet un audio (tasmi)
+export async function notifyTeacherNewSubmission(taskId) {
+    try {
+        const { data: task } = await supabaseClient
+            .from('tasks')
+            .select('assigned_by, title')
+            .eq('id', taskId)
+            .maybeSingle();
+
+        if (!task?.assigned_by) return;
+
+        const localUser = JSON.parse(localStorage.getItem('quranreview_user') || 'null');
+        const studentName = localUser?.username || 'طالب';
+
+        const notifTitle = '🎙 تسليم جديد بانتظار التصحيح';
+        const notifBody = `${studentName} — ${task.title}`;
+
+        supabaseClient
+            .from('notifications')
+            .insert({
+                user_id: task.assigned_by,
+                type: 'new_submission',
+                title: notifTitle,
+                body: notifBody,
+                url: '/soumissions',
+            })
+            .then(({ error }) => {
+                if (error)
+                    console.warn('[Submission] Notif in-app non sauvegardée:', error.message);
+            });
+
+        try {
+            const { error } = await supabaseClient.functions.invoke('send-push', {
+                body: {
+                    user_id: task.assigned_by,
+                    title: notifTitle,
+                    body: notifBody,
+                    url: '/soumissions',
+                },
+            });
+            if (error && error.context?.status !== 404) {
+                console.warn('[Submission] Push non envoyé:', error);
+            }
+        } catch (err) {
+            console.warn('[Submission] Push non envoyé:', err);
+        }
+    } catch (err) {
+        console.warn('[Submission] Notification prof non envoyée:', err);
+    }
+}
+
 // Notifie le prof via push quand l'élève complète un devoir hifz
 export async function notifyTeacherHifzComplete(
     taskId,

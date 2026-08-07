@@ -6,6 +6,7 @@
 //   offlineQueue.getPendingCount()                   // badge UI
 
 import * as supabaseSubmissions from './supabase-submissions.js';
+import { notifyTeacherNewSubmission } from './supabase-tasks.js';
 import { showNotification } from '../core/ui.js';
 import { Logger } from '../core/logger.js';
 import { apiCache } from '../core/apiCache.js';
@@ -130,6 +131,7 @@ export async function processQueue() {
             );
             if (submitError) throw new Error(submitError.message);
 
+            notifyTeacherNewSubmission(item.taskId).catch(() => {});
             await _dequeue(item.id);
             successCount++;
             Logger.log('OFFLINE-QUEUE', `Soumission ${item.id} synchronisée ✓`);

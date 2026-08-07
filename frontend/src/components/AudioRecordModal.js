@@ -6,6 +6,7 @@ import { Logger } from '../core/logger.js';
 import { apiCache } from '../core/apiCache.js';
 import * as supabaseSubmissions from '../services/supabase-submissions.js';
 import * as offlineQueue from '../services/offline-queue.js';
+import { notifyTeacherNewSubmission } from '../services/supabase-tasks.js';
 
 // Variables module-level (remplacent this._recorder, this._recordBlob, etc.)
 let _recorder = null;
@@ -183,6 +184,9 @@ export async function submitRecording() {
         }
 
         Logger.log('RECORDING', 'Submission successful', result);
+
+        // Notifier le prof (non bloquant)
+        notifyTeacherNewSubmission(_recordTaskId).catch(() => {});
 
         showNotification('تم إرسال التسجيل بنجاح!', 'success');
         const modal = document.getElementById('audio-record-modal');
