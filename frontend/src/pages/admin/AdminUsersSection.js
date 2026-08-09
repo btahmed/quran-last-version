@@ -245,16 +245,16 @@ async function openUserProfile(userId) {
             <div id="admin-edit-form" style="display:none; background:#f9fafb; border:1px solid #e5e7eb; border-radius:12px; padding:16px; margin-bottom:16px;">
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
                     <div>
-                        <label style="font-size:0.72rem; color:#6b7280; display:block; margin-bottom:4px;">الاسم الأول</label>
+                        <label for="edit-first-name" style="font-size:0.72rem; color:#6b7280; display:block; margin-bottom:4px;">الاسم الأول</label>
                         <input id="edit-first-name" type="text" style="width:100%; padding:7px 10px; border:1px solid #d1d5db; border-radius:8px; font-size:0.85rem; box-sizing:border-box;" />
                     </div>
                     <div>
-                        <label style="font-size:0.72rem; color:#6b7280; display:block; margin-bottom:4px;">الاسم الأخير</label>
+                        <label for="edit-last-name" style="font-size:0.72rem; color:#6b7280; display:block; margin-bottom:4px;">الاسم الأخير</label>
                         <input id="edit-last-name" type="text" style="width:100%; padding:7px 10px; border:1px solid #d1d5db; border-radius:8px; font-size:0.85rem; box-sizing:border-box;" />
                     </div>
                 </div>
                 <div style="margin-bottom:12px;">
-                    <label style="font-size:0.72rem; color:#6b7280; display:block; margin-bottom:4px;">الدور</label>
+                    <label for="edit-role" style="font-size:0.72rem; color:#6b7280; display:block; margin-bottom:4px;">الدور</label>
                     <select id="edit-role" style="width:100%; padding:7px 10px; border:1px solid #d1d5db; border-radius:8px; font-size:0.85rem;">
                         <option value="student">🎓 طالب</option>
                         <option value="teacher">👨‍🏫 معلم</option>
