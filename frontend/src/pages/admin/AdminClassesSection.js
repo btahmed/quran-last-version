@@ -34,11 +34,11 @@ export function render() {
             <div id="admin-create-class-form" style="display:none; background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-lg); padding:var(--space-4); margin-bottom:var(--space-4);">
                 <div style="display:flex; gap:var(--space-3); align-items:flex-end; flex-wrap:wrap;">
                     <div style="flex:1; min-width:200px;">
-                        <label style="font-size:0.75rem; color:var(--color-text-secondary); display:block; margin-bottom:var(--space-1);">اسم الفصل</label>
+                        <label for="new-class-name" style="font-size:0.75rem; color:var(--color-text-secondary); display:block; margin-bottom:var(--space-1);">اسم الفصل</label>
                         <input id="new-class-name" type="text" placeholder="مثال: فصل الحفظ 1" style="width:100%; padding:var(--space-2) var(--space-3); border:1px solid var(--color-border); border-radius:var(--radius-lg); background:var(--color-bg); color:var(--color-text);" />
                     </div>
                     <div style="flex:1; min-width:200px;">
-                        <label style="font-size:0.75rem; color:var(--color-text-secondary); display:block; margin-bottom:var(--space-1);">المعلم</label>
+                        <label for="new-class-teacher" style="font-size:0.75rem; color:var(--color-text-secondary); display:block; margin-bottom:var(--space-1);">المعلم</label>
                         <select id="new-class-teacher" style="width:100%; padding:var(--space-2) var(--space-3); border:1px solid var(--color-border); border-radius:var(--radius-lg); background:var(--color-bg); color:var(--color-text);">
                             <option value="">-- اختر المعلم --</option>
                         </select>
