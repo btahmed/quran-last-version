@@ -68,7 +68,7 @@ export function render() {
                                 <span class="setting-label" style="display: block; font-weight: 500;">إشعارات التصحيح</span>
                                 <span class="setting-desc" style="display: block; font-size: 0.85rem; opacity: 0.7;">إشعار فوري عند تصحيح المعلم لتلاوتك</span>
                             </div>
-                            <button id="push-toggle-btn" class="btn btn-sm btn-outline">تفعيل</button>
+                            <button id="push-toggle-btn" class="btn btn-sm btn-outline" aria-label="تفعيل أو إلغاء الإشعارات" title="تفعيل أو إلغاء الإشعارات">تفعيل</button>
                         </div>
                     </div>
 
