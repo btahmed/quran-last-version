@@ -69,7 +69,7 @@ export function render() {
                         <span class="k-chip k-chip--primary" id="hifz-score">النقاط: 0</span>
                         <span class="k-chip" id="hifz-ayah-info">الآية 1</span>
                     </div>
-                    <button class="k-chip hifz-audio-chip" id="hifz-audio-btn">🔊 استمع</button>
+                    <button class="k-chip hifz-audio-chip" id="hifz-audio-btn" aria-label="استماع للآية" title="استماع للآية">🔊 استمع</button>
                 </div>
 
                 <!-- Tracker de progression par ayah (✅ done / 🔄 current / ⬜ pending) -->

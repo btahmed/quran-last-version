@@ -207,16 +207,16 @@ function createTableRow(item) {
             <td>${escapeHtml(item.reviewCount || 0)}</td>
             <td>${getNextReviewDate(item)}</td>
             <td>
-                <button class="btn btn-sm btn-primary" onclick="QuranReview.markAsReviewed(${item.id})" title="تسجيل المراجعة">
+                <button class="btn btn-sm btn-primary" onclick="QuranReview.markAsReviewed(${item.id})" title="تسجيل المراجعة" aria-label="تسجيل المراجعة">
                     ✓ مراجعة
                 </button>
-                <button class="btn btn-sm btn-success" onclick="QuranReview.playSurahAudio(${item.surahId})" title="استماع للسورة">
+                <button class="btn btn-sm btn-success" onclick="QuranReview.playSurahAudio(${item.surahId})" title="استماع للسورة" aria-label="استماع للسورة">
                     🎵 استماع
                 </button>
-                <button class="btn btn-sm btn-secondary" onclick="QuranReview.openTarteel(${item.surahId}, ${item.fromAyah}, ${item.toAyah})" title="فتح في تطبيق ترتيل">
+                <button class="btn btn-sm btn-secondary" onclick="QuranReview.openTarteel(${item.surahId}, ${item.fromAyah}, ${item.toAyah})" title="فتح في تطبيق ترتيل" aria-label="فتح في تطبيق ترتيل">
                     🎧 ترتيل
                 </button>
-                <button class="btn btn-sm btn-danger" onclick="QuranReview.deleteItem(${item.id})" title="حذف العنصر">
+                <button class="btn btn-sm btn-danger" onclick="QuranReview.deleteItem(${item.id})" title="حذف العنصر" aria-label="حذف العنصر">
                     حذف
                 </button>
             </td>
