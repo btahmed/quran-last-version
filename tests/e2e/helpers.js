@@ -26,7 +26,7 @@ export async function waitForApp(page) {
 export async function openAuthModal(page) {
     // NavManager injecte un bouton avec data-action ou onclick showAuthModal
     const loginBtn = page.locator(
-        '[onclick*="showAuthModal"], button[data-action="login"], .nav-login-btn'
+        '[onclick*="showAuthModal"], button[data-action="login"], .nav-login-btn, button:has-text("تسجيل الدخول")'
     );
     await loginBtn.first().click();
 

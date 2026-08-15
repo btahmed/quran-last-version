@@ -17,3 +17,20 @@ global.console = {
 beforeEach(() => {
     localStorage.clear();
 });
+
+global.supabase = {
+    createClient: vi.fn(() => ({
+        channel: vi.fn(() => ({
+            on: vi.fn(() => ({
+                subscribe: vi.fn(),
+            })),
+        })),
+        from: vi.fn(() => ({
+            select: vi.fn(() => ({
+                eq: vi.fn(() => ({
+                    single: vi.fn(() => ({ data: null, error: null })),
+                })),
+            })),
+        })),
+    })),
+};
