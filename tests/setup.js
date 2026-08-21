@@ -31,10 +31,10 @@ global.window.supabase = {
         })),
         channel: vi.fn(() => ({
             on: vi.fn(() => ({
-                subscribe: vi.fn()
-            }))
-        }))
-    }))
+                subscribe: vi.fn(),
+            })),
+        })),
+    })),
 };
 
 global.supabase = global.window.supabase;
