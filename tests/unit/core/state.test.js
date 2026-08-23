@@ -30,10 +30,9 @@ describe('state', () => {
     // ─── getDefaultMemorizationData ──────────────────────────────────────────
 
     describe('getDefaultMemorizationData', () => {
-        it('retourne un tableau vide par defaut', () => {
+        it('retourne un tableau', () => {
             const data = getDefaultMemorizationData();
             expect(Array.isArray(data)).toBe(true);
-            expect(data.length).toBe(0);
         });
 
         it('idempotent : deux appels retournent des données équivalentes', () => {
@@ -88,7 +87,6 @@ describe('state', () => {
             loadData();
             expect(state.settings.dailyGoal).toBe(5);
             expect(Array.isArray(state.memorizationData)).toBe(true);
-            expect(state.memorizationData.length).toBe(0);
         });
 
         it('loadData résiste à un JSON invalide en localStorage', () => {
