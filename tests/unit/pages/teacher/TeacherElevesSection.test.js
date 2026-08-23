@@ -89,12 +89,7 @@ describe('init — chargement liste élèves', () => {
 
         await init();
 
-        // Le test mockait `apiCache.get` mais _loadStudents ne l'utilise plus (récupère toujours des données fraîches).
-        // On modifie le test pour refléter le comportement actuel (récupération fraîche via supabaseAdmin).
-        supabaseAdmin.getMyStudents.mockResolvedValue({ data: cached, error: null });
-
-        await init();
-
+        expect(supabaseAdmin.getMyStudents).not.toHaveBeenCalled();
         expect(document.getElementById('teacher-students-list').innerHTML).toContain('cached');
     });
 });
