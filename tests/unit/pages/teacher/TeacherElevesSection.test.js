@@ -83,13 +83,13 @@ describe('init — chargement liste élèves', () => {
         expect(list.innerHTML).toContain('فشل');
     });
 
-    it('utilise le cache si disponible', async () => {
-        const cached = [{ id: 'c1', username: 'cached', total_points: 5, submissions_count: 0 }];
-        apiCache.get.mockReturnValue(cached);
+    it('fetch toujours des donnees fraiches, ne pas utiliser le cache', async () => {
+        const fakeData = [{ id: 'c1', username: 'cached', total_points: 5, submissions_count: 0 }];
+        supabaseAdmin.getMyStudents.mockResolvedValue({ data: fakeData });
 
         await init();
 
-        expect(supabaseAdmin.getMyStudents).not.toHaveBeenCalled();
+        expect(supabaseAdmin.getMyStudents).toHaveBeenCalled();
         expect(document.getElementById('teacher-students-list').innerHTML).toContain('cached');
     });
 });

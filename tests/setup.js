@@ -4,6 +4,19 @@ import { vi } from 'vitest';
 // config.js lit window.API_BASE_URL — on le fixe à undefined pour utiliser la détection auto
 window.API_BASE_URL = undefined;
 
+// Mock Supabase to prevent ReferenceError in supabase-client.js during tests
+global.supabase = {
+    createClient: vi.fn(() => ({
+        channel: vi.fn(() => ({
+            on: vi.fn(() => ({
+                subscribe: vi.fn()
+            }))
+        }))
+    })),
+};
+global.window.__SUPABASE_URL__ = 'http://localhost';
+global.window.__SUPABASE_ANON_KEY__ = 'mock-key';
+
 // Logger appelle console — on le silentise pour garder la sortie de test propre
 global.console = {
     ...console,
