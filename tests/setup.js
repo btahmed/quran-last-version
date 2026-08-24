@@ -25,10 +25,10 @@ global.supabase = {
         rpc: vi.fn(),
         channel: vi.fn(() => ({
             on: vi.fn(() => ({
-                subscribe: vi.fn()
-            }))
+                subscribe: vi.fn(),
+            })),
         })),
-    }))
+    })),
 };
 
 // config.js lit window.API_BASE_URL — on le fixe à undefined pour utiliser la détection auto
