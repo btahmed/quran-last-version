@@ -24,11 +24,10 @@ export async function waitForApp(page) {
  * Ouvre le modal d'authentification en cliquant sur le bouton de nav.
  */
 export async function openAuthModal(page) {
-    // NavManager injecte un bouton avec data-action ou onclick showAuthModal
-    const loginBtn = page.locator(
-        '[onclick*="showAuthModal"], button[data-action="login"], .nav-login-btn'
-    );
-    await loginBtn.first().click();
+    // NavManager injecte un bouton "تسجيل الدخول" si le role est visiteur
+    // On utilise getByText car le sélecteur d'origine matchait `.nav-login-btn` qui n'existe plus
+    const loginBtn = page.getByRole('button', { name: 'تسجيل الدخول' }).first();
+    await loginBtn.click();
 
     await page.waitForFunction(
         () => {
