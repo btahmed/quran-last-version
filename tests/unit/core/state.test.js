@@ -30,45 +30,10 @@ describe('state', () => {
     // ─── getDefaultMemorizationData ──────────────────────────────────────────
 
     describe('getDefaultMemorizationData', () => {
-        it('retourne un tableau non vide', () => {
+        it('retourne un tableau vide par défaut', () => {
             const data = getDefaultMemorizationData();
             expect(Array.isArray(data)).toBe(true);
-            expect(data.length).toBeGreaterThan(0);
-        });
-
-        it('chaque entrée a les champs obligatoires', () => {
-            const data = getDefaultMemorizationData();
-            for (const item of data) {
-                expect(item).toHaveProperty('id');
-                expect(item).toHaveProperty('surahId');
-                expect(item).toHaveProperty('surahName');
-                expect(item).toHaveProperty('fromAyah');
-                expect(item).toHaveProperty('toAyah');
-                expect(item).toHaveProperty('status');
-                expect(item).toHaveProperty('reviewCount');
-            }
-        });
-
-        it('les surahId sont dans la plage [1, 114]', () => {
-            const data = getDefaultMemorizationData();
-            for (const item of data) {
-                expect(item.surahId).toBeGreaterThanOrEqual(1);
-                expect(item.surahId).toBeLessThanOrEqual(114);
-            }
-        });
-
-        it('les statuts sont valides', () => {
-            const validStatuses = ['mastered', 'weak', 'new', 'learning', 'review'];
-            const data = getDefaultMemorizationData();
-            for (const item of data) {
-                expect(validStatuses).toContain(item.status);
-            }
-        });
-
-        it('idempotent : deux appels retournent des données équivalentes', () => {
-            const a = getDefaultMemorizationData();
-            const b = getDefaultMemorizationData();
-            expect(JSON.stringify(a)).toBe(JSON.stringify(b));
+            expect(data.length).toBe(0);
         });
     });
 
@@ -117,7 +82,7 @@ describe('state', () => {
             loadData();
             expect(state.settings.dailyGoal).toBe(5);
             expect(Array.isArray(state.memorizationData)).toBe(true);
-            expect(state.memorizationData.length).toBeGreaterThan(0);
+            expect(state.memorizationData.length).toBe(0);
         });
 
         it('loadData résiste à un JSON invalide en localStorage', () => {
