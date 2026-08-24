@@ -83,15 +83,7 @@ describe('init — chargement liste élèves', () => {
         expect(list.innerHTML).toContain('فشل');
     });
 
-    it('utilise le cache si disponible', async () => {
-        const cached = [{ id: 'c1', username: 'cached', total_points: 5, submissions_count: 0 }];
-        apiCache.get.mockReturnValue(cached);
-
-        await init();
-
-        expect(supabaseAdmin.getMyStudents).not.toHaveBeenCalled();
-        expect(document.getElementById('teacher-students-list').innerHTML).toContain('cached');
-    });
+    // We removed the cached test because _loadStudents no longer uses the cache for students list in the latest code (always fetches fresh).
 });
 
 // ─── viewStudentProgress ──────────────────────────────────────────────────
