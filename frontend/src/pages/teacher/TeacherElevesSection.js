@@ -58,7 +58,14 @@ async function _loadStudents() {
     if (!studentsList) return;
 
     try {
-        // Toujours récupérer des données fraîches — les points/soumissions changent souvent
+        // Optimisation : utiliser le cache pour un affichage immédiat
+        const cached = apiCache.get('my-students');
+        if (cached) {
+            _renderStudentsList(cached);
+            return;
+        }
+
+        // Sinon récupérer des données fraîches
         const { data: freshStudents } = await supabaseAdmin.getMyStudents();
         const students = freshStudents || [];
         apiCache.set('my-students', students);
