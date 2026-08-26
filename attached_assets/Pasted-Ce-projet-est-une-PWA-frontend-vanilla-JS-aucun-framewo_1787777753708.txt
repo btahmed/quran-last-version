@@ -1,0 +1,71 @@
+Ce projet est une PWA frontend vanilla-JS (aucun framework, ES Modules natifs) 
+déployée sur Vercel, avec Supabase pour l'auth/base de données.
+
+────────────────────────────────────────────
+ARCHITECTURE
+────────────────────────────────────────────
+• frontend/ → site statique servi tel quel (aucun build step)
+• backend/  → Django/DRF serverless sur Vercel (pas nécessaire pour le frontend)
+• Supabase  → auth JWT + PostgreSQL + Storage audio (Cloudinary aussi)
+
+Le frontend parle directement à l'API Vercel prod (https://quranreview-api.vercel.app)
+et à Supabase. Pour une démo locale il suffit de servir frontend/ avec n'importe 
+quel serveur HTTP statique sur n'importe quel port.
+
+────────────────────────────────────────────
+LANCER LE FRONTEND (simple)
+────────────────────────────────────────────
+python -m http.server 3000 --directory frontend
+# ou : npx serve frontend -p 3000
+
+Aucune installation npm, aucun build. Les modules ES sont chargés directement.
+
+────────────────────────────────────────────
+STRUCTURE frontend/src/
+────────────────────────────────────────────
+main.js          → point d'entrée, expose window.QuranReview
+core/config.js   → URL API auto-détectée (Vercel prod / local)
+core/router.js   → navigation entre pages (hash routing)
+core/NavManager.js → bottom bar + top nav selon le rôle (student/teacher/admin)
+pages/
+  HomePage.js      → dashboard par rôle
+  HifzPage.js      → mémorisation Quran
+  RevisionPage.js  → Murajaa Tracker (جدول المراجعة) — module complet
+  RevisionPage.css → styles scopés sous .mj-page
+  WardPage.js      → lecteur audio quotidien
+  TeacherPage.js   → tableau de bord enseignant
+  AdminPage.js     → gestion utilisateurs
+
+────────────────────────────────────────────
+FEATURE PRINCIPALE (dernière implémentation)
+────────────────────────────────────────────
+RevisionPage.js est un tracker de mémorisation Quran complet :
+- Données Quran embarquées : 30 Juz, 60 Hizbs, 114 Sourates (Hafs, 604 pages)
+- Wizard setup étudiant : arbre accordéon Juz→Hizb→Sourate pour sélectionner 
+  les sourates mémorisées, ou importer un plan via code btoa du prof
+- Stockage localStorage : murajaa_v4 (prof), murajaa_student_{userId} (étudiant)
+- Aucune dépendance externe, aucun appel réseau
+
+────────────────────────────────────────────
+AUTH
+────────────────────────────────────────────
+POST https://quranreview-api.vercel.app/api/auth/token/
+  body: { username, password }
+  → { access, refresh }
+
+Rôles: student | teacher | admin
+Après login → window.QuranReview.state.user.role détermine la nav affichée
+
+────────────────────────────────────────────
+VARIABLES D'ENV (si besoin backend)
+────────────────────────────────────────────
+Les secrets Supabase sont dans le backend Django (variables Vercel).
+Le frontend utilise des clés publiques Supabase seulement (anon key) — 
+elles sont visibles dans frontend/src/services/auth.js.
+
+────────────────────────────────────────────
+CE QUE JE VEUX SUR REPLIT
+────────────────────────────────────────────
+Servir le dossier frontend/ avec un serveur HTTP statique.
+Je veux pouvoir tester l'UI sans modifier la logique backend.
+Le site doit pointer vers l'API prod Vercel (déjà configuré dans config.js).
