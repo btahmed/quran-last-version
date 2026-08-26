@@ -20,6 +20,18 @@ export function init() {
 // ─────────────────────────────────────────────────────────────
 const _AR = '٠١٢٣٤٥٦٧٨٩';
 const arN = n => String(n).replace(/[0-9]/g, c => _AR[+c]);
+const escapeHtml = value =>
+    String(value ?? '').replace(
+        /[&<>"']/g,
+        char =>
+            ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;',
+            })[char]
+    );
 
 // 30 Juz avec leur plage de pages (vérifiée contre les débuts de sourates)
 const JUZ_DATA = [
@@ -319,11 +331,11 @@ class MurajaaTracker {
             return;
         }
 
+        this.repairFusedRanges();
+        this.normalizeRanges();
         this.autoAdvanceBunker();
         this.promoteByDate();
         this.ensureActiveTargets();
-        this.repairFusedRanges();
-        this.normalizeRanges();
         this.seedYesterday();
         this.syncTodayHistory();
         this.persist();
@@ -414,7 +426,18 @@ class MurajaaTracker {
             const raw =
                 localStorage.getItem(key) ||
                 (key === this.TEACHER_KEY ? localStorage.getItem(this.OLD_KEY) : null);
-            if (raw) return Object.assign(base, JSON.parse(raw));
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+                    const data = Object.assign(base, parsed);
+                    data.bunkerRanges = Array.isArray(parsed.bunkerRanges)
+                        ? this.normalizeRangeList(parsed.bunkerRanges, false)
+                        : base.bunkerRanges;
+                    data.configured = Boolean(parsed.configured);
+                    if (data.configured && !data.bunkerRanges.length) data.configured = false;
+                    return data;
+                }
+            }
         } catch (e) {
             /* ignore, use defaults */
         }
@@ -517,14 +540,16 @@ class MurajaaTracker {
     }
 
     flattenPages(ranges) {
-        const pages = [];
+        const pages = new Map();
         (ranges || []).forEach(r => {
             const from = parseInt(r.from, 10),
                 to = parseInt(r.to, 10);
             if (Number.isFinite(from) && Number.isFinite(to) && to >= from)
-                for (let p = from; p <= to; p++) pages.push({ page: p, label: r.label });
+                for (let p = from; p <= to; p++) {
+                    if (!pages.has(p)) pages.set(p, { page: p, label: r.label || '' });
+                }
         });
-        return pages;
+        return [...pages.values()];
     }
 
     flattenQueue(items) {
@@ -533,6 +558,54 @@ class MurajaaTracker {
             for (let p = it.start; p <= it.end; p++) pages.push({ page: p, label: it.name });
         });
         return pages;
+    }
+
+    mergeRanges(ranges, mergeAdjacent = true) {
+        const sorted = (ranges || [])
+            .map(r => ({ from: Number(r.from), to: Number(r.to), label: String(r.label || '') }))
+            .filter(
+                r =>
+                    Number.isInteger(r.from) &&
+                    Number.isInteger(r.to) &&
+                    r.from >= 1 &&
+                    r.to <= 604 &&
+                    r.to >= r.from
+            )
+            .sort((a, b) => a.from - b.from || a.to - b.to);
+        const merged = [];
+        sorted.forEach(range => {
+            const last = merged[merged.length - 1];
+            const touches = mergeAdjacent ? range.from <= last?.to + 1 : range.from <= last?.to;
+            if (last && touches) {
+                last.to = Math.max(last.to, range.to);
+                if (range.label && !last.label.split('، ').includes(range.label))
+                    last.label = [last.label, range.label].filter(Boolean).join('، ');
+            } else {
+                merged.push({ ...range });
+            }
+        });
+        return merged;
+    }
+
+    normalizeRangeList(ranges, strict = false) {
+        if (!Array.isArray(ranges)) {
+            if (strict) throw new Error('invalid');
+            return [];
+        }
+        const valid = ranges.filter(r => {
+            if (!r || typeof r !== 'object') return false;
+            const from = Number(r.from);
+            const to = Number(r.to);
+            return (
+                Number.isInteger(from) &&
+                Number.isInteger(to) &&
+                from >= 1 &&
+                to <= 604 &&
+                to >= from
+            );
+        });
+        if (strict && valid.length !== ranges.length) throw new Error('invalid');
+        return this.mergeRanges(valid);
     }
 
     getWindow(pages, cursor, size) {
@@ -591,12 +664,19 @@ class MurajaaTracker {
 
     surahsInJuz(juzNum) {
         const j = JUZ_DATA[juzNum - 1];
-        return this.surahsStartingInRange(j.from, j.to);
+        return j ? this.surahsOverlappingRange(j.from, j.to) : [];
     }
 
     surahsInHizb(hizbNum) {
         const h = HIZB_DATA[hizbNum - 1];
-        return this.surahsStartingInRange(h.from, h.to);
+        return h ? this.surahsOverlappingRange(h.from, h.to) : [];
+    }
+
+    surahsOverlappingRange(fromPage, toPage) {
+        return SURAH_FULL.filter(s => {
+            const end = this.surahPageEnd(s.num);
+            return s.page <= toPage && end >= fromPage;
+        });
     }
 
     // état case à cocher : 'all' | 'partial' | 'none'
@@ -659,37 +739,18 @@ class MurajaaTracker {
     buildRangesFromSelected() {
         const sel = this.state.wiz.selected;
         if (!sel.size) return [];
-        const ranges = [];
-        const covered = new Set();
-
-        // Juz complets
-        for (const juz of JUZ_DATA) {
-            const surahs = this.surahsInJuz(juz.num);
-            if (surahs.length && surahs.every(s => sel.has(s.num))) {
-                ranges.push({ label: juz.label, from: juz.from, to: juz.to });
-                surahs.forEach(s => covered.add(s.num));
-            }
-        }
-
-        // Hizbs complets (parmi les sourates non encore couvertes par un juz entier)
-        for (const hizb of HIZB_DATA) {
-            const surahs = this.surahsInHizb(hizb.num).filter(s => !covered.has(s.num));
-            if (surahs.length && surahs.every(s => sel.has(s.num))) {
-                ranges.push({ label: hizb.label, from: hizb.from, to: hizb.to });
-                surahs.forEach(s => covered.add(s.num));
-            }
-        }
-
-        // Sourates individuelles restantes
-        for (const snum of [...sel].sort((a, b) => a - b)) {
-            if (!covered.has(snum)) {
+        const ranges = [...sel]
+            .map(Number)
+            .filter(snum => Number.isInteger(snum) && snum >= 1 && snum <= SURAH_FULL.length)
+            .sort((a, b) => a - b)
+            .map(snum => {
                 const s = SURAH_FULL[snum - 1];
-                ranges.push({ label: s.name, from: s.page, to: this.surahPageEnd(snum) });
-                covered.add(snum);
-            }
-        }
+                return { label: s.name, from: s.page, to: this.surahPageEnd(snum) };
+            });
 
-        return ranges.sort((a, b) => a.from - b.from);
+        // Les petites sourates peuvent partager une page. Fusionner les
+        // chevauchements évite les doublons dans le planning et les compteurs.
+        return this.mergeRanges(ranges, false);
     }
 
     finishSetup() {
@@ -698,6 +759,7 @@ class MurajaaTracker {
         const d = JSON.parse(JSON.stringify(this.DEFAULTS));
         d.bunkerRanges = ranges;
         d.configured = true;
+        d.rangesRebuilt = true;
         d.bunkerCursor = 0;
         d.bunkerLastDate = null;
         this.state.d = d;
@@ -722,11 +784,12 @@ class MurajaaTracker {
     importFromCode(text) {
         try {
             const payload = JSON.parse(decodeURIComponent(atob(text.trim())));
-            if (!Array.isArray(payload.bunkerRanges) || !payload.bunkerRanges.length)
-                throw new Error('invalid');
+            const ranges = this.normalizeRangeList(payload?.bunkerRanges, true);
+            if (!ranges.length) throw new Error('invalid');
             const d = JSON.parse(JSON.stringify(this.DEFAULTS));
-            d.bunkerRanges = payload.bunkerRanges;
+            d.bunkerRanges = ranges;
             d.configured = true;
+            d.rangesRebuilt = true;
             d.bunkerCursor = 0;
             this.state.d = d;
             this.persist();
@@ -819,18 +882,8 @@ class MurajaaTracker {
 
     normalizeRanges() {
         const d = this.state.d;
-        const src = [...(d.bunkerRanges || [])]
-            .map(r => ({ from: +r.from, to: +r.to, label: r.label }))
-            .filter(r => Number.isFinite(r.from) && Number.isFinite(r.to))
-            .sort((a, b) => a.from - b.from);
-        const out = [];
-        src.forEach(r => {
-            const last = out[out.length - 1];
-            if (last && last.label === r.label && r.from <= last.to + 1)
-                last.to = Math.max(last.to, r.to);
-            else out.push({ ...r });
-        });
-        if (out.length !== (d.bunkerRanges || []).length) d.bunkerRanges = out;
+        const out = this.normalizeRangeList(d.bunkerRanges, false);
+        if (JSON.stringify(out) !== JSON.stringify(d.bunkerRanges || [])) d.bunkerRanges = out;
     }
 
     repairFusedRanges() {
@@ -938,7 +991,9 @@ class MurajaaTracker {
     promoteItem(item) {
         const d = this.state.d;
         if (!d.pendingConfirm) d.pendingConfirm = [];
-        d.pendingConfirm.push({ page: item.page, label: item.label, source: item.source });
+        if (!d.pendingConfirm.some(p => p.page === item.page)) {
+            d.pendingConfirm.push({ page: item.page, label: item.label, source: item.source });
+        }
         const h = this.hist();
         if (!h.memorized.some(m => m.page === item.page))
             h.memorized.push({ page: item.page, label: item.label });
@@ -953,8 +1008,10 @@ class MurajaaTracker {
         const d = this.state.d;
         const item = (d.pendingConfirm || [])[index];
         if (!item) return;
-        d.bucket.push({ page: item.page, label: item.label, source: item.source });
-        this.hist().confirmed.push({ page: item.page, label: item.label });
+        if (!d.bucket.some(b => b.page === item.page))
+            d.bucket.push({ page: item.page, label: item.label, source: item.source });
+        if (!this.hist().confirmed.some(c => c.page === item.page))
+            this.hist().confirmed.push({ page: item.page, label: item.label });
         this.addLog(
             '✓ ثبّت صفحة ' +
                 this.ar(item.page) +
@@ -1134,7 +1191,13 @@ class MurajaaTracker {
         if (act === 'export-copy') {
             const ta = this.container.querySelector('#mj-export-code');
             if (ta) ta.select();
-            navigator.clipboard?.writeText(this.getExportCode()).catch(() => {});
+            const copy = navigator.clipboard?.writeText(this.getExportCode());
+            if (copy?.then) {
+                copy.then(() => {
+                    this.state.exportCopied = true;
+                    this.update();
+                }).catch(() => {});
+            }
             return;
         }
 
