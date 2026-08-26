@@ -1574,7 +1574,7 @@ ${hizbRows}`;
             base.toLocaleDateString('ar', { month: 'long' }) + ' ' + this.ar(base.getFullYear());
         return `<div style="display:flex;align-items:center;gap:8px">
   <button class="mj-modal-close" data-action="prev-month" style="width:30px;height:30px;border-radius:8px">›</button>
-  <span style="font-size:12.5px;font-weight:700">${label}</span>
+   <span style="font-size:12.5px;font-weight:700">${escapeHtml(label)}</span>
   <button class="mj-modal-close" data-action="next-month" style="width:30px;height:30px;border-radius:8px">‹</button>
 </div>`;
     }
@@ -1826,9 +1826,9 @@ ${hizbRows}`;
                 const done = reviewedToday.has(w.page);
                 const label = this.surahAtPage(w.page) || w.label || '';
                 return `
-<div class="mj-bead-wrap">
-  <button class="mj-bead${done ? ' done' : ' todo'}" data-action="bead" data-arg="${w.page}" title="${label}">${this.ar(w.page)}</button>
-  <span class="mj-bead-label">${label}</span>
+ <div class="mj-bead-wrap">
+   <button class="mj-bead${done ? ' done' : ' todo'}" data-action="bead" data-arg="${w.page}" title="${escapeHtml(label)}">${this.ar(w.page)}</button>
+   <span class="mj-bead-label">${escapeHtml(label)}</span>
 </div>`;
             })
             .join('');
