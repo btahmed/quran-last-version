@@ -1,5 +1,6 @@
 // RevisionPage.js — Murajaa Tracker (جدول المراجعة)
 // Implémentation native ES module — aucun iframe, aucun framework externe.
+// Données Quran : source api.alquran.cloud / tanzil.net (données Hafs 'an 'Asim, 604 pages).
 
 export function render() {
     return `<div id="mj-root" class="mj-page page active" dir="rtl" lang="ar"></div>`;
@@ -10,136 +11,190 @@ export function init() {
     if (!root) return;
     const app = new MurajaaTracker(root);
     app.mount();
-    // Nettoyage quand on quitte la page
     root._mjUnmount = () => app.unmount();
 }
+
+// ─────────────────────────────────────────────────────────────
+// Constantes Quran — embarquées pour fiabilité offline
+// Source : api.alquran.cloud meta + tanzil.net (Hafs, Madinah 604p)
+// ─────────────────────────────────────────────────────────────
+const _AR = '٠١٢٣٤٥٦٧٨٩';
+const arN = n => String(n).replace(/[0-9]/g, c => _AR[+c]);
+
+// 30 Juz avec leur plage de pages (vérifiée contre les débuts de sourates)
+const JUZ_DATA = [
+    { num: 1, label: 'الجزء الأول', from: 1, to: 21 },
+    { num: 2, label: 'الجزء الثاني', from: 22, to: 41 },
+    { num: 3, label: 'الجزء الثالث', from: 42, to: 61 },
+    { num: 4, label: 'الجزء الرابع', from: 62, to: 81 },
+    { num: 5, label: 'الجزء الخامس', from: 82, to: 101 },
+    { num: 6, label: 'الجزء السادس', from: 102, to: 121 },
+    { num: 7, label: 'الجزء السابع', from: 122, to: 141 },
+    { num: 8, label: 'الجزء الثامن', from: 142, to: 161 },
+    { num: 9, label: 'الجزء التاسع', from: 162, to: 181 },
+    { num: 10, label: 'الجزء العاشر', from: 182, to: 201 },
+    { num: 11, label: 'الجزء الحادي عشر', from: 202, to: 221 },
+    { num: 12, label: 'الجزء الثاني عشر', from: 222, to: 241 },
+    { num: 13, label: 'الجزء الثالث عشر', from: 242, to: 261 },
+    { num: 14, label: 'الجزء الرابع عشر', from: 262, to: 281 },
+    { num: 15, label: 'الجزء الخامس عشر', from: 282, to: 301 },
+    { num: 16, label: 'الجزء السادس عشر', from: 302, to: 321 },
+    { num: 17, label: 'الجزء السابع عشر', from: 322, to: 341 },
+    { num: 18, label: 'الجزء الثامن عشر', from: 342, to: 361 },
+    { num: 19, label: 'الجزء التاسع عشر', from: 362, to: 381 },
+    { num: 20, label: 'الجزء العشرون', from: 382, to: 401 },
+    { num: 21, label: 'الجزء الحادي والعشرون', from: 402, to: 421 },
+    { num: 22, label: 'الجزء الثاني والعشرون', from: 422, to: 441 },
+    { num: 23, label: 'الجزء الثالث والعشرون', from: 442, to: 461 },
+    { num: 24, label: 'الجزء الرابع والعشرون', from: 462, to: 481 },
+    { num: 25, label: 'الجزء الخامس والعشرون', from: 482, to: 501 },
+    { num: 26, label: 'الجزء السادس والعشرون', from: 502, to: 521 },
+    { num: 27, label: 'الجزء السابع والعشرون', from: 522, to: 541 },
+    { num: 28, label: 'الجزء الثامن والعشرون', from: 542, to: 561 },
+    { num: 29, label: 'الجزء التاسع والعشرون', from: 562, to: 581 },
+    { num: 30, label: 'الجزء الثلاثون', from: 582, to: 604 },
+];
+
+// 60 Hizbs — découpage approximatif par pages (chaque juz = 2 hizbs)
+const HIZB_DATA = JUZ_DATA.flatMap(j => {
+    const mid = Math.floor((j.from + j.to) / 2);
+    const n = (j.num - 1) * 2;
+    return [
+        { num: n + 1, juzNum: j.num, label: `الحزب ${arN(n + 1)}`, from: j.from, to: mid },
+        { num: n + 2, juzNum: j.num, label: `الحزب ${arN(n + 2)}`, from: mid + 1, to: j.to },
+    ];
+});
+
+// 114 Sourates (num, name, page de début, nb de versets — Hafs 'an 'Asim)
+const SURAH_FULL = [
+    { num: 1, name: 'الفاتحة', page: 1, verses: 7 },
+    { num: 2, name: 'البقرة', page: 2, verses: 286 },
+    { num: 3, name: 'آل عمران', page: 50, verses: 200 },
+    { num: 4, name: 'النساء', page: 77, verses: 176 },
+    { num: 5, name: 'المائدة', page: 106, verses: 120 },
+    { num: 6, name: 'الأنعام', page: 128, verses: 165 },
+    { num: 7, name: 'الأعراف', page: 151, verses: 206 },
+    { num: 8, name: 'الأنفال', page: 177, verses: 75 },
+    { num: 9, name: 'التوبة', page: 187, verses: 129 },
+    { num: 10, name: 'يونس', page: 208, verses: 109 },
+    { num: 11, name: 'هود', page: 221, verses: 123 },
+    { num: 12, name: 'يوسف', page: 235, verses: 111 },
+    { num: 13, name: 'الرعد', page: 249, verses: 43 },
+    { num: 14, name: 'إبراهيم', page: 255, verses: 52 },
+    { num: 15, name: 'الحجر', page: 262, verses: 99 },
+    { num: 16, name: 'النحل', page: 267, verses: 128 },
+    { num: 17, name: 'الإسراء', page: 282, verses: 111 },
+    { num: 18, name: 'الكهف', page: 293, verses: 110 },
+    { num: 19, name: 'مريم', page: 305, verses: 98 },
+    { num: 20, name: 'طه', page: 312, verses: 135 },
+    { num: 21, name: 'الأنبياء', page: 322, verses: 112 },
+    { num: 22, name: 'الحج', page: 332, verses: 78 },
+    { num: 23, name: 'المؤمنون', page: 342, verses: 118 },
+    { num: 24, name: 'النور', page: 350, verses: 64 },
+    { num: 25, name: 'الفرقان', page: 359, verses: 77 },
+    { num: 26, name: 'الشعراء', page: 367, verses: 227 },
+    { num: 27, name: 'النمل', page: 377, verses: 93 },
+    { num: 28, name: 'القصص', page: 385, verses: 88 },
+    { num: 29, name: 'العنكبوت', page: 396, verses: 69 },
+    { num: 30, name: 'الروم', page: 404, verses: 60 },
+    { num: 31, name: 'لقمان', page: 411, verses: 34 },
+    { num: 32, name: 'السجدة', page: 415, verses: 30 },
+    { num: 33, name: 'الأحزاب', page: 418, verses: 73 },
+    { num: 34, name: 'سبأ', page: 428, verses: 54 },
+    { num: 35, name: 'فاطر', page: 434, verses: 45 },
+    { num: 36, name: 'يس', page: 440, verses: 83 },
+    { num: 37, name: 'الصافات', page: 446, verses: 182 },
+    { num: 38, name: 'ص', page: 453, verses: 88 },
+    { num: 39, name: 'الزمر', page: 458, verses: 75 },
+    { num: 40, name: 'غافر', page: 467, verses: 85 },
+    { num: 41, name: 'فصلت', page: 477, verses: 54 },
+    { num: 42, name: 'الشورى', page: 483, verses: 53 },
+    { num: 43, name: 'الزخرف', page: 489, verses: 89 },
+    { num: 44, name: 'الدخان', page: 496, verses: 59 },
+    { num: 45, name: 'الجاثية', page: 499, verses: 37 },
+    { num: 46, name: 'الأحقاف', page: 502, verses: 35 },
+    { num: 47, name: 'محمد', page: 507, verses: 38 },
+    { num: 48, name: 'الفتح', page: 511, verses: 29 },
+    { num: 49, name: 'الحجرات', page: 515, verses: 18 },
+    { num: 50, name: 'ق', page: 518, verses: 45 },
+    { num: 51, name: 'الذاريات', page: 520, verses: 60 },
+    { num: 52, name: 'الطور', page: 523, verses: 49 },
+    { num: 53, name: 'النجم', page: 526, verses: 62 },
+    { num: 54, name: 'القمر', page: 528, verses: 55 },
+    { num: 55, name: 'الرحمن', page: 531, verses: 78 },
+    { num: 56, name: 'الواقعة', page: 534, verses: 96 },
+    { num: 57, name: 'الحديد', page: 537, verses: 29 },
+    { num: 58, name: 'المجادلة', page: 542, verses: 22 },
+    { num: 59, name: 'الحشر', page: 545, verses: 24 },
+    { num: 60, name: 'الممتحنة', page: 549, verses: 13 },
+    { num: 61, name: 'الصف', page: 551, verses: 14 },
+    { num: 62, name: 'الجمعة', page: 553, verses: 11 },
+    { num: 63, name: 'المنافقون', page: 554, verses: 11 },
+    { num: 64, name: 'التغابن', page: 556, verses: 18 },
+    { num: 65, name: 'الطلاق', page: 558, verses: 12 },
+    { num: 66, name: 'التحريم', page: 560, verses: 12 },
+    { num: 67, name: 'الملك', page: 562, verses: 30 },
+    { num: 68, name: 'القلم', page: 564, verses: 52 },
+    { num: 69, name: 'الحاقة', page: 566, verses: 52 },
+    { num: 70, name: 'المعارج', page: 568, verses: 44 },
+    { num: 71, name: 'نوح', page: 570, verses: 28 },
+    { num: 72, name: 'الجن', page: 572, verses: 28 },
+    { num: 73, name: 'المزمل', page: 574, verses: 20 },
+    { num: 74, name: 'المدثر', page: 575, verses: 56 },
+    { num: 75, name: 'القيامة', page: 577, verses: 40 },
+    { num: 76, name: 'الإنسان', page: 578, verses: 31 },
+    { num: 77, name: 'المرسلات', page: 580, verses: 50 },
+    { num: 78, name: 'النبأ', page: 582, verses: 40 },
+    { num: 79, name: 'النازعات', page: 583, verses: 46 },
+    { num: 80, name: 'عبس', page: 585, verses: 42 },
+    { num: 81, name: 'التكوير', page: 586, verses: 29 },
+    { num: 82, name: 'الانفطار', page: 587, verses: 19 },
+    { num: 83, name: 'المطففين', page: 587, verses: 36 },
+    { num: 84, name: 'الانشقاق', page: 589, verses: 25 },
+    { num: 85, name: 'البروج', page: 590, verses: 22 },
+    { num: 86, name: 'الطارق', page: 591, verses: 17 },
+    { num: 87, name: 'الأعلى', page: 591, verses: 19 },
+    { num: 88, name: 'الغاشية', page: 592, verses: 26 },
+    { num: 89, name: 'الفجر', page: 593, verses: 30 },
+    { num: 90, name: 'البلد', page: 594, verses: 20 },
+    { num: 91, name: 'الشمس', page: 595, verses: 15 },
+    { num: 92, name: 'الليل', page: 595, verses: 21 },
+    { num: 93, name: 'الضحى', page: 596, verses: 11 },
+    { num: 94, name: 'الشرح', page: 596, verses: 8 },
+    { num: 95, name: 'التين', page: 597, verses: 8 },
+    { num: 96, name: 'العلق', page: 597, verses: 19 },
+    { num: 97, name: 'القدر', page: 598, verses: 5 },
+    { num: 98, name: 'البينة', page: 598, verses: 8 },
+    { num: 99, name: 'الزلزلة', page: 599, verses: 8 },
+    { num: 100, name: 'العاديات', page: 599, verses: 11 },
+    { num: 101, name: 'القارعة', page: 600, verses: 11 },
+    { num: 102, name: 'التكاثر', page: 600, verses: 8 },
+    { num: 103, name: 'العصر', page: 601, verses: 3 },
+    { num: 104, name: 'الهمزة', page: 601, verses: 9 },
+    { num: 105, name: 'الفيل', page: 601, verses: 5 },
+    { num: 106, name: 'قريش', page: 602, verses: 4 },
+    { num: 107, name: 'الماعون', page: 602, verses: 7 },
+    { num: 108, name: 'الكوثر', page: 602, verses: 3 },
+    { num: 109, name: 'الكافرون', page: 603, verses: 6 },
+    { num: 110, name: 'النصر', page: 603, verses: 3 },
+    { num: 111, name: 'المسد', page: 603, verses: 5 },
+    { num: 112, name: 'الإخلاص', page: 604, verses: 4 },
+    { num: 113, name: 'الفلق', page: 604, verses: 5 },
+    { num: 114, name: 'الناس', page: 604, verses: 6 },
+];
 
 // ─────────────────────────────────────────────────────────────
 // Classe principale
 // ─────────────────────────────────────────────────────────────
 class MurajaaTracker {
-    KEY = 'murajaa_v4';
+    TEACHER_KEY = 'murajaa_v4';
     OLD_KEY = 'murajaa_v3';
     START_DAY = '2026-08-21';
     BATCH = 10;
     DAY_LABELS = ['أحد', 'إثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة', 'سبت'];
 
-    SURAH_STARTS = [
-        { name: 'الفاتحة', page: 1 },
-        { name: 'البقرة', page: 2 },
-        { name: 'آل عمران', page: 50 },
-        { name: 'النساء', page: 77 },
-        { name: 'المائدة', page: 106 },
-        { name: 'الأنعام', page: 128 },
-        { name: 'الأعراف', page: 151 },
-        { name: 'الأنفال', page: 177 },
-        { name: 'التوبة', page: 187 },
-        { name: 'يونس', page: 208 },
-        { name: 'هود', page: 221 },
-        { name: 'يوسف', page: 235 },
-        { name: 'الرعد', page: 249 },
-        { name: 'إبراهيم', page: 255 },
-        { name: 'الحجر', page: 262 },
-        { name: 'النحل', page: 267 },
-        { name: 'الإسراء', page: 282 },
-        { name: 'الكهف', page: 293 },
-        { name: 'مريم', page: 305 },
-        { name: 'طه', page: 312 },
-        { name: 'الأنبياء', page: 322 },
-        { name: 'الحج', page: 332 },
-        { name: 'المؤمنون', page: 342 },
-        { name: 'النور', page: 350 },
-        { name: 'الفرقان', page: 359 },
-        { name: 'الشعراء', page: 367 },
-        { name: 'النمل', page: 377 },
-        { name: 'القصص', page: 385 },
-        { name: 'العنكبوت', page: 396 },
-        { name: 'الروم', page: 404 },
-        { name: 'لقمان', page: 411 },
-        { name: 'السجدة', page: 415 },
-        { name: 'الأحزاب', page: 418 },
-        { name: 'سبأ', page: 428 },
-        { name: 'فاطر', page: 434 },
-        { name: 'يس', page: 440 },
-        { name: 'الصافات', page: 446 },
-        { name: 'ص', page: 453 },
-        { name: 'الزمر', page: 458 },
-        { name: 'غافر', page: 467 },
-        { name: 'فصلت', page: 477 },
-        { name: 'الشورى', page: 483 },
-        { name: 'الزخرف', page: 489 },
-        { name: 'الدخان', page: 496 },
-        { name: 'الجاثية', page: 499 },
-        { name: 'الأحقاف', page: 502 },
-        { name: 'محمد', page: 507 },
-        { name: 'الفتح', page: 511 },
-        { name: 'الحجرات', page: 515 },
-        { name: 'ق', page: 518 },
-        { name: 'الذاريات', page: 520 },
-        { name: 'الطور', page: 523 },
-        { name: 'النجم', page: 526 },
-        { name: 'القمر', page: 528 },
-        { name: 'الرحمن', page: 531 },
-        { name: 'الواقعة', page: 534 },
-        { name: 'الحديد', page: 537 },
-        { name: 'المجادلة', page: 542 },
-        { name: 'الحشر', page: 545 },
-        { name: 'الممتحنة', page: 549 },
-        { name: 'الصف', page: 551 },
-        { name: 'الجمعة', page: 553 },
-        { name: 'المنافقون', page: 554 },
-        { name: 'التغابن', page: 556 },
-        { name: 'الطلاق', page: 558 },
-        { name: 'التحريم', page: 560 },
-        { name: 'الملك', page: 562 },
-        { name: 'القلم', page: 564 },
-        { name: 'الحاقة', page: 566 },
-        { name: 'المعارج', page: 568 },
-        { name: 'نوح', page: 570 },
-        { name: 'الجن', page: 572 },
-        { name: 'المزمل', page: 574 },
-        { name: 'المدثر', page: 575 },
-        { name: 'القيامة', page: 577 },
-        { name: 'الإنسان', page: 578 },
-        { name: 'المرسلات', page: 580 },
-        { name: 'النبأ', page: 582 },
-        { name: 'النازعات', page: 583 },
-        { name: 'عبس', page: 585 },
-        { name: 'التكوير', page: 586 },
-        { name: 'الانفطار', page: 587 },
-        { name: 'المطففين', page: 587 },
-        { name: 'الانشقاق', page: 589 },
-        { name: 'البروج', page: 590 },
-        { name: 'الطارق', page: 591 },
-        { name: 'الأعلى', page: 591 },
-        { name: 'الغاشية', page: 592 },
-        { name: 'الفجر', page: 593 },
-        { name: 'البلد', page: 594 },
-        { name: 'الشمس', page: 595 },
-        { name: 'الليل', page: 595 },
-        { name: 'الضحى', page: 596 },
-        { name: 'الشرح', page: 596 },
-        { name: 'التين', page: 597 },
-        { name: 'العلق', page: 597 },
-        { name: 'القدر', page: 598 },
-        { name: 'البينة', page: 598 },
-        { name: 'الزلزلة', page: 599 },
-        { name: 'العاديات', page: 599 },
-        { name: 'القارعة', page: 600 },
-        { name: 'التكاثر', page: 600 },
-        { name: 'العصر', page: 601 },
-        { name: 'الهمزة', page: 601 },
-        { name: 'الفيل', page: 601 },
-        { name: 'قريش', page: 602 },
-        { name: 'الماعون', page: 602 },
-        { name: 'الكوثر', page: 602 },
-        { name: 'الكافرون', page: 603 },
-        { name: 'النصر', page: 603 },
-        { name: 'المسد', page: 603 },
-        { name: 'الإخلاص', page: 604 },
-        { name: 'الفلق', page: 604 },
-        { name: 'الناس', page: 604 },
-    ];
+    // Alias pour la compatibilité avec surahAtPage() qui utilise this.SURAH_STARTS
+    SURAH_STARTS = SURAH_FULL;
 
     MEMO_ITEMS = [
         { name: 'آل عمران (تكملة)', start: 53, end: 76 },
@@ -230,22 +285,40 @@ class MurajaaTracker {
         cyclesDone: 0,
         activeDates: [],
         theme: null,
+        configured: false,
     };
 
     constructor(container) {
         this.container = container;
         this.state = {
-            d: this.loadData(),
+            d: null,
             tab: 'new',
             calView: 'week',
             calOffset: 0,
             selectedDay: null,
+            wiz: null, // wizard state — non-null quand setup requis
         };
-        this._bound = null; // listener délégué
+        this._bound = null;
     }
 
     // ── Cycle de vie ──────────────────────────────────────────
     mount() {
+        this.state.d = this.loadData();
+
+        if (this.needsSetup()) {
+            this.state.wiz = {
+                mode: null,
+                expandedJuz: new Set(),
+                expandedHizb: new Set(),
+                selected: new Set(), // Set de numéros de sourates (1-114)
+                importText: '',
+                importError: null,
+                copied: false,
+            };
+            this.update();
+            return;
+        }
+
         this.autoAdvanceBunker();
         this.promoteByDate();
         this.ensureActiveTargets();
@@ -280,27 +353,77 @@ class MurajaaTracker {
 
     unmount() {
         clearInterval(this.rollTimer);
-        document.removeEventListener('visibilitychange', this._onVis);
-        window.removeEventListener('beforeunload', this._onLeave);
-        window.removeEventListener('pagehide', this._onLeave);
+        if (this._onVis) document.removeEventListener('visibilitychange', this._onVis);
+        if (this._onLeave) {
+            window.removeEventListener('beforeunload', this._onLeave);
+            window.removeEventListener('pagehide', this._onLeave);
+        }
         if (this._bound) this.container.removeEventListener('click', this._bound);
+    }
+
+    // ── Identification utilisateur ───────────────────────────
+    getUserId() {
+        try {
+            const u = window.QuranReview?.state?.user;
+            if (u?.id) return u.id;
+            const stored = JSON.parse(
+                localStorage.getItem('quran_auth_user') || localStorage.getItem('sb-user') || '{}'
+            );
+            return stored.id || null;
+        } catch {
+            return null;
+        }
+    }
+
+    getUserRole() {
+        try {
+            return (
+                window.QuranReview?.state?.user?.role ||
+                JSON.parse(localStorage.getItem('quran_auth_user') || '{}').role ||
+                null
+            );
+        } catch {
+            return null;
+        }
+    }
+
+    getUserKey() {
+        const uid = this.getUserId();
+        const role = this.getUserRole();
+        if (!uid || role === 'teacher' || role === 'admin') return this.TEACHER_KEY;
+        return `murajaa_student_${uid}`;
+    }
+
+    needsSetup() {
+        const key = this.getUserKey();
+        if (key === this.TEACHER_KEY) return false; // le prof a toujours ses données
+        const raw = localStorage.getItem(key);
+        if (!raw) return true;
+        try {
+            return !JSON.parse(raw).configured;
+        } catch {
+            return true;
+        }
     }
 
     // ── Persistance ───────────────────────────────────────────
     loadData() {
         const base = JSON.parse(JSON.stringify(this.DEFAULTS));
+        const key = this.getUserKey();
         try {
-            const raw = localStorage.getItem(this.KEY) || localStorage.getItem(this.OLD_KEY);
+            const raw =
+                localStorage.getItem(key) ||
+                (key === this.TEACHER_KEY ? localStorage.getItem(this.OLD_KEY) : null);
             if (raw) return Object.assign(base, JSON.parse(raw));
         } catch (e) {
-            /* ignore parse errors, use defaults */
+            /* ignore, use defaults */
         }
         return base;
     }
 
     persist() {
         try {
-            localStorage.setItem(this.KEY, JSON.stringify(this.state.d));
+            localStorage.setItem(this.getUserKey(), JSON.stringify(this.state.d));
         } catch (e) {
             /* quota exceeded */
         }
@@ -316,9 +439,9 @@ class MurajaaTracker {
         this.update();
     }
 
-    // ── Helpers ───────────────────────────────────────────────
+    // ── Helpers généraux ─────────────────────────────────────
     ar(n) {
-        return String(n).replace(/[0-9]/g, ch => '٠١٢٣٤٥٦٧٨٩'[+ch]);
+        return String(n).replace(/[0-9]/g, c => _AR[+c]);
     }
 
     today() {
@@ -386,7 +509,7 @@ class MurajaaTracker {
 
     surahAtPage(page) {
         let best = null;
-        for (const s of this.SURAH_STARTS) {
+        for (const s of SURAH_FULL) {
             if (s.page <= page) best = s;
             else break;
         }
@@ -452,6 +575,170 @@ class MurajaaTracker {
         (d.bucket || []).forEach(b => set.add(b.page));
         (d.pendingConfirm || []).forEach(p => set.add(p.page));
         return set;
+    }
+
+    // ── Helpers Quran (arbre Juz → Hizb → Sourate) ───────────
+    surahPageEnd(snum) {
+        const idx = snum - 1;
+        const next = SURAH_FULL[idx + 1];
+        return Math.max(SURAH_FULL[idx].page, next ? next.page - 1 : 604);
+    }
+
+    // Sourates dont la 1re page est dans [fromPage, toPage]
+    surahsStartingInRange(fromPage, toPage) {
+        return SURAH_FULL.filter(s => s.page >= fromPage && s.page <= toPage);
+    }
+
+    surahsInJuz(juzNum) {
+        const j = JUZ_DATA[juzNum - 1];
+        return this.surahsStartingInRange(j.from, j.to);
+    }
+
+    surahsInHizb(hizbNum) {
+        const h = HIZB_DATA[hizbNum - 1];
+        return this.surahsStartingInRange(h.from, h.to);
+    }
+
+    // état case à cocher : 'all' | 'partial' | 'none'
+    juzCheckState(juzNum) {
+        const surahs = this.surahsInJuz(juzNum);
+        if (!surahs.length) return 'none';
+        const sel = surahs.filter(s => this.state.wiz.selected.has(s.num)).length;
+        if (sel === 0) return 'none';
+        return sel === surahs.length ? 'all' : 'partial';
+    }
+
+    hizbCheckState(hizbNum) {
+        const surahs = this.surahsInHizb(hizbNum);
+        if (!surahs.length) return 'none';
+        const sel = surahs.filter(s => this.state.wiz.selected.has(s.num)).length;
+        if (sel === 0) return 'none';
+        return sel === surahs.length ? 'all' : 'partial';
+    }
+
+    // ── Logique wizard ────────────────────────────────────────
+    wizToggleJuz(juzNum) {
+        const w = this.state.wiz;
+        const surahs = this.surahsInJuz(juzNum);
+        const state = this.juzCheckState(juzNum);
+        if (state === 'all') {
+            surahs.forEach(s => w.selected.delete(s.num));
+        } else {
+            surahs.forEach(s => w.selected.add(s.num));
+        }
+        this.update();
+    }
+
+    wizToggleHizb(hizbNum) {
+        const w = this.state.wiz;
+        const surahs = this.surahsInHizb(hizbNum);
+        const state = this.hizbCheckState(hizbNum);
+        if (state === 'all') {
+            surahs.forEach(s => w.selected.delete(s.num));
+        } else {
+            surahs.forEach(s => w.selected.add(s.num));
+        }
+        this.update();
+    }
+
+    wizToggleSurah(snum) {
+        const w = this.state.wiz;
+        if (w.selected.has(snum)) w.selected.delete(snum);
+        else w.selected.add(snum);
+        this.update();
+    }
+
+    wizToggleExpand(type, num) {
+        const w = this.state.wiz;
+        const set = type === 'juz' ? w.expandedJuz : w.expandedHizb;
+        if (set.has(num)) set.delete(num);
+        else set.add(num);
+        this.update();
+    }
+
+    buildRangesFromSelected() {
+        const sel = this.state.wiz.selected;
+        if (!sel.size) return [];
+        const ranges = [];
+        const covered = new Set();
+
+        // Juz complets
+        for (const juz of JUZ_DATA) {
+            const surahs = this.surahsInJuz(juz.num);
+            if (surahs.length && surahs.every(s => sel.has(s.num))) {
+                ranges.push({ label: juz.label, from: juz.from, to: juz.to });
+                surahs.forEach(s => covered.add(s.num));
+            }
+        }
+
+        // Hizbs complets (parmi les sourates non encore couvertes par un juz entier)
+        for (const hizb of HIZB_DATA) {
+            const surahs = this.surahsInHizb(hizb.num).filter(s => !covered.has(s.num));
+            if (surahs.length && surahs.every(s => sel.has(s.num))) {
+                ranges.push({ label: hizb.label, from: hizb.from, to: hizb.to });
+                surahs.forEach(s => covered.add(s.num));
+            }
+        }
+
+        // Sourates individuelles restantes
+        for (const snum of [...sel].sort((a, b) => a - b)) {
+            if (!covered.has(snum)) {
+                const s = SURAH_FULL[snum - 1];
+                ranges.push({ label: s.name, from: s.page, to: this.surahPageEnd(snum) });
+                covered.add(snum);
+            }
+        }
+
+        return ranges.sort((a, b) => a.from - b.from);
+    }
+
+    finishSetup() {
+        const ranges = this.buildRangesFromSelected();
+        if (!ranges.length) return;
+        const d = JSON.parse(JSON.stringify(this.DEFAULTS));
+        d.bunkerRanges = ranges;
+        d.configured = true;
+        d.bunkerCursor = 0;
+        d.bunkerLastDate = null;
+        this.state.d = d;
+        this.persist();
+        this.state.wiz = null;
+        // Initialiser le tracker
+        this.autoAdvanceBunker();
+        this.promoteByDate();
+        this.ensureActiveTargets();
+        this.commit();
+    }
+
+    getExportCode() {
+        const payload = JSON.stringify({
+            v: 1,
+            bunkerRanges: this.state.d.bunkerRanges,
+            label: 'جدول المراجعة',
+        });
+        return btoa(encodeURIComponent(payload));
+    }
+
+    importFromCode(text) {
+        try {
+            const payload = JSON.parse(decodeURIComponent(atob(text.trim())));
+            if (!Array.isArray(payload.bunkerRanges) || !payload.bunkerRanges.length)
+                throw new Error('invalid');
+            const d = JSON.parse(JSON.stringify(this.DEFAULTS));
+            d.bunkerRanges = payload.bunkerRanges;
+            d.configured = true;
+            d.bunkerCursor = 0;
+            this.state.d = d;
+            this.persist();
+            this.state.wiz = null;
+            this.autoAdvanceBunker();
+            this.promoteByDate();
+            this.ensureActiveTargets();
+            this.commit();
+        } catch (_e) {
+            this.state.wiz.importError = 'الكود غير صالح — تأكد من نسخه كاملاً من الأستاذ.';
+            this.update();
+        }
     }
 
     // ── Logique quotidienne ───────────────────────────────────
@@ -636,7 +923,7 @@ class MurajaaTracker {
         }
     }
 
-    // ── Actions ───────────────────────────────────────────────
+    // ── Actions tracker ───────────────────────────────────────
     toggleMemorized(item) {
         item.memorized = !item.memorized;
         const h = this.hist();
@@ -770,15 +1057,13 @@ class MurajaaTracker {
 
     // ── Rendu ─────────────────────────────────────────────────
     update() {
-        // Supprimer le listener précédent avant de réinjecter le HTML
         if (this._bound) {
             this.container.removeEventListener('click', this._bound);
             this._bound = null;
         }
-        this.container.innerHTML = this.renderPage();
-        // Appliquer le thème
-        if ((this.state.d.theme || 'light') === 'dark')
-            this.container.setAttribute('data-dark', '');
+        this.container.innerHTML = this.state.wiz ? this.renderSetupWizard() : this.renderPage();
+        const theme = this.state.d?.theme || 'light';
+        if (theme === 'dark') this.container.setAttribute('data-dark', '');
         else this.container.removeAttribute('data-dark');
         this.bindEvents();
     }
@@ -787,15 +1072,73 @@ class MurajaaTracker {
         this._bound = e => {
             const el = e.target.closest('[data-action]');
             if (!el) return;
-            const act = el.dataset.action;
-            const arg = el.dataset.arg;
-            this._dispatch(act, arg, e);
+            this._dispatch(el.dataset.action, el.dataset.arg, e);
         };
         this.container.addEventListener('click', this._bound);
+
+        // Lecture du textarea import
+        const ta = this.container.querySelector('#mj-import-code');
+        if (ta) {
+            ta.addEventListener('input', () => {
+                if (this.state.wiz) {
+                    this.state.wiz.importText = ta.value;
+                    if (this.state.wiz.importError) {
+                        this.state.wiz.importError = null;
+                        this.update();
+                    }
+                }
+            });
+        }
     }
 
     _dispatch(act, arg) {
         const d = this.state.d;
+        // ── Actions wizard ──
+        if (act === 'wiz-mode') {
+            this.state.wiz.mode = arg;
+            this.update();
+            return;
+        }
+        if (act === 'wiz-back') {
+            this.state.wiz.mode = null;
+            this.state.wiz.importError = null;
+            this.update();
+            return;
+        }
+        if (act === 'wiz-expand') {
+            const [type, num] = arg.split(':');
+            this.wizToggleExpand(type, parseInt(num));
+            return;
+        }
+        if (act === 'wiz-toggle-juz') {
+            this.wizToggleJuz(parseInt(arg));
+            return;
+        }
+        if (act === 'wiz-toggle-hizb') {
+            this.wizToggleHizb(parseInt(arg));
+            return;
+        }
+        if (act === 'wiz-toggle-surah') {
+            this.wizToggleSurah(parseInt(arg));
+            return;
+        }
+        if (act === 'wiz-finish') {
+            this.finishSetup();
+            return;
+        }
+        if (act === 'wiz-import') {
+            const ta = this.container.querySelector('#mj-import-code');
+            this.importFromCode(ta ? ta.value : this.state.wiz.importText);
+            return;
+        }
+        if (act === 'export-copy') {
+            const ta = this.container.querySelector('#mj-export-code');
+            if (ta) ta.select();
+            navigator.clipboard?.writeText(this.getExportCode()).catch(() => {});
+            return;
+        }
+
+        // ── Actions tracker ──
         switch (act) {
             case 'tab':
                 this.setState({ tab: arg });
@@ -812,20 +1155,18 @@ class MurajaaTracker {
             case 'next-month':
                 this.setState({ calOffset: Math.min(0, this.state.calOffset + 1) });
                 break;
-            case 'day-open': {
+            case 'day-open':
                 this.syncTodayHistory();
                 this.persist();
                 this.setState({ selectedDay: arg });
                 break;
-            }
             case 'day-close':
                 this.setState({ selectedDay: null });
                 break;
-            case 'toggle-theme': {
+            case 'toggle-theme':
                 d.theme = (d.theme || 'light') === 'dark' ? 'light' : 'dark';
                 this.commit();
                 break;
-            }
             case 'toggle-memo': {
                 const item = arg === 'new' ? d.activeNew : d.activeOld;
                 if (item) {
@@ -854,10 +1195,154 @@ class MurajaaTracker {
             case 'consolidate':
                 this.consolidateBucket();
                 break;
+            case 'show-export':
+                this.setState({ showExport: !this.state.showExport });
+                break;
         }
     }
 
-    // ── Templates HTML ────────────────────────────────────────
+    // ─────────────────────────────────────────────────────────
+    // WIZARD — rendu
+    // ─────────────────────────────────────────────────────────
+    renderSetupWizard() {
+        const w = this.state.wiz;
+        return `
+<div class="mj-setup">
+  <div class="mj-setup-header">
+    <p class="mj-setup-title">🕌 جدول المراجعة</p>
+    <p class="mj-setup-sub">ابني جدولك الخاص أو استورد جدول الأستاذ</p>
+  </div>
+  ${!w.mode ? this.renderWizHome() : w.mode === 'build' ? this.renderWizTree() : this.renderWizImport()}
+</div>`;
+    }
+
+    renderWizHome() {
+        return `
+<div class="mj-choice-row">
+  <button class="mj-choice-btn" data-action="wiz-mode" data-arg="build">
+    <span class="mj-choice-icon">✏️</span>
+    <span class="mj-choice-label">أبني جدولي</span>
+    <span class="mj-choice-desc">اختار السور والأجزاء التي حفظتها من الشجرة</span>
+  </button>
+  <button class="mj-choice-btn" data-action="wiz-mode" data-arg="import">
+    <span class="mj-choice-icon">📥</span>
+    <span class="mj-choice-label">استورد جدول الأستاذ</span>
+    <span class="mj-choice-desc">ألصق الكود الذي أرسله الأستاذ</span>
+  </button>
+</div>`;
+    }
+
+    renderWizTree() {
+        const w = this.state.wiz;
+        const selCount = w.selected.size;
+        const totalSurahs = SURAH_FULL.length;
+
+        const treeRows = JUZ_DATA.map(juz => {
+            const juzState = this.juzCheckState(juz.num);
+            const juzExpanded = w.expandedJuz.has(juz.num);
+            const surahsInJuz = this.surahsInJuz(juz.num);
+
+            let hizbRows = '';
+            if (juzExpanded) {
+                const hizbs = HIZB_DATA.filter(h => h.juzNum === juz.num);
+                hizbRows = hizbs
+                    .map(hizb => {
+                        const hizbState = this.hizbCheckState(hizb.num);
+                        const hizbExpanded = w.expandedHizb.has(hizb.num);
+                        const surahsInHizb = this.surahsInHizb(hizb.num);
+
+                        let surahRows = '';
+                        if (hizbExpanded) {
+                            surahRows = surahsInHizb
+                                .map(s => {
+                                    const checked = w.selected.has(s.num);
+                                    const pEnd = this.surahPageEnd(s.num);
+                                    const pagesStr =
+                                        s.page === pEnd
+                                            ? `ص.${arN(s.page)}`
+                                            : `ص.${arN(s.page)}–${arN(pEnd)}`;
+                                    return `
+<div class="mj-tree-row mj-tree-surah">
+  <button class="mj-tree-check${checked ? ' checked' : ''}"
+          data-action="wiz-toggle-surah" data-arg="${s.num}"
+          aria-label="${s.name}">
+    ${checked ? '✓' : ''}
+  </button>
+  <span class="mj-tree-label" style="cursor:pointer" data-action="wiz-toggle-surah" data-arg="${s.num}">
+    ${s.name}
+    <span class="mj-tree-sub">${pagesStr} · ${arN(s.verses)} آية</span>
+  </span>
+</div>`;
+                                })
+                                .join('');
+                        }
+
+                        return `
+<div class="mj-tree-row mj-tree-hizb">
+  <button class="mj-tree-check${hizbState === 'all' ? ' checked' : hizbState === 'partial' ? ' partial' : ''}"
+          data-action="wiz-toggle-hizb" data-arg="${hizb.num}">
+    ${hizbState === 'all' ? '✓' : hizbState === 'partial' ? '─' : ''}
+  </button>
+  <span class="mj-tree-label">${hizb.label}
+    <span class="mj-tree-sub">ص.${arN(hizb.from)}–${arN(hizb.to)} · ${arN(surahsInHizb.length)} سور</span>
+  </span>
+  <button class="mj-tree-expand${hizbExpanded ? ' open' : ''}" data-action="wiz-expand" data-arg="hizb:${hizb.num}" aria-label="توسيع">›</button>
+</div>
+${surahRows}`;
+                    })
+                    .join('');
+            }
+
+            return `
+<div class="mj-tree-row mj-tree-juz">
+  <button class="mj-tree-check${juzState === 'all' ? ' checked' : juzState === 'partial' ? ' partial' : ''}"
+          data-action="wiz-toggle-juz" data-arg="${juz.num}">
+    ${juzState === 'all' ? '✓' : juzState === 'partial' ? '─' : ''}
+  </button>
+  <span class="mj-tree-label">${juz.label}
+    <span class="mj-tree-sub">ص.${arN(juz.from)}–${arN(juz.to)} · ${arN(surahsInJuz.length)} سور</span>
+  </span>
+  <button class="mj-tree-expand${juzExpanded ? ' open' : ''}" data-action="wiz-expand" data-arg="juz:${juz.num}" aria-label="توسيع">›</button>
+</div>
+${hizbRows}`;
+        }).join('');
+
+        return `
+<div class="mj-wiz-nav">
+  <button class="mj-wiz-back" data-action="wiz-back">‹</button>
+  <span class="mj-wiz-title">اختار ما حفظته</span>
+  <span class="mj-sel-count">${arN(selCount)} / ${arN(totalSurahs)} سورة</span>
+</div>
+<div class="mj-tree">${treeRows}</div>
+<button class="mj-btn mj-btn-primary mj-btn-full" data-action="wiz-finish"
+        ${selCount === 0 ? 'disabled' : ''}>
+  ✓ حفظ جدولي (${arN(selCount)} سورة)
+</button>
+<p class="mj-note">الحزب ≈ نصف الجزء · التقسيم بالصفحات تقريبي</p>`;
+    }
+
+    renderWizImport() {
+        const w = this.state.wiz;
+        return `
+<div class="mj-wiz-nav">
+  <button class="mj-wiz-back" data-action="wiz-back">‹</button>
+  <span class="mj-wiz-title">استوراد جدول الأستاذ</span>
+</div>
+<div class="mj-card" style="display:flex;flex-direction:column;gap:10px">
+  <p style="margin:0;font-size:13.5px;color:var(--text-secondary)">
+    اطلب من الأستاذ يشاركك كود الجدول، ثم الصقه هنا:
+  </p>
+  <textarea id="mj-import-code" class="mj-code-area"
+            placeholder="الصق الكود هنا..."
+            dir="ltr"></textarea>
+  ${w.importError ? `<p style="color:var(--mj-danger);font-size:12.5px;margin:0">${w.importError}</p>` : ''}
+  <button class="mj-btn mj-btn-primary mj-btn-full" data-action="wiz-import">📥 استورد الجدول</button>
+</div>`;
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // TRACKER — rendu
+    // ─────────────────────────────────────────────────────────
     renderPage() {
         const d = this.state.d;
         const streak = this.currentStreak();
@@ -882,7 +1367,7 @@ class MurajaaTracker {
   ${this.state.selectedDay ? this.renderDayModal(this.state.selectedDay) : ''}
   ${this.renderTabNav()}
   ${this.state.tab === 'new' ? this.renderNewTab(activeItems, todayH, wirdDone) : ''}
-  ${this.state.tab === 'muta' ? this.renderMutaTab(win, reviewedToday, wirdDone, wirdDoneToday) : ''}
+  ${this.state.tab === 'muta' ? this.renderMutaTab(win, reviewedToday, wirdDone) : ''}
   ${this.state.tab === 'tables' ? this.renderTablesTab() : ''}
 </div>`;
     }
@@ -1025,9 +1510,9 @@ class MurajaaTracker {
         const label =
             base.toLocaleDateString('ar', { month: 'long' }) + ' ' + this.ar(base.getFullYear());
         return `<div style="display:flex;align-items:center;gap:8px">
-  <button class="mj-modal-close" data-action="prev-month" aria-label="الشهر السابق" style="width:30px;height:30px;border-radius:8px">›</button>
+  <button class="mj-modal-close" data-action="prev-month" style="width:30px;height:30px;border-radius:8px">›</button>
   <span style="font-size:12.5px;font-weight:700">${label}</span>
-  <button class="mj-modal-close" data-action="next-month" aria-label="الشهر الجاي" style="width:30px;height:30px;border-radius:8px">‹</button>
+  <button class="mj-modal-close" data-action="next-month" style="width:30px;height:30px;border-radius:8px">‹</button>
 </div>`;
     }
 
@@ -1093,7 +1578,6 @@ class MurajaaTracker {
             con = h.confirmed || [],
             wirds = h.wirds || [];
         const isEmpty = !mem.length && !con.length && !wirds.length && !h.hizb && !h.cycles;
-
         const tasks = [
             {
                 icon: '📖',
@@ -1140,7 +1624,6 @@ class MurajaaTracker {
             lines.push({ icon: '🏛', title: this.ar(h.hizb) + ' حزب دخل دورة المراجعة', sub: '' });
         if (h.cycles)
             lines.push({ icon: '🎉', title: this.ar(h.cycles) + ' دورة مراجعة كاملة', sub: '' });
-
         return `
 <div class="mj-modal-overlay" data-action="day-close">
   <div class="mj-modal" onclick="event.stopPropagation()">
@@ -1193,7 +1676,6 @@ class MurajaaTracker {
         const d = this.state.d;
         const pending = d.pendingConfirm || [];
         const bucket = d.bucket || [];
-
         const memoCards = activeItems
             .map(item => {
                 const done = item.memorized;
@@ -1211,7 +1693,6 @@ class MurajaaTracker {
 </div>`;
             })
             .join('');
-
         const pendingRows = pending
             .map(
                 (p, i) => `
@@ -1222,7 +1703,6 @@ class MurajaaTracker {
 </div>`
             )
             .join('');
-
         const bucketBeads = bucket
             .slice(0, 15)
             .map(
@@ -1233,54 +1713,44 @@ class MurajaaTracker {
 </div>`
             )
             .join('');
-
         return `
 <section class="mj-card" aria-label="حفظ جديد">
   ${
       activeItems.length
-          ? `
-    <div class="mj-flex-between">
-      <h2 class="mj-section-title">📖 حفظ اليوم</h2>
-      <span class="mj-count">${this.ar((todayH.memorized || []).length)} / ٢ صفحة</span>
-    </div>
-    ${memoCards}
-  `
+          ? `<div class="mj-flex-between">
+           <h2 class="mj-section-title">📖 حفظ اليوم</h2>
+           <span class="mj-count">${this.ar((todayH.memorized || []).length)} / ٢ صفحة</span>
+         </div>${memoCards}`
           : `<p class="mj-empty">خلصت كل قوائم الحفظ 🎉</p>`
   }
-
   ${
       pending.length
-          ? `
-    <div class="mj-divider"></div>
-    <div class="mj-flex-between">
-      <h2 class="mj-section-title gold">⏳ بانتظار التثبيت</h2>
-      <span class="mj-count">${this.ar(pending.length)} صفحة</span>
-    </div>
-    ${pending.length > 1 ? `<button class="mj-btn mj-btn-primary mj-btn-full" data-action="confirm-all-pending">✓ ثبّت الكل دفعة وحدة</button>` : ''}
-    ${pendingRows}
-  `
+          ? `<div class="mj-divider"></div>
+         <div class="mj-flex-between">
+           <h2 class="mj-section-title gold">⏳ بانتظار التثبيت</h2>
+           <span class="mj-count">${this.ar(pending.length)} صفحة</span>
+         </div>
+         ${pending.length > 1 ? `<button class="mj-btn mj-btn-primary mj-btn-full" data-action="confirm-all-pending">✓ ثبّت الكل دفعة وحدة</button>` : ''}
+         ${pendingRows}`
           : ''
   }
-
   ${
       bucket.length
-          ? `
-    <div class="mj-divider"></div>
-    <div class="mj-flex-between">
-      <h2 class="mj-section-title gold">🟠 الحزب قيد التكوين</h2>
-      <span class="mj-count">${this.ar(Math.min(bucket.length, 10))} / ١٠</span>
-    </div>
-    <div class="mj-progress" style="height:6px"><div class="mj-progress-fill" style="width:${Math.min(100, Math.round((bucket.length / 10) * 100))}%"></div></div>
-    <div class="mj-beads">${bucketBeads}</div>
-    <p class="mj-note">🆕 جديد (خط متصل) · 📗 قديم (خط متقطع)</p>
-    <button class="mj-btn mj-btn-primary mj-btn-full" data-action="consolidate" ${bucket.length < 10 ? 'disabled' : ''}>✓ راجعت الحزب كامل — ثبّته بالدورة</button>
-  `
+          ? `<div class="mj-divider"></div>
+         <div class="mj-flex-between">
+           <h2 class="mj-section-title gold">🟠 الحزب قيد التكوين</h2>
+           <span class="mj-count">${this.ar(Math.min(bucket.length, 10))} / ١٠</span>
+         </div>
+         <div class="mj-progress" style="height:6px"><div class="mj-progress-fill" style="width:${Math.min(100, Math.round((bucket.length / 10) * 100))}%"></div></div>
+         <div class="mj-beads">${bucketBeads}</div>
+         <p class="mj-note">🆕 جديد (خط متصل) · 📗 قديم (خط متقطع)</p>
+         <button class="mj-btn mj-btn-primary mj-btn-full" data-action="consolidate" ${bucket.length < 10 ? 'disabled' : ''}>✓ راجعت الحزب كامل — ثبّته بالدورة</button>`
           : ''
   }
 </section>`;
     }
 
-    renderMutaTab(win, reviewedToday, wirdDone, _wirdDoneToday) {
+    renderMutaTab(win, reviewedToday, wirdDone) {
         const d = this.state.d;
         const reviewedInWin = win.filter(w => reviewedToday.has(w.page)).length;
         const winLabel = this._winLabel(win);
@@ -1288,7 +1758,6 @@ class MurajaaTracker {
         const totalPages = this.flattenPages(d.bunkerRanges).length;
         const cycleSet = new Set(d.cycleReviewed || []);
         const cycleCount = cycleSet.size;
-
         const beads = win
             .map(w => {
                 const done = reviewedToday.has(w.page);
@@ -1300,7 +1769,6 @@ class MurajaaTracker {
 </div>`;
             })
             .join('');
-
         return `
 <section class="mj-card" aria-label="مراجعة">
   <div class="mj-flex-between">
@@ -1312,7 +1780,7 @@ class MurajaaTracker {
   <div class="mj-beads">${beads}</div>
   <div class="mj-btn-row">
     <button class="mj-btn mj-btn-outline" data-action="confirm-all-bunker">✓ سمّعت الورد كامل</button>
-    <button class="mj-btn mj-btn-ghost" data-action="advance-next" title="ينتقل تلقائيًا بكرا — هالزر بس إذا بدك تسبقه">⏭ الورد الجاي</button>
+    <button class="mj-btn mj-btn-ghost" data-action="advance-next" title="ينتقل تلقائيًا بكرا">⏭ الورد الجاي</button>
   </div>
   ${wirdDone ? `<p class="mj-success-note">✅ خلصت ورد اليوم</p>` : ''}
   <p class="mj-note">${d.bunkerHistory || ''}</p>
@@ -1324,6 +1792,8 @@ class MurajaaTracker {
         const d = this.state.d;
         const bunkerRows = d.bunkerRanges || [];
         const cycleSet = new Set(d.cycleReviewed || []);
+        const showExport = this.state.showExport;
+        const exportCode = showExport ? this.getExportCode() : '';
 
         const rows = bunkerRows
             .map(r => {
@@ -1354,6 +1824,23 @@ class MurajaaTracker {
     </table>
   </div>
   <p class="mj-note">إجمالي الصفحات الثابتة: ${this.ar(this.flattenPages(d.bunkerRanges).length)} صفحة · ${this.ar(d.cyclesDone || 0)} دورة مكتملة</p>
+
+  <div class="mj-divider"></div>
+  <button class="mj-btn mj-btn-outline mj-btn-full" data-action="show-export">
+    ${showExport ? '▲ إخفاء كود المشاركة' : '📤 شارك الجدول مع الطلاب'}
+  </button>
+  ${
+      showExport
+          ? `
+  <div class="mj-export-wrap" style="background:var(--surface-raised);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:8px">
+    <p style="margin:0;font-size:12.5px;color:var(--text-secondary)">انسخ هذا الكود وأرسله للطلاب — سيستوردون جدولك مباشرة:</p>
+    <textarea id="mj-export-code" class="mj-code-area" readonly dir="ltr"
+              style="width:100%;min-height:60px;border-radius:10px;border:1.5px solid var(--border-subtle);background:var(--surface-card);color:var(--text-primary);font:12px/1.5 monospace;padding:10px;box-sizing:border-box;resize:none"
+              onclick="this.select()">${exportCode}</textarea>
+    <button class="mj-btn mj-btn-primary" data-action="export-copy">📋 انسخ الكود</button>
+  </div>`
+          : ''
+  }
 </section>`;
     }
 }
