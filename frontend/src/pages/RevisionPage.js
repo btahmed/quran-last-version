@@ -1346,7 +1346,7 @@ class MurajaaTracker {
           data-action="wiz-toggle-hizb" data-arg="${hizb.num}">
     ${hizbState === 'all' ? '✓' : hizbState === 'partial' ? '─' : ''}
   </button>
-  <span class="mj-tree-label">${hizb.label}
+  <span class="mj-tree-label">${escapeHtml(hizb.label)}
     <span class="mj-tree-sub">ص.${arN(hizb.from)}–${arN(hizb.to)} · ${arN(surahsInHizb.length)} سور</span>
   </span>
   <button class="mj-tree-expand${hizbExpanded ? ' open' : ''}" data-action="wiz-expand" data-arg="hizb:${hizb.num}" aria-label="توسيع">›</button>
@@ -1362,7 +1362,7 @@ ${surahRows}`;
           data-action="wiz-toggle-juz" data-arg="${juz.num}">
     ${juzState === 'all' ? '✓' : juzState === 'partial' ? '─' : ''}
   </button>
-  <span class="mj-tree-label">${juz.label}
+  <span class="mj-tree-label">${escapeHtml(juz.label)}
     <span class="mj-tree-sub">ص.${arN(juz.from)}–${arN(juz.to)} · ${arN(surahsInJuz.length)} سور</span>
   </span>
   <button class="mj-tree-expand${juzExpanded ? ' open' : ''}" data-action="wiz-expand" data-arg="juz:${juz.num}" aria-label="توسيع">›</button>
@@ -1494,7 +1494,7 @@ ${hizbRows}`;
       <span style="font-size:20px;line-height:1">📖</span>
       <span class="mj-plan-item-info">
         <span class="mj-plan-item-title">حفظ اليوم</span>
-        <span class="mj-plan-item-sub">${activeItems.length ? activeItems.map(i => 'صفحة ' + this.ar(i.page) + ' · ' + i.label).join(' — ') : 'خلصت كل القوائم 🎉'}</span>
+        <span class="mj-plan-item-sub">${activeItems.length ? activeItems.map(i => 'صفحة ' + this.ar(i.page) + ' · ' + escapeHtml(i.label)).join(' — ') : 'خلصت كل القوائم 🎉'}</span>
       </span>
       <span class="mj-plan-item-status" style="color:${memDone ? 'var(--mj-success)' : 'var(--gold-700,#b8956a)'}">
         ${memDone ? '✓ تم · ' + this.ar(memCount) + ' صفحة' : activeItems.length ? this.ar(Math.max(0, 2 - memCount)) + ' باقي' : '—'}
@@ -1516,7 +1516,7 @@ ${hizbRows}`;
       <span style="font-size:20px;line-height:1">🔁</span>
       <span class="mj-plan-item-info">
         <span class="mj-plan-item-title">ورد المراجعة</span>
-        <span class="mj-plan-item-sub">${winLabel || 'ما في ورد اليوم'}</span>
+        <span class="mj-plan-item-sub">${escapeHtml(winLabel || 'ما في ورد اليوم')}</span>
       </span>
       <span class="mj-plan-item-status" style="color:${wirdDone ? 'var(--mj-success)' : 'var(--gold-700,#b8956a)'}">
         ${wirdDone ? '✓ تم' : this.ar(reviewedInWin) + '/' + this.ar(win.length)}
@@ -1672,12 +1672,12 @@ ${hizbRows}`;
             lines.push({
                 icon: '📖',
                 title: 'حفظ ' + this.ar(mem.length) + ' صفحة',
-                sub:
-                    mem.map(m => this.ar(m.page)).join('، ') +
-                    ' — ' +
-                    [...new Set(mem.map(m => m.label))].join('، '),
+                 sub:
+                     mem.map(m => this.ar(m.page)).join('، ') +
+                     ' — ' +
+                     [...new Set(mem.map(m => m.label))].map(escapeHtml).join('، '),
             });
-        if (con.length)
+         if (con.length)
             lines.push({
                 icon: '✅',
                 title: 'تثبيت ' + this.ar(con.length) + ' صفحة',
@@ -1710,12 +1710,12 @@ ${hizbRows}`;
     ${isEmpty ? `<p class="mj-note">${(d.activeDates || []).includes(key) ? 'هاليوم مسجّل نشيط ✓ — التفاصيل ما كانت تنحفظ بالنسخة القديمة.' : 'هاليوم لسه ما فيه إنجاز مسجّل 🌱'}</p>` : ''}
     <div style="display:flex;flex-direction:column;gap:6px;max-height:280px;overflow-y:auto">
       ${lines
-          .map(
-              l => `<div class="mj-day-line">
+           .map(
+               l => `<div class="mj-day-line">
         <span style="font-size:16px;line-height:1">${l.icon}</span>
         <div class="mj-day-line-info">
-          <span class="mj-day-line-title">${l.title}</span>
-          ${l.sub ? `<span class="mj-day-line-sub">${l.sub}</span>` : ''}
+           <span class="mj-day-line-title">${escapeHtml(l.title)}</span>
+           ${l.sub ? `<span class="mj-day-line-sub">${escapeHtml(l.sub)}</span>` : ''}
         </div>
       </div>`
           )
@@ -1746,7 +1746,7 @@ ${hizbRows}`;
 <div class="mj-memo-card${done ? ' done' : ''}">
   <div class="mj-memo-page-num">${this.ar(item.page)}</div>
   <div class="mj-memo-info">
-    <span class="mj-memo-name">${item.label}</span>
+   <span class="mj-memo-name">${escapeHtml(item.label)}</span>
     <span class="mj-memo-tag">${item.source === 'new' ? '🆕 حفظ جديد' : '📗 مراجعة قديم'}</span>
   </div>
   <button class="mj-btn${done ? ' mj-btn-primary' : ' mj-btn-outline'}"
@@ -1761,7 +1761,7 @@ ${hizbRows}`;
                 (p, i) => `
 <div class="mj-pending-item">
   <span class="mj-pending-num">${this.ar(p.page)}</span>
-  <span class="mj-pending-label">${p.source === 'new' ? '🆕' : '📗'} ${p.label}</span>
+  <span class="mj-pending-label">${p.source === 'new' ? '🆕' : '📗'} ${escapeHtml(p.label)}</span>
   <button class="mj-btn mj-btn-outline" data-action="confirm-pending" data-arg="${i}">✓ ثبّت</button>
 </div>`
             )
@@ -1772,7 +1772,7 @@ ${hizbRows}`;
                 b => `
 <div class="mj-bead-wrap">
   <div class="mj-bead mj-bead-static" style="border-style:${b.source === 'old' ? 'dashed' : 'solid'}">${this.ar(b.page)}</div>
-  <span class="mj-bead-label">${b.label}</span>
+   <span class="mj-bead-label">${escapeHtml(b.label)}</span>
 </div>`
             )
             .join('');
@@ -1838,7 +1838,7 @@ ${hizbRows}`;
     <h2 class="mj-section-title">🟢 ورد اليوم من الثابت</h2>
     <span class="mj-count">${this.ar(reviewedInWin)} / ${this.ar(win.length)}</span>
   </div>
-  ${winLabel ? `<p style="margin:0;font-size:13px;font-weight:600;color:var(--gold-700,#b8956a)">${winLabel}</p>` : ''}
+   ${winLabel ? `<p style="margin:0;font-size:13px;font-weight:600;color:var(--gold-700,#b8956a)">${escapeHtml(winLabel)}</p>` : ''}
   <div class="mj-progress" style="height:6px"><div class="mj-progress-fill" style="width:${pct}%"></div></div>
   <div class="mj-beads">${beads}</div>
   <div class="mj-btn-row">
@@ -1867,7 +1867,7 @@ ${hizbRows}`;
                         ? `<span style="color:var(--mj-success);font-weight:700">✓ مراجعة هالدورة</span>`
                         : `<span style="color:var(--text-secondary)">${this.ar(reviewed)}/${this.ar(pagesInRange.length)}</span>`;
                 return `<tr>
-  <td>${r.label}</td>
+  <td>${escapeHtml(r.label)}</td>
   <td style="font-variant-numeric:tabular-nums">${this.ar(r.from)}</td>
   <td style="font-variant-numeric:tabular-nums">${this.ar(r.to)}</td>
   <td>${status}</td>
@@ -1890,7 +1890,7 @@ ${hizbRows}`;
 
   <div class="mj-divider"></div>
   <button class="mj-btn mj-btn-outline mj-btn-full" data-action="show-export">
-    ${showExport ? '▲ إخفاء كود المشاركة' : '📤 شارك الجدول مع الطلاب'}
+     ${showExport ? '▲ إخفاء كود المشاركة' : '📤 شارك الجدول مع الطلاب'}
   </button>
   ${
       showExport
@@ -1900,7 +1900,7 @@ ${hizbRows}`;
     <textarea id="mj-export-code" class="mj-code-area" readonly dir="ltr"
               style="width:100%;min-height:60px;border-radius:10px;border:1.5px solid var(--border-subtle);background:var(--surface-card);color:var(--text-primary);font:12px/1.5 monospace;padding:10px;box-sizing:border-box;resize:none"
               onclick="this.select()">${exportCode}</textarea>
-    <button class="mj-btn mj-btn-primary" data-action="export-copy">📋 انسخ الكود</button>
+    <button class="mj-btn mj-btn-primary" data-action="export-copy">${this.state.exportCopied ? '✓ تم النسخ' : '📋 انسخ الكود'}</button>
   </div>`
           : ''
   }
