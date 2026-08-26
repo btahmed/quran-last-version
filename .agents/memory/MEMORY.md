@@ -1,0 +1,1 @@
+- [Browser verification](browser-verification.md) — use the preinstalled Chromium/CDP path when npm test dependencies are blocked.
