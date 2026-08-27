@@ -18,4 +18,11 @@ beforeEach(() => {
     localStorage.clear();
 });
 
-global.supabase = { createClient: vi.fn(() => ({ auth: { onAuthStateChange: vi.fn(), getUser: vi.fn() }, from: vi.fn(), storage: { from: vi.fn() }, channel: vi.fn(() => ({ on: vi.fn(() => ({ subscribe: vi.fn() })) })) })) };
+global.supabase = {
+    createClient: vi.fn(() => ({
+        auth: { onAuthStateChange: vi.fn(), getUser: vi.fn() },
+        from: vi.fn(),
+        storage: { from: vi.fn() },
+        channel: vi.fn(() => ({ on: vi.fn(() => ({ subscribe: vi.fn() })) })),
+    })),
+};

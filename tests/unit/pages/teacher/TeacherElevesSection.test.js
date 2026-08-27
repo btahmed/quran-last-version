@@ -82,7 +82,6 @@ describe('init — chargement liste élèves', () => {
         const list = document.getElementById('teacher-students-list');
         expect(list.innerHTML).toContain('فشل');
     });
-
 });
 
 // ─── viewStudentProgress ──────────────────────────────────────────────────
