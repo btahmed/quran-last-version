@@ -654,12 +654,12 @@ class MurajaaTracker {
 
     surahsInJuz(juzNum) {
         const j = JUZ_DATA[juzNum - 1];
-        return j ? this.surahsStartingInRange(j.from, j.to) : [];
+        return j ? this.surahsOverlappingRange(j.from, j.to) : [];
     }
 
     surahsInHizb(hizbNum) {
         const h = HIZB_DATA[hizbNum - 1];
-        return h ? this.surahsStartingInRange(h.from, h.to) : [];
+        return h ? this.surahsOverlappingRange(h.from, h.to) : [];
     }
 
     surahsOverlappingRange(fromPage, toPage) {
