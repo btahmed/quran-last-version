@@ -1,2 +1,3 @@
 - [Browser verification](browser-verification.md) — use the preinstalled Chromium/CDP path when npm test dependencies are blocked.
 - [Static app post-merge](static-post-merge.md) — keep merge setup independent of npm downloads when the app has no build step.
+- [Vercel project split](vercel-project-split.md) — frontend and legacy API Vercel projects watch this repo, but only the frontend source is present.
