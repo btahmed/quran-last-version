@@ -111,6 +111,23 @@
 .mj-theme-btn:hover {
     border-color: var(--color-primary);
 }
+.mj-edit-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1px solid var(--border-subtle, #e5e5e5);
+    background: var(--surface-card, #fff);
+    font-size: 17px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-sm);
+    transition: border-color 0.15s;
+}
+.mj-edit-btn:hover {
+    border-color: var(--color-primary);
+}
 
 /* ── Stat cards ───────────────────────────────────────────── */
 .mj-stats-grid {

@@ -725,16 +725,23 @@ class MurajaaTracker {
     finishSetup() {
         const ranges = this.buildRangesFromSelected();
         if (!ranges.length) return;
-        const d = JSON.parse(JSON.stringify(this.DEFAULTS));
-        d.bunkerRanges = ranges;
-        d.configured = true;
-        d.rangesRebuilt = true;
-        d.bunkerCursor = 0;
-        d.bunkerLastDate = null;
-        this.state.d = d;
+        if (this.state.d?.configured) {
+            // Édition d'un plan existant : conserver l'historique, juste mettre à jour les plages
+            this.state.d.bunkerRanges = ranges;
+            this.state.d.bunkerCursor = 0;
+            this.state.d.rangesRebuilt = true;
+            this.state.d.bunkerLastDate = null;
+        } else {
+            const d = JSON.parse(JSON.stringify(this.DEFAULTS));
+            d.bunkerRanges = ranges;
+            d.configured = true;
+            d.rangesRebuilt = true;
+            d.bunkerCursor = 0;
+            d.bunkerLastDate = null;
+            this.state.d = d;
+        }
         this.persist();
         this.state.wiz = null;
-        // Initialiser le tracker
         this.autoAdvanceBunker();
         this.promoteByDate();
         this.ensureActiveTargets();
@@ -1141,6 +1148,24 @@ class MurajaaTracker {
             this.update();
             return;
         }
+        if (act === 'wiz-edit') {
+            const existingRanges = (this.state.d?.bunkerRanges || []).map(r => ({
+                from: r.from,
+                to: r.to,
+                label: r.label || `ص.${r.from}–${r.to}`,
+                type: 'page',
+            }));
+            this.state.wiz = {
+                mode: 'build',
+                tab: 'juz',
+                ranges: existingRanges,
+                importText: '',
+                importError: null,
+                copied: false,
+            };
+            this.update();
+            return;
+        }
         if (act === 'wiz-tab') {
             this.wizSetTab(arg);
             return;
@@ -1482,9 +1507,12 @@ ${content}
       <p class="mj-subtitle">جدول المراجعة · ${dayLabel}</p>
     </div>
   </div>
-  <button class="mj-theme-btn" data-action="toggle-theme" aria-label="تبديل الوضع الليلي">
-    ${theme === 'dark' ? '☀️' : '🌙'}
-  </button>
+  <div style="display:flex;gap:8px;align-items:center">
+    <button class="mj-edit-btn" data-action="wiz-edit" aria-label="تعديل الجدول" title="تعديل الجدول">✏️</button>
+    <button class="mj-theme-btn" data-action="toggle-theme" aria-label="تبديل الوضع الليلي">
+      ${theme === 'dark' ? '☀️' : '🌙'}
+    </button>
+  </div>
 </header>`;
     }
 
