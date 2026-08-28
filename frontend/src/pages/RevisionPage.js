@@ -673,6 +673,35 @@ class MurajaaTracker {
         return this.state.wiz.ranges.some(r => r.from === from && r.to === to);
     }
 
+    // 'all' | 'partial' | 'none' selon les hizbs sélectionnés
+    juzSelectionState(juzNum) {
+        const hizbs = HIZB_DATA.filter(h => h.juzNum === juzNum);
+        if (!hizbs.length) return 'none';
+        const sel = hizbs.filter(h => this.isRangeSelected(h.from, h.to)).length;
+        if (sel === 0) return 'none';
+        return sel === hizbs.length ? 'all' : 'partial';
+    }
+
+    // Sélectionner un juz = ajouter/retirer tous ses hizbs
+    wizToggleJuz(juzNum) {
+        const w = this.state.wiz;
+        const hizbs = HIZB_DATA.filter(h => h.juzNum === juzNum);
+        const state = this.juzSelectionState(juzNum);
+        if (state === 'all') {
+            hizbs.forEach(h => {
+                const idx = w.ranges.findIndex(r => r.from === h.from && r.to === h.to);
+                if (idx >= 0) w.ranges.splice(idx, 1);
+            });
+        } else {
+            hizbs.forEach(h => {
+                if (!this.isRangeSelected(h.from, h.to)) {
+                    w.ranges.push({ from: h.from, to: h.to, label: h.label, type: 'hizb' });
+                }
+            });
+        }
+        this.update();
+    }
+
     wizSetTab(tab) {
         this.state.wiz.tab = tab;
         this.update();
@@ -1116,6 +1145,10 @@ class MurajaaTracker {
             this.wizSetTab(arg);
             return;
         }
+        if (act === 'wiz-toggle-juz') {
+            this.wizToggleJuz(parseInt(arg));
+            return;
+        }
         if (act === 'wiz-toggle-range') {
             const el = e.target.closest('[data-action]');
             if (el) {
@@ -1273,21 +1306,18 @@ class MurajaaTracker {
         let content;
         if (w.tab === 'juz') {
             content = `<div class="mj-tree">${JUZ_DATA.map(j => {
-                const sel = this.isRangeSelected(j.from, j.to);
+                const st = this.juzSelectionState(j.num);
+                const hizbCount = HIZB_DATA.filter(h => h.juzNum === j.num).length;
                 return `
 <div class="mj-tree-row mj-tree-juz">
-  <button class="mj-tree-check${sel ? ' checked' : ''}"
-          data-action="wiz-toggle-range"
-          data-from="${j.from}" data-to="${j.to}"
-          data-label="${escapeHtml(j.label)}" data-rtype="juz">
-    ${sel ? '✓' : ''}
+  <button class="mj-tree-check${st === 'all' ? ' checked' : st === 'partial' ? ' partial' : ''}"
+          data-action="wiz-toggle-juz" data-arg="${j.num}">
+    ${st === 'all' ? '✓' : st === 'partial' ? '─' : ''}
   </button>
   <span class="mj-tree-label" style="cursor:pointer"
-        data-action="wiz-toggle-range"
-        data-from="${j.from}" data-to="${j.to}"
-        data-label="${escapeHtml(j.label)}" data-rtype="juz">
+        data-action="wiz-toggle-juz" data-arg="${j.num}">
     ${escapeHtml(j.label)}
-    <span class="mj-tree-sub">ص.${arN(j.from)}–${arN(j.to)}</span>
+    <span class="mj-tree-sub">ص.${arN(j.from)}–${arN(j.to)} · ${arN(hizbCount)} حزب</span>
   </span>
 </div>`;
             }).join('')}</div>`;
