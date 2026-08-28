@@ -1,15 +1,46 @@
 // Service d'authentification Supabase — QuranReview
 import { supabaseClient } from './supabase-client.js';
 
-function buildEmail(username) {
-    const normalized = (username || '').trim().toLowerCase();
-    return `${normalized}@quranreview.app`;
+const INTERNAL_EMAIL_DOMAINS = ['quranreview.local', 'quranreview.app'];
+
+function normalizeIdentifier(identifier) {
+    return (identifier || '').trim().toLowerCase();
+}
+
+function buildEmail(username, domain = INTERNAL_EMAIL_DOMAINS[0]) {
+    const normalized = normalizeIdentifier(username);
+    return normalized.includes('@') ? normalized : `${normalized}@${domain}`;
+}
+
+function isInvalidCredentialsError(error) {
+    const code = String(error?.code || '').toLowerCase();
+    const message = String(error?.message || '').toLowerCase();
+
+    return (
+        code === 'invalid_credentials' ||
+        message.includes('invalid login credentials') ||
+        message.includes('invalid credentials')
+    );
 }
 
 export async function signIn(username, password) {
     try {
-        const email = buildEmail(username);
-        return await supabaseClient.auth.signInWithPassword({ email, password });
+        const identifier = normalizeIdentifier(username);
+        const emails = identifier.includes('@')
+            ? [identifier]
+            : INTERNAL_EMAIL_DOMAINS.map(domain => buildEmail(identifier, domain));
+
+        let result;
+        for (const [index, email] of emails.entries()) {
+            result = await supabaseClient.auth.signInWithPassword({ email, password });
+
+            if (!result.error) return result;
+            if (!isInvalidCredentialsError(result.error) || index === emails.length - 1) {
+                return result;
+            }
+        }
+
+        return result;
     } catch (error) {
         return { data: null, error };
     }
@@ -103,7 +134,7 @@ export async function createTeacher(email, password, username) {
     try {
         const { data, error } = await supabaseClient.functions.invoke('create-user', {
             body: {
-                email: email || `${String(username || '').trim()}@quranreview.app`,
+                email: email || buildEmail(username),
                 password,
                 username,
             },
