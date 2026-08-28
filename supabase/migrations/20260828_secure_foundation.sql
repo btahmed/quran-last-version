@@ -390,6 +390,32 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE
     public.push_subscriptions
 TO authenticated;
 
+-- Supprimer toutes les anciennes policies applicatives avant de recréer la
+-- matrice canonique. Une policy permissive oubliée serait combinée avec les
+-- nouvelles policies par OR et annulerait leur protection.
+DO $$
+DECLARE
+    existing_policy record;
+BEGIN
+    FOR existing_policy IN
+        SELECT schemaname, tablename, policyname
+        FROM pg_policies
+        WHERE schemaname = 'public'
+          AND tablename IN (
+              'profiles', 'classes', 'class_members', 'tasks',
+              'submissions', 'points_log', 'notifications', 'push_subscriptions'
+          )
+    LOOP
+        EXECUTE format(
+            'DROP POLICY IF EXISTS %I ON %I.%I',
+            existing_policy.policyname,
+            existing_policy.schemaname,
+            existing_policy.tablename
+        );
+    END LOOP;
+END
+$$;
+
 DROP POLICY IF EXISTS profiles_select ON public.profiles;
 DROP POLICY IF EXISTS profiles_update ON public.profiles;
 CREATE POLICY profiles_select ON public.profiles FOR SELECT TO authenticated
@@ -483,7 +509,7 @@ DROP POLICY IF EXISTS points_update ON public.points_log;
 DROP POLICY IF EXISTS points_delete ON public.points_log;
 CREATE POLICY points_select ON public.points_log FOR SELECT TO authenticated
     USING (student_id = auth.uid() OR public.can_access_student(student_id) OR public.is_admin());
-CREATE POLICY points_insert ON public.points_log FOR INSERT TO authenticated USING (false) WITH CHECK (false);
+CREATE POLICY points_insert ON public.points_log FOR INSERT TO authenticated WITH CHECK (false);
 CREATE POLICY points_update ON public.points_log FOR UPDATE TO authenticated USING (false) WITH CHECK (false);
 CREATE POLICY points_delete ON public.points_log FOR DELETE TO authenticated USING (false);
 
@@ -519,15 +545,31 @@ CREATE POLICY push_subscriptions_own ON public.push_subscriptions
     USING (user_id = auth.uid())
     WITH CHECK (user_id = auth.uid());
 
--- Vue de projection : elle n'expose que le classement, jamais les profils complets.
+-- Fonction de projection : elle n'expose que le classement, jamais les profils
+-- complets. La vérification auth.uid() et les privilèges empêchent l'accès anon.
+CREATE OR REPLACE FUNCTION public.get_leaderboard_rows()
+RETURNS TABLE (id uuid, username text, total_points bigint)
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+    SELECT p.id, p.username, COALESCE(SUM(pl.delta), 0)::bigint AS total_points
+    FROM public.profiles p
+    LEFT JOIN public.points_log pl ON pl.student_id = p.id
+    WHERE auth.uid() IS NOT NULL
+      AND p.role = 'student'
+    GROUP BY p.id, p.username
+$$;
+REVOKE ALL ON FUNCTION public.get_leaderboard_rows() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_leaderboard_rows() TO authenticated;
+
+-- La vue utilise les droits de l'appelant et délègue uniquement la projection
+-- contrôlée à get_leaderboard_rows().
 DROP VIEW IF EXISTS public.leaderboard;
-CREATE VIEW public.leaderboard AS
-SELECT p.id, p.username, COALESCE(SUM(pl.delta), 0)::bigint AS total_points
-FROM public.profiles p
-LEFT JOIN public.points_log pl ON pl.student_id = p.id
-WHERE p.role = 'student'
-GROUP BY p.id, p.username
-ORDER BY total_points DESC;
+CREATE VIEW public.leaderboard
+WITH (security_invoker = true)
+AS SELECT * FROM public.get_leaderboard_rows();
 REVOKE ALL ON public.leaderboard FROM anon;
 GRANT SELECT ON public.leaderboard TO authenticated;
 
@@ -547,7 +589,7 @@ DECLARE
     current_submission public.submissions;
     updated_submission public.submissions;
 BEGIN
-    SELECT s INTO current_submission
+    SELECT s.* INTO current_submission
     FROM public.submissions s
     WHERE s.id = p_submission_id
     FOR UPDATE;
@@ -592,7 +634,7 @@ AS $$
 DECLARE
     current_submission public.submissions;
 BEGIN
-    SELECT s INTO current_submission FROM public.submissions s
+    SELECT s.* INTO current_submission FROM public.submissions s
     WHERE s.id = p_submission_id FOR UPDATE;
     IF NOT FOUND THEN RAISE EXCEPTION 'Soumission introuvable'; END IF;
     IF NOT public.can_review_submission(p_submission_id) THEN
@@ -629,7 +671,7 @@ DECLARE
     safe_points integer;
     detail_text text;
 BEGIN
-    SELECT t INTO task_row FROM public.tasks t
+    SELECT t.* INTO task_row FROM public.tasks t
     WHERE t.id = p_task_id AND t.user_id = auth.uid() FOR UPDATE;
     IF NOT FOUND THEN RAISE EXCEPTION 'Devoir hifz introuvable ou non autorisé'; END IF;
     IF p_from_ayah IS NULL OR p_to_ayah IS NULL OR p_from_ayah < 1
@@ -662,7 +704,7 @@ BEGIN
     RETURNING * INTO submission_row;
 
     IF submission_row.id IS NULL THEN
-        SELECT s INTO submission_row FROM public.submissions s
+        SELECT s.* INTO submission_row FROM public.submissions s
         WHERE s.task_id = p_task_id AND s.student_id = auth.uid()
           AND s.type = 'hifz' AND s.status = 'approved'
         LIMIT 1;
@@ -697,6 +739,7 @@ CREATE OR REPLACE FUNCTION public.storage_path_user_id(path text)
 RETURNS uuid
 LANGUAGE plpgsql
 IMMUTABLE
+SET search_path = public, pg_catalog
 AS $$
 BEGIN
     RETURN split_part(path, '/', 1)::uuid;
@@ -713,6 +756,7 @@ DROP POLICY IF EXISTS audio_read_auth ON storage.objects;
 DROP POLICY IF EXISTS audio_upload_authenticated ON storage.objects;
 DROP POLICY IF EXISTS audio_read_authorized ON storage.objects;
 DROP POLICY IF EXISTS audio_delete_authorized ON storage.objects;
+DROP POLICY IF EXISTS audio_update ON storage.objects;
 CREATE POLICY audio_upload_authenticated ON storage.objects
     FOR INSERT TO authenticated
     WITH CHECK (
@@ -731,3 +775,23 @@ CREATE POLICY audio_delete_authorized ON storage.objects
         bucket_id = 'audio-submissions'
         AND (public.storage_path_user_id(name) = auth.uid() OR public.is_admin())
     );
+
+-- Les helpers utilisés par les policies restent disponibles aux comptes
+-- authentifiés, jamais aux anonymes. Les fonctions de trigger ne sont pas des
+-- endpoints RPC et ne doivent être exécutables par aucun rôle client.
+REVOKE ALL ON FUNCTION public.app_role() FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.is_admin() FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.is_teacher_or_admin() FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.can_access_student(uuid) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.can_review_submission(uuid) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.storage_path_user_id(text) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.app_role() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.is_admin() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.is_teacher_or_admin() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.can_access_student(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.can_review_submission(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.storage_path_user_id(text) TO authenticated;
+
+REVOKE ALL ON FUNCTION public.handle_new_user() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.protect_profile_role() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.validate_class_member() FROM PUBLIC, anon, authenticated;
