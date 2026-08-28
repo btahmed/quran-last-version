@@ -377,11 +377,14 @@ class MurajaaTracker {
     getUserId() {
         try {
             const u = window.QuranReview?.state?.user;
-            if (u?.id) return u.id;
+            if (u?.id != null) return u.id;
             const stored = JSON.parse(
-                localStorage.getItem('quran_auth_user') || localStorage.getItem('sb-user') || '{}'
+                localStorage.getItem('quranreview_user') ||
+                    localStorage.getItem('quran_auth_user') ||
+                    localStorage.getItem('sb-user') ||
+                    '{}'
             );
-            return stored.id || null;
+            return stored.id != null ? stored.id : null;
         } catch {
             return null;
         }
@@ -391,7 +394,11 @@ class MurajaaTracker {
         try {
             return (
                 window.QuranReview?.state?.user?.role ||
-                JSON.parse(localStorage.getItem('quran_auth_user') || '{}').role ||
+                JSON.parse(
+                    localStorage.getItem('quranreview_user') ||
+                        localStorage.getItem('quran_auth_user') ||
+                        '{}'
+                ).role ||
                 null
             );
         } catch {
@@ -542,9 +549,15 @@ class MurajaaTracker {
     flattenPages(ranges) {
         const pages = new Map();
         (ranges || []).forEach(r => {
-            const from = parseInt(r.from, 10),
-                to = parseInt(r.to, 10);
-            if (Number.isFinite(from) && Number.isFinite(to) && to >= from)
+            const from = Number(r.from),
+                to = Number(r.to);
+            if (
+                Number.isInteger(from) &&
+                Number.isInteger(to) &&
+                from >= 1 &&
+                to <= 604 &&
+                to >= from
+            )
                 for (let p = from; p <= to; p++) {
                     if (!pages.has(p)) pages.set(p, { page: p, label: r.label || '' });
                 }
@@ -799,6 +812,17 @@ class MurajaaTracker {
             this.ensureActiveTargets();
             this.commit();
         } catch (_e) {
+            if (!this.state.wiz) {
+                this.state.wiz = {
+                    mode: 'import',
+                    expandedJuz: new Set(),
+                    expandedHizb: new Set(),
+                    selected: new Set(),
+                    importText: text || '',
+                    importError: null,
+                    copied: false,
+                };
+            }
             this.state.wiz.importError = 'الكود غير صالح — تأكد من نسخه كاملاً من الأستاذ.';
             this.update();
         }
@@ -841,7 +865,7 @@ class MurajaaTracker {
         if (d.lastPromoteDate === todayStr) return;
         if (!d.pendingConfirm) d.pendingConfirm = [];
         [d.activeNew, d.activeOld].forEach(item => {
-            if (item)
+            if (item && !d.pendingConfirm.some(p => p.page === item.page))
                 d.pendingConfirm.push({ page: item.page, label: item.label, source: item.source });
         });
         d.activeNew = null;
@@ -1346,7 +1370,7 @@ class MurajaaTracker {
           data-action="wiz-toggle-hizb" data-arg="${hizb.num}">
     ${hizbState === 'all' ? '✓' : hizbState === 'partial' ? '─' : ''}
   </button>
-  <span class="mj-tree-label">${escapeHtml(hizb.label)}
+  <span class="mj-tree-label" style="cursor:pointer" data-action="wiz-toggle-hizb" data-arg="${hizb.num}">${escapeHtml(hizb.label)}
     <span class="mj-tree-sub">ص.${arN(hizb.from)}–${arN(hizb.to)} · ${arN(surahsInHizb.length)} سور</span>
   </span>
   <button class="mj-tree-expand${hizbExpanded ? ' open' : ''}" data-action="wiz-expand" data-arg="hizb:${hizb.num}" aria-label="توسيع">›</button>
@@ -1362,7 +1386,7 @@ ${surahRows}`;
           data-action="wiz-toggle-juz" data-arg="${juz.num}">
     ${juzState === 'all' ? '✓' : juzState === 'partial' ? '─' : ''}
   </button>
-  <span class="mj-tree-label">${escapeHtml(juz.label)}
+  <span class="mj-tree-label" style="cursor:pointer" data-action="wiz-toggle-juz" data-arg="${juz.num}">${escapeHtml(juz.label)}
     <span class="mj-tree-sub">ص.${arN(juz.from)}–${arN(juz.to)} · ${arN(surahsInJuz.length)} سور</span>
   </span>
   <button class="mj-tree-expand${juzExpanded ? ' open' : ''}" data-action="wiz-expand" data-arg="juz:${juz.num}" aria-label="توسيع">›</button>
@@ -1389,7 +1413,7 @@ ${hizbRows}`;
         return `
 <div class="mj-wiz-nav">
   <button class="mj-wiz-back" data-action="wiz-back">‹</button>
-  <span class="mj-wiz-title">استوراد جدول الأستاذ</span>
+  <span class="mj-wiz-title">استيراد جدول الأستاذ</span>
 </div>
 <div class="mj-card" style="display:flex;flex-direction:column;gap:10px">
   <p style="margin:0;font-size:13.5px;color:var(--text-secondary)">
@@ -1450,7 +1474,7 @@ ${hizbRows}`;
     <span style="font-size:30px;line-height:1" aria-hidden="true">🕌</span>
     <div style="display:flex;flex-direction:column;gap:3px">
       <h1 class="mj-title">مراجعة القرآن</h1>
-      <p class="mj-subtitle">الشيخ أحمد · ${dayLabel}</p>
+      <p class="mj-subtitle">جدول المراجعة · ${dayLabel}</p>
     </div>
   </div>
   <button class="mj-theme-btn" data-action="toggle-theme" aria-label="تبديل الوضع الليلي">
@@ -1907,3 +1931,7 @@ ${hizbRows}`;
 </section>`;
     }
 }
+
+// Exports nommés conservés pour permettre des tests unitaires sans dépendance
+// à l’interface ou au backend.
+export { MurajaaTracker, JUZ_DATA, HIZB_DATA, SURAH_FULL };
