@@ -320,9 +320,8 @@ class MurajaaTracker {
         if (this.needsSetup()) {
             this.state.wiz = {
                 mode: null,
-                expandedJuz: new Set(),
-                expandedHizb: new Set(),
-                selected: new Set(), // Set de numéros de sourates (1-114)
+                tab: 'juz', // 'juz' | 'hizb' | 'surah' | 'page'
+                ranges: [], // [{from, to, label, type}]
                 importText: '',
                 importError: null,
                 copied: false,
@@ -669,78 +668,29 @@ class MurajaaTracker {
         });
     }
 
-    // état case à cocher : 'all' | 'partial' | 'none'
-    juzCheckState(juzNum) {
-        const surahs = this.surahsInJuz(juzNum);
-        if (!surahs.length) return 'none';
-        const sel = surahs.filter(s => this.state.wiz.selected.has(s.num)).length;
-        if (sel === 0) return 'none';
-        return sel === surahs.length ? 'all' : 'partial';
-    }
-
-    hizbCheckState(hizbNum) {
-        const surahs = this.surahsInHizb(hizbNum);
-        if (!surahs.length) return 'none';
-        const sel = surahs.filter(s => this.state.wiz.selected.has(s.num)).length;
-        if (sel === 0) return 'none';
-        return sel === surahs.length ? 'all' : 'partial';
-    }
-
     // ── Logique wizard ────────────────────────────────────────
-    wizToggleJuz(juzNum) {
-        const w = this.state.wiz;
-        const surahs = this.surahsInJuz(juzNum);
-        const state = this.juzCheckState(juzNum);
-        if (state === 'all') {
-            surahs.forEach(s => w.selected.delete(s.num));
-        } else {
-            surahs.forEach(s => w.selected.add(s.num));
-        }
+    isRangeSelected(from, to) {
+        return this.state.wiz.ranges.some(r => r.from === from && r.to === to);
+    }
+
+    wizSetTab(tab) {
+        this.state.wiz.tab = tab;
         this.update();
     }
 
-    wizToggleHizb(hizbNum) {
+    wizToggleRange(from, to, label, type) {
         const w = this.state.wiz;
-        const surahs = this.surahsInHizb(hizbNum);
-        const state = this.hizbCheckState(hizbNum);
-        if (state === 'all') {
-            surahs.forEach(s => w.selected.delete(s.num));
-        } else {
-            surahs.forEach(s => w.selected.add(s.num));
-        }
-        this.update();
-    }
-
-    wizToggleSurah(snum) {
-        const w = this.state.wiz;
-        if (w.selected.has(snum)) w.selected.delete(snum);
-        else w.selected.add(snum);
-        this.update();
-    }
-
-    wizToggleExpand(type, num) {
-        const w = this.state.wiz;
-        const set = type === 'juz' ? w.expandedJuz : w.expandedHizb;
-        if (set.has(num)) set.delete(num);
-        else set.add(num);
+        const idx = w.ranges.findIndex(r => r.from === from && r.to === to);
+        if (idx >= 0) w.ranges.splice(idx, 1);
+        else w.ranges.push({ from, to, label, type });
         this.update();
     }
 
     buildRangesFromSelected() {
-        const sel = this.state.wiz.selected;
-        if (!sel.size) return [];
-        const ranges = [...sel]
-            .map(Number)
-            .filter(snum => Number.isInteger(snum) && snum >= 1 && snum <= SURAH_FULL.length)
-            .sort((a, b) => a - b)
-            .map(snum => {
-                const s = SURAH_FULL[snum - 1];
-                return { label: s.name, from: s.page, to: this.surahPageEnd(snum) };
-            });
-
-        // Les petites sourates peuvent partager une page. Fusionner les
-        // chevauchements évite les doublons dans le planning et les compteurs.
-        return this.mergeRanges(ranges, false);
+        const { ranges } = this.state.wiz;
+        if (!ranges.length) return [];
+        const sorted = [...ranges].sort((a, b) => a.from - b.from);
+        return this.mergeRanges(sorted, false);
     }
 
     finishSetup() {
@@ -792,9 +742,8 @@ class MurajaaTracker {
             if (!this.state.wiz) {
                 this.state.wiz = {
                     mode: 'import',
-                    expandedJuz: new Set(),
-                    expandedHizb: new Set(),
-                    selected: new Set(),
+                    tab: 'juz',
+                    ranges: [],
                     importText: text || '',
                     importError: null,
                     copied: false,
@@ -1149,7 +1098,7 @@ class MurajaaTracker {
         }
     }
 
-    _dispatch(act, arg) {
+    _dispatch(act, arg, e) {
         const d = this.state.d;
         // ── Actions wizard ──
         if (act === 'wiz-mode') {
@@ -1163,21 +1112,34 @@ class MurajaaTracker {
             this.update();
             return;
         }
-        if (act === 'wiz-expand') {
-            const [type, num] = arg.split(':');
-            this.wizToggleExpand(type, parseInt(num));
+        if (act === 'wiz-tab') {
+            this.wizSetTab(arg);
             return;
         }
-        if (act === 'wiz-toggle-juz') {
-            this.wizToggleJuz(parseInt(arg));
+        if (act === 'wiz-toggle-range') {
+            const el = e.target.closest('[data-action]');
+            if (el) {
+                this.wizToggleRange(
+                    parseInt(el.dataset.from),
+                    parseInt(el.dataset.to),
+                    el.dataset.label || '',
+                    el.dataset.rtype || 'custom'
+                );
+            }
             return;
         }
-        if (act === 'wiz-toggle-hizb') {
-            this.wizToggleHizb(parseInt(arg));
-            return;
-        }
-        if (act === 'wiz-toggle-surah') {
-            this.wizToggleSurah(parseInt(arg));
+        if (act === 'wiz-add-page') {
+            const fromEl = this.container.querySelector('#mj-page-from');
+            const toEl = this.container.querySelector('#mj-page-to');
+            const pFrom = parseInt(fromEl?.value);
+            const pTo = parseInt(toEl?.value);
+            if (pFrom >= 1 && pTo <= 604 && pFrom <= pTo) {
+                const lbl = `ص.${pFrom}–${pTo}`;
+                if (!this.isRangeSelected(pFrom, pTo)) {
+                    this.state.wiz.ranges.push({ from: pFrom, to: pTo, label: lbl, type: 'page' });
+                }
+                this.update();
+            }
             return;
         }
         if (act === 'wiz-finish') {
@@ -1298,91 +1260,121 @@ class MurajaaTracker {
 
     renderWizTree() {
         const w = this.state.wiz;
-        const selCount = w.selected.size;
-        const totalSurahs = SURAH_FULL.length;
+        const merged = this.buildRangesFromSelected();
+        const totalPages = merged.reduce((s, r) => s + r.to - r.from + 1, 0);
 
-        const treeRows = JUZ_DATA.map(juz => {
-            const juzState = this.juzCheckState(juz.num);
-            const juzExpanded = w.expandedJuz.has(juz.num);
-            const surahsInJuz = this.surahsInJuz(juz.num);
+        const tabBar = `<div class="mj-tabs">
+  <button class="mj-tab${w.tab === 'juz' ? ' active' : ''}" data-action="wiz-tab" data-arg="juz">جزء</button>
+  <button class="mj-tab${w.tab === 'hizb' ? ' active' : ''}" data-action="wiz-tab" data-arg="hizb">حزب</button>
+  <button class="mj-tab${w.tab === 'surah' ? ' active' : ''}" data-action="wiz-tab" data-arg="surah">سورة</button>
+  <button class="mj-tab${w.tab === 'page' ? ' active' : ''}" data-action="wiz-tab" data-arg="page">صفحة</button>
+</div>`;
 
-            let hizbRows = '';
-            if (juzExpanded) {
-                const hizbs = HIZB_DATA.filter(h => h.juzNum === juz.num);
-                hizbRows = hizbs
-                    .map(hizb => {
-                        const hizbState = this.hizbCheckState(hizb.num);
-                        const hizbExpanded = w.expandedHizb.has(hizb.num);
-                        const surahsInHizb = this.surahsInHizb(hizb.num);
-
-                        let surahRows = '';
-                        if (hizbExpanded) {
-                            surahRows = surahsInHizb
-                                .map(s => {
-                                    const checked = w.selected.has(s.num);
-                                    const pEnd = this.surahPageEnd(s.num);
-                                    const pagesStr =
-                                        s.page === pEnd
-                                            ? `ص.${arN(s.page)}`
-                                            : `ص.${arN(s.page)}–${arN(pEnd)}`;
-                                    return `
-<div class="mj-tree-row mj-tree-surah">
-  <button class="mj-tree-check${checked ? ' checked' : ''}"
-          data-action="wiz-toggle-surah" data-arg="${s.num}"
-          aria-label="${s.name}">
-    ${checked ? '✓' : ''}
+        let content;
+        if (w.tab === 'juz') {
+            content = `<div class="mj-tree">${JUZ_DATA.map(j => {
+                const sel = this.isRangeSelected(j.from, j.to);
+                return `
+<div class="mj-tree-row mj-tree-juz">
+  <button class="mj-tree-check${sel ? ' checked' : ''}"
+          data-action="wiz-toggle-range"
+          data-from="${j.from}" data-to="${j.to}"
+          data-label="${escapeHtml(j.label)}" data-rtype="juz">
+    ${sel ? '✓' : ''}
   </button>
-  <span class="mj-tree-label" style="cursor:pointer" data-action="wiz-toggle-surah" data-arg="${s.num}">
-    ${s.name}
-    <span class="mj-tree-sub">${pagesStr} · ${arN(s.verses)} آية</span>
+  <span class="mj-tree-label" style="cursor:pointer"
+        data-action="wiz-toggle-range"
+        data-from="${j.from}" data-to="${j.to}"
+        data-label="${escapeHtml(j.label)}" data-rtype="juz">
+    ${escapeHtml(j.label)}
+    <span class="mj-tree-sub">ص.${arN(j.from)}–${arN(j.to)}</span>
   </span>
 </div>`;
-                                })
-                                .join('');
-                        }
-
-                        return `
+            }).join('')}</div>`;
+        } else if (w.tab === 'hizb') {
+            content = `<div class="mj-tree">${HIZB_DATA.map(h => {
+                const sel = this.isRangeSelected(h.from, h.to);
+                return `
 <div class="mj-tree-row mj-tree-hizb">
-  <button class="mj-tree-check${hizbState === 'all' ? ' checked' : hizbState === 'partial' ? ' partial' : ''}"
-          data-action="wiz-toggle-hizb" data-arg="${hizb.num}">
-    ${hizbState === 'all' ? '✓' : hizbState === 'partial' ? '─' : ''}
+  <button class="mj-tree-check${sel ? ' checked' : ''}"
+          data-action="wiz-toggle-range"
+          data-from="${h.from}" data-to="${h.to}"
+          data-label="${escapeHtml(h.label)}" data-rtype="hizb">
+    ${sel ? '✓' : ''}
   </button>
-  <span class="mj-tree-label" style="cursor:pointer" data-action="wiz-toggle-hizb" data-arg="${hizb.num}">${escapeHtml(hizb.label)}
-    <span class="mj-tree-sub">ص.${arN(hizb.from)}–${arN(hizb.to)} · ${arN(surahsInHizb.length)} سور</span>
+  <span class="mj-tree-label" style="cursor:pointer"
+        data-action="wiz-toggle-range"
+        data-from="${h.from}" data-to="${h.to}"
+        data-label="${escapeHtml(h.label)}" data-rtype="hizb">
+    ${escapeHtml(h.label)}
+    <span class="mj-tree-sub">ص.${arN(h.from)}–${arN(h.to)}</span>
   </span>
-  <button class="mj-tree-expand${hizbExpanded ? ' open' : ''}" data-action="wiz-expand" data-arg="hizb:${hizb.num}" aria-label="توسيع">›</button>
-</div>
-${surahRows}`;
-                    })
-                    .join('');
-            }
-
-            return `
-<div class="mj-tree-row mj-tree-juz">
-  <button class="mj-tree-check${juzState === 'all' ? ' checked' : juzState === 'partial' ? ' partial' : ''}"
-          data-action="wiz-toggle-juz" data-arg="${juz.num}">
-    ${juzState === 'all' ? '✓' : juzState === 'partial' ? '─' : ''}
+</div>`;
+            }).join('')}</div>`;
+        } else if (w.tab === 'surah') {
+            content = `<div class="mj-tree">${SURAH_FULL.map(s => {
+                const pEnd = this.surahPageEnd(s.num);
+                const sel = this.isRangeSelected(s.page, pEnd);
+                const pStr = s.page === pEnd ? `ص.${arN(s.page)}` : `ص.${arN(s.page)}–${arN(pEnd)}`;
+                return `
+<div class="mj-tree-row mj-tree-surah">
+  <button class="mj-tree-check${sel ? ' checked' : ''}"
+          data-action="wiz-toggle-range"
+          data-from="${s.page}" data-to="${pEnd}"
+          data-label="${escapeHtml(s.name)}" data-rtype="surah">
+    ${sel ? '✓' : ''}
   </button>
-  <span class="mj-tree-label" style="cursor:pointer" data-action="wiz-toggle-juz" data-arg="${juz.num}">${escapeHtml(juz.label)}
-    <span class="mj-tree-sub">ص.${arN(juz.from)}–${arN(juz.to)} · ${arN(surahsInJuz.length)} سور</span>
+  <span class="mj-tree-label" style="cursor:pointer"
+        data-action="wiz-toggle-range"
+        data-from="${s.page}" data-to="${pEnd}"
+        data-label="${escapeHtml(s.name)}" data-rtype="surah">
+    ${escapeHtml(s.name)}
+    <span class="mj-tree-sub">${pStr} · ${arN(s.verses)} آية</span>
   </span>
-  <button class="mj-tree-expand${juzExpanded ? ' open' : ''}" data-action="wiz-expand" data-arg="juz:${juz.num}" aria-label="توسيع">›</button>
-</div>
-${hizbRows}`;
-        }).join('');
+</div>`;
+            }).join('')}</div>`;
+        } else {
+            const pageRanges = w.ranges.filter(r => r.type === 'page');
+            content = `
+<div class="mj-page-input">
+  <div class="mj-page-row">
+    <input type="number" id="mj-page-from" min="1" max="604" placeholder="١" dir="ltr">
+    <span>—</span>
+    <input type="number" id="mj-page-to" min="1" max="604" placeholder="٦٠٤" dir="ltr">
+    <button class="mj-btn mj-btn-primary" data-action="wiz-add-page">+ إضافة</button>
+  </div>
+  <p class="mj-note" style="margin:6px 0 4px">الصفحات من ١ إلى ٦٠٤</p>
+  ${
+      pageRanges.length
+          ? `<div class="mj-page-list">${pageRanges
+                .map(
+                    r => `
+  <div class="mj-page-tag">
+    <span>ص.${arN(r.from)}–${arN(r.to)}</span>
+    <button class="mj-page-remove" data-action="wiz-toggle-range"
+            data-from="${r.from}" data-to="${r.to}"
+            data-label="${escapeHtml(r.label)}" data-rtype="page">✕</button>
+  </div>`
+                )
+                .join('')}</div>`
+          : ''
+  }
+</div>`;
+        }
 
         return `
 <div class="mj-wiz-nav">
   <button class="mj-wiz-back" data-action="wiz-back">‹</button>
   <span class="mj-wiz-title">اختار ما حفظته</span>
-  <span class="mj-sel-count">${arN(selCount)} / ${arN(totalSurahs)} سورة</span>
+  <span class="mj-sel-count">${arN(totalPages)} صفحة</span>
 </div>
-<div class="mj-tree">${treeRows}</div>
+${tabBar}
+${content}
 <button class="mj-btn mj-btn-primary mj-btn-full" data-action="wiz-finish"
-        ${selCount === 0 ? 'disabled' : ''}>
-  ✓ حفظ جدولي (${arN(selCount)} سورة)
+        ${!w.ranges.length ? 'disabled' : ''} style="margin-top:12px">
+  ✓ حفظ جدولي (${arN(totalPages)} صفحة)
 </button>
-<p class="mj-note">الحزب ≈ نصف الجزء · التقسيم بالصفحات تقريبي</p>`;
+<p class="mj-note">يمكنك الجمع بين جزء وحزب وسور وصفحات</p>`;
     }
 
     renderWizImport() {
