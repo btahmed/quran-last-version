@@ -56,7 +56,8 @@ function buildTopNav(role) {
     if (role === 'visitor') {
         const loginBtn = document.createElement('button');
         loginBtn.type = 'button';
-        loginBtn.className = 'btn btn-glow btn-sm';
+        loginBtn.className = 'btn btn-glow btn-sm nav-login-btn';
+        loginBtn.dataset.action = 'login';
         loginBtn.textContent = 'تسجيل الدخول';
         loginBtn.addEventListener('click', () => window.QuranReview?.showLoginForm?.());
         nav.appendChild(loginBtn);
