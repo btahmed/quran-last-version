@@ -1367,13 +1367,19 @@ class MurajaaTracker {
             const pageRanges = w.ranges.filter(r => r.type === 'page');
             content = `
 <div class="mj-page-input">
+  <div class="mj-page-labels">
+    <span>من صفحة</span>
+    <span></span>
+    <span>إلى صفحة</span>
+    <span></span>
+  </div>
   <div class="mj-page-row">
-    <input type="number" id="mj-page-from" min="1" max="604" placeholder="١" dir="ltr">
-    <span>—</span>
-    <input type="number" id="mj-page-to" min="1" max="604" placeholder="٦٠٤" dir="ltr">
+    <input type="number" id="mj-page-from" min="1" max="604" placeholder="1" dir="ltr">
+    <span class="mj-page-sep">←</span>
+    <input type="number" id="mj-page-to" min="1" max="604" placeholder="604" dir="ltr">
     <button class="mj-btn mj-btn-primary" data-action="wiz-add-page">+ إضافة</button>
   </div>
-  <p class="mj-note" style="margin:6px 0 4px">الصفحات من ١ إلى ٦٠٤</p>
+  <p class="mj-note" style="margin:6px 0 4px">المصحف من الصفحة ١ إلى ٦٠٤</p>
   ${
       pageRanges.length
           ? `<div class="mj-page-list">${pageRanges

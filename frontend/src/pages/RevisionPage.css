@@ -888,11 +888,35 @@
     padding: 8px 0;
 }
 
+.mj-page-labels {
+    display: flex;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-secondary, #666);
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.mj-page-labels span:nth-child(1) {
+    width: 72px;
+    text-align: center;
+}
+
+.mj-page-labels span:nth-child(3) {
+    width: 72px;
+    text-align: center;
+}
+
 .mj-page-row {
     display: flex;
     align-items: center;
     gap: 8px;
     flex-wrap: wrap;
+}
+
+.mj-page-sep {
+    color: var(--text-secondary, #888);
+    font-size: 16px;
 }
 
 .mj-page-row input[type='number'] {
