@@ -2,3 +2,4 @@
 - [Stable E2E hooks](e2e-stable-hooks.md) — dynamic navigation controls need semantic selectors independent of localized labels.
 - [Static app post-merge](static-post-merge.md) — keep merge setup independent of npm downloads when the app has no build step.
 - [Vercel project split](vercel-project-split.md) — frontend and legacy API Vercel projects watch this repo, but only the frontend source is present.
+- [Murajaa Juz boundaries](murajaa-juz-boundaries.md) — Juz selections must preserve exact page ranges because surah boundaries cross between Juz.
