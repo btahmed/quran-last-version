@@ -83,13 +83,15 @@ describe('init — chargement liste élèves', () => {
         expect(list.innerHTML).toContain('فشل');
     });
 
-    it('utilise le cache si disponible', async () => {
+    it('récupère des données fraîches même si le cache existe', async () => {
         const cached = [{ id: 'c1', username: 'cached', total_points: 5, submissions_count: 0 }];
         apiCache.get.mockReturnValue(cached);
+        supabaseAdmin.getMyStudents.mockResolvedValue({ data: cached, error: null });
 
         await init();
 
-        expect(supabaseAdmin.getMyStudents).not.toHaveBeenCalled();
+        expect(supabaseAdmin.getMyStudents).toHaveBeenCalledOnce();
+        expect(apiCache.set).toHaveBeenCalledWith('my-students', cached);
         expect(document.getElementById('teacher-students-list').innerHTML).toContain('cached');
     });
 });

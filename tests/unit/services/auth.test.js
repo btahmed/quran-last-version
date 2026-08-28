@@ -83,7 +83,8 @@ describe('performLogin', () => {
 
         await performLogin('ali', 'pass');
 
-        expect(localStorage.getItem('quranreview_token')).toBe('tok123');
+        // Supabase conserve et rafraîchit le token dans son propre stockage.
+        expect(localStorage.getItem('quranreview_token')).toBeNull();
         expect(state.user).toMatchObject({ username: 'ali', role: 'student' });
     });
 
@@ -107,14 +108,12 @@ describe('performLogin', () => {
 describe('logout', () => {
     it('efface state.user et le token localStorage', async () => {
         state.user = { id: 'u1', username: 'ali', role: 'student' };
-        localStorage.setItem('quranreview_token', 'tok123');
         localStorage.setItem('quranreview_user', JSON.stringify(state.user));
         SupabaseAuth.signOut.mockResolvedValue({ error: null });
 
         await logout();
 
         expect(state.user).toBeNull();
-        expect(localStorage.getItem('quranreview_token')).toBeNull();
         expect(localStorage.getItem('quranreview_user')).toBeNull();
     });
 });
@@ -240,7 +239,8 @@ describe('initAuth', () => {
         await initAuth();
 
         expect(state.user).toEqual(fakeUser);
-        expect(localStorage.getItem('quranreview_token')).toBe('tok999');
+        // Le token n'est pas recopié dans le localStorage applicatif.
+        expect(localStorage.getItem('quranreview_token')).toBeNull();
     });
 
     it('appelle updateAuthUI(false) si aucune session', async () => {

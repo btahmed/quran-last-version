@@ -7,7 +7,7 @@ vi.mock('../../../frontend/src/services/supabase-submissions.js', () => ({
     createSubmission: vi.fn(),
 }));
 vi.mock('../../../frontend/src/services/supabase-tasks.js', () => ({
-    notifyTeacherNewSubmission: vi.fn(),
+    notifyTeacherNewSubmission: vi.fn(() => Promise.resolve()),
 }));
 vi.mock('../../../frontend/src/core/ui.js', () => ({
     showNotification: vi.fn(),
