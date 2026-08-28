@@ -1673,12 +1673,12 @@ ${hizbRows}`;
             lines.push({
                 icon: '📖',
                 title: 'حفظ ' + this.ar(mem.length) + ' صفحة',
-                 sub:
-                     mem.map(m => this.ar(m.page)).join('، ') +
-                     ' — ' +
-                     [...new Set(mem.map(m => m.label))].map(escapeHtml).join('، '),
+                sub:
+                    mem.map(m => this.ar(m.page)).join('، ') +
+                    ' — ' +
+                    [...new Set(mem.map(m => m.label))].map(escapeHtml).join('، '),
             });
-         if (con.length)
+        if (con.length)
             lines.push({
                 icon: '✅',
                 title: 'تثبيت ' + this.ar(con.length) + ' صفحة',
@@ -1711,8 +1711,8 @@ ${hizbRows}`;
     ${isEmpty ? `<p class="mj-note">${(d.activeDates || []).includes(key) ? 'هاليوم مسجّل نشيط ✓ — التفاصيل ما كانت تنحفظ بالنسخة القديمة.' : 'هاليوم لسه ما فيه إنجاز مسجّل 🌱'}</p>` : ''}
     <div style="display:flex;flex-direction:column;gap:6px;max-height:280px;overflow-y:auto">
       ${lines
-           .map(
-               l => `<div class="mj-day-line">
+          .map(
+              l => `<div class="mj-day-line">
         <span style="font-size:16px;line-height:1">${l.icon}</span>
         <div class="mj-day-line-info">
            <span class="mj-day-line-title">${escapeHtml(l.title)}</span>
