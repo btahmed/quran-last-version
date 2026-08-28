@@ -6,6 +6,7 @@ import { Logger } from '../../core/logger.js';
 import { apiCache } from '../../core/apiCache.js';
 import { Validators } from '../../core/validators.js';
 import { state } from '../../core/state.js';
+import { config } from '../../core/config.js';
 import * as supabaseTasks from '../../services/supabase-tasks.js';
 import * as supabaseAdmin from '../../services/supabase-admin.js';
 
