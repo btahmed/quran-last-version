@@ -10,6 +10,18 @@ export function render() {
     const progressContent = ProgressPage.render ? ProgressPage.render() : '';
     return `
     <div class="profil-page" dir="rtl">
+        <div class="profil-mobile-actions">
+            <button
+                type="button"
+                class="profil-mobile-logout"
+                data-action="logout"
+                aria-label="تسجيل الخروج"
+                onclick="QuranReview.logout()"
+            >
+                <span aria-hidden="true">🚪</span>
+                <span>تسجيل الخروج</span>
+            </button>
+        </div>
         <div class="profil-tabs">
             <button class="profil-tab profil-tab--active"
                     onclick="QuranReview.switchProfilTab('progress')">

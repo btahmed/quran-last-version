@@ -16,6 +16,44 @@
     min-height: 120px;
 }
 
-[data-theme="dark"] .chart-container {
-    background: rgba(255,255,255,0.04);
+[data-theme='dark'] .chart-container {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+/* La grille de la semaine contient sept cartes compactes. Sans tracks
+   minmax(0, 1fr), le texte arabe impose une largeur minimale qui déborde
+   l'écran sur les petits téléphones. */
+.progress-week-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.progress-week-grid > .card-glass-pro {
+    min-width: 0;
+    overflow: hidden;
+}
+
+@media (max-width: 768px) {
+    .profil-page {
+        width: 100%;
+        max-width: 100%;
+        padding-inline: 12px;
+    }
+
+    .profil-page .k-grid2 > * {
+        min-width: 0;
+    }
+
+    .progress-week-grid {
+        gap: 4px !important;
+    }
+
+    .progress-week-grid > .card-glass-pro {
+        padding: 6px !important;
+    }
+
+    .progress-week-grid > .card-glass-pro > div:first-child {
+        font-size: 0.6rem !important;
+        white-space: nowrap;
+    }
 }

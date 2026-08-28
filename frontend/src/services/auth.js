@@ -414,11 +414,22 @@ export async function refreshToken() {
 
 export async function logout() {
     destroyNotificationCenter();
-    await SupabaseAuth.signOut();
+    const { error } = await SupabaseAuth.signOut();
+
+    // Nettoyage local garanti même si Supabase renvoie une erreur réseau.
+    // L'utilisateur doit toujours pouvoir sortir de l'interface sur mobile.
     localStorage.removeItem('quranreview_user');
     state.user = null;
     updateAuthUI(false);
     buildNav('visitor');
     window.QuranReview.navigateTo('home');
+
+    if (error) {
+        Logger.warn('AUTH', 'Logout completed locally with a Supabase error', error);
+        showNotification('تم تسجيل الخروج من هذا الجهاز', 'info');
+        return { error };
+    }
+
     showNotification('تم تسجيل الخروج بنجاح', 'info');
+    return { error: null };
 }

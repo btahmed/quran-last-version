@@ -185,6 +185,8 @@ body:has(.landing-page) #app {
 
 /* ── Dashboard (commun) ────────────────────────────────────── */
 .dashboard {
+    width: 100%;
+    min-width: 0;
     padding: clamp(1rem, 3vw, 2rem);
     max-width: 900px;
     margin: 0 auto;

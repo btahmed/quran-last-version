@@ -73,7 +73,7 @@ export function render() {
 
                     <div class="card-glass-pro">
                         <h3 style="font-size:1rem;font-weight:600;margin-bottom:var(--space-4);">📅 نشاط الأسبوع</h3>
-                        <div style="display:grid;grid-template-columns:repeat(7,1fr);text-align:center;gap:var(--space-2);">
+                        <div class="progress-week-grid" style="text-align:center;gap:var(--space-2);">
                             <div class="card-glass-pro" style="padding:var(--space-2);"><div style="font-size:0.7rem;color:var(--color-text-secondary);">سبت</div><div style="font-weight:600;" id="activity-sat">0</div></div>
                             <div class="card-glass-pro" style="padding:var(--space-2);"><div style="font-size:0.7rem;color:var(--color-text-secondary);">أحد</div><div style="font-weight:600;" id="activity-sun">0</div></div>
                             <div class="card-glass-pro" style="padding:var(--space-2);"><div style="font-size:0.7rem;color:var(--color-text-secondary);">اثن</div><div style="font-weight:600;" id="activity-mon">0</div></div>

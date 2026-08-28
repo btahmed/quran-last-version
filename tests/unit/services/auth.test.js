@@ -116,6 +116,18 @@ describe('logout', () => {
         expect(state.user).toBeNull();
         expect(localStorage.getItem('quranreview_user')).toBeNull();
     });
+
+    it('nettoie la session locale même si Supabase renvoie une erreur', async () => {
+        state.user = { id: 'u1', username: 'ali', role: 'student' };
+        localStorage.setItem('quranreview_user', JSON.stringify(state.user));
+        SupabaseAuth.signOut.mockResolvedValue({ error: { message: 'network' } });
+
+        const result = await logout();
+
+        expect(result.error).toEqual({ message: 'network' });
+        expect(state.user).toBeNull();
+        expect(localStorage.getItem('quranreview_user')).toBeNull();
+    });
 });
 
 // ─── showAuthModal / hideAuthModal ────────────────────────────────────────
