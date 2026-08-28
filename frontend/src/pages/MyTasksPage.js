@@ -128,8 +128,7 @@ let _studentTasks = [];
 let _studentSubByTask = {};
 
 export async function loadStudentDashboard() {
-    const token = localStorage.getItem(config.apiTokenKey);
-    if (!token) {
+    if (!state.user?.id) {
         showAuthModal();
         return;
     }

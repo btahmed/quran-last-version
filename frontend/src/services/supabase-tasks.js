@@ -1,21 +1,18 @@
 // Service de gestion des tâches Supabase — QuranReview
 import { supabaseClient } from './supabase-client.js';
+import { getAuthenticatedProfile } from './supabase-auth.js';
 import { apiCache } from '../core/apiCache.js';
+
+async function currentProfile() {
+    const { data, error } = await getAuthenticatedProfile();
+    if (error || !data) return { data: null, error: error || new Error('Non authentifié') };
+    return { data, error: null };
+}
 
 export async function getMyTasks() {
     try {
-        // Récupérer l'utilisateur depuis localStorage (Django JWT)
-        const localUser = JSON.parse(localStorage.getItem('quranreview_user') || 'null');
-        if (!localUser?.username) return { data: [], error: null };
-
-        // Résoudre l'UUID Supabase via username
-        const { data: profile } = await supabaseClient
-            .from('profiles')
-            .select('id')
-            .eq('username', localUser.username)
-            .maybeSingle();
-
-        if (!profile) return { data: [], error: null };
+        const { data: profile, error: profileError } = await currentProfile();
+        if (profileError) return { data: [], error: profileError };
 
         const { data, error } = await supabaseClient
             .from('tasks')
@@ -83,18 +80,11 @@ export async function getAllTasks() {
 
 export async function createTask(payload) {
     try {
-        // Récupérer l'utilisateur depuis localStorage (Django JWT)
-        const localUser = JSON.parse(localStorage.getItem('quranreview_user') || 'null');
-        if (!localUser?.username) return { data: null, error: { message: 'Non authentifié' } };
-
-        // Résoudre l'UUID Supabase du prof via username
-        const { data: profile } = await supabaseClient
-            .from('profiles')
-            .select('id')
-            .eq('username', localUser.username)
-            .maybeSingle();
-
-        if (!profile) return { data: null, error: { message: 'Profil non trouvé' } };
+        const { data: profile, error: profileError } = await currentProfile();
+        if (profileError) return { data: null, error: profileError };
+        if (!['teacher', 'admin'].includes(profile.role) && !profile.is_superuser) {
+            return { data: null, error: new Error('Droits insuffisants') };
+        }
 
         // Extraire les champs valides de la table tasks (exclure assign_all, student_ids, task_type)
         const { assign_all, student_ids, task_type, ...rest } = payload;
@@ -230,8 +220,8 @@ export async function notifyTeacherNewSubmission(taskId) {
 
         if (!task?.assigned_by) return;
 
-        const localUser = JSON.parse(localStorage.getItem('quranreview_user') || 'null');
-        const studentName = localUser?.username || 'طالب';
+        const { data: profile } = await currentProfile();
+        const studentName = profile?.first_name || profile?.username || 'طالب';
 
         const notifTitle = '🎙 تسليم جديد بانتظار التصحيح';
         const notifBody = `${studentName} — ${task.title}`;

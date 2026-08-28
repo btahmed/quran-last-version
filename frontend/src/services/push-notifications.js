@@ -1,14 +1,14 @@
 // Service de notifications push Web Push API — QuranReview
 //
 // SETUP REQUIS (une seule fois) :
-//   1. Générer les clés VAPID : npx web-push generate-vapid-keys
-//   2. Remplacer VAPID_PUBLIC_KEY ci-dessous par la clé publique générée
+//   1. Générer une paire de clés VAPID : npx web-push generate-vapid-keys
+//   2. Conserver la clé privée uniquement dans les secrets de l'Edge Function
 //   3. Enregistrer les clés dans Supabase Dashboard → Edge Functions → Secrets :
 //      VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT=mailto:ton@email.com
 //   4. Créer la table push_subscriptions (voir supabase/functions/send-push/index.ts)
 //   5. Déployer l'Edge Function : supabase functions deploy send-push
 
-// Clé publique VAPID — doit correspondre exactement à VAPID_PUBLIC_KEY dans Supabase secrets
+// Clé publique VAPID — doit correspondre exactement à VAPID_PUBLIC_KEY côté Edge Function.
 export const VAPID_PUBLIC_KEY =
     'BE34JexsKmLk4q2vo2DLbwfQzLr9J5AA-GEQc5QGiVt92S3zcJuAOVyZeb9l0zBUybwq5l5plFd5j68RxnLj-co';
 

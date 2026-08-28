@@ -1,9 +1,21 @@
 // Service d'administration Supabase — QuranReview
 import { supabaseClient } from './supabase-client.js';
-import { createUser } from './supabase-auth.js';
+import { createTeacher as createTeacherAccount, getAuthenticatedProfile } from './supabase-auth.js';
+
+async function requireRole(allowedRoles) {
+    const { data, error } = await getAuthenticatedProfile();
+    if (error || !data) return { data: null, error: error || new Error('Non authentifié') };
+    const effectiveRole = data.is_superuser ? 'admin' : data.role;
+    if (!allowedRoles.includes(effectiveRole)) {
+        return { data: null, error: new Error('Droits insuffisants') };
+    }
+    return { data, error: null };
+}
 
 export async function getAllUsers() {
     try {
+        const { error: authError } = await requireRole(['admin']);
+        if (authError) return { data: null, error: authError };
         const { data, error } = await supabaseClient
             .from('profiles')
             .select('*')
@@ -18,6 +30,8 @@ export async function getAllUsers() {
 
 export async function updateUser(userId, payload) {
     try {
+        const { error: authError } = await requireRole(['admin']);
+        if (authError) return { data: null, error: authError };
         const { data, error } = await supabaseClient
             .from('profiles')
             .update(payload)
@@ -33,6 +47,8 @@ export async function updateUser(userId, payload) {
 
 export async function deleteUser(userId) {
     try {
+        const { error: authError } = await requireRole(['admin']);
+        if (authError) return { error: authError };
         // Supprime le profil (cascade vers tasks, submissions, points_log via FK ON DELETE CASCADE)
         // auth.users reste intact mais l'utilisateur n'a plus de profil actif
         const { error } = await supabaseClient.from('profiles').delete().eq('id', userId);
@@ -43,11 +59,24 @@ export async function deleteUser(userId) {
 }
 
 export async function createTeacher(email, password, username) {
-    return createUser(email, password, username, 'teacher');
+    return createTeacherAccount(email, password, username);
 }
 
 export async function getStudentProgress(userId) {
     try {
+        const { data: currentUser, error: authError } = await requireRole([
+            'student',
+            'teacher',
+            'admin',
+        ]);
+        if (authError) return { data: null, error: authError };
+        if (
+            currentUser.role === 'student' &&
+            !currentUser.is_superuser &&
+            currentUser.id !== userId
+        ) {
+            return { data: null, error: new Error('Accès interdit') };
+        }
         const { data: profile, error: profileError } = await supabaseClient
             .from('profiles')
             .select('*')
@@ -127,6 +156,8 @@ export async function getStudentProgress(userId) {
 
 export async function getAdminOverview() {
     try {
+        const { error: authError } = await requireRole(['admin']);
+        if (authError) return { data: null, error: authError };
         const [usersRes, tasksRes, submissionsRes] = await Promise.all([
             supabaseClient.from('profiles').select('id, role'),
             supabaseClient.from('tasks').select('id', { count: 'exact', head: true }),
@@ -154,6 +185,8 @@ export async function getAdminOverview() {
 
 export async function getTeacherStatsAndTasks() {
     try {
+        const { error: authError } = await requireRole(['admin']);
+        if (authError) return { teacherStats: [], recentTasks: [], error: authError };
         const [teachersRes, tasksRes] = await Promise.all([
             supabaseClient
                 .from('profiles')
@@ -202,6 +235,8 @@ export async function getTeacherStatsAndTasks() {
 
 export async function getClasses() {
     try {
+        const { error: authError } = await requireRole(['teacher', 'admin']);
+        if (authError) return { data: null, error: authError };
         const { data, error } = await supabaseClient
             .from('classes')
             .select('*, profiles!teacher_id(id, username), class_members(count)')
@@ -215,19 +250,8 @@ export async function getClasses() {
 
 export async function getMyStudents() {
     try {
-        // Récupérer l'utilisateur connecté depuis localStorage (Django JWT — pas Supabase Auth)
-        const localUser = JSON.parse(localStorage.getItem('quranreview_user') || 'null');
-        if (!localUser?.username) return { data: [], error: null };
-
-        // Résoudre l'UUID Supabase du prof via son username
-        const { data: profileData, error: profileError } = await supabaseClient
-            .from('profiles')
-            .select('id')
-            .eq('username', localUser.username)
-            .maybeSingle();
-
+        const { data: profileData, error: profileError } = await requireRole(['teacher', 'admin']);
         if (profileError || !profileData) return { data: [], error: profileError };
-
         const teacherId = profileData.id;
 
         // Récupérer les étudiants des classes de ce prof
@@ -236,41 +260,7 @@ export async function getMyStudents() {
             .select('student_id, classes!inner(teacher_id)')
             .eq('classes.teacher_id', teacherId);
 
-        if (cmError) {
-            // Si la table n'existe pas encore, retourner tous les étudiants (fallback)
-            console.warn('class_members query failed, falling back to all students:', cmError);
-            const { data, error } = await supabaseClient
-                .from('profiles')
-                .select('*')
-                .eq('role', 'student')
-                .order('username', { ascending: true });
-            if (error || !data || data.length === 0) return { data, error };
-            const fallbackIds = data.map(s => s.id);
-            const [pRes, sRes] = await Promise.all([
-                supabaseClient
-                    .from('points_log')
-                    .select('student_id, delta')
-                    .in('student_id', fallbackIds),
-                supabaseClient
-                    .from('submissions')
-                    .select('student_id')
-                    .in('student_id', fallbackIds)
-                    .eq('status', 'approved'),
-            ]);
-            const pb = {};
-            (pRes.data || []).forEach(p => {
-                pb[p.student_id] = (pb[p.student_id] || 0) + (p.delta || 0);
-            });
-            const sb = {};
-            (sRes.data || []).forEach(s => {
-                sb[s.student_id] = (sb[s.student_id] || 0) + 1;
-            });
-            data.forEach(s => {
-                s.total_points = pb[s.id] || 0;
-                s.submissions_count = sb[s.id] || 0;
-            });
-            return { data, error: null };
-        }
+        if (cmError) return { data: null, error: cmError };
 
         if (!classMembers || classMembers.length === 0) {
             return { data: [], error: null };
@@ -319,6 +309,8 @@ export async function getMyStudents() {
 
 export async function assignStudentToClass(studentId, classId) {
     try {
+        const { error: authError } = await requireRole(['teacher', 'admin']);
+        if (authError) return { data: null, error: authError };
         const { data, error } = await supabaseClient
             .from('class_members')
             .insert({ student_id: studentId, class_id: classId })
@@ -333,6 +325,8 @@ export async function assignStudentToClass(studentId, classId) {
 
 export async function removeStudentFromClass(studentId, classId) {
     try {
+        const { error: authError } = await requireRole(['teacher', 'admin']);
+        if (authError) return { error: authError };
         const { error } = await supabaseClient
             .from('class_members')
             .delete()
@@ -347,15 +341,8 @@ export async function removeStudentFromClass(studentId, classId) {
 
 export async function createClass(name) {
     try {
-        const localUser = JSON.parse(localStorage.getItem('quranreview_user') || 'null');
-        if (!localUser?.username) return { data: null, error: new Error('Non authentifié') };
-
-        const { data: profile } = await supabaseClient
-            .from('profiles')
-            .select('id')
-            .eq('username', localUser.username)
-            .maybeSingle();
-        if (!profile) return { data: null, error: new Error('Profil non trouvé') };
+        const { data: profile, error: profileError } = await requireRole(['teacher']);
+        if (profileError || !profile) return { data: null, error: profileError };
 
         const { data, error } = await supabaseClient
             .from('classes')
@@ -371,6 +358,8 @@ export async function createClass(name) {
 
 export async function createClassWithTeacher(name, teacherId) {
     try {
+        const { error: authError } = await requireRole(['admin']);
+        if (authError) return { data: null, error: authError };
         const { data, error } = await supabaseClient
             .from('classes')
             .insert({ name, teacher_id: teacherId })
@@ -385,6 +374,8 @@ export async function createClassWithTeacher(name, teacherId) {
 
 export async function deleteClass(classId) {
     try {
+        const { error: authError } = await requireRole(['teacher', 'admin']);
+        if (authError) return { error: authError };
         const { error } = await supabaseClient.from('classes').delete().eq('id', classId);
 
         return { error };
@@ -395,15 +386,8 @@ export async function deleteClass(classId) {
 
 export async function getMyClasses() {
     try {
-        const localUser = JSON.parse(localStorage.getItem('quranreview_user') || 'null');
-        if (!localUser?.username) return { data: [], error: null };
-
-        const { data: profile } = await supabaseClient
-            .from('profiles')
-            .select('id')
-            .eq('username', localUser.username)
-            .maybeSingle();
-        if (!profile) return { data: [], error: null };
+        const { data: profile, error: profileError } = await requireRole(['teacher']);
+        if (profileError || !profile) return { data: [], error: profileError };
 
         const { data, error } = await supabaseClient
             .from('classes')
@@ -419,7 +403,7 @@ export async function getMyClasses() {
 
 export async function getClassStudents(classId) {
     try {
-        // Étape 1 : récupérer les student_ids depuis class_members (accessible sans session Supabase)
+        // RLS limite cette lecture au membre, au professeur de la classe ou à l'admin.
         const { data: members, error: membersError } = await supabaseClient
             .from('class_members')
             .select('student_id')
@@ -436,21 +420,7 @@ export async function getClassStudents(classId) {
             .select('*')
             .in('id', studentIds);
 
-        if (!profilesError && profiles && profiles.length > 0) {
-            return { data: profiles, error: null };
-        }
-
-        // Fallback : profiles bloqués par RLS — retourner les IDs avec username minimal
-        // ⚠️ Ajouter dans Supabase Dashboard : CREATE POLICY "profiles_select" ON profiles FOR SELECT USING (true);
-        return {
-            data: studentIds.map(id => ({
-                id,
-                username: id.substring(0, 8) + '…',
-                first_name: '',
-                last_name: '',
-            })),
-            error: null,
-        };
+        return { data: profiles || [], error: profilesError };
     } catch (error) {
         return { data: null, error };
     }
@@ -458,6 +428,8 @@ export async function getClassStudents(classId) {
 
 export async function getAllStudentsNotInClass(classId) {
     try {
+        const { error: authError } = await requireRole(['teacher', 'admin']);
+        if (authError) return { data: [], error: authError };
         // Récupérer les étudiants déjà dans cette classe
         const { data: members } = await supabaseClient
             .from('class_members')
@@ -467,8 +439,7 @@ export async function getAllStudentsNotInClass(classId) {
         const memberIds = (members || []).map(m => m.student_id);
 
         // Récupérer tous les étudiants qui ne sont pas dans cette classe
-        // ⚠️ Nécessite une RLS SELECT policy sur profiles pour fonctionner
-        // CREATE POLICY "profiles_select" ON profiles FOR SELECT USING (true);
+        // La RLS limite cette liste aux étudiants autorisés par le rôle courant.
         let query = supabaseClient
             .from('profiles')
             .select('*')

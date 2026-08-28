@@ -1,5 +1,6 @@
 // Service de gestion des soumissions audio Supabase — QuranReview
 import { supabaseClient } from './supabase-client.js';
+import { getAuthenticatedProfile } from './supabase-auth.js';
 
 const MAX_AUDIO_SIZE = 10 * 1024 * 1024;
 const ALLOWED_EXTENSIONS = ['.webm', '.mp3', '.wav', '.m4a'];
@@ -48,16 +49,8 @@ async function _freshSignedUrl(audioUrl) {
 
 export async function getMySubmissions() {
     try {
-        // Résoudre l'UUID Supabase depuis localStorage (Django JWT)
-        const localUser = JSON.parse(localStorage.getItem('quranreview_user') || 'null');
-        if (!localUser?.username) return { data: [], error: null };
-
-        const { data: profile } = await supabaseClient
-            .from('profiles')
-            .select('id')
-            .eq('username', localUser.username)
-            .maybeSingle();
-        if (!profile) return { data: [], error: null };
+        const { data: profile, error: profileError } = await getAuthenticatedProfile();
+        if (profileError || !profile) return { data: [], error: profileError };
 
         const { data, error } = await supabaseClient
             .from('submissions')
@@ -82,6 +75,12 @@ export async function getMySubmissions() {
 
 export async function getPendingSubmissions() {
     try {
+        const { data: profile, error: profileError } = await getAuthenticatedProfile();
+        if (profileError || !profile)
+            return { data: [], error: profileError || new Error('Non authentifié') };
+        if (!['teacher', 'admin'].includes(profile.role) && !profile.is_superuser) {
+            return { data: [], error: new Error('Droits insuffisants') };
+        }
         const { data, error } = await supabaseClient
             .from('submissions')
             .select('*, tasks(*), profiles!student_id(*)')
@@ -108,22 +107,10 @@ export async function uploadAudio(taskId, audioBlob) {
     if (!validation.valid) return { data: null, error: new Error(validation.error) };
 
     try {
-        // Résoudre l'UUID Supabase depuis localStorage (Django JWT)
-        const localUser = JSON.parse(localStorage.getItem('quranreview_user') || 'null');
-        if (!localUser?.username) return { data: null, error: new Error('Non authentifié') };
-
-        const { data: profile, error: profileError } = await supabaseClient
-            .from('profiles')
-            .select('id')
-            .eq('username', localUser.username)
-            .maybeSingle();
-
-        if (profileError) {
-            console.error('[uploadAudio] Profile fetch error:', profileError);
-            return { data: null, error: new Error('Erreur lors de la récupération du profil') };
+        const { data: profile, error: profileError } = await getAuthenticatedProfile();
+        if (profileError || !profile) {
+            return { data: null, error: profileError || new Error('Profil non trouvé') };
         }
-
-        if (!profile) return { data: null, error: new Error('Profil non trouvé') };
 
         const uid = profile.id;
         const uuid = crypto.randomUUID();
@@ -169,16 +156,9 @@ export async function uploadAudio(taskId, audioBlob) {
 
 export async function createSubmission(taskId, audioUrl) {
     try {
-        // Résoudre l'UUID Supabase depuis localStorage (Django JWT)
-        const localUser = JSON.parse(localStorage.getItem('quranreview_user') || 'null');
-        if (!localUser?.username) return { data: null, error: new Error('Non authentifié') };
-
-        const { data: profile } = await supabaseClient
-            .from('profiles')
-            .select('id')
-            .eq('username', localUser.username)
-            .maybeSingle();
-        if (!profile) return { data: null, error: new Error('Profil non trouvé') };
+        const { data: profile, error: profileError } = await getAuthenticatedProfile();
+        if (profileError || !profile)
+            return { data: null, error: profileError || new Error('Profil non trouvé') };
 
         const { data, error } = await supabaseClient
             .from('submissions')
@@ -199,42 +179,20 @@ export async function createSubmission(taskId, audioUrl) {
 
 export async function approveSubmission(submissionId, points, feedback = '') {
     try {
-        // Récupérer student_id depuis la soumission
-        const { data: sub, error: subError } = await supabaseClient
-            .from('submissions')
-            .select('student_id')
-            .eq('id', submissionId)
-            .maybeSingle();
-
-        if (subError) return { data: null, error: subError };
-
-        const { data, error } = await supabaseClient
-            .from('submissions')
-            .update({
-                status: 'approved',
-                awarded_points: points,
-                admin_feedback: feedback,
-                validated_at: new Date().toISOString(),
-            })
-            .eq('id', submissionId)
-            .select()
-            .single();
-
+        const { data, error } = await supabaseClient.rpc('approve_submission', {
+            p_submission_id: submissionId,
+            p_points: points,
+            p_feedback: feedback,
+        });
         if (error) return { data: null, error };
 
-        // Ajouter dans points_log
-        await supabaseClient.from('points_log').insert({
-            student_id: sub.student_id,
-            delta: points,
-            reason: 'Soumission approuvée',
-            submission_id: submissionId,
-        });
+        const reviewedSubmission = Array.isArray(data) ? data[0] : data;
 
         // Notifier l'étudiant via push (non bloquant — échec silencieux)
         supabaseClient.functions
             .invoke('send-push', {
                 body: {
-                    user_id: sub.student_id,
+                    user_id: reviewedSubmission?.student_id,
                     title: 'تم تصحيح تلاوتك ✅',
                     body: `حصلت على ${points} نقطة`,
                     url: '/soumettre',
@@ -261,25 +219,22 @@ export async function createHifzSubmission(
     if (!studentId) return { data: null, error: new Error('studentId requis') };
 
     try {
-        const ayahRange = completedAyahs?.length
-            ? completedAyahs.join('،')
-            : `${fromAyah}-${toAyah}`;
-        const details = `${surahName} — الآيات ${ayahRange}`;
+        const { data: authenticatedProfile, error: authError } = await getAuthenticatedProfile();
+        if (authError || !authenticatedProfile) {
+            return { data: null, error: authError || new Error('Non authentifié') };
+        }
+        if (authenticatedProfile.id !== studentId) {
+            return { data: null, error: new Error('Identité étudiant invalide') };
+        }
 
-        const { data, error } = await supabaseClient
-            .from('submissions')
-            .insert({
-                task_id: taskId,
-                student_id: studentId,
-                audio_url: null,
-                status: 'submitted',
-                type: 'hifz',
-                awarded_points: score,
-                admin_feedback: details,
-                validated_at: new Date().toISOString(),
-            })
-            .select()
-            .single();
+        const { data, error } = await supabaseClient.rpc('record_hifz_submission', {
+            p_task_id: taskId,
+            p_score: score,
+            p_surah_name: surahName,
+            p_from_ayah: fromAyah,
+            p_to_ayah: toAyah,
+            p_completed_ayahs: completedAyahs || [],
+        });
 
         return { data, error };
     } catch (error) {
@@ -289,16 +244,10 @@ export async function createHifzSubmission(
 
 export async function rejectSubmission(submissionId, feedback = '') {
     try {
-        const { data, error } = await supabaseClient
-            .from('submissions')
-            .update({
-                status: 'rejected',
-                admin_feedback: feedback,
-                validated_at: new Date().toISOString(),
-            })
-            .eq('id', submissionId)
-            .select()
-            .single();
+        const { data, error } = await supabaseClient.rpc('reject_submission', {
+            p_submission_id: submissionId,
+            p_feedback: feedback,
+        });
 
         return { data, error };
     } catch (error) {

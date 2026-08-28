@@ -522,10 +522,8 @@ export const competitionManager = {
         if (!list) return;
 
         try {
-            // Fetch real leaderboard from API
-            const token = localStorage.getItem(config.apiTokenKey);
-            if (!token) {
-                // Fallback to local leaderboard if not authenticated
+            // Fetch real leaderboard only for an authenticated Supabase user.
+            if (!state.user?.id) {
                 this.renderLocalLeaderboard();
                 return;
             }
@@ -1088,8 +1086,7 @@ export const competitionManager = {
         const linkedTaskId = this._hifzLinkedTaskId || session.linkedTaskId || null;
         if (linkedTaskId) {
             const surah = config.surahs.find(s => s.id === session.surahId);
-            const localUser = JSON.parse(localStorage.getItem('quranreview_user') || '{}');
-            const studentName = localUser.first_name || localUser.username || '';
+            const studentName = state.user?.first_name || state.user?.username || '';
             const surahName = surah?.name || '';
 
             supabaseTasks.notifyTeacherHifzComplete(

@@ -1,356 +1,121 @@
 # Configuration Supabase — QuranReview
 
-## 1. Storage Bucket
+## Source de vérité
 
-### Créer le bucket `audio-submissions`
+La configuration reproductible est dans :
 
-Dans Supabase Dashboard → Storage → New bucket :
+- `supabase/migrations/20260828_secure_foundation.sql`
+- `supabase/SECURITY_MATRIX.md`
+- `supabase/functions/send-push/index.ts`
 
-```
-Name: audio-submissions
-Public: Non (privé)
-File size limit: 10MB
-Allowed MIME types: audio/webm, audio/mp3, audio/wav, audio/m4a
-```
+Ne pas exécuter d'anciens snippets SQL avec `USING (true)` ou un Storage
+public. La migration active RLS sur toutes les tables métier, crée le bucket
+audio privé et installe les fonctions transactionnelles de validation.
 
-### Policies Storage
+## Appliquer le schéma
 
-**Option 1 : Policies permissives (recommandé pour dev/test)**
-
-Exécuter dans SQL Editor :
-
-```sql
--- Policy 1: Permettre upload pour tous (pas de vérification auth)
-CREATE POLICY "audio_upload"
-ON storage.objects
-FOR INSERT
-WITH CHECK (bucket_id = 'audio-submissions');
-
--- Policy 2: Permettre lecture pour tous
-CREATE POLICY "audio_read"
-ON storage.objects
-FOR SELECT
-USING (bucket_id = 'audio-submissions');
-
--- Policy 3: Permettre suppression pour tous (optionnel)
-CREATE POLICY "audio_delete"
-ON storage.objects
-FOR DELETE
-USING (bucket_id = 'audio-submissions');
-```
-
-**Option 2 : Policies avec auth Supabase (pour prod)**
-
-Si vous utilisez Supabase Auth (pas localStorage) :
-
-```sql
--- Upload: utilisateurs authentifiés uniquement
-CREATE POLICY "audio_upload_auth"
-ON storage.objects
-FOR INSERT
-WITH CHECK (
-  bucket_id = 'audio-submissions'
-  AND auth.role() = 'authenticated'
-);
-
--- Lecture: utilisateurs authentifiés uniquement
-CREATE POLICY "audio_read_auth"
-ON storage.objects
-FOR SELECT
-USING (
-  bucket_id = 'audio-submissions'
-  AND auth.role() = 'authenticated'
-);
-```
-
-**Note** : L'app utilise actuellement localStorage (legacy Django), donc utilisez l'Option 1.
-
-## 2. Tables et colonnes manquantes
-
-### Ajouter colonnes dans `submissions`
-
-```sql
-ALTER TABLE public.submissions
-  ADD COLUMN IF NOT EXISTS submitted_at timestamptz DEFAULT now(),
-  ADD COLUMN IF NOT EXISTS validated_at timestamptz;
-```
-
-## 3. Row Level Security (RLS)
-
-### Policy sur `profiles` (lecture publique)
-
-```sql
--- Permettre SELECT sur profiles pour tous
-CREATE POLICY "profiles_select"
-ON public.profiles
-FOR SELECT
-USING (true);
-```
-
-### Policy sur `tasks` (lecture/écriture)
-
-```sql
--- Lecture: tous peuvent voir leurs propres tâches
-CREATE POLICY "tasks_select_own"
-ON public.tasks
-FOR SELECT
-USING (auth.uid() = user_id OR auth.uid() IN (
-  SELECT id FROM profiles WHERE role IN ('teacher', 'admin')
-));
-
--- Insertion: teachers et admins peuvent créer des tâches
-CREATE POLICY "tasks_insert"
-ON public.tasks
-FOR INSERT
-WITH CHECK (auth.uid() IN (
-  SELECT id FROM profiles WHERE role IN ('teacher', 'admin')
-));
-
--- Mise à jour: teachers et admins peuvent modifier
-CREATE POLICY "tasks_update"
-ON public.tasks
-FOR UPDATE
-USING (auth.uid() IN (
-  SELECT id FROM profiles WHERE role IN ('teacher', 'admin')
-));
-
--- Suppression: teachers et admins peuvent supprimer
-CREATE POLICY "tasks_delete"
-ON public.tasks
-FOR DELETE
-USING (auth.uid() IN (
-  SELECT id FROM profiles WHERE role IN ('teacher', 'admin')
-));
-```
-
-### Policy sur `submissions`
-
-```sql
--- Lecture: étudiants voient leurs soumissions, teachers/admins voient tout
-CREATE POLICY "submissions_select"
-ON public.submissions
-FOR SELECT
-USING (
-  auth.uid() = student_id OR
-  auth.uid() IN (SELECT id FROM profiles WHERE role IN ('teacher', 'admin'))
-);
-
--- Insertion: étudiants peuvent soumettre
-CREATE POLICY "submissions_insert"
-ON public.submissions
-FOR INSERT
-WITH CHECK (auth.uid() = student_id);
-
--- Mise à jour: teachers/admins peuvent valider
-CREATE POLICY "submissions_update"
-ON public.submissions
-FOR UPDATE
-USING (auth.uid() IN (
-  SELECT id FROM profiles WHERE role IN ('teacher', 'admin')
-));
-```
-
-### Policy sur `points_log`
-
-```sql
--- Lecture: étudiants voient leurs points, teachers/admins voient tout
-CREATE POLICY "points_select"
-ON public.points_log
-FOR SELECT
-USING (
-  auth.uid() = student_id OR
-  auth.uid() IN (SELECT id FROM profiles WHERE role IN ('teacher', 'admin'))
-);
-
--- Insertion: teachers/admins peuvent ajouter des points
-CREATE POLICY "points_insert"
-ON public.points_log
-FOR INSERT
-WITH CHECK (auth.uid() IN (
-  SELECT id FROM profiles WHERE role IN ('teacher', 'admin')
-));
-```
-
-### Policy sur `classes` et `class_members`
-
-```sql
--- Classes: lecture publique
-CREATE POLICY "classes_select"
-ON public.classes
-FOR SELECT
-USING (true);
-
--- Classes: teachers/admins peuvent créer/modifier
-CREATE POLICY "classes_insert"
-ON public.classes
-FOR INSERT
-WITH CHECK (auth.uid() IN (
-  SELECT id FROM profiles WHERE role IN ('teacher', 'admin')
-));
-
--- Class members: lecture publique
-CREATE POLICY "class_members_select"
-ON public.class_members
-FOR SELECT
-USING (true);
-
--- Class members: teachers/admins peuvent gérer
-CREATE POLICY "class_members_insert"
-ON public.class_members
-FOR INSERT
-WITH CHECK (auth.uid() IN (
-  SELECT id FROM profiles WHERE role IN ('teacher', 'admin')
-));
-
-CREATE POLICY "class_members_delete"
-ON public.class_members
-FOR DELETE
-USING (auth.uid() IN (
-  SELECT id FROM profiles WHERE role IN ('teacher', 'admin')
-));
-```
-
-## 4. Vue `leaderboard`
-
-```sql
-CREATE OR REPLACE VIEW leaderboard AS
-SELECT
-  p.id,
-  p.username,
-  COALESCE(SUM(pl.delta), 0) AS total_points
-FROM profiles p
-LEFT JOIN points_log pl ON p.id = pl.student_id
-WHERE p.role = 'student'
-GROUP BY p.id, p.username
-ORDER BY total_points DESC;
-```
-
-## 5. Vérification
-
-### Tester l'upload audio
-
-1. Se connecter en tant qu'étudiant
-2. Ouvrir une tâche
-3. Cliquer sur 🎤
-4. Enregistrer un audio
-5. Soumettre
-
-### Tester l'approbation
-
-1. Se connecter en tant que teacher
-2. Aller dans "Soumissions"
-3. Approuver une soumission avec note emoji (1-5)
-4. Vérifier que les points sont ajoutés dans `points_log`
-
-### Tester le leaderboard
-
-1. Aller dans "Classement"
-2. Vérifier que les points s'affichent correctement
-
-## 6. Troubleshooting
-
-### Erreur "Bucket not found"
-
-- Vérifier que le bucket `audio-submissions` existe dans Storage
-- Vérifier les policies `audio_upload` et `audio_read`
-
-### Erreur "Row level security policy violation"
-
-- Vérifier que les policies RLS sont créées sur les tables
-- Vérifier que `auth.uid()` correspond bien à l'utilisateur connecté
-
-### Erreur "Profile not found"
-
-- Vérifier que l'utilisateur a un profil dans la table `profiles`
-- Vérifier que le `username` dans localStorage correspond à celui en base
-
-### Upload audio échoue silencieusement
-
-- Ouvrir la console navigateur (F12)
-- Vérifier les erreurs Supabase
-- Vérifier que le blob audio est valide (taille < 10MB)
-- Vérifier le contentType du blob
-
----
-
-## 7. Notifications Push — Setup complet (OBLIGATOIRE)
-
-> Sans ces étapes, aucune notification push ne fonctionnera.
-
-### Étape 1 — Créer la table `push_subscriptions`
-
-Dans Supabase Dashboard → SQL Editor :
-
-```sql
-CREATE TABLE IF NOT EXISTS push_subscriptions (
-    user_id     uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-    subscription jsonb NOT NULL,
-    created_at  timestamptz DEFAULT now()
-);
-
-ALTER TABLE push_subscriptions ENABLE ROW LEVEL SECURITY;
-
--- Permettre aux utilisateurs authentifiés de gérer leur propre subscription
-CREATE POLICY "own_subscription" ON push_subscriptions
-    FOR ALL
-    USING (auth.uid() = user_id)
-    WITH CHECK (auth.uid() = user_id);
-```
-
-### Étape 2 — Générer les clés VAPID
-
-En local (une seule fois) :
+Après sauvegarde de la base, appliquer les migrations dans l'ordre avec le CLI
+Supabase ou le SQL Editor :
 
 ```bash
-npx web-push generate-vapid-keys
+supabase db push
 ```
 
-Résultat :
+La migration est idempotente pour les tables, colonnes, indexes, policies,
+fonctions et bucket. Les contraintes ajoutées `NOT VALID` protègent les
+écritures nouvelles tout en laissant une fenêtre de nettoyage des données
+historiques avant validation complète.
 
+## Rôles et autorisations
+
+Les rôles effectifs sont lus dans `public.profiles` à partir de l'identité
+`auth.uid()`. Un rôle reçu dans `user_metadata`, un paramètre d'URL ou
+`localStorage` n'est jamais une preuve d'autorisation.
+
+- Un étudiant lit et crée uniquement ses propres données.
+- Un enseignant gère uniquement les classes et élèves qui lui sont rattachés.
+- Un administrateur dispose des opérations d'administration prévues par les
+  policies.
+- Les profils ne sont pas publics ; le leaderboard est une vue de projection
+  limitée au classement.
+- `points_log` n'est pas insérable depuis le navigateur.
+
+## Storage audio
+
+Le bucket `audio-submissions` est privé, limité à 10 MiB et aux types
+`audio/webm`, `audio/mp3`, `audio/wav`, `audio/m4a`. Les chemins sont écrits
+avec le préfixe UUID de l'élève (`<student-uuid>/<task-id>/<file>.webm`).
+
+Les URLs audio sont signées à la demande. Un étudiant ne peut gérer que ses
+propres chemins ; un enseignant ne peut lire que les fichiers des élèves de ses
+classes.
+
+## Notifications push
+
+Configurer dans les secrets de l'Edge Function, jamais dans Git ou
+`localStorage` :
+
+| Nom | Valeur |
+| --- | --- |
+| `VAPID_PUBLIC_KEY` | La clé publique de `frontend/src/services/push-notifications.js` |
+| `VAPID_PRIVATE_KEY` | La clé privée correspondante, uniquement côté serveur |
+| `VAPID_SUBJECT` | Une adresse `mailto:` valide |
+| `SUPABASE_URL` | Variable fournie à l'Edge Function |
+| `SUPABASE_ANON_KEY` | Variable fournie à l'Edge Function |
+| `SUPABASE_SERVICE_ROLE_KEY` | Variable serveur fournie par Supabase |
+
+La clé publique actuellement embarquée est :
+
+```text
+BE34JexsKmLk4q2vo2DLbwfQzLr9J5AA-GEQc5QGiVt92S3zcJuAOVyZeb9l0zBUybwq5l5plFd5j68RxnLj-co
 ```
-Public Key: BLop-qhihAdaTL33D...  (déjà dans push-notifications.js)
-Private Key: XXXXX...              (à mettre dans Supabase secrets)
-```
 
-> ⚠️ La clé publique `BLop-qhihAdaTL33D13QgIAVPVn_byLmpi960I8qsjeihVXYm459ABDgOVk_fNjRp5QXxkA-U2QRb6UP_jb3D_Y`
-> est déjà dans `push-notifications.js`. Utilise la **private key correspondante** (générée avec cette public key).
-
-### Étape 3 — Configurer les secrets Supabase
-
-Dans Supabase Dashboard → Edge Functions → Manage secrets :
-
-| Nom                 | Valeur                                                                                    |
-| ------------------- | ----------------------------------------------------------------------------------------- |
-| `VAPID_PUBLIC_KEY`  | `BLop-qhihAdaTL33D13QgIAVPVn_byLmpi960I8qsjeihVXYm459ABDgOVk_fNjRp5QXxkA-U2QRb6UP_jb3D_Y` |
-| `VAPID_PRIVATE_KEY` | _(ta clé privée générée à l'étape 2)_                                                     |
-| `VAPID_SUBJECT`     | `mailto:ton-email@exemple.com`                                                            |
-
-### Étape 4 — Déployer l'Edge Function
+Déployer ensuite :
 
 ```bash
-cd quran-last-version
-npx supabase functions deploy send-push --project-ref <ton-project-ref>
+supabase functions deploy send-push
 ```
 
-> Le `project-ref` est dans Supabase Dashboard → Settings → General → Reference ID.
+La fonction vérifie le JWT de l'appelant, son profil, son rôle et sa relation
+avec le destinataire avant de lire la subscription via la clé de service.
+Une subscription expirée est renvoyée en erreur 410 et ne doit pas être
+réutilisée.
 
-### Étape 5 — Vérifier que ça marche
+La création d'un enseignant depuis l'interface admin passe par
+`supabase/functions/create-user/index.ts`. Cette fonction vérifie le rôle admin,
+crée le compte avec la clé de service et ne renvoie jamais le mot de passe.
+Déployer les deux fonctions :
 
-1. Se connecter (étudiant ou prof)
-2. Le navigateur demande "Autoriser les notifications ?" → Autoriser
-3. Dans Supabase → Table Editor → `push_subscriptions` → vérifier qu'une ligne a été insérée
-4. Faire terminer un devoir hifz → le prof reçoit une notification
-
-### Diagnostic push
-
-```sql
--- Vérifier les subscriptions enregistrées
-SELECT user_id, created_at FROM push_subscriptions;
-
--- Si la table est vide → personne n'a autorisé les notifications
--- → Se reconnecter après avoir accepté la permission navigateur
+```bash
+supabase functions deploy send-push
+supabase functions deploy create-user
 ```
 
----
+## Validations et points
 
-**Note importante** : L'application utilise `localStorage` pour stocker le username (legacy Django JWT), puis résout l'UUID Supabase via une requête sur `profiles`. Cette approche permet la transition progressive vers Supabase Auth.
+Les actions sensibles passent par :
+
+- `approve_submission(submission_id, points, feedback)`
+- `reject_submission(submission_id, feedback)`
+- `record_hifz_submission(task_id, score, surah_name, from_ayah, to_ayah, completed_ayahs)`
+
+Ces fonctions vérifient l'identité et les droits côté base. L'approbation
+verrouille la soumission, refuse une seconde validation et ajoute les points
+dans la même transaction. `record_hifz_submission` plafonne le score au nombre
+de points du devoir et possède une clé unique par devoir hifz et élève.
+
+## Contrôle avant production
+
+Suivre `supabase/SECURITY_MATRIX.md` avec trois comptes de test distincts
+(étudiant, enseignant, administrateur). Vérifier les succès et refus attendus,
+notamment :
+
+1. Un étudiant ne lit ni ne modifie les données d'un autre étudiant.
+2. Un enseignant ne voit ni ne modifie un élève hors de ses classes.
+3. Une écriture directe dans `points_log` est refusée.
+4. Deux validations concurrentes ne produisent qu'une seule ligne de points.
+5. Un appel push sans JWT ou vers un destinataire non autorisé est refusé.
+6. Une lecture Storage anonyme et un chemin d'un autre périmètre sont refusés.
+
+Ne pas déployer en production avant d'avoir appliqué les migrations et validé
+la configuration réelle des secrets dans le projet Supabase cible.

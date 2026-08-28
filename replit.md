@@ -6,7 +6,7 @@ QuranReview is a vanilla-JS PWA (no framework, native ES Modules) for Quran memo
 ## Architecture
 - `frontend/` — the static site (this is what runs on Replit). Entry point: `frontend/index.html` → `frontend/src/main.js`.
 - `backend/` referenced in project docs (Django/DRF on Vercel) is **not** part of this Replit setup — the frontend talks directly to the production API at `https://quranreview-api.vercel.app` (see `frontend/src/core/config.js`) and to Supabase.
-- Supabase anon key / URL are public client keys embedded in the frontend code (see `frontend/src/services/auth.js`), consistent with the original project setup.
+- Supabase anon key / URL are public client keys embedded in the frontend code (see `frontend/index.html`); authorization is enforced by Supabase Auth, RLS, and server-side RPCs.
 
 ## Running on Replit
 - Workflow "Start application" runs: `python -m http.server 5000 --directory frontend`

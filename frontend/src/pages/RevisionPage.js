@@ -375,35 +375,12 @@ class MurajaaTracker {
 
     // ── Identification utilisateur ───────────────────────────
     getUserId() {
-        try {
-            const u = window.QuranReview?.state?.user;
-            if (u?.id != null) return u.id;
-            const stored = JSON.parse(
-                localStorage.getItem('quranreview_user') ||
-                    localStorage.getItem('quran_auth_user') ||
-                    localStorage.getItem('sb-user') ||
-                    '{}'
-            );
-            return stored.id != null ? stored.id : null;
-        } catch {
-            return null;
-        }
+        const user = window.QuranReview?.state?.user;
+        return user?.id ?? null;
     }
 
     getUserRole() {
-        try {
-            return (
-                window.QuranReview?.state?.user?.role ||
-                JSON.parse(
-                    localStorage.getItem('quranreview_user') ||
-                        localStorage.getItem('quran_auth_user') ||
-                        '{}'
-                ).role ||
-                null
-            );
-        } catch {
-            return null;
-        }
+        return window.QuranReview?.state?.user?.role || null;
     }
 
     getUserKey() {

@@ -1,9 +1,9 @@
 // frontend/src/components/AudioRecordModal.js
 // Gestion de l'enregistrement audio des tâches étudiant
-import { config } from '../core/config.js';
 import { showNotification } from '../core/ui.js';
 import { Logger } from '../core/logger.js';
 import { apiCache } from '../core/apiCache.js';
+import { state } from '../core/state.js';
 import * as supabaseSubmissions from '../services/supabase-submissions.js';
 import * as offlineQueue from '../services/offline-queue.js';
 import { notifyTeacherNewSubmission } from '../services/supabase-tasks.js';
@@ -140,8 +140,7 @@ export async function submitRecording() {
         return;
     }
 
-    const token = localStorage.getItem(config.apiTokenKey);
-    if (!token) {
+    if (!state.user?.id) {
         Logger.error('RECORDING', 'No auth token found');
         return;
     }

@@ -1,5 +1,6 @@
 // Service classement Supabase — QuranReview
 import { supabaseClient } from './supabase-client.js';
+import { getAuthenticatedProfile } from './supabase-auth.js';
 
 export async function getLeaderboard() {
     try {
@@ -17,15 +18,8 @@ export async function getLeaderboard() {
 
 export async function getMyPoints() {
     try {
-        const localUser = JSON.parse(localStorage.getItem('quranreview_user') || 'null');
-        if (!localUser?.username) return { data: { total: 0 }, error: null };
-
-        const { data: profile } = await supabaseClient
-            .from('profiles')
-            .select('id')
-            .eq('username', localUser.username)
-            .maybeSingle();
-        if (!profile) return { data: { total: 0 }, error: null };
+        const { data: profile, error: profileError } = await getAuthenticatedProfile();
+        if (profileError || !profile) return { data: null, error: profileError };
 
         const { data, error } = await supabaseClient
             .from('points_log')

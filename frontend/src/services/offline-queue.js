@@ -127,7 +127,7 @@ export async function processQueue() {
 
             const { error: submitError } = await supabaseSubmissions.createSubmission(
                 item.taskId,
-                uploadData.url
+                uploadData.path || uploadData.url
             );
             if (submitError) throw new Error(submitError.message);
 

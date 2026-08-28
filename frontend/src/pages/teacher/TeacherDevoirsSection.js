@@ -1,11 +1,11 @@
 // frontend/src/pages/teacher/TeacherDevoirsSection.js
 // Section Devoirs — extraite de TeacherPage.js (Task 9 : lazy-loading)
 // Responsabilités : créer une tâche, lister les tâches assignées, supprimer par batch
-import { config } from '../../core/config.js';
 import { showNotification } from '../../core/ui.js';
 import { Logger } from '../../core/logger.js';
 import { apiCache } from '../../core/apiCache.js';
 import { Validators } from '../../core/validators.js';
+import { state } from '../../core/state.js';
 import * as supabaseTasks from '../../services/supabase-tasks.js';
 import * as supabaseAdmin from '../../services/supabase-admin.js';
 
@@ -315,8 +315,7 @@ export async function handleCreateTask(event) {
     event.preventDefault();
     if (_creating) return;
 
-    const token = localStorage.getItem(config.apiTokenKey);
-    if (!token) return;
+    if (!state.user?.id || !['teacher', 'admin'].includes(state.user.role)) return;
 
     // ── Validation complète AVANT de bloquer le bouton ──────────────────────
     const assignMode = document.querySelector('input[name="assign-mode"]:checked')?.value || 'all';
@@ -461,8 +460,7 @@ export async function handleDeleteAllTasks() {
         return;
     }
 
-    const token = localStorage.getItem(config.apiTokenKey);
-    if (!token) return;
+    if (!state.user?.id || !['teacher', 'admin'].includes(state.user.role)) return;
 
     try {
         const { data: students } = await supabaseAdmin.getMyStudents();

@@ -1,10 +1,10 @@
 // frontend/src/pages/teacher/TeacherSoumissionsSection.js
 // Section Soumissions — extraite de TeacherPage.js (Task 9 : lazy-loading)
 // Responsabilités : lister les soumissions audio en attente, player audio, modal notation emoji, modal rejet
-import { config } from '../../core/config.js';
 import { showNotification } from '../../core/ui.js';
 import { Logger } from '../../core/logger.js';
 import { apiCache } from '../../core/apiCache.js';
+import { state } from '../../core/state.js';
 import * as supabaseSubmissions from '../../services/supabase-submissions.js';
 
 // ─── CONSTANTES ───────────────────────────────────────────────────────────────
@@ -335,8 +335,7 @@ export async function confirmGrade() {
 }
 
 export async function approveSubmission(submissionId, grade) {
-    const token = localStorage.getItem(config.apiTokenKey);
-    if (!token) return;
+    if (!state.user?.id || !['teacher', 'admin'].includes(state.user.role)) return;
 
     const gradeInfo = grade ? GRADE_LABELS[grade] : null;
     const feedback = gradeInfo ? `${gradeInfo.emoji} ${gradeInfo.text} (${grade}/5)` : '';
@@ -389,8 +388,7 @@ export async function confirmReject() {
 }
 
 export async function rejectSubmission(submissionId, feedback) {
-    const token = localStorage.getItem(config.apiTokenKey);
-    if (!token) return;
+    if (!state.user?.id || !['teacher', 'admin'].includes(state.user.role)) return;
 
     try {
         const { error } = await supabaseSubmissions.rejectSubmission(submissionId, feedback || '');

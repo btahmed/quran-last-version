@@ -9,7 +9,7 @@ const SUPABASE_URL = window.__SUPABASE_URL__;
 const SUPABASE_ANON_KEY = window.__SUPABASE_ANON_KEY__;
 
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-    console.error('[Supabase] Variables manquantes — vérifier index.html ou Vercel env vars');
+    throw new Error('[Supabase] Configuration manquante : URL et clé anon requises');
 }
 
 const { createClient } = supabase;
