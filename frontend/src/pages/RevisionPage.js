@@ -1109,6 +1109,7 @@ class MurajaaTracker {
         const theme = this.state.d?.theme || 'light';
         if (theme === 'dark') this.container.setAttribute('data-dark', '');
         else this.container.removeAttribute('data-dark');
+        this._wheelCleanup?.();
         this.bindEvents();
         if (this._wheelRaf) {
             cancelAnimationFrame(this._wheelRaf);
@@ -1381,8 +1382,10 @@ class MurajaaTracker {
   }
 </div>`
                 : `<div class="mj-wheel-track" id="mj-wt"></div>
-<div class="mj-wheel-grad"></div>
-<div class="mj-wheel-center"></div>`;
+      <div class="mj-wheel-center"></div>
+      <div class="mj-wheel-caret"></div>
+      <div class="mj-wheel-hub" id="mj-hub"></div>
+      <div class="mj-wheel-bism">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>`;
 
         return `
 <div class="mj-wiz-nav">
@@ -1435,149 +1438,157 @@ ${
         if (!w || w.mode !== 'build') return;
         const track = this.container.querySelector('#mj-wt');
         if (!track) return;
+
         const rect = track.getBoundingClientRect();
         const W = rect.width || 360;
-        const H = rect.height || 340;
+        const H = rect.height || 420;
+
+        const R = W * 0.86;
+        const R0 = W * 0.33;
         this._wc = {
             W,
             H,
-            R: W * 0.68,
-            CX: W * 0.76,
+            R,
+            R0,
+            CX: W * 0.81,
             CY: H * 0.5,
-            DEG: 5.5,
+            DEG: 6.4,
+            WIN: 62,
             items: this._getWheelItems(),
         };
         if (!this._wc.items.length) return;
+
+        const hub = this.container.querySelector('#mj-hub');
+        if (hub) {
+            hub.style.left = this._wc.CX - R0 + 'px';
+            hub.style.top = this._wc.CY - R0 + 'px';
+            hub.style.width = hub.style.height = R0 * 2 + 'px';
+        }
+        const center = this.container.querySelector('.mj-wheel-center');
+        if (center) center.style.width = this._wc.CX - R0 + 'px';
+
         this._drawWheel(track);
         this._bindWheelTouch(track);
     }
 
     _drawWheel(track) {
         if (!this._wc) return;
-        const { R, CX, CY, DEG, items } = this._wc;
+        const { R, R0, CX, CY, DEG, WIN, items } = this._wc;
         const angle = this.state.wiz.wheelAngle || 0;
-        track.innerHTML = items
-            .map((item, i) => {
-                const eff = i * DEG - angle;
-                if (Math.abs(eff) > 60) return '';
-                const rad = (eff * Math.PI) / 180;
-                const x = CX - R * Math.cos(rad);
-                const y = CY - R * Math.sin(rad);
-                const opacity = Math.max(0.08, 1 - Math.abs(eff) / 64);
-                const fs = (12 + (1 - Math.abs(eff) / 64) * 5).toFixed(1);
-                const fw = Math.abs(eff) < DEG / 2 ? 700 : 400;
-                const added =
-                    item.type === 'juz'
-                        ? this.juzSelectionState(item.juzNum) !== 'none'
-                        : this.isRangeSelected(item.from, item.to);
-                return `<div class="mj-wheel-item${added ? ' added' : ''}" data-idx="${i}"
-  style="left:${x.toFixed(1)}px;top:${y.toFixed(1)}px;
-         transform:translate(-50%,-50%) rotate(${(-eff).toFixed(1)}deg);
-         opacity:${opacity.toFixed(2)};font-size:${fs}px;font-weight:${fw}"
+        const n = items.length;
+
+        const h = 2 * R * Math.sin((DEG * Math.PI) / 360) - 2;
+        const inset = (((1 - R0 / R) / 2) * 100).toFixed(1);
+        const len = R - R0 + 4;
+        const lo = Math.ceil((angle - WIN) / DEG);
+        const hi = Math.floor((angle + WIN) / DEG);
+
+        let html = '';
+        for (let i = lo; i <= hi; i++) {
+            const item = items[((i % n) + n) % n];
+            const eff = i * DEG - angle;
+            const k = Math.abs(eff) / WIN;
+            const focus = Math.abs(eff) < DEG / 2;
+            const added =
+                item.type === 'juz'
+                    ? this.juzSelectionState(item.juzNum) !== 'none'
+                    : this.isRangeSelected(item.from, item.to);
+
+            const cls = 'mj-wheel-item' + (added ? ' added' : '') + (focus ? ' focus' : '');
+            html += `<div class="${cls}" data-idx="${((i % n) + n) % n}"
+  style="left:${(CX - R).toFixed(1)}px;top:${(CY - h / 2).toFixed(1)}px;
+         width:${len.toFixed(1)}px;height:${h.toFixed(1)}px;
+         --mj-origin:${(R - 4).toFixed(1)}px;
+         transform:rotate(${eff.toFixed(2)}deg);
+         z-index:${60 - Math.round(Math.abs(eff))};
+         opacity:${Math.max(0.1, 1 - k * 1.02).toFixed(2)};
+         clip-path:polygon(0 0,100% ${inset}%,100% ${100 - inset}%,0 100%);
+         font-size:${(14.5 + (1 - k) * 5).toFixed(1)}px;
+         font-weight:${focus ? 800 : added ? 700 : 500}"
 >${escapeHtml(item.label)}</div>`;
-            })
-            .join('');
+        }
+        track.innerHTML = html;
     }
 
     _bindWheelTouch(track) {
-        let startY = 0,
-            startAngle = 0,
-            isDrag = false;
-        const getA = () => this.state.wiz.wheelAngle || 0;
+        const wc = this._wc;
+        let sy = 0,
+            sa = 0,
+            lastY = 0,
+            lastT = 0,
+            vel = 0,
+            moved = false,
+            dragging = false;
+
         const setA = v => {
-            const max = (this._wc.items.length - 1) * this._wc.DEG;
-            this.state.wiz.wheelAngle = Math.max(0, Math.min(max, v));
+            this.state.wiz.wheelAngle = v;
         };
+        const snap = v => Math.round(v / wc.DEG) * wc.DEG;
 
         const onStart = e => {
             if (this._wheelRaf) {
                 cancelAnimationFrame(this._wheelRaf);
                 this._wheelRaf = null;
             }
-            startY = e.touches ? e.touches[0].clientY : e.clientY;
-            startAngle = getA();
-            isDrag = false;
+            sy = lastY = e.touches ? e.touches[0].clientY : e.clientY;
+            sa = this.state.wiz.wheelAngle || 0;
+            lastT = performance.now();
+            vel = 0;
+            moved = false;
+            dragging = true;
         };
+
         const onMove = e => {
-            e.preventDefault();
+            if (!dragging) return;
             const y = e.touches ? e.touches[0].clientY : e.clientY;
-            const dy = y - startY;
-            if (Math.abs(dy) > 6) isDrag = true;
-            setA(startAngle - (dy / this._wc.R) * (180 / Math.PI));
+            const dy = y - sy;
+            if (Math.abs(dy) > 5) moved = true;
+            const now = performance.now();
+            vel = (-((y - lastY) / wc.R) * (180 / Math.PI)) / Math.max(8, now - lastT);
+            lastY = y;
+            lastT = now;
+            setA(sa - (dy / wc.R) * (180 / Math.PI));
             this._drawWheel(track);
+            if (e.cancelable) e.preventDefault();
         };
+
         const onEnd = e => {
-            if (!isDrag) {
-                const el = (e.target || e.changedTouches?.[0]?.target)?.closest('.mj-wheel-item');
-                if (el) {
-                    this._snapAndSelect(
-                        track,
-                        parseInt(el.dataset.idx) * this._wc.DEG,
-                        this._wc.items[el.dataset.idx]
-                    );
-                    return;
-                }
+            if (!dragging) return;
+            dragging = false;
+            if (moved) {
+                setA(snap((this.state.wiz.wheelAngle || 0) + vel * 90));
+                this._drawWheel(track);
+                return;
             }
-            const { DEG, items } = this._wc;
-            const ni = Math.max(0, Math.min(items.length - 1, Math.round(getA() / DEG)));
-            this._snapTo(track, ni * DEG);
+            const el = (e.target || e.changedTouches?.[0]?.target)?.closest?.('.mj-wheel-item');
+            if (!el) return;
+            const item = wc.items[+el.dataset.idx];
+            if (!item) return;
+            const cur = this.state.wiz.wheelAngle || 0;
+            const turns = Math.round((cur - +el.dataset.idx * wc.DEG) / (wc.items.length * wc.DEG));
+            setA((+el.dataset.idx + turns * wc.items.length) * wc.DEG);
+            if (item.type === 'juz') this.wizToggleJuz(item.juzNum);
+            else this.wizToggleRange(item.from, item.to, item.label, item.type);
         };
-        track.addEventListener('touchstart', onStart, { passive: true });
-        track.addEventListener('touchmove', onMove, { passive: false });
-        track.addEventListener('touchend', onEnd, { passive: true });
-        // Mouse fallback
-        let md = false;
-        track.addEventListener('mousedown', e => {
-            md = true;
-            onStart(e);
-        });
-        track.addEventListener('mousemove', e => {
-            if (md) onMove(e);
-        });
-        track.addEventListener('mouseup', e => {
-            if (!md) return;
-            md = false;
-            onEnd(e);
-        });
-    }
 
-    _snapTo(track, target) {
-        const start = this.state.wiz.wheelAngle || 0;
-        const t0 = performance.now();
-        const D = 260;
-        const step = t => {
-            const p = Math.min(1, (t - t0) / D);
-            const e = 1 - Math.pow(1 - p, 3);
-            this.state.wiz.wheelAngle = start + (target - start) * e;
-            this._drawWheel(track);
-            if (p < 1) this._wheelRaf = requestAnimationFrame(step);
-            else {
-                this.state.wiz.wheelAngle = target;
-                this._wheelRaf = null;
-            }
-        };
-        this._wheelRaf = requestAnimationFrame(step);
-    }
+        track.addEventListener('pointerdown', onStart);
+        window.addEventListener('pointermove', onMove);
+        window.addEventListener('pointerup', onEnd);
+        track.addEventListener(
+            'wheel',
+            e => {
+                setA(snap((this.state.wiz.wheelAngle || 0) + Math.sign(e.deltaY) * wc.DEG));
+                this._drawWheel(track);
+                e.preventDefault();
+            },
+            { passive: false }
+        );
 
-    _snapAndSelect(track, target, item) {
-        const start = this.state.wiz.wheelAngle || 0;
-        const t0 = performance.now();
-        const D = 200;
-        const step = t => {
-            const p = Math.min(1, (t - t0) / D);
-            const e = 1 - Math.pow(1 - p, 3);
-            this.state.wiz.wheelAngle = start + (target - start) * e;
-            this._drawWheel(track);
-            if (p < 1) {
-                this._wheelRaf = requestAnimationFrame(step);
-            } else {
-                this.state.wiz.wheelAngle = target;
-                this._wheelRaf = null;
-                if (item.type === 'juz') this.wizToggleJuz(item.juzNum);
-                else this.wizToggleRange(item.from, item.to, item.label, item.type);
-            }
+        this._wheelCleanup?.();
+        this._wheelCleanup = () => {
+            window.removeEventListener('pointermove', onMove);
+            window.removeEventListener('pointerup', onEnd);
         };
-        this._wheelRaf = requestAnimationFrame(step);
     }
 
     renderWizImport() {
