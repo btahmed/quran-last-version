@@ -704,6 +704,7 @@ class MurajaaTracker {
 
     wizSetTab(tab) {
         this.state.wiz.tab = tab;
+        this.state.wiz.wheelAngle = 0;
         this.update();
     }
 
@@ -1109,6 +1110,13 @@ class MurajaaTracker {
         if (theme === 'dark') this.container.setAttribute('data-dark', '');
         else this.container.removeAttribute('data-dark');
         this.bindEvents();
+        if (this._wheelRaf) {
+            cancelAnimationFrame(this._wheelRaf);
+            this._wheelRaf = null;
+        }
+        if (this.state.wiz?.mode === 'build' && this.state.wiz?.tab !== 'page') {
+            requestAnimationFrame(() => this._mountWheel());
+        }
     }
 
     bindEvents() {
@@ -1196,6 +1204,14 @@ class MurajaaTracker {
                 if (!this.isRangeSelected(pFrom, pTo)) {
                     this.state.wiz.ranges.push({ from: pFrom, to: pTo, label: lbl, type: 'page' });
                 }
+                this.update();
+            }
+            return;
+        }
+        if (act === 'wiz-remove-range') {
+            const idx = parseInt(arg);
+            if (!isNaN(idx) && idx >= 0 && idx < this.state.wiz.ranges.length) {
+                this.state.wiz.ranges.splice(idx, 1);
                 this.update();
             }
             return;
@@ -1321,78 +1337,28 @@ class MurajaaTracker {
         const merged = this.buildRangesFromSelected();
         const totalPages = merged.reduce((s, r) => s + r.to - r.from + 1, 0);
 
-        const tabBar = `<div class="mj-tabs">
-  <button class="mj-tab${w.tab === 'juz' ? ' active' : ''}" data-action="wiz-tab" data-arg="juz">جزء</button>
-  <button class="mj-tab${w.tab === 'hizb' ? ' active' : ''}" data-action="wiz-tab" data-arg="hizb">حزب</button>
-  <button class="mj-tab${w.tab === 'surah' ? ' active' : ''}" data-action="wiz-tab" data-arg="surah">سورة</button>
-  <button class="mj-tab${w.tab === 'page' ? ' active' : ''}" data-action="wiz-tab" data-arg="page">صفحة</button>
-</div>`;
+        const tabsHtml = ['juz', 'hizb', 'surah', 'page']
+            .map(
+                t =>
+                    `<button class="mj-wtab${w.tab === t ? ' active' : ''}" data-action="wiz-tab" data-arg="${t}">${{ juz: 'JUZ', hizb: 'HIZB', surah: 'SURAH', page: 'PAGE' }[t]}</button>`
+            )
+            .join('');
 
-        let content;
-        if (w.tab === 'juz') {
-            content = `<div class="mj-tree">${JUZ_DATA.map(j => {
-                const st = this.juzSelectionState(j.num);
-                const hizbCount = HIZB_DATA.filter(h => h.juzNum === j.num).length;
-                return `
-<div class="mj-tree-row mj-tree-juz">
-  <button class="mj-tree-check${st === 'all' ? ' checked' : st === 'partial' ? ' partial' : ''}"
-          data-action="wiz-toggle-juz" data-arg="${j.num}">
-    ${st === 'all' ? '✓' : st === 'partial' ? '─' : ''}
-  </button>
-  <span class="mj-tree-label" style="cursor:pointer"
-        data-action="wiz-toggle-juz" data-arg="${j.num}">
-    ${escapeHtml(j.label)}
-    <span class="mj-tree-sub">ص.${arN(j.from)}–${arN(j.to)} · ${arN(hizbCount)} حزب</span>
-  </span>
-</div>`;
-            }).join('')}</div>`;
-        } else if (w.tab === 'hizb') {
-            content = `<div class="mj-tree">${HIZB_DATA.map(h => {
-                const sel = this.isRangeSelected(h.from, h.to);
-                const covered = !sel && merged.some(r => r.from <= h.from && r.to >= h.to);
-                const toggleAttrs = covered
-                    ? ''
-                    : `data-action="wiz-toggle-range" data-from="${h.from}" data-to="${h.to}" data-label="${escapeHtml(h.label)}" data-rtype="hizb"`;
-                return `
-<div class="mj-tree-row mj-tree-hizb${covered ? ' mj-row-covered' : ''}">
-  <button class="mj-tree-check${sel ? ' checked' : covered ? ' covered' : ''}" ${toggleAttrs}>
-    ${sel ? '✓' : covered ? '◦' : ''}
-  </button>
-  <span class="mj-tree-label" style="cursor:${covered ? 'default' : 'pointer'}" ${toggleAttrs}>
-    ${escapeHtml(h.label)}
-    <span class="mj-tree-sub">ص.${arN(h.from)}–${arN(h.to)}</span>
-  </span>
-</div>`;
-            }).join('')}</div>`;
-        } else if (w.tab === 'surah') {
-            content = `<div class="mj-tree">${SURAH_FULL.map(s => {
-                const pEnd = this.surahPageEnd(s.num);
-                const sel = this.isRangeSelected(s.page, pEnd);
-                const covered = !sel && merged.some(r => r.from <= s.page && r.to >= pEnd);
-                const pStr = s.page === pEnd ? `ص.${arN(s.page)}` : `ص.${arN(s.page)}–${arN(pEnd)}`;
-                const toggleAttrs = covered
-                    ? ''
-                    : `data-action="wiz-toggle-range" data-from="${s.page}" data-to="${pEnd}" data-label="${escapeHtml(s.name)}" data-rtype="surah"`;
-                return `
-<div class="mj-tree-row mj-tree-surah${covered ? ' mj-row-covered' : ''}">
-  <button class="mj-tree-check${sel ? ' checked' : covered ? ' covered' : ''}" ${toggleAttrs}>
-    ${sel ? '✓' : covered ? '◦' : ''}
-  </button>
-  <span class="mj-tree-label" style="cursor:${covered ? 'default' : 'pointer'}" ${toggleAttrs}>
-    ${escapeHtml(s.name)}
-    <span class="mj-tree-sub">${pStr} · ${arN(s.verses)} آية</span>
-  </span>
-</div>`;
-            }).join('')}</div>`;
-        } else {
-            const pageRanges = w.ranges.filter(r => r.type === 'page');
-            content = `
-<div class="mj-page-input">
+        const chipsHtml = w.ranges
+            .map(
+                (r, i) => `<div class="mj-plage-chip">
+  <span class="mj-chip-label">${escapeHtml(r.label || `ص.${r.from}–${r.to}`)}</span>
+  <button class="mj-chip-remove" data-action="wiz-remove-range" data-arg="${i}">⊖</button>
+</div>`
+            )
+            .join('');
+
+        const pageRanges = w.ranges.filter(r => r.type === 'page');
+        const wheelOrPage =
+            w.tab === 'page'
+                ? `<div class="mj-page-input" style="padding:16px 12px">
   <div class="mj-page-labels">
-    <span>من صفحة</span>
-    <span></span>
-    <span>إلى صفحة</span>
-    <span></span>
+    <span>من صفحة</span><span></span><span>إلى صفحة</span><span></span>
   </div>
   <div class="mj-page-row">
     <input type="number" id="mj-page-from" min="1" max="604" placeholder="1" dir="ltr">
@@ -1405,37 +1371,213 @@ class MurajaaTracker {
       pageRanges.length
           ? `<div class="mj-page-list">${pageRanges
                 .map(
-                    r => `
-  <div class="mj-page-tag">
-    <span>ص.${arN(r.from)}–${arN(r.to)}</span>
+                    r => `<div class="mj-page-tag"><span>ص.${arN(r.from)}–${arN(r.to)}</span>
     <button class="mj-page-remove" data-action="wiz-toggle-range"
             data-from="${r.from}" data-to="${r.to}"
-            data-label="${escapeHtml(r.label)}" data-rtype="page">✕</button>
-  </div>`
+            data-label="${escapeHtml(r.label)}" data-rtype="page">✕</button></div>`
                 )
                 .join('')}</div>`
           : ''
   }
-</div>`;
-        }
-
-        const previewBar = merged.length
-            ? `<div class="mj-ranges-preview">${merged.map(r => `<span class="mj-range-chip">ص.${arN(r.from)}–${arN(r.to)}</span>`).join('')}</div>`
-            : '';
+</div>`
+                : `<div class="mj-wheel-track" id="mj-wt"></div>
+<div class="mj-wheel-grad"></div>
+<div class="mj-wheel-center"></div>`;
 
         return `
 <div class="mj-wiz-nav">
   <button class="mj-wiz-back" data-action="wiz-back">‹</button>
   <span class="mj-wiz-title">اختار ما حفظته</span>
-  <span class="mj-sel-count">${arN(totalPages)} صفحة</span>
+  ${totalPages ? `<span class="mj-sel-count">${arN(totalPages)} صفحة</span>` : ''}
 </div>
-${tabBar}
-${content}
-${previewBar}
+<div class="mj-wheel-wrap">
+  ${wheelOrPage}
+  <div class="mj-wheel-tabs">${tabsHtml}</div>
+  ${w.tab !== 'page' ? '<p class="mj-wheel-hint">اضغط على العنصر لإضافته</p>' : ''}
+</div>
+${
+    w.ranges.length
+        ? `<div class="mj-plage-actuelle">
+  <span class="mj-plage-label">الاختيار الحالي</span>
+  <div class="mj-plage-chips">${chipsHtml}</div>
+</div>`
+        : ''
+}
 <button class="mj-btn mj-btn-primary mj-btn-full" data-action="wiz-finish"
-        ${!w.ranges.length ? 'disabled' : ''} style="margin-top:12px">
-  ✓ حفظ جدولي (${arN(totalPages)} صفحة)
+        ${!w.ranges.length ? 'disabled' : ''} style="margin-top:10px">
+  ✓ حفظ جدولي${totalPages ? ` (${arN(totalPages)} صفحة)` : ''}
 </button>`;
+    }
+
+    // ─── Wheel picker ────────────────────────────────────────
+    _getWheelItems() {
+        const tab = this.state.wiz.tab;
+        if (tab === 'juz')
+            return JUZ_DATA.map(j => ({
+                label: j.label,
+                from: j.from,
+                to: j.to,
+                type: 'juz',
+                juzNum: j.num,
+            }));
+        if (tab === 'hizb')
+            return HIZB_DATA.map(h => ({ label: h.label, from: h.from, to: h.to, type: 'hizb' }));
+        if (tab === 'surah')
+            return SURAH_FULL.map(s => {
+                const pEnd = this.surahPageEnd(s.num);
+                return { label: s.name, from: s.page, to: pEnd, type: 'surah' };
+            });
+        return [];
+    }
+
+    _mountWheel() {
+        const w = this.state.wiz;
+        if (!w || w.mode !== 'build') return;
+        const track = this.container.querySelector('#mj-wt');
+        if (!track) return;
+        const rect = track.getBoundingClientRect();
+        const W = rect.width || 360;
+        const H = rect.height || 340;
+        this._wc = {
+            W,
+            H,
+            R: W * 0.68,
+            CX: W * 0.76,
+            CY: H * 0.5,
+            DEG: 5.5,
+            items: this._getWheelItems(),
+        };
+        if (!this._wc.items.length) return;
+        this._drawWheel(track);
+        this._bindWheelTouch(track);
+    }
+
+    _drawWheel(track) {
+        if (!this._wc) return;
+        const { R, CX, CY, DEG, items } = this._wc;
+        const angle = this.state.wiz.wheelAngle || 0;
+        track.innerHTML = items
+            .map((item, i) => {
+                const eff = i * DEG - angle;
+                if (Math.abs(eff) > 60) return '';
+                const rad = (eff * Math.PI) / 180;
+                const x = CX - R * Math.cos(rad);
+                const y = CY - R * Math.sin(rad);
+                const opacity = Math.max(0.08, 1 - Math.abs(eff) / 64);
+                const fs = (12 + (1 - Math.abs(eff) / 64) * 5).toFixed(1);
+                const fw = Math.abs(eff) < DEG / 2 ? 700 : 400;
+                const added =
+                    item.type === 'juz'
+                        ? this.juzSelectionState(item.juzNum) !== 'none'
+                        : this.isRangeSelected(item.from, item.to);
+                return `<div class="mj-wheel-item${added ? ' added' : ''}" data-idx="${i}"
+  style="left:${x.toFixed(1)}px;top:${y.toFixed(1)}px;
+         transform:translate(-50%,-50%) rotate(${(-eff).toFixed(1)}deg);
+         opacity:${opacity.toFixed(2)};font-size:${fs}px;font-weight:${fw}"
+>${escapeHtml(item.label)}</div>`;
+            })
+            .join('');
+    }
+
+    _bindWheelTouch(track) {
+        let startY = 0,
+            startAngle = 0,
+            isDrag = false;
+        const getA = () => this.state.wiz.wheelAngle || 0;
+        const setA = v => {
+            const max = (this._wc.items.length - 1) * this._wc.DEG;
+            this.state.wiz.wheelAngle = Math.max(0, Math.min(max, v));
+        };
+
+        const onStart = e => {
+            if (this._wheelRaf) {
+                cancelAnimationFrame(this._wheelRaf);
+                this._wheelRaf = null;
+            }
+            startY = e.touches ? e.touches[0].clientY : e.clientY;
+            startAngle = getA();
+            isDrag = false;
+        };
+        const onMove = e => {
+            e.preventDefault();
+            const y = e.touches ? e.touches[0].clientY : e.clientY;
+            const dy = y - startY;
+            if (Math.abs(dy) > 6) isDrag = true;
+            setA(startAngle - (dy / this._wc.R) * (180 / Math.PI));
+            this._drawWheel(track);
+        };
+        const onEnd = e => {
+            if (!isDrag) {
+                const el = (e.target || e.changedTouches?.[0]?.target)?.closest('.mj-wheel-item');
+                if (el) {
+                    this._snapAndSelect(
+                        track,
+                        parseInt(el.dataset.idx) * this._wc.DEG,
+                        this._wc.items[el.dataset.idx]
+                    );
+                    return;
+                }
+            }
+            const { DEG, items } = this._wc;
+            const ni = Math.max(0, Math.min(items.length - 1, Math.round(getA() / DEG)));
+            this._snapTo(track, ni * DEG);
+        };
+        track.addEventListener('touchstart', onStart, { passive: true });
+        track.addEventListener('touchmove', onMove, { passive: false });
+        track.addEventListener('touchend', onEnd, { passive: true });
+        // Mouse fallback
+        let md = false;
+        track.addEventListener('mousedown', e => {
+            md = true;
+            onStart(e);
+        });
+        track.addEventListener('mousemove', e => {
+            if (md) onMove(e);
+        });
+        track.addEventListener('mouseup', e => {
+            if (!md) return;
+            md = false;
+            onEnd(e);
+        });
+    }
+
+    _snapTo(track, target) {
+        const start = this.state.wiz.wheelAngle || 0;
+        const t0 = performance.now();
+        const D = 260;
+        const step = t => {
+            const p = Math.min(1, (t - t0) / D);
+            const e = 1 - Math.pow(1 - p, 3);
+            this.state.wiz.wheelAngle = start + (target - start) * e;
+            this._drawWheel(track);
+            if (p < 1) this._wheelRaf = requestAnimationFrame(step);
+            else {
+                this.state.wiz.wheelAngle = target;
+                this._wheelRaf = null;
+            }
+        };
+        this._wheelRaf = requestAnimationFrame(step);
+    }
+
+    _snapAndSelect(track, target, item) {
+        const start = this.state.wiz.wheelAngle || 0;
+        const t0 = performance.now();
+        const D = 200;
+        const step = t => {
+            const p = Math.min(1, (t - t0) / D);
+            const e = 1 - Math.pow(1 - p, 3);
+            this.state.wiz.wheelAngle = start + (target - start) * e;
+            this._drawWheel(track);
+            if (p < 1) {
+                this._wheelRaf = requestAnimationFrame(step);
+            } else {
+                this.state.wiz.wheelAngle = target;
+                this._wheelRaf = null;
+                if (item.type === 'juz') this.wizToggleJuz(item.juzNum);
+                else this.wizToggleRange(item.from, item.to, item.label, item.type);
+            }
+        };
+        this._wheelRaf = requestAnimationFrame(step);
     }
 
     renderWizImport() {

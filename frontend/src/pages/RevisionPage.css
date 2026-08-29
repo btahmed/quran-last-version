@@ -897,6 +897,163 @@
     direction: ltr;
 }
 
+/* ── Wheel Picker ────────────────────────────────────────────── */
+.mj-wheel-wrap {
+    position: relative;
+    height: 340px;
+    background: linear-gradient(155deg, #b5d9ef 0%, #daeef9 45%, #c3e3f4 100%);
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.mj-wheel-track {
+    position: absolute;
+    inset: 0;
+}
+
+.mj-wheel-item {
+    position: absolute;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    color: #1e3448;
+    letter-spacing: 0.3px;
+    transition: color 0.15s;
+}
+
+.mj-wheel-item.added {
+    color: #1a6b1a;
+    font-style: italic;
+}
+
+.mj-wheel-grad {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+        linear-gradient(to bottom, #b5d9ef 0%, transparent 24%),
+        linear-gradient(to top, #c3e3f4 0%, transparent 24%);
+}
+
+.mj-wheel-center {
+    position: absolute;
+    left: 8px;
+    right: 118px;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 42px;
+    border-top: 1.5px solid rgba(0, 50, 100, 0.2);
+    border-bottom: 1.5px solid rgba(0, 50, 100, 0.2);
+    pointer-events: none;
+}
+
+.mj-wheel-tabs {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+    padding: 12px 12px 12px 8px;
+    background: rgba(255, 255, 255, 0.38);
+    backdrop-filter: blur(6px);
+    border-radius: 14px 0 0 14px;
+}
+
+.mj-wtab {
+    background: none;
+    border: none;
+    font: inherit;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: rgba(20, 50, 80, 0.4);
+    cursor: pointer;
+    padding: 5px 6px;
+    border-radius: 6px;
+    transition: color 0.15s;
+    min-width: 44px;
+    text-align: right;
+}
+
+.mj-wtab.active {
+    color: #1565c0;
+    font-size: 11.5px;
+}
+
+.mj-wtab:hover:not(.active) {
+    color: rgba(20, 50, 80, 0.7);
+}
+
+.mj-wheel-hint {
+    position: absolute;
+    bottom: 8px;
+    left: 10px;
+    right: 118px;
+    font-size: 10.5px;
+    color: rgba(20, 50, 80, 0.5);
+    margin: 0;
+    text-align: center;
+    pointer-events: none;
+}
+
+/* ── Plage actuelle ──────────────────────────────────────────── */
+.mj-plage-actuelle {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    margin-top: 6px;
+}
+
+.mj-plage-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+}
+
+.mj-plage-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.mj-plage-chip {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--mj-success-soft, rgba(45, 80, 22, 0.08));
+    border: 1px solid rgba(45, 80, 22, 0.22);
+    border-radius: 20px;
+    padding: 5px 6px 5px 12px;
+    font-size: 12.5px;
+    color: var(--mj-success, #2d5016);
+}
+
+.mj-chip-label {
+    font-weight: 600;
+}
+
+.mj-chip-remove {
+    background: none;
+    border: none;
+    color: var(--mj-danger, #ef4444);
+    cursor: pointer;
+    font-size: 15px;
+    padding: 0 2px;
+    line-height: 1;
+    opacity: 0.65;
+    transition: opacity 0.15s;
+}
+
+.mj-chip-remove:hover {
+    opacity: 1;
+}
+
 /* ── Onglets wizard ────────────────────────────────────────── */
 .mj-tabs {
     display: flex;
