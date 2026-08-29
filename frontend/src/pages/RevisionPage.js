@@ -321,6 +321,7 @@ class MurajaaTracker {
             this.state.wiz = {
                 mode: null,
                 tab: 'juz', // 'juz' | 'hizb' | 'surah' | 'page'
+                lang: 'ar', // 'ar' | 'fr'
                 ranges: [], // [{from, to, label, type}]
                 importText: '',
                 importError: null,
@@ -685,6 +686,7 @@ class MurajaaTracker {
     // Sélectionner un juz = ajouter/retirer tous ses hizbs
     wizToggleJuz(juzNum) {
         const w = this.state.wiz;
+        const fr = (w.lang || 'ar') === 'fr';
         const hizbs = HIZB_DATA.filter(h => h.juzNum === juzNum);
         const state = this.juzSelectionState(juzNum);
         if (state === 'all') {
@@ -695,7 +697,8 @@ class MurajaaTracker {
         } else {
             hizbs.forEach(h => {
                 if (!this.isRangeSelected(h.from, h.to)) {
-                    w.ranges.push({ from: h.from, to: h.to, label: h.label, type: 'hizb' });
+                    const label = fr ? `Hizb ${h.num}` : h.label;
+                    w.ranges.push({ from: h.from, to: h.to, label, type: 'hizb' });
                 }
             });
         }
@@ -1157,6 +1160,12 @@ class MurajaaTracker {
             this.update();
             return;
         }
+        if (act === 'wiz-lang') {
+            this.state.wiz.lang = arg;
+            this.state.wiz.wheelAngle = 0;
+            this.update();
+            return;
+        }
         if (act === 'wiz-edit') {
             const existingRanges = (this.state.d?.bunkerRanges || []).map(r => ({
                 from: r.from,
@@ -1335,20 +1344,27 @@ class MurajaaTracker {
 
     renderWizTree() {
         const w = this.state.wiz;
+        const fr = (w.lang || 'ar') === 'fr';
         const merged = this.buildRangesFromSelected();
         const totalPages = merged.reduce((s, r) => s + r.to - r.from + 1, 0);
 
+        const TAB_LABELS = {
+            juz: 'JUZ',
+            hizb: 'HIZB',
+            surah: fr ? 'SOURATE' : 'SURAH',
+            page: 'PAGE',
+        };
         const tabsHtml = ['juz', 'hizb', 'surah', 'page']
             .map(
                 t =>
-                    `<button class="mj-wtab${w.tab === t ? ' active' : ''}" data-action="wiz-tab" data-arg="${t}">${{ juz: 'JUZ', hizb: 'HIZB', surah: 'SURAH', page: 'PAGE' }[t]}</button>`
+                    `<button class="mj-wtab${w.tab === t ? ' active' : ''}" data-action="wiz-tab" data-arg="${t}">${TAB_LABELS[t]}</button>`
             )
             .join('');
 
         const chipsHtml = w.ranges
             .map(
                 (r, i) => `<div class="mj-plage-chip">
-  <span class="mj-chip-label">${escapeHtml(r.label || `ص.${r.from}–${r.to}`)}</span>
+  <span class="mj-chip-label">${escapeHtml(r.label || (fr ? `p.${r.from}–${r.to}` : `ص.${r.from}–${r.to}`))}</span>
   <button class="mj-chip-remove" data-action="wiz-remove-range" data-arg="${i}">⊖</button>
 </div>`
             )
@@ -1359,20 +1375,20 @@ class MurajaaTracker {
             w.tab === 'page'
                 ? `<div class="mj-page-input" style="padding:16px 12px">
   <div class="mj-page-labels">
-    <span>من صفحة</span><span></span><span>إلى صفحة</span><span></span>
+    <span>${fr ? 'De la page' : 'من صفحة'}</span><span></span><span>${fr ? 'À la page' : 'إلى صفحة'}</span><span></span>
   </div>
   <div class="mj-page-row">
     <input type="number" id="mj-page-from" min="1" max="604" placeholder="1" dir="ltr">
     <span class="mj-page-sep">←</span>
     <input type="number" id="mj-page-to" min="1" max="604" placeholder="604" dir="ltr">
-    <button class="mj-btn mj-btn-primary" data-action="wiz-add-page">+ إضافة</button>
+    <button class="mj-btn mj-btn-primary" data-action="wiz-add-page">${fr ? '+ Ajouter' : '+ إضافة'}</button>
   </div>
-  <p class="mj-note" style="margin:6px 0 4px">المصحف من الصفحة ١ إلى ٦٠٤</p>
+  <p class="mj-note" style="margin:6px 0 4px">${fr ? 'Coran de la page 1 à 604' : 'المصحف من الصفحة ١ إلى ٦٠٤'}</p>
   ${
       pageRanges.length
           ? `<div class="mj-page-list">${pageRanges
                 .map(
-                    r => `<div class="mj-page-tag"><span>ص.${arN(r.from)}–${arN(r.to)}</span>
+                    r => `<div class="mj-page-tag"><span>${fr ? `p.${r.from}–${r.to}` : `ص.${arN(r.from)}–${arN(r.to)}`}</span>
     <button class="mj-page-remove" data-action="wiz-toggle-range"
             data-from="${r.from}" data-to="${r.to}"
             data-label="${escapeHtml(r.label)}" data-rtype="page">✕</button></div>`
@@ -1387,48 +1403,66 @@ class MurajaaTracker {
       <div class="mj-wheel-hub" id="mj-hub"></div>
       <div class="mj-wheel-bism">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>`;
 
+        const selCount = totalPages
+            ? `<span class="mj-sel-count">${fr ? `${totalPages} p.` : `${arN(totalPages)} صفحة`}</span>`
+            : '';
+
         return `
 <div class="mj-wiz-nav">
   <button class="mj-wiz-back" data-action="wiz-back">‹</button>
-  <span class="mj-wiz-title">اختار ما حفظته</span>
-  ${totalPages ? `<span class="mj-sel-count">${arN(totalPages)} صفحة</span>` : ''}
+  <span class="mj-wiz-title">${fr ? 'Choisissez ce que vous avez mémorisé' : 'اختار ما حفظته'}</span>
+  <div style="display:flex;gap:6px;align-items:center">
+    ${selCount}
+    <button class="mj-lang-toggle" data-action="wiz-lang" data-arg="${fr ? 'ar' : 'fr'}">${fr ? 'ع' : 'FR'}</button>
+  </div>
 </div>
 <div class="mj-wheel-wrap">
   ${wheelOrPage}
   <div class="mj-wheel-tabs">${tabsHtml}</div>
-  ${w.tab !== 'page' ? '<p class="mj-wheel-hint">اضغط على العنصر لإضافته</p>' : ''}
+  ${w.tab !== 'page' ? `<p class="mj-wheel-hint">${fr ? 'Appuyez pour sélectionner' : 'اضغط على العنصر لإضافته'}</p>` : ''}
 </div>
 ${
     w.ranges.length
         ? `<div class="mj-plage-actuelle">
-  <span class="mj-plage-label">الاختيار الحالي</span>
+  <span class="mj-plage-label">${fr ? 'Sélection actuelle' : 'الاختيار الحالي'}</span>
   <div class="mj-plage-chips">${chipsHtml}</div>
 </div>`
         : ''
 }
 <button class="mj-btn mj-btn-primary mj-btn-full" data-action="wiz-finish"
         ${!w.ranges.length ? 'disabled' : ''} style="margin-top:10px">
-  ✓ حفظ جدولي${totalPages ? ` (${arN(totalPages)} صفحة)` : ''}
+  ✓ ${fr ? `Enregistrer${totalPages ? ` (${totalPages} pages)` : ''}` : `حفظ جدولي${totalPages ? ` (${arN(totalPages)} صفحة)` : ''}`}
 </button>`;
     }
 
     // ─── Wheel picker ────────────────────────────────────────
     _getWheelItems() {
         const tab = this.state.wiz.tab;
+        const fr = (this.state.wiz.lang || 'ar') === 'fr';
         if (tab === 'juz')
             return JUZ_DATA.map(j => ({
-                label: j.label,
+                label: fr ? `Juz ${j.num}` : j.label,
                 from: j.from,
                 to: j.to,
                 type: 'juz',
                 juzNum: j.num,
             }));
         if (tab === 'hizb')
-            return HIZB_DATA.map(h => ({ label: h.label, from: h.from, to: h.to, type: 'hizb' }));
+            return HIZB_DATA.map(h => ({
+                label: fr ? `Hizb ${h.num}` : h.label,
+                from: h.from,
+                to: h.to,
+                type: 'hizb',
+            }));
         if (tab === 'surah')
             return SURAH_FULL.map(s => {
                 const pEnd = this.surahPageEnd(s.num);
-                return { label: s.name, from: s.page, to: pEnd, type: 'surah' };
+                return {
+                    label: fr ? `S.${s.num} — ${s.name}` : s.name,
+                    from: s.page,
+                    to: pEnd,
+                    type: 'surah',
+                };
             });
         return [];
     }
