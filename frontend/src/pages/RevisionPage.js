@@ -1349,18 +1349,16 @@ class MurajaaTracker {
         } else if (w.tab === 'hizb') {
             content = `<div class="mj-tree">${HIZB_DATA.map(h => {
                 const sel = this.isRangeSelected(h.from, h.to);
+                const covered = !sel && merged.some(r => r.from <= h.from && r.to >= h.to);
+                const toggleAttrs = covered
+                    ? ''
+                    : `data-action="wiz-toggle-range" data-from="${h.from}" data-to="${h.to}" data-label="${escapeHtml(h.label)}" data-rtype="hizb"`;
                 return `
-<div class="mj-tree-row mj-tree-hizb">
-  <button class="mj-tree-check${sel ? ' checked' : ''}"
-          data-action="wiz-toggle-range"
-          data-from="${h.from}" data-to="${h.to}"
-          data-label="${escapeHtml(h.label)}" data-rtype="hizb">
-    ${sel ? '✓' : ''}
+<div class="mj-tree-row mj-tree-hizb${covered ? ' mj-row-covered' : ''}">
+  <button class="mj-tree-check${sel ? ' checked' : covered ? ' covered' : ''}" ${toggleAttrs}>
+    ${sel ? '✓' : covered ? '◦' : ''}
   </button>
-  <span class="mj-tree-label" style="cursor:pointer"
-        data-action="wiz-toggle-range"
-        data-from="${h.from}" data-to="${h.to}"
-        data-label="${escapeHtml(h.label)}" data-rtype="hizb">
+  <span class="mj-tree-label" style="cursor:${covered ? 'default' : 'pointer'}" ${toggleAttrs}>
     ${escapeHtml(h.label)}
     <span class="mj-tree-sub">ص.${arN(h.from)}–${arN(h.to)}</span>
   </span>
@@ -1370,19 +1368,17 @@ class MurajaaTracker {
             content = `<div class="mj-tree">${SURAH_FULL.map(s => {
                 const pEnd = this.surahPageEnd(s.num);
                 const sel = this.isRangeSelected(s.page, pEnd);
+                const covered = !sel && merged.some(r => r.from <= s.page && r.to >= pEnd);
                 const pStr = s.page === pEnd ? `ص.${arN(s.page)}` : `ص.${arN(s.page)}–${arN(pEnd)}`;
+                const toggleAttrs = covered
+                    ? ''
+                    : `data-action="wiz-toggle-range" data-from="${s.page}" data-to="${pEnd}" data-label="${escapeHtml(s.name)}" data-rtype="surah"`;
                 return `
-<div class="mj-tree-row mj-tree-surah">
-  <button class="mj-tree-check${sel ? ' checked' : ''}"
-          data-action="wiz-toggle-range"
-          data-from="${s.page}" data-to="${pEnd}"
-          data-label="${escapeHtml(s.name)}" data-rtype="surah">
-    ${sel ? '✓' : ''}
+<div class="mj-tree-row mj-tree-surah${covered ? ' mj-row-covered' : ''}">
+  <button class="mj-tree-check${sel ? ' checked' : covered ? ' covered' : ''}" ${toggleAttrs}>
+    ${sel ? '✓' : covered ? '◦' : ''}
   </button>
-  <span class="mj-tree-label" style="cursor:pointer"
-        data-action="wiz-toggle-range"
-        data-from="${s.page}" data-to="${pEnd}"
-        data-label="${escapeHtml(s.name)}" data-rtype="surah">
+  <span class="mj-tree-label" style="cursor:${covered ? 'default' : 'pointer'}" ${toggleAttrs}>
     ${escapeHtml(s.name)}
     <span class="mj-tree-sub">${pStr} · ${arN(s.verses)} آية</span>
   </span>
@@ -1423,6 +1419,10 @@ class MurajaaTracker {
 </div>`;
         }
 
+        const previewBar = merged.length
+            ? `<div class="mj-ranges-preview">${merged.map(r => `<span class="mj-range-chip">ص.${arN(r.from)}–${arN(r.to)}</span>`).join('')}</div>`
+            : '';
+
         return `
 <div class="mj-wiz-nav">
   <button class="mj-wiz-back" data-action="wiz-back">‹</button>
@@ -1431,11 +1431,11 @@ class MurajaaTracker {
 </div>
 ${tabBar}
 ${content}
+${previewBar}
 <button class="mj-btn mj-btn-primary mj-btn-full" data-action="wiz-finish"
         ${!w.ranges.length ? 'disabled' : ''} style="margin-top:12px">
   ✓ حفظ جدولي (${arN(totalPages)} صفحة)
-</button>
-<p class="mj-note">يمكنك الجمع بين جزء وحزب وسور وصفحات</p>`;
+</button>`;
     }
 
     renderWizImport() {
