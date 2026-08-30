@@ -1441,7 +1441,7 @@ ${
         const fr = (this.state.wiz.lang || 'ar') === 'fr';
         if (tab === 'juz')
             return JUZ_DATA.map(j => ({
-                label: fr ? `Juz ${j.num}` : j.label,
+                label: fr ? `Juz ${j.num}` : `الجزء ${arN(j.num)}`,
                 from: j.from,
                 to: j.to,
                 type: 'juz',
@@ -1449,7 +1449,7 @@ ${
             }));
         if (tab === 'hizb')
             return HIZB_DATA.map(h => ({
-                label: fr ? `Hizb ${h.num}` : h.label,
+                label: fr ? `Hizb ${h.num}` : `الحزب ${arN(h.num)}`,
                 from: h.from,
                 to: h.to,
                 type: 'hizb',
@@ -1475,31 +1475,27 @@ ${
 
         const rect = track.getBoundingClientRect();
         const W = rect.width || 360;
-        const H = rect.height || 420;
+        const H = rect.height || 520;
 
-        const R = W * 0.86;
-        const R0 = W * 0.33;
-        this._wc = {
-            W,
-            H,
-            R,
-            R0,
-            CX: W * 0.81,
-            CY: H * 0.5,
-            DEG: 6.4,
-            WIN: 62,
-            items: this._getWheelItems(),
-        };
-        if (!this._wc.items.length) return;
+        // Rebuild geometry only when dimensions actually changed (avoids jump on tap)
+        if (!this._wc || Math.abs(this._wc.W - W) > 2 || Math.abs(this._wc.H - H) > 2) {
+            const R = W * 0.86;
+            const R0 = W * 0.33;
+            this._wc = { W, H, R, R0, CX: W * 0.81, CY: H * 0.5, DEG: 6.4, WIN: 62, items: [] };
 
-        const hub = this.container.querySelector('#mj-hub');
-        if (hub) {
-            hub.style.left = this._wc.CX - R0 + 'px';
-            hub.style.top = this._wc.CY - R0 + 'px';
-            hub.style.width = hub.style.height = R0 * 2 + 'px';
+            const hub = this.container.querySelector('#mj-hub');
+            if (hub) {
+                hub.style.left = this._wc.CX - R0 + 'px';
+                hub.style.top = this._wc.CY - R0 + 'px';
+                hub.style.width = hub.style.height = R0 * 2 + 'px';
+            }
+            const center = this.container.querySelector('.mj-wheel-center');
+            if (center) center.style.width = this._wc.CX - R0 + 'px';
         }
-        const center = this.container.querySelector('.mj-wheel-center');
-        if (center) center.style.width = this._wc.CX - R0 + 'px';
+
+        // Always refresh items (lang/tab may have changed)
+        this._wc.items = this._getWheelItems();
+        if (!this._wc.items.length) return;
 
         this._drawWheel(track);
         this._bindWheelTouch(track);

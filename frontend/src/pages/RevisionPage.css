@@ -900,7 +900,7 @@
 /* ── Wheel Picker ────────────────────────────────────────────── */
 .mj-wheel-wrap {
     position: relative;
-    height: 420px;
+    height: 520px;
     overflow: hidden;
     border-radius: 24px;
     background:
@@ -928,11 +928,13 @@
     align-items: center;
     padding-left: 26px;
     white-space: nowrap;
+    overflow: hidden;
     cursor: pointer;
     color: #33402c;
     background: linear-gradient(90deg, rgba(255, 255, 255, 0.97), rgba(248, 244, 235, 0.9));
     transform-origin: var(--mj-origin, 100%) 50%;
     -webkit-tap-highlight-color: transparent;
+    direction: ltr;
 }
 
 .mj-wheel-item.added {
@@ -1094,6 +1096,9 @@
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
+    max-height: 130px;
+    overflow-y: auto;
+    padding-right: 4px;
 }
 
 .mj-plage-chip {
