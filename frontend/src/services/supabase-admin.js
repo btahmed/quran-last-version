@@ -383,7 +383,10 @@ export async function getMyStudents() {
             s.last_submission_at = lastActivityByStudent[s.id] || null;
         });
 
-        return { data, error: null };
+        // `submissions` : liste brute (student_id + submitted_at, tous statuts) — sert
+        // au composant StudentRadar pour ses barres réelles des 7 derniers jours.
+        // Propriété additive : ne change rien pour les appelants qui ne lisent que `data`.
+        return { data, submissions: lastActivityRes.data || [], error: null };
     } catch (error) {
         return { data: null, error };
     }

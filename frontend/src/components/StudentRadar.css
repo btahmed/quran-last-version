@@ -1,0 +1,223 @@
+/* StudentRadar.css — « رادار الطلاب »
+   Cartes de santé par élève : accent à droite (RTL) selon le niveau,
+   barres de régularité sur 7 jours. */
+
+.student-radar {
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+}
+
+/* ── Filtres (compteurs) ── */
+.radar-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.radar-pill {
+    padding: 0.4rem 0.875rem;
+    border-radius: 999px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.radar-pill.is-all {
+    background: #2d5016;
+    color: #fff;
+}
+.radar-pill.is-critical {
+    background: rgba(139, 38, 53, 0.12);
+    color: #8b2635;
+}
+.radar-pill.is-warn {
+    background: rgba(245, 158, 11, 0.14);
+    color: #b45309;
+}
+.radar-pill.is-ok {
+    background: rgba(16, 185, 129, 0.12);
+    color: #047857;
+}
+
+/* ── Liste ── */
+.radar-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+}
+
+.radar-card {
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 1.125rem;
+    padding: 0.875rem 1rem;
+    box-shadow: 0 1px 3px rgba(26, 26, 46, 0.06);
+    cursor: pointer;
+    transition:
+        transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+        box-shadow 0.25s ease;
+}
+
+.radar-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px -8px rgba(45, 80, 22, 0.2);
+}
+
+/* Accent côté droit (lecture RTL) */
+.radar-card.is-critical {
+    border-right: 4px solid #8b2635;
+    background: rgba(139, 38, 53, 0.05);
+    border-color: rgba(139, 38, 53, 0.28);
+}
+
+.radar-card.is-warn {
+    border-right: 4px solid #f59e0b;
+    border-color: rgba(245, 158, 11, 0.3);
+}
+
+.radar-card.is-ok {
+    border-right: 4px solid #4caf50;
+}
+
+.radar-top {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+}
+
+.radar-avatar {
+    width: 40px;
+    height: 40px;
+    flex: none;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    font-size: 1.0625rem;
+    font-weight: 700;
+}
+
+.radar-avatar.is-critical {
+    background: rgba(139, 38, 53, 0.12);
+    color: #8b2635;
+}
+.radar-avatar.is-warn {
+    background: rgba(245, 158, 11, 0.14);
+    color: #b45309;
+}
+.radar-avatar.is-ok {
+    background: rgba(45, 80, 22, 0.1);
+    color: #2d5016;
+}
+
+.radar-id {
+    flex: 1;
+    min-width: 0;
+}
+
+.radar-id .name {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: var(--color-text-primary, #171717);
+}
+
+.radar-id .meta {
+    font-size: 0.75rem;
+    color: var(--color-text-secondary, #737373);
+    margin-top: 1px;
+}
+
+.radar-card.is-critical .radar-id .meta {
+    color: #8b2635;
+}
+
+.radar-card.is-warn .radar-id .meta {
+    color: #b45309;
+}
+
+/* Action de rappel */
+.radar-action {
+    flex: none;
+    min-height: 44px;
+    padding: 0.5rem 0.875rem;
+    border: none;
+    border-radius: 0.875rem;
+    font-family: inherit;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.radar-action.is-critical {
+    background: rgba(139, 38, 53, 0.12);
+    color: #8b2635;
+}
+
+.radar-action.is-critical:hover {
+    background: #8b2635;
+    color: #fff;
+}
+
+.radar-action.is-warn {
+    background: rgba(245, 158, 11, 0.14);
+    color: #b45309;
+}
+
+.radar-action.is-warn:hover {
+    background: #f59e0b;
+    color: #fff;
+}
+
+.radar-score {
+    flex: none;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #2d5016, #d4a574);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+}
+
+/* ── Barres de régularité (7 jours) ── */
+.streak-bars {
+    display: flex;
+    gap: 3px;
+    margin-top: 0.75rem;
+}
+
+.streak-bars i {
+    flex: 1;
+    height: 5px;
+    border-radius: 999px;
+    background: var(--color-border, #e5e5e5);
+}
+
+.streak-bars i.is-done {
+    background: #4caf50;
+}
+
+/* ── Dark mode ── */
+[data-theme='dark'] .radar-card {
+    background: rgba(26, 26, 46, 0.68);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) .radar-card {
+        background: rgba(26, 26, 46, 0.68);
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+}
+
+/* ── Mobile ── */
+@media (max-width: 420px) {
+    .radar-action {
+        padding: 0.5rem 0.625rem;
+        font-size: 0.75rem;
+    }
+}

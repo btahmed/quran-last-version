@@ -1,0 +1,197 @@
+/* ClassHealth.css — cartes de santé des fasl (admin).
+   Surfaces sombres en verre, accent selon le niveau, barres de métriques. */
+
+.class-health-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.class-health {
+    position: relative;
+    border-radius: 1.25rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #fff;
+    transition:
+        transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+        box-shadow 0.25s ease,
+        border-color 0.25s ease;
+}
+
+.class-health:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px -10px rgba(10, 10, 26, 0.5);
+}
+
+.class-health.is-ok:hover {
+    border-color: rgba(76, 175, 80, 0.45);
+}
+
+.class-health.is-warn {
+    border-color: rgba(245, 158, 11, 0.4);
+}
+
+.class-health.is-critical {
+    border-color: rgba(139, 38, 53, 0.55);
+    background: rgba(139, 38, 53, 0.12);
+}
+
+.ch-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.ch-id strong {
+    font-size: 1.0625rem;
+    font-weight: 700;
+}
+
+.ch-sub {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.55);
+    margin-top: 2px;
+}
+
+.ch-badge {
+    flex: none;
+    padding: 0.25rem 0.7rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.ch-badge.is-ok {
+    background: rgba(76, 175, 80, 0.16);
+    border: 1px solid rgba(76, 175, 80, 0.45);
+    color: #bbf7d0;
+}
+
+.ch-badge.is-warn {
+    background: rgba(245, 158, 11, 0.16);
+    border: 1px solid rgba(245, 158, 11, 0.45);
+    color: #fde68a;
+}
+
+.ch-badge.is-critical {
+    background: rgba(139, 38, 53, 0.28);
+    border: 1px solid rgba(139, 38, 53, 0.6);
+    color: #fecaca;
+}
+
+.ch-reason {
+    font-size: 0.8125rem;
+    color: rgba(255, 255, 255, 0.62);
+    margin-top: 0.5rem;
+}
+
+.class-health.is-critical .ch-reason {
+    color: #fecaca;
+}
+
+.class-health.is-warn .ch-reason {
+    color: #fde68a;
+}
+
+/* ── Métriques ── */
+.ch-metrics {
+    display: flex;
+    gap: 0.875rem;
+    margin-top: 0.875rem;
+}
+
+.ch-metrics:empty {
+    display: none;
+}
+
+.ch-metric {
+    flex: 1;
+}
+
+.ch-metric-label {
+    font-size: 0.6875rem;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 5px;
+}
+
+.ch-track {
+    height: 6px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+    overflow: hidden;
+}
+
+.ch-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ch-fill.is-high {
+    background: linear-gradient(90deg, #2d5016, #4caf50);
+}
+
+.ch-fill.is-mid {
+    background: linear-gradient(90deg, #2d5016, #d4a574);
+}
+
+.ch-fill.is-low {
+    background: linear-gradient(90deg, #b45309, #f59e0b);
+}
+
+/* ── Action ── */
+.ch-action {
+    width: 100%;
+    min-height: 46px;
+    margin-top: 0.875rem;
+    border: none;
+    border-radius: 0.875rem;
+    font-family: inherit;
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: #fff;
+    background: #8b2635;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.ch-action:hover {
+    background: #a53347;
+    transform: translateY(-2px);
+}
+
+/* ── Sur fond clair (si la section admin est en thème clair) ── */
+@media (prefers-color-scheme: light) {
+    :root[data-theme='light'] .class-health {
+        background: rgba(255, 255, 255, 0.72);
+        border-color: rgba(255, 255, 255, 0.5);
+        color: var(--color-text-primary, #171717);
+    }
+
+    :root[data-theme='light'] .ch-sub,
+    :root[data-theme='light'] .ch-metric-label {
+        color: var(--color-text-secondary, #737373);
+    }
+
+    :root[data-theme='light'] .ch-track {
+        background: rgba(26, 26, 46, 0.1);
+    }
+
+    :root[data-theme='light'] .ch-badge.is-ok {
+        color: #047857;
+    }
+
+    :root[data-theme='light'] .ch-badge.is-warn {
+        color: #b45309;
+    }
+
+    :root[data-theme='light'] .ch-badge.is-critical {
+        color: #8b2635;
+    }
+}

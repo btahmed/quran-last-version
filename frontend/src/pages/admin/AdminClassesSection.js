@@ -2,6 +2,7 @@
 // Section Fassoul (Classes) — extraite d'AdminPage.js (Task 8 : lazy-loading)
 import { Logger } from '../../core/logger.js';
 import * as supabaseAdmin from '../../services/supabase-admin.js';
+import { mountClassHealth } from '../../components/ClassHealth.js';
 
 // ─── UTILS ───────────────────────────────────────────────────────────────────
 function escapeHtml(str) {
@@ -67,6 +68,16 @@ export async function init() {
     window._adminAddStudentToClass = addStudentToClass;
     window._adminRemoveStudentFromClass = removeStudentFromClass;
 
+    // Délégation de clic — ouvre "إدارة" au tap sur une carte (ClassHealth
+    // n'a pas de clic-carte intégré, seulement un bouton d'action optionnel).
+    document.getElementById('admin-classes-list')?.addEventListener('click', e => {
+        if (e.target.closest('.ch-action')) return; // action propre au bouton (ex: assigner un prof)
+        const card = e.target.closest('.class-health');
+        if (!card) return;
+        const id = card.dataset.classId;
+        if (id) openClassModal(id);
+    });
+
     await loadClasses();
 }
 
@@ -93,54 +104,26 @@ function renderClassesList() {
     const el = document.getElementById('admin-classes-list');
     if (!el) return;
 
-    if (!allClasses.length) {
-        el.innerHTML =
-            '<p style="text-align:center; color:var(--color-text-secondary); padding:var(--space-6);">لا توجد فصول بعد. أنشئ فصلاً جديداً!</p>';
-        return;
-    }
+    // Adapte les vrais champs de getClasses() aux noms attendus par ClassHealth
+    // (composant générique) — aucune valeur inventée, juste un renommage.
+    const mapped = allClasses.map(c => ({
+        id: c.id,
+        name: c.name,
+        teacher_name: c.profiles?.username || null,
+        student_count: (c.class_members || []).length,
+        pending_count: c.pending_submissions_count || 0,
+        // attendance_rate/graded_rate non trackés côté serveur → absents,
+        // ClassHealth masque les barres correspondantes automatiquement.
+    }));
 
-    el.innerHTML = allClasses
-        .map(c => {
-            const teacherName = c.profiles?.username || null;
-            const studentCount = (c.class_members || []).length;
-            const pending = c.pending_submissions_count || 0;
-            const cid = escapeHtml(String(c.id));
-
-            // Statut réel : pas de prof assigné = critique, sinon selon les
-            // soumissions en attente réellement comptées (aucune valeur inventée).
-            let healthClass, healthLabel;
-            if (!teacherName) {
-                healthClass = 'is-critical';
-                healthLabel = '🔴 بلا معلم';
-            } else if (pending >= 10) {
-                healthClass = 'is-warn';
-                healthLabel = `🟡 ${pending} تسليماً معلقاً`;
-            } else {
-                healthClass = 'is-ok';
-                healthLabel = '🟢 نشط';
-            }
-
-            return `
-        <div class="health-card ${healthClass}" style="margin-bottom:var(--space-2)">
-            <div class="k-row" style="padding:0;background:none;border:none">
-                <div class="rl">
-                    <span class="k-avatar" style="border-radius:var(--radius-lg)">🏫</span>
-                    <div>
-                        <div class="name">${escapeHtml(c.name)}</div>
-                        <div class="meta">👨‍🏫 ${teacherName ? escapeHtml(teacherName) : 'غير محدد'} · 🎓 ${studentCount} طالب · ${healthLabel}</div>
-                    </div>
-                </div>
-                <div style="display:flex;gap:var(--space-2);flex-shrink:0">
-                    <button class="k-quickbtn" style="min-width:auto;padding:var(--space-1) var(--space-3);font-size:var(--text-xs)"
-                        onclick="window._adminOpenClassModal('${cid}')">⚙️ إدارة</button>
-                    <button class="k-quickbtn k-quickbtn--danger" style="min-width:auto;padding:var(--space-1) var(--space-2)" aria-label="حذف الفصل" title="حذف الفصل"
-                        onclick="window._adminDeleteClass('${cid}','${escapeHtml(c.name)}')">🗑</button>
-                </div>
-            </div>
-        </div>
-        `;
-        })
-        .join('');
+    mountClassHealth('admin-classes-list', mapped);
+    el.querySelectorAll('.class-health').forEach(card => {
+        const tap = document.createElement('div');
+        tap.className = 'ch-tap-hint';
+        tap.textContent = '⚙️ اضغط للإدارة';
+        tap.style.cssText = 'font-size:0.7rem;opacity:.6;margin-top:6px;text-align:end';
+        card.appendChild(tap);
+    });
 }
 
 // ─── FORMULAIRE CRÉATION CLASSE ───────────────────────────────────────────────
@@ -224,9 +207,12 @@ async function openClassModal(classId) {
         };
         modal.innerHTML = `
             <div style="position:relative; margin:40px auto; width:calc(100% - 32px); max-width:600px; background:#fff; border-radius:16px; box-shadow:0 24px 64px rgba(0,0,0,0.35); overflow:hidden;" onclick="event.stopPropagation()">
-                <div style="padding:20px 24px 16px; border-bottom:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center;">
+                <div style="padding:20px 24px 16px; border-bottom:1px solid #e5e7eb; display:flex; justify-content:space-between; align-items:center; gap:8px;">
                     <h3 id="class-modal-title" style="margin:0; font-size:1.1rem; font-weight:700; color:#111827;">إدارة الفصل</h3>
-                    <button onclick="window._adminCloseClassModal()" aria-label="إغلاق" title="إغلاق" style="display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; background:#f3f4f6; border:none; border-radius:8px; font-size:1.1rem; cursor:pointer; color:#6b7280;">✕</button>
+                    <div style="display:flex; gap:8px; flex-shrink:0;">
+                        <button id="class-modal-delete-btn" aria-label="حذف الفصل" title="حذف الفصل" style="display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; background:#fef2f2; border:none; border-radius:8px; font-size:1.1rem; cursor:pointer; color:#ef4444;">🗑</button>
+                        <button onclick="window._adminCloseClassModal()" aria-label="إغلاق" title="إغلاق" style="display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; background:#f3f4f6; border:none; border-radius:8px; font-size:1.1rem; cursor:pointer; color:#6b7280;">✕</button>
+                    </div>
                 </div>
                 <div id="class-modal-content" style="padding:20px 24px 24px;"></div>
             </div>
@@ -236,6 +222,11 @@ async function openClassModal(classId) {
 
     modal.style.display = 'block';
     document.getElementById('class-modal-title').textContent = `🏫 ${classData.name}`;
+    // Rebranché à chaque ouverture : le modal est réutilisé pour toutes les classes
+    document.getElementById('class-modal-delete-btn').onclick = () => {
+        closeClassModal();
+        deleteClass(classData.id, classData.name);
+    };
 
     await renderClassModalContent(classId);
 }

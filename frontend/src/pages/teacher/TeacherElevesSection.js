@@ -4,6 +4,7 @@
 import { Logger } from '../../core/logger.js';
 import { apiCache } from '../../core/apiCache.js';
 import * as supabaseAdmin from '../../services/supabase-admin.js';
+import { mountStudentRadar } from '../../components/StudentRadar.js';
 
 // ─── UTILS ───────────────────────────────────────────────────────────────────
 
@@ -15,16 +16,6 @@ function escapeHtml(text) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
-}
-
-function escapeJs(text) {
-    if (!text) return '';
-    return String(text)
-        .replace(/\\/g, '\\\\')
-        .replace(/'/g, "\\'")
-        .replace(/"/g, '\\"')
-        .replace(/\n/g, '\\n')
-        .replace(/\r/g, '\\r');
 }
 
 // ─── RENDER ──────────────────────────────────────────────────────────────────
@@ -48,6 +39,19 @@ export function render() {
 
 export async function init() {
     Logger.log('TEACHER-ELEVES', 'init');
+
+    // Délégation de clic sur la liste — ouvre le détail élève (StudentRadar
+    // n'affiche que la relance/le score, pas de clic-carte intégré à son API).
+    const studentsList = document.getElementById('teacher-students-list');
+    studentsList?.addEventListener('click', e => {
+        if (e.target.closest('.radar-action')) return; // le bouton "ذكّره" gère son propre clic
+        const card = e.target.closest('.radar-card');
+        if (!card) return;
+        const id = card.dataset.studentId;
+        const name = card.querySelector('.name')?.textContent?.trim();
+        if (id) viewStudentProgress(id, name);
+    });
+
     await _loadStudents();
 }
 
@@ -59,11 +63,17 @@ async function _loadStudents() {
 
     try {
         // Toujours récupérer des données fraîches — les points/soumissions changent souvent
-        const { data: freshStudents } = await supabaseAdmin.getMyStudents();
+        const { data: freshStudents, submissions } = await supabaseAdmin.getMyStudents();
         const students = freshStudents || [];
         apiCache.set('my-students', students);
 
-        _renderStudentsList(students);
+        if (!students.length) {
+            studentsList.innerHTML = '<p class="empty-state">لا يوجد طلاب بعد</p>';
+            return;
+        }
+        // Pas de onRemind : aucune méthode de rappel n'existe encore dans la façade
+        // (voir INTEGRATION.md) — le bouton "ذكّره" reste donc masqué, jamais inactif.
+        mountStudentRadar('teacher-students-list', students, submissions || []);
     } catch (err) {
         Logger.error('TEACHER-ELEVES', 'Erreur chargement élèves', err);
         if (studentsList) {
@@ -71,75 +81,6 @@ async function _loadStudents() {
                 '<p class="empty-state" style="color:var(--color-danger);">فشل تحميل قائمة الطلاب</p>';
         }
     }
-}
-
-/** Jours écoulés depuis une date ISO — null si la date est absente/invalide */
-function _daysSince(isoDate) {
-    if (!isoDate) return null;
-    const d = new Date(isoDate);
-    if (Number.isNaN(d.getTime())) return null;
-    return Math.max(0, Math.floor((Date.now() - d.getTime()) / 86400000));
-}
-
-/** Rادار : élèves triés par urgence réelle — jamais soumis, puis les plus
- *  longtemps inactifs, en dernier les plus actifs. Basé uniquement sur
- *  submissions_count/last_submission_at (aucune métrique inventée). */
-function _sortByUrgency(students) {
-    return [...students].sort((a, b) => {
-        const da = _daysSince(a.last_submission_at);
-        const db = _daysSince(b.last_submission_at);
-        // Jamais soumis (da === null) = priorité maximale
-        if (da === null && db === null) return 0;
-        if (da === null) return -1;
-        if (db === null) return 1;
-        return db - da; // le plus inactif (da grand) en premier
-    });
-}
-
-function _renderStudentsList(students) {
-    const studentsList = document.getElementById('teacher-students-list');
-    if (!studentsList) return;
-
-    if (!students.length) {
-        studentsList.innerHTML = '<p class="empty-state">لا يوجد طلاب بعد</p>';
-        return;
-    }
-
-    studentsList.innerHTML = _sortByUrgency(students)
-        .map(s => {
-            const safeName = escapeHtml(s.first_name || s.username);
-            const safeNameAttr = escapeHtml(escapeJs(s.first_name || s.username));
-            const initial = escapeHtml((s.first_name || s.username || '؟')[0]);
-            const sid = escapeHtml(String(s.id));
-            const subs = s.submissions_count ?? 0;
-            // Statut calculé depuis une vraie donnée (aucun élève n'a encore soumis = critique)
-            const healthClass = subs === 0 ? 'is-critical' : subs < 3 ? 'is-warn' : 'is-ok';
-            const days = _daysSince(s.last_submission_at);
-            const activityLabel =
-                days === null
-                    ? 'لم يُسلَّم أي تسجيل بعد'
-                    : days === 0
-                      ? 'نشط اليوم'
-                      : `آخر تسليم منذ ${days} ${days === 1 ? 'يوم' : 'أيام'}`;
-            return `
-        <div class="health-card ${healthClass}" style="cursor:pointer;margin-bottom:var(--space-2)"
-            onclick="QuranReview.viewStudentProgress('${sid}','${safeNameAttr}')">
-            <div class="k-row" style="padding:0;background:none;border:none">
-                <div class="rl">
-                    <span class="k-avatar">${initial}</span>
-                    <div>
-                        <div class="name">🎓 ${safeName}</div>
-                        <div class="meta">
-                            🏆 ${escapeHtml(String(s.total_points ?? '—'))} نقطة ·
-                            📝 ${escapeHtml(String(subs))} تسليم · ${escapeHtml(activityLabel)}
-                        </div>
-                    </div>
-                </div>
-                <span style="color:var(--text-secondary)">←</span>
-            </div>
-        </div>`;
-        })
-        .join('');
 }
 
 // ─── DÉTAIL DE PROGRESSION D'UN ÉLÈVE ────────────────────────────────────────
