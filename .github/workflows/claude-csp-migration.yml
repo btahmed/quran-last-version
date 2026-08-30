@@ -9,8 +9,13 @@ name: Auto-migrate CSP inline handlers (Claude)
 # une branche dédiée et ouvre un lien de création de PR (humain garde la main).
 
 on:
-  schedule:
-    - cron: '23 */6 * * *' # toutes les 6h
+  # Pas de schedule automatique par défaut — chaque exécution consomme des
+  # tokens API (facturés sur ANTHROPIC_API_KEY). Déclenche-le manuellement
+  # (bouton "Run workflow" dans l'onglet Actions) tant que tu n'as pas
+  # confirmé que le coût par run te convient. Décommente le cron ci-dessous
+  # si tu veux le réactiver en automatique plus tard.
+  # schedule:
+  #   - cron: '23 */6 * * *'
   workflow_dispatch:
 
 permissions:
