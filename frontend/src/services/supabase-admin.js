@@ -239,10 +239,41 @@ export async function getClasses() {
         if (authError) return { data: null, error: authError };
         const { data, error } = await supabaseClient
             .from('classes')
-            .select('*, profiles!teacher_id(id, username), class_members(count)')
+            .select('*, profiles!teacher_id(id, username), class_members(student_id)')
             .order('name', { ascending: true });
 
-        return { data, error };
+        if (error || !data) return { data, error };
+
+        // Enrichir avec le nombre réel de soumissions en attente par classe
+        // (aucune valeur inventée — 0 si la classe n'a pas d'élève ou pas de soumission)
+        const allStudentIds = [
+            ...new Set(
+                data.flatMap(c => (c.class_members || []).map(m => m.student_id).filter(Boolean))
+            ),
+        ];
+        if (allStudentIds.length) {
+            const { data: pendingSubs } = await supabaseClient
+                .from('submissions')
+                .select('student_id')
+                .in('student_id', allStudentIds)
+                .eq('status', 'submitted');
+            const pendingByStudent = {};
+            (pendingSubs || []).forEach(s => {
+                pendingByStudent[s.student_id] = (pendingByStudent[s.student_id] || 0) + 1;
+            });
+            data.forEach(c => {
+                c.pending_submissions_count = (c.class_members || []).reduce(
+                    (sum, m) => sum + (pendingByStudent[m.student_id] || 0),
+                    0
+                );
+            });
+        } else {
+            data.forEach(c => {
+                c.pending_submissions_count = 0;
+            });
+        }
+
+        return { data, error: null };
     } catch (error) {
         return { data: null, error };
     }

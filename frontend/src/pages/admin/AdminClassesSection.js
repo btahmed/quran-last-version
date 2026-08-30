@@ -101,24 +101,41 @@ function renderClassesList() {
 
     el.innerHTML = allClasses
         .map(c => {
-            const teacherName = c.profiles?.username || 'غير محدد';
-            const studentCount = parseInt(c.class_members?.[0]?.count || 0);
+            const teacherName = c.profiles?.username || null;
+            const studentCount = (c.class_members || []).length;
+            const pending = c.pending_submissions_count || 0;
             const cid = escapeHtml(String(c.id));
 
+            // Statut réel : pas de prof assigné = critique, sinon selon les
+            // soumissions en attente réellement comptées (aucune valeur inventée).
+            let healthClass, healthLabel;
+            if (!teacherName) {
+                healthClass = 'is-critical';
+                healthLabel = '🔴 بلا معلم';
+            } else if (pending >= 10) {
+                healthClass = 'is-warn';
+                healthLabel = `🟡 ${pending} تسليماً معلقاً`;
+            } else {
+                healthClass = 'is-ok';
+                healthLabel = '🟢 نشط';
+            }
+
             return `
-        <div class="k-row">
-            <div class="rl">
-                <span class="k-avatar" style="border-radius:var(--radius-lg)">🏫</span>
-                <div>
-                    <div class="name">${escapeHtml(c.name)}</div>
-                    <div class="meta">👨‍🏫 ${escapeHtml(teacherName)} · 🎓 ${studentCount} طالب</div>
+        <div class="health-card ${healthClass}" style="margin-bottom:var(--space-2)">
+            <div class="k-row" style="padding:0;background:none;border:none">
+                <div class="rl">
+                    <span class="k-avatar" style="border-radius:var(--radius-lg)">🏫</span>
+                    <div>
+                        <div class="name">${escapeHtml(c.name)}</div>
+                        <div class="meta">👨‍🏫 ${teacherName ? escapeHtml(teacherName) : 'غير محدد'} · 🎓 ${studentCount} طالب · ${healthLabel}</div>
+                    </div>
                 </div>
-            </div>
-            <div style="display:flex;gap:var(--space-2);flex-shrink:0">
-                <button class="k-quickbtn" style="min-width:auto;padding:var(--space-1) var(--space-3);font-size:var(--text-xs)"
-                    onclick="window._adminOpenClassModal('${cid}')">⚙️ إدارة</button>
-                <button class="k-quickbtn k-quickbtn--danger" style="min-width:auto;padding:var(--space-1) var(--space-2)" aria-label="حذف الفصل" title="حذف الفصل"
-                    onclick="window._adminDeleteClass('${cid}','${escapeHtml(c.name)}')">🗑</button>
+                <div style="display:flex;gap:var(--space-2);flex-shrink:0">
+                    <button class="k-quickbtn" style="min-width:auto;padding:var(--space-1) var(--space-3);font-size:var(--text-xs)"
+                        onclick="window._adminOpenClassModal('${cid}')">⚙️ إدارة</button>
+                    <button class="k-quickbtn k-quickbtn--danger" style="min-width:auto;padding:var(--space-1) var(--space-2)" aria-label="حذف الفصل" title="حذف الفصل"
+                        onclick="window._adminDeleteClass('${cid}','${escapeHtml(c.name)}')">🗑</button>
+                </div>
             </div>
         </div>
         `;
