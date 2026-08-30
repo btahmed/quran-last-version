@@ -1896,3 +1896,50 @@ button,
     align-items: center;
     gap: var(--space-2);
 }
+
+/* ── Carte "rapport" sombre (قصة الشهر, admin) — réutilisable partout,
+   contrairement à .correction-card qui est limitée à .dashboard */
+.month-story-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radius-xl);
+    padding: var(--space-5);
+    color: #fff;
+    background: linear-gradient(140deg, #0d2d0d 0%, #1a3d1a 55%, #0a0a1a 100%);
+    box-shadow: 0 12px 30px rgba(13, 45, 13, 0.35);
+}
+.month-story-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 85% 15%, rgba(212, 165, 116, 0.24), transparent 52%);
+    pointer-events: none;
+}
+.month-story-card > * {
+    position: relative;
+}
+.month-story-card .msc-title {
+    font-size: var(--text-lg);
+    font-weight: 700;
+    margin-bottom: var(--space-1);
+}
+.month-story-card .msc-sub {
+    font-size: var(--text-xs);
+    opacity: 0.75;
+    margin-bottom: var(--space-4);
+}
+.month-story-card .msc-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-2) 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: var(--text-sm);
+}
+.month-story-card .msc-row:last-child {
+    border-bottom: none;
+}
+.month-story-card .msc-row strong {
+    font-variant-numeric: tabular-nums;
+    color: var(--color-gold);
+}

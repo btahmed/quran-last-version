@@ -38,6 +38,7 @@ export function render() {
                 <button class="k-quickbtn" style="min-width:auto;padding:var(--space-2) var(--space-4)" onclick="window._adminRefresh()">🔄 تحديث</button>
             </div>
             <div id="admin-users-count" style="color:var(--text-secondary);font-size:var(--text-xs);margin-bottom:var(--space-3)"></div>
+            <div id="admin-users-breakdown" style="display:flex;gap:var(--space-2);flex-wrap:wrap;margin-bottom:var(--space-4)"></div>
             <div id="admin-users-list" class="k-stack">
                 <div class="skeleton skeleton-card"></div>
                 <div class="skeleton skeleton-card"></div>
@@ -117,6 +118,19 @@ export async function loadUsers() {
         // Mettre à jour le compteur global (si présent dans la façade)
         const elTotal = document.getElementById('admin-total-users');
         if (elTotal) elTotal.textContent = allUsers.length;
+
+        // Répartition réelle par rôle (comptée depuis les vrais utilisateurs chargés)
+        const breakdown = document.getElementById('admin-users-breakdown');
+        if (breakdown) {
+            const students = allUsers.filter(u => u.role === 'student').length;
+            const teachers = allUsers.filter(u => u.role === 'teacher').length;
+            const admins = allUsers.filter(u => u.role === 'admin' || u.is_superuser).length;
+            breakdown.innerHTML = `
+                <span class="k-chip k-chip--info">👨‍🎓 طلاب ${students}</span>
+                <span class="k-chip k-chip--primary">👨‍🏫 معلمون ${teachers}</span>
+                <span class="k-chip k-chip--success">👑 مدراء ${admins}</span>
+            `;
+        }
 
         renderUsersList();
     } catch (err) {

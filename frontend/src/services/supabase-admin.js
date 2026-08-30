@@ -233,6 +233,42 @@ export async function getTeacherStatsAndTasks() {
     }
 }
 
+/** Rapport du mois en cours — uniquement des comptages réels sur `submissions`.
+ *  Aucune métrique inventée (pas d'ayat/pages comptés, cette donnée n'existe
+ *  pas côté serveur — seule la mémorisation locale par élève l'a). */
+export async function getMonthlyReport() {
+    try {
+        const { error: authError } = await requireRole(['admin']);
+        if (authError) return { data: null, error: authError };
+
+        const now = new Date();
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+
+        const { data, error } = await supabaseClient
+            .from('submissions')
+            .select('status, admin_feedback, submitted_at')
+            .gte('submitted_at', monthStart);
+        if (error) return { data: null, error };
+
+        const rows = data || [];
+        const excellent = rows.filter(r => (r.admin_feedback || '').startsWith('🌟')).length;
+
+        return {
+            data: {
+                month_label: now.toLocaleDateString('ar-MA', { month: 'long', year: 'numeric' }),
+                recorded: rows.length,
+                approved: rows.filter(r => r.status === 'approved').length,
+                rejected: rows.filter(r => r.status === 'rejected').length,
+                pending: rows.filter(r => r.status === 'submitted').length,
+                excellent,
+            },
+            error: null,
+        };
+    } catch (error) {
+        return { data: null, error };
+    }
+}
+
 export async function getClasses() {
     try {
         const { error: authError } = await requireRole(['teacher', 'admin']);

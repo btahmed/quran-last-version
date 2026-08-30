@@ -16,6 +16,9 @@ function escapeHtml(str) {
 // ─── RENDER ──────────────────────────────────────────────────────────────────
 export function render() {
     return `
+        <section class="k-section" id="admin-month-story-section" style="display:none">
+            <div class="month-story-card" id="admin-month-story"></div>
+        </section>
         <section class="k-section" id="admin-funnel-section" style="display:none">
             <h3 class="k-section-title">📊 مسار المهام</h3>
             <div class="funnel" id="admin-funnel"></div>
@@ -40,6 +43,7 @@ export function render() {
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 export async function init() {
     await loadOverview();
+    await loadMonthStory();
 }
 
 // ─── CHARGEMENT VUE GLOBALE ───────────────────────────────────────────────────
@@ -65,6 +69,34 @@ export async function loadOverview() {
         renderAllTasks(statsRes.recentTasks || []);
     } catch (err) {
         Logger.error('ADMIN-STATS', 'loadOverview error', err);
+    }
+}
+
+// ─── قصة الشهر (rapport mensuel — comptages réels sur submissions) ───────────
+async function loadMonthStory() {
+    const section = document.getElementById('admin-month-story-section');
+    const host = document.getElementById('admin-month-story');
+    if (!section || !host) return;
+
+    try {
+        const { data, error } = await supabaseAdmin.getMonthlyReport();
+        if (error || !data || !data.recorded) {
+            section.style.display = 'none';
+            return;
+        }
+        section.style.display = '';
+        host.innerHTML = `
+            <div class="msc-title">📊 قصة هذا الشهر</div>
+            <div class="msc-sub">${escapeHtml(data.month_label)} · تقرير مبني على بيانات حقيقية</div>
+            <div class="msc-row"><span>🎧 سُجّلت</span><strong>${data.recorded}</strong></div>
+            <div class="msc-row"><span>✅ صُحّحت</span><strong>${data.approved}</strong></div>
+            <div class="msc-row"><span>🔁 مرفوضة</span><strong>${data.rejected}</strong></div>
+            <div class="msc-row"><span>⏳ بانتظار التصحيح</span><strong>${data.pending}</strong></div>
+            <div class="msc-row"><span>🌟 ممتاز</span><strong>${data.excellent}</strong></div>
+        `;
+    } catch (err) {
+        Logger.error('ADMIN-STATS', 'loadMonthStory error', err);
+        section.style.display = 'none';
     }
 }
 
