@@ -241,6 +241,8 @@ window.QuranReview = {
             p.classList.add('hidden');
         }
     },
+    // Notation en un tap (design system Pro Edition)
+    approveSubmission: TeacherPage.approveSubmission,
     // Grade modal (approbation emoji)
     openGradeModal: TeacherPage.openGradeModal,
     closeGradeModal: TeacherPage.closeGradeModal,

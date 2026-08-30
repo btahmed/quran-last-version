@@ -88,20 +88,25 @@ function _renderStudentsList(students) {
             const safeNameAttr = escapeHtml(escapeJs(s.first_name || s.username));
             const initial = escapeHtml((s.first_name || s.username || '؟')[0]);
             const sid = escapeHtml(String(s.id));
+            const subs = s.submissions_count ?? 0;
+            // Statut calculé depuis une vraie donnée (aucun élève n'a encore soumis = critique)
+            const healthClass = subs === 0 ? 'is-critical' : subs < 3 ? 'is-warn' : 'is-ok';
             return `
-        <div class="k-row" style="cursor:pointer"
+        <div class="health-card ${healthClass}" style="cursor:pointer;margin-bottom:var(--space-2)"
             onclick="QuranReview.viewStudentProgress('${sid}','${safeNameAttr}')">
-            <div class="rl">
-                <span class="k-avatar">${initial}</span>
-                <div>
-                    <div class="name">🎓 ${safeName}</div>
-                    <div class="meta">
-                        🏆 ${escapeHtml(String(s.total_points ?? '—'))} نقطة ·
-                        📝 ${escapeHtml(String(s.submissions_count ?? '—'))} تسليم
+            <div class="k-row" style="padding:0;background:none;border:none">
+                <div class="rl">
+                    <span class="k-avatar">${initial}</span>
+                    <div>
+                        <div class="name">🎓 ${safeName}</div>
+                        <div class="meta">
+                            🏆 ${escapeHtml(String(s.total_points ?? '—'))} نقطة ·
+                            📝 ${escapeHtml(String(subs))} تسليم
+                        </div>
                     </div>
                 </div>
+                <span style="color:var(--text-secondary)">←</span>
             </div>
-            <span style="color:var(--text-secondary)">←</span>
         </div>`;
         })
         .join('');

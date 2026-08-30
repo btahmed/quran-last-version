@@ -29,6 +29,7 @@ export function openRecordModal(taskId, taskTitle) {
     document.getElementById('recording-timer').textContent = '00:00';
     document.getElementById('recording-status').textContent = 'اضغط للتسجيل';
     document.getElementById('recording-btn').classList.remove('recording-active');
+    document.getElementById('recording-wave')?.classList.add('hidden');
 
     const preview = document.getElementById('recording-preview');
     if (preview) {
@@ -88,6 +89,7 @@ export async function toggleRecording() {
         _recorder.start();
         _recordSeconds = 0;
         document.getElementById('recording-btn').classList.add('recording-active');
+        document.getElementById('recording-wave')?.classList.remove('hidden');
         document.getElementById('recording-status').textContent = 'جاري التسجيل...';
 
         _recordTimer = setInterval(() => {
@@ -119,6 +121,7 @@ export function stopRecording(cancel) {
         _recorder.stop();
     }
     document.getElementById('recording-btn').classList.remove('recording-active');
+    document.getElementById('recording-wave')?.classList.add('hidden');
 
     if (cancel) {
         const modal = document.getElementById('audio-record-modal');

@@ -16,6 +16,10 @@ function escapeHtml(str) {
 // ─── RENDER ──────────────────────────────────────────────────────────────────
 export function render() {
     return `
+        <section class="k-section" id="admin-funnel-section" style="display:none">
+            <h3 class="k-section-title">📊 مسار المهام</h3>
+            <div class="funnel" id="admin-funnel"></div>
+        </section>
         <section class="k-section">
             <h3 class="k-section-title">👨‍🏫 إحصائيات المعلمين</h3>
             <div id="admin-teacher-stats" class="k-grid2">
@@ -54,6 +58,7 @@ export async function loadOverview() {
             set('admin-total-tasks', overviewRes.data?.total_tasks ?? '—');
             set('admin-pending-subs', overviewRes.data?.pending_submissions ?? '—');
             set('admin-approved-subs', overviewRes.data?.approved_submissions ?? '—');
+            renderFunnel(overviewRes.data);
         }
 
         renderTeacherStats(statsRes.teacherStats || []);
@@ -61,6 +66,28 @@ export async function loadOverview() {
     } catch (err) {
         Logger.error('ADMIN-STATS', 'loadOverview error', err);
     }
+}
+
+// ─── ENTONNOIR DES MHAM (mesures réelles, pas de placeholder) ────────────────
+function renderFunnel(data) {
+    const section = document.getElementById('admin-funnel-section');
+    const el = document.getElementById('admin-funnel');
+    if (!el || !section) return;
+
+    const total = parseInt(data?.total_tasks, 10) || 0;
+    const pending = parseInt(data?.pending_submissions, 10) || 0;
+    const approved = parseInt(data?.approved_submissions, 10) || 0;
+
+    if (!total) {
+        section.style.display = 'none';
+        return;
+    }
+    section.style.display = '';
+    el.innerHTML = `
+        <div class="bar">📋 إجمالي المهام — ${total}</div>
+        <div class="bar">⏳ بانتظار التصحيح — ${pending}</div>
+        <div class="bar">✅ مقبولة — ${approved}</div>
+    `;
 }
 
 // ─── RENDU STATISTIQUES ENSEIGNANTS ──────────────────────────────────────────

@@ -2091,6 +2091,76 @@ ${
 </section>`;
     }
 
+    // ── Carte du Mushaf — heatmap réelle des 30 juz' à partir du plan sauvegardé
+    renderJuzMap() {
+        const d = this.state.d;
+        const masteredPages = new Set(this.flattenPages(d.bunkerRanges).map(p => p.page));
+        if (!masteredPages.size) return '';
+
+        const cells = JUZ_DATA.map(j => {
+            let covered = 0;
+            for (let p = j.from; p <= j.to; p++) if (masteredPages.has(p)) covered++;
+            const total = j.to - j.from + 1;
+            const cls = covered === total ? 'is-mastered' : covered > 0 ? 'is-learning' : '';
+            return `<div class="juz-cell ${cls}" title="${escapeHtml(j.label)} — ${this.ar(covered)}/${this.ar(total)}">${this.ar(j.num)}</div>`;
+        }).join('');
+
+        return `
+<section class="mj-card" aria-label="خريطة الأجزاء" style="margin-bottom:16px">
+  <h2 class="mj-section-title">🗺️ خريطة المصحف</h2>
+  <div class="juz-map">${cells}</div>
+  <p class="mj-note">أخضر = ثابت بالكامل · ذهبي = قيد الحفظ جزئياً</p>
+</section>`;
+    }
+
+    // ── Orbite de mémoire — vue radiale des مقاطع sauvegardés (données réelles)
+    renderMemoryOrbit() {
+        const d = this.state.d;
+        const ranges = d.bunkerRanges || [];
+        if (!ranges.length) return '';
+
+        const cycleSet = new Set(d.cycleReviewed || []);
+        const totalPages = this.flattenPages(ranges).length;
+        const pct = Math.round((totalPages / 604) * 100);
+        const shown = ranges.slice(0, 8);
+
+        const chips = shown
+            .map((r, i) => {
+                const pages = this.flattenPages([r]);
+                const reviewed = pages.filter(p => cycleSet.has(p.page)).length;
+                const cls =
+                    reviewed === pages.length
+                        ? 'is-mastered'
+                        : reviewed > 0
+                          ? 'is-soon'
+                          : 'is-urgent';
+                const angle = (i / shown.length) * 2 * Math.PI - Math.PI / 2;
+                const x = Math.round(Math.cos(angle) * 130);
+                const y = Math.round(Math.sin(angle) * 130);
+                return `<button class="orbit-chip ${cls}" style="--x:${x}px;--y:${y}px" title="${escapeHtml(r.label)}">
+                    ${escapeHtml(r.label)} <span class="pct">${this.ar(reviewed)}/${this.ar(pages.length)}</span>
+                </button>`;
+            })
+            .join('');
+
+        return `
+<section class="mj-card" aria-label="orbite الحفظ" style="margin-bottom:16px">
+  <h2 class="mj-section-title">🪐 مدار الحفظ</h2>
+  <div class="memory-orbit">
+    <div class="orbit-ring orbit-ring--outer"></div>
+    <div class="orbit-ring orbit-ring--mid"></div>
+    <div class="orbit-ring orbit-ring--inner"></div>
+    <div class="orbit-core">${this.ar(pct)}٪</div>
+    ${chips}
+  </div>
+  <div class="orbit-legend">
+    <span><i style="background:var(--color-primary)"></i>ثابت هالدورة</span>
+    <span><i style="background:var(--color-gold)"></i>قيد المراجعة</span>
+    <span><i style="background:var(--color-danger,#ef4444)"></i>ما راجعتها بعد</span>
+  </div>
+</section>`;
+    }
+
     renderTablesTab() {
         const d = this.state.d;
         const bunkerRows = d.bunkerRanges || [];
@@ -2116,6 +2186,8 @@ ${
             .join('');
 
         return `
+${this.renderMemoryOrbit()}
+${this.renderJuzMap()}
 <section class="mj-card" aria-label="التقدم">
   <h2 class="mj-section-title">🟢 جدول المراجعة — كل الثابت</h2>
   <div class="mj-table-wrap">

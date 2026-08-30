@@ -193,11 +193,14 @@ function _cardHtml(s, showActions) {
         }
         ${
             showActions
-                ? `<div class="k-pending-actions">
+                ? `<div class="grade-actions" style="margin-top:var(--space-2)">
+            <button class="btn btn-grade-good" onclick="QuranReview.approveSubmission(&quot;${sid}&quot;,5)">🌟<small>ممتاز</small></button>
+            <button class="btn btn-grade-ok" onclick="QuranReview.approveSubmission(&quot;${sid}&quot;,3)">🙂<small>جيد</small></button>
+            <button class="btn btn-grade-retry" onclick="QuranReview.openRejectModal(&quot;${sid}&quot;,&quot;${escapeHtml(escapeJs(studentName))}&quot;)">↺<small>إعادة</small></button>
+        </div>
+        <div class="k-pending-actions" style="margin-top:var(--space-2)">
             <button class="k-quickbtn k-quickbtn--primary"
-                onclick="QuranReview.openGradeModal(&quot;${sid}&quot;,&quot;${escapeHtml(escapeJs(studentName))}&quot;,&quot;${escapeHtml(escapeJs(taskTitle))}&quot;)">⭐ قبول وتقييم</button>
-            <button class="k-quickbtn k-quickbtn--danger"
-                onclick="QuranReview.openRejectModal(&quot;${sid}&quot;,&quot;${escapeHtml(escapeJs(studentName))}&quot;)">✗ رفض</button>
+                onclick="QuranReview.openGradeModal(&quot;${sid}&quot;,&quot;${escapeHtml(escapeJs(studentName))}&quot;,&quot;${escapeHtml(escapeJs(taskTitle))}&quot;)">⭐ تقييم مفصّل</button>
         </div>`
                 : ''
         }

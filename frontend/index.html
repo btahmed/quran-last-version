@@ -365,12 +365,15 @@
                 <div id="recording-timer" style="font-size: 2.5rem; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--color-primary);">00:00</div>
                 <p id="recording-status" style="color: var(--color-text-secondary); margin-top: var(--space-2);">اضغط للتسجيل</p>
             </div>
+            <div class="wave-meter hidden" id="recording-wave" aria-hidden="true">
+                <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+            </div>
             <div style="text-align: center; margin-bottom: var(--space-6);">
                 <button id="recording-btn"
+                    class="record-btn recording-btn"
                     onclick="QuranReview.toggleRecording()"
                     aria-label="بدء أو إيقاف التسجيل"
-                    title="بدء أو إيقاف التسجيل"
-                    style="width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--color-primary); background: var(--glass-bg); font-size: 2rem; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center;">
+                    title="بدء أو إيقاف التسجيل">
                     🎙️
                 </button>
             </div>
