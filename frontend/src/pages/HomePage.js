@@ -188,6 +188,16 @@ function renderStudentDashboard() {
             <p class="date">${getArabicDate()} · واصل تقدمك</p>
         </div>
 
+        <!-- خطوتك التالية — action suivante intelligente -->
+        <section class="k-section">
+            <div class="next-step-card" id="next-step" hidden>
+                <span class="eyebrow">✨ خطوتك التالية</span>
+                <div class="title" id="next-step-title">—</div>
+                <div class="meta" id="next-step-meta"></div>
+                <button class="btn" id="next-step-btn" type="button">ابدأ الآن</button>
+            </div>
+        </section>
+
         <!-- STATS GRID 3 (KStat style) -->
         <section class="k-section">
             <div class="k-grid3">
@@ -197,8 +207,9 @@ function renderStudentDashboard() {
                     <span class="k-stat-label">يوم متتالي</span>
                 </div>
                 <div class="k-stat-card">
-                    <span class="k-stat-icon">📖</span>
-                    <span id="hifz-progress" class="k-stat-value">0%</span>
+                    <div class="ring-stat" id="hifz-ring" style="--pct:0">
+                        <span id="hifz-progress" class="k-stat-value">0%</span>
+                    </div>
                     <span class="k-stat-label">تقدم الحفظ</span>
                 </div>
                 <div class="k-stat-card">
@@ -242,6 +253,19 @@ function renderStudentDashboard() {
             <div id="student-tasks-list" class="k-stack">
                 <div class="skeleton skeleton-card"></div>
                 <div class="skeleton skeleton-card"></div>
+            </div>
+        </section>
+
+        <!-- خريطة السور — حالة كل سورة محفوظة (données réelles) -->
+        <section class="k-section" id="surah-map-section" hidden>
+            <h3 class="k-section-title">🗺️ خريطة محفوظاتك</h3>
+            <div class="hifz-prog">
+                <div class="surah-map" id="surah-map"></div>
+                <div class="surah-map-legend">
+                    <span><i class="is-mastered"></i> متقن</span>
+                    <span><i class="is-learning"></i> قيد الحفظ</span>
+                    <span><i class="is-weak"></i> ضعيف</span>
+                </div>
             </div>
         </section>
 
@@ -296,9 +320,10 @@ function renderTeacherDashboard() {
             </div>
         </section>
 
-        <!-- SOUMISSIONS RÉCENTES -->
+        <!-- FILE DE CORRECTION — carte de tête + queue -->
         <section class="k-section">
-            <h3 class="k-section-title">🎧 آخر التسليمات</h3>
+            <h3 class="k-section-title">🎧 طابور التصحيح</h3>
+            <div id="teacher-correction-card"></div>
             <div id="teacher-submissions-list" class="k-stack">
                 <div class="skeleton skeleton-card"></div>
                 <div class="skeleton skeleton-card"></div>
@@ -356,6 +381,14 @@ function renderAdminDashboard() {
             </div>
         </section>
 
+        <!-- ENTONNOIR — répartition réelle des comptes -->
+        <section class="k-section" id="admin-funnel-section" hidden>
+            <h3 class="k-section-title">📈 توزيع المنصة</h3>
+            <div class="hifz-prog">
+                <div class="funnel" id="admin-funnel"></div>
+            </div>
+        </section>
+
         <!-- ACTIVITÉ RÉCENTE -->
         <section class="k-section">
             <h3 class="k-section-title">📊 النشاط الأخير</h3>
@@ -383,40 +416,93 @@ function renderAdminDashboard() {
 // INIT DASHBOARDS — fetch API
 // ══════════════════════════════════════════════════════════════
 
-function _applyStudentLocalStats() {
-    const data = state.memorizationData || [];
-    const mastered = data.filter(x => x.status === 'mastered').length;
-    const pct = data.length > 0 ? Math.round((mastered / data.length) * 100) : 0;
+/** Lit le vrai plan de mémorisation (page المراجعة, localStorage) — jamais de donnée inventée.
+ *  Retourne null tant que l'utilisateur n'a pas configuré son plan (`configured !== true`). */
+function _readRealMemorizationData() {
+    if (!state.user?.id) return null;
+    try {
+        const raw = localStorage.getItem(`murajaa_student_${state.user.id}`);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== 'object' || !parsed.configured) return null;
+        return {
+            bunkerRanges: Array.isArray(parsed.bunkerRanges) ? parsed.bunkerRanges : [],
+            cycleReviewed: Array.isArray(parsed.cycleReviewed) ? parsed.cycleReviewed : [],
+            activeDates: Array.isArray(parsed.activeDates) ? parsed.activeDates : [],
+        };
+    } catch {
+        return null;
+    }
+}
 
-    // Calcul streak : jours consécutifs avec au moins une révision
+function _flattenPages(ranges) {
+    const pages = new Map();
+    (ranges || []).forEach(r => {
+        const from = Number(r.from);
+        const to = Number(r.to);
+        if (
+            Number.isInteger(from) &&
+            Number.isInteger(to) &&
+            from >= 1 &&
+            to <= 604 &&
+            to >= from
+        ) {
+            for (let p = from; p <= to; p++) {
+                if (!pages.has(p)) pages.set(p, { page: p, label: r.label || '' });
+            }
+        }
+    });
+    return Array.from(pages.values());
+}
+
+function _applyStudentLocalStats() {
+    const real = _readRealMemorizationData();
+
+    if (!real) {
+        // Pas encore de plan de mémorisation configuré — état honnête, aucune donnée inventée
+        setText('hifz-progress', '0%');
+        setText('revision-score', '0');
+        setText('streak-days', 0);
+        setText('hifz-pct', '0%');
+        const surahEl = document.getElementById('hifz-surah-name');
+        if (surahEl) {
+            surahEl.childNodes[0].textContent = 'لم تبدأ الحفظ بعد';
+            setText('hifz-surah-detail', 'ابدأ أول سورة من صفحة المراجعة');
+        }
+        _renderSurahMap([], new Set());
+        return;
+    }
+
+    const flat = _flattenPages(real.bunkerRanges);
+    const reviewedSet = new Set(real.cycleReviewed);
+    const hifzTotal = flat.length;
+    const hifzDone = flat.filter(p => reviewedSet.has(p.page)).length;
+    const hifzPct = hifzTotal > 0 ? Math.round((hifzDone / hifzTotal) * 100) : 0;
+
+    // Streak réel : jours consécutifs dans activeDates (données de la page المراجعة)
     const today = new Date();
     let streak = 0;
+    const activeSet = new Set(real.activeDates);
     for (let i = 0; i < 30; i++) {
         const d = new Date(today);
         d.setDate(d.getDate() - i);
         const ds = d.toISOString().split('T')[0];
-        if (data.some(x => x.lastReviewed === ds)) streak++;
+        if (activeSet.has(ds)) streak++;
         else if (i > 0) break;
     }
 
-    // hifzDone = ayats mémorisés, hifzTotal = nombre total dans les données
-    const hifzDone = mastered;
-    const hifzTotal = data.length;
-    const hifzPct = hifzTotal > 0 ? Math.round((hifzDone / hifzTotal) * 100) : 0;
-
     setText('hifz-progress', hifzPct + '%');
-    setText('revision-score', pct + '%');
+    setText('revision-score', hifzDone);
     setText('streak-days', streak);
-
-    // Nouveaux IDs Claude Design (hifz-prog card)
     setText('hifz-pct', hifzPct + '%');
+
     const surahEl = document.getElementById('hifz-surah-name');
     if (surahEl && hifzTotal > 0) {
-        surahEl.childNodes[0].textContent = `${hifzDone} سور محفوظة`;
+        surahEl.childNodes[0].textContent = `${hifzDone} صفحة مراجَعة`;
         setText('hifz-surah-detail', `من أصل ${hifzTotal} · ${hifzPct}%`);
     } else if (surahEl) {
         surahEl.childNodes[0].textContent = 'لم تبدأ الحفظ بعد';
-        setText('hifz-surah-detail', 'ابدأ أول سورة من صفحة الحفظ');
+        setText('hifz-surah-detail', 'ابدأ أول سورة من صفحة المراجعة');
     }
 
     // Animation progress bar hifz
@@ -426,6 +512,82 @@ function _applyStudentLocalStats() {
             hifzBarEl.style.width = hifzPct + '%';
         });
     }
+
+    // Anneau de progression (CSS conic-gradient piloté par --pct)
+    const ringEl = document.getElementById('hifz-ring');
+    if (ringEl) {
+        requestAnimationFrame(() => {
+            ringEl.style.setProperty('--pct', String(hifzPct));
+        });
+    }
+
+    // Carte des plages de mémorisation — une case par plage réelle du plan المراجعة
+    _renderSurahMap(real.bunkerRanges, reviewedSet);
+}
+
+/** Grille d'état des plages de mémorisation — uniquement des données réelles
+ *  (bunkerRanges/cycleReviewed du plan المراجعة, jamais de statut inventé) */
+function _renderSurahMap(ranges, reviewedSet) {
+    const section = document.getElementById('surah-map-section');
+    const grid = document.getElementById('surah-map');
+    if (!section || !grid) return;
+    if (!ranges || !ranges.length) {
+        section.hidden = true;
+        return;
+    }
+    section.hidden = false;
+    grid.innerHTML = ranges
+        .slice(0, 60)
+        .map(r => {
+            const from = Number(r.from);
+            const to = Number(r.to);
+            const pagesInRange = [];
+            if (Number.isInteger(from) && Number.isInteger(to) && to >= from) {
+                for (let p = from; p <= to; p++) pagesInRange.push(p);
+            }
+            const reviewedCount = pagesInRange.filter(
+                p => reviewedSet && reviewedSet.has(p)
+            ).length;
+            const status =
+                pagesInRange.length > 0 && reviewedCount === pagesInRange.length
+                    ? 'is-mastered'
+                    : reviewedCount > 0
+                      ? 'is-learning'
+                      : 'is-weak';
+            const label = escapeHtml(r.label || '');
+            return `<span class="surah-cell ${status}" title="${label}">${label.slice(0, 10)}</span>`;
+        })
+        .join('');
+}
+
+/** Carte « خطوتك التالية » — dérivée du premier devoir non traité */
+function _renderNextStep(tasks, subByTask = {}) {
+    const card = document.getElementById('next-step');
+    if (!card) return;
+    const next = (tasks || []).find(t => {
+        const st = subByTask[t.id]?.status;
+        return !st || st === 'rejected';
+    });
+    if (!next) {
+        card.hidden = true;
+        return;
+    }
+    const isRevision = next.task_type === 'revision';
+    const rejected = subByTask[next.id]?.status === 'rejected';
+    setText(
+        'next-step-title',
+        `${isRevision ? '🔁 راجع' : '📖 احفظ'} ${next.surah_name || next.title || 'واجبك'}`
+    );
+    setText(
+        'next-step-meta',
+        rejected ? 'مرفوض — أعد الإرسال' : isRevision ? 'مراجعة مجدولة اليوم' : 'حفظ جديد بانتظارك'
+    );
+    const btn = document.getElementById('next-step-btn');
+    if (btn) {
+        btn.textContent = rejected ? '🎧 أعد الإرسال' : '🎧 أرسل تلاوتك';
+        btn.onclick = () => window.QuranReview.navigateTo('soumettre');
+    }
+    card.hidden = false;
 }
 
 async function initDashboard(role) {
@@ -553,6 +715,7 @@ function _buildSubByTask(submissions) {
 }
 
 function renderStudentTasks(tasks, subByTask = {}) {
+    _renderNextStep(tasks, subByTask);
     const el = document.getElementById('student-tasks-list');
     if (!el) return;
     if (!tasks.length) {
@@ -606,6 +769,7 @@ function renderStudentTasks(tasks, subByTask = {}) {
 }
 
 function renderTeacherSubmissions(subs) {
+    _renderCorrectionCard(subs);
     const el = document.getElementById('teacher-submissions-list');
     if (!el) return;
     if (!subs.length) {
@@ -613,7 +777,7 @@ function renderTeacherSubmissions(subs) {
         return;
     }
     el.innerHTML = subs
-        .slice(0, 5)
+        .slice(1, 6)
         .map(s => {
             const name = s.profiles?.first_name || s.profiles?.username || s.student_name || 'طالب';
             const task = s.tasks?.title || s.task_title || 'تسليم';
@@ -635,6 +799,7 @@ function renderTeacherSubmissions(subs) {
 }
 
 function renderAdminActivity(data) {
+    _renderAdminFunnel(data);
     const el = document.getElementById('admin-activity-list');
     if (!el) return;
     const items = [];
@@ -668,6 +833,78 @@ function renderAdminActivity(data) {
         .join('');
 }
 
+/** Carte de correction — première soumission en attente, notation en un tap */
+function _renderCorrectionCard(subs) {
+    const host = document.getElementById('teacher-correction-card');
+    if (!host) return;
+    const s = (subs || [])[0];
+    if (!s) {
+        host.innerHTML = '';
+        return;
+    }
+    const name = s.profiles?.first_name || s.profiles?.username || s.student_name || 'طالب';
+    const task = s.tasks?.title || s.tasks?.surah_name || s.task_title || 'تسليم';
+    const initial = escapeHtml(name.charAt(0) || '؟');
+    const audio =
+        typeof s.audio_url === 'string' && s.audio_url.startsWith('https://')
+            ? `<audio class="correction-audio" controls preload="none" src="${escapeHtml(s.audio_url)}"></audio>`
+            : '<p class="correction-noaudio">لا يوجد تسجيل صوتي مرفق</p>';
+    const total = (subs || []).length;
+    host.innerHTML = `
+    <div class="correction-card">
+        <div class="cc-head">
+            <div class="cc-who">
+                <span class="k-avatar">${initial}</span>
+                <div>
+                    <div class="name">${escapeHtml(name)}</div>
+                    <div class="meta">${escapeHtml(task)}</div>
+                </div>
+            </div>
+            <span class="cc-count">⏳ 1/${total}</span>
+        </div>
+        ${audio}
+        <div class="grade-actions">
+            <button type="button" class="btn btn-grade-good" onclick="QuranReview.approveSubmission('${escapeHtml(String(s.id))}',5)">⭐ ممتاز<small>تقييم</small></button>
+            <button type="button" class="btn btn-grade-ok" onclick="QuranReview.approveSubmission('${escapeHtml(String(s.id))}',2)">👍 مقبول<small>موافقة</small></button>
+            <button type="button" class="btn btn-grade-retry" onclick="QuranReview.openRejectModal('${escapeHtml(String(s.id))}','${escapeHtml(escapeJs(name))}')">🔁 إعادة<small>ملاحظة</small></button>
+        </div>
+    </div>`;
+}
+
+/** Entonnoir admin — uniquement les comptes réellement retournés par l'API */
+function _renderAdminFunnel(data) {
+    const section = document.getElementById('admin-funnel-section');
+    const host = document.getElementById('admin-funnel');
+    if (!section || !host) return;
+    const users = Number(data?.total_users) || 0;
+    if (!users) {
+        section.hidden = true;
+        return;
+    }
+    const rows = [
+        { label: `👥 ${users} مستخدماً`, value: users },
+        {
+            label: `👨‍🎓 ${data?.total_students || 0} طالباً`,
+            value: Number(data?.total_students) || 0,
+        },
+        {
+            label: `👨‍🏫 ${data?.total_teachers || 0} معلماً`,
+            value: Number(data?.total_teachers) || 0,
+        },
+        {
+            label: `📤 ${data?.submissions_today || 0} تسليماً اليوم`,
+            value: Number(data?.submissions_today) || 0,
+        },
+    ];
+    host.innerHTML = rows
+        .map(r => {
+            const pct = Math.max(12, Math.round((r.value / users) * 100));
+            return `<div class="bar" style="width:${pct}%">${escapeHtml(r.label)}</div>`;
+        })
+        .join('');
+    section.hidden = false;
+}
+
 function setText(id, value) {
     const el = document.getElementById(id);
     if (el) el.textContent = value;
@@ -691,4 +928,16 @@ function escapeHtml(str) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+}
+
+/** Échappe pour insertion sûre dans un attribut onclick="...('...')"
+ *  (à utiliser AVANT escapeHtml sur toute donnée utilisateur injectée dans un onclick) */
+function escapeJs(str) {
+    if (typeof str !== 'string') return String(str ?? '');
+    return str
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "\\'")
+        .replace(/"/g, '\\"')
+        .replace(/\n/g, '\\n')
+        .replace(/\r/g, '\\r');
 }

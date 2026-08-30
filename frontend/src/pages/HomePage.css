@@ -544,3 +544,706 @@ body:has(.landing-page) #app {
     font-size: var(--text-sm, 0.75rem);
     color: var(--text-secondary, #4a5e36);
 }
+
+/* ============================================================
+   REFONTE DASHBOARDS — verre, or, anneaux, glow
+   Purement visuel : aucune classe renommée, aucun HTML/JS requis.
+   Préfixé .dashboard pour l'emporter sur les règles génériques
+   ci-dessus sans !important.
+   ============================================================ */
+
+/* ── Salutation : plus généreuse, date discrète ── */
+.dashboard .k-greeting {
+    margin-bottom: 1.5rem;
+}
+
+.dashboard .k-greeting h2 {
+    font-size: clamp(1.35rem, 4vw, 1.75rem);
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: var(--color-text-primary, #171717);
+}
+
+.dashboard .k-greeting .date {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary, #737373);
+}
+
+/* ── Grilles de stats ── */
+.dashboard .k-grid2,
+.dashboard .k-grid3 {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.dashboard .k-grid2 {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.dashboard .k-grid3 {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.dashboard .k-section {
+    margin-bottom: 1.5rem;
+}
+
+.dashboard .k-section-title {
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0 0 0.75rem;
+    color: var(--color-text-primary, #171717);
+}
+
+/* ── Cartes de stats : verre + lift + glow doré ── */
+.dashboard .k-stat-card {
+    position: relative;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 1.25rem;
+    padding: 1.125rem 0.75rem;
+    box-shadow: 0 1px 3px rgba(26, 26, 46, 0.06);
+    transition:
+        transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+        box-shadow 0.3s ease,
+        border-color 0.3s ease;
+}
+
+/* filet doré en haut de chaque carte — la signature du design */
+.dashboard .k-stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    inset-inline: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #2d5016, #d4a574);
+    opacity: 0.85;
+}
+
+.dashboard .k-stat-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(212, 165, 116, 0.55);
+    box-shadow: 0 12px 28px -6px rgba(45, 80, 22, 0.18);
+}
+
+.dashboard .k-stat-icon {
+    font-size: 1.5rem;
+    filter: drop-shadow(0 2px 6px rgba(45, 80, 22, 0.18));
+}
+
+.dashboard .k-stat-value {
+    font-size: clamp(1.5rem, 5vw, 1.875rem);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: #2d5016;
+}
+
+/* Valeurs mises en avant : dégradé vert → or */
+.dashboard .k-stat-value.gradient-text,
+.dashboard .k-stat-value.gradient-value {
+    background: linear-gradient(135deg, #2d5016, #d4a574);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+}
+
+.dashboard .k-stat-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--color-text-secondary, #737373);
+}
+
+/* ── Carte de progression du hifz ── */
+.dashboard .hifz-prog {
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 1.25rem;
+    padding: 1.125rem 1.25rem;
+    box-shadow: 0 1px 3px rgba(26, 26, 46, 0.06);
+}
+
+.dashboard .hifz-prog .top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.875rem;
+}
+
+.dashboard .hifz-prog .surah {
+    font-size: 1.0625rem;
+    font-weight: 700;
+    line-height: 1.5;
+    color: var(--color-text-primary, #171717);
+}
+
+.dashboard .hifz-prog .surah small {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--color-text-secondary, #737373);
+    margin-top: 2px;
+}
+
+.dashboard .hifz-prog .pct {
+    font-size: 1.375rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    background: linear-gradient(135deg, #2d5016, #d4a574);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+}
+
+/* ── Lignes de liste (devoirs, soumissions, activité) ── */
+.dashboard .k-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.dashboard .k-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    min-height: 60px;
+    padding: 0.75rem 1rem;
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 1.125rem;
+    box-shadow: 0 1px 3px rgba(26, 26, 46, 0.06);
+    transition:
+        transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+        box-shadow 0.2s ease;
+}
+
+.dashboard .k-row:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px -6px rgba(45, 80, 22, 0.18);
+}
+
+.dashboard .k-row .rl {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    min-width: 0;
+}
+
+.dashboard .k-row .name {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: var(--color-text-primary, #171717);
+}
+
+.dashboard .k-row .meta {
+    font-size: 0.75rem;
+    color: var(--color-text-secondary, #737373);
+    margin-top: 1px;
+}
+
+/* Pastilles d'état avec halo coloré */
+.dashboard .k-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 999px;
+    flex-shrink: 0;
+    background: #a3a3a3;
+}
+
+.dashboard .k-dot--done {
+    background: #10b981;
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.55);
+}
+.dashboard .k-dot--pending {
+    background: #f59e0b;
+    box-shadow: 0 0 8px rgba(245, 158, 11, 0.55);
+}
+.dashboard .k-dot--new {
+    background: #3b82f6;
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.55);
+}
+.dashboard .k-dot--missed {
+    background: #8b2635;
+    box-shadow: 0 0 8px rgba(139, 38, 53, 0.55);
+}
+
+/* Avatar initiale — dégradé doré */
+.dashboard .k-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    font-size: 1.0625rem;
+    font-weight: 700;
+    color: #0d2d0d;
+    background: linear-gradient(135deg, #d4a574, #e8b86d);
+    box-shadow: 0 4px 12px rgba(212, 165, 116, 0.35);
+}
+
+/* Chips d'état */
+.dashboard .k-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0.3rem 0.7rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.dashboard .k-chip--success {
+    background: rgba(16, 185, 129, 0.12);
+    color: #047857;
+}
+.dashboard .k-chip--warning {
+    background: rgba(245, 158, 11, 0.14);
+    color: #b45309;
+}
+
+/* ── Boutons d'accès rapide ── */
+.dashboard .k-quick {
+    display: flex;
+    gap: 0.625rem;
+    flex-wrap: wrap;
+}
+
+.dashboard .k-quickbtn {
+    flex: 1;
+    min-width: 130px;
+    min-height: 48px;
+    padding: 0.75rem 1rem;
+    border-radius: 1rem;
+    font-family: inherit;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: #2d5016;
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(45, 80, 22, 0.18);
+    box-shadow: 0 1px 3px rgba(26, 26, 46, 0.06);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dashboard .k-quickbtn:hover {
+    transform: translateY(-3px);
+    border-color: rgba(212, 165, 116, 0.6);
+    box-shadow: 0 8px 22px -6px rgba(45, 80, 22, 0.25);
+}
+
+.dashboard .k-quickbtn--primary {
+    color: #fff;
+    background: linear-gradient(135deg, #2d5016, #3d6b1f);
+    border-color: transparent;
+    box-shadow: 0 4px 14px rgba(45, 80, 22, 0.4);
+}
+
+.dashboard .k-quickbtn--primary:hover {
+    box-shadow: 0 0 26px rgba(212, 165, 116, 0.5);
+}
+
+/* ── État vide : positif, jamais culpabilisant ── */
+.dashboard .k-empty {
+    text-align: center;
+    padding: 1.75rem 1rem;
+    margin: 0;
+    font-size: 0.9375rem;
+    color: var(--color-text-secondary, #737373);
+    background: rgba(255, 255, 255, 0.5);
+    border: 1px dashed rgba(45, 80, 22, 0.2);
+    border-radius: 1.125rem;
+}
+
+/* ── Thème sombre : mêmes formes, surfaces profondes ── */
+[data-theme='dark'] .dashboard .k-stat-card,
+[data-theme='dark'] .dashboard .hifz-prog,
+[data-theme='dark'] .dashboard .k-row,
+[data-theme='dark'] .dashboard .k-quickbtn {
+    background: rgba(26, 26, 46, 0.68);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme='dark'] .dashboard .k-quickbtn {
+    color: #86efac;
+}
+
+[data-theme='dark'] .dashboard .k-stat-value {
+    color: #86efac;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) .dashboard .k-stat-card,
+    :root:not([data-theme='light']) .dashboard .hifz-prog,
+    :root:not([data-theme='light']) .dashboard .k-row,
+    :root:not([data-theme='light']) .dashboard .k-quickbtn {
+        background: rgba(26, 26, 46, 0.68);
+        border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    :root:not([data-theme='light']) .dashboard .k-quickbtn {
+        color: #86efac;
+    }
+
+    :root:not([data-theme='light']) .dashboard .k-stat-value {
+        color: #86efac;
+    }
+}
+
+/* ── Mobile ── */
+@media (max-width: 480px) {
+    .dashboard .k-grid3 {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.5rem;
+    }
+
+    .dashboard .k-stat-card {
+        padding: 0.875rem 0.5rem;
+    }
+
+    .dashboard .k-stat-value {
+        font-size: 1.375rem;
+    }
+
+    .dashboard .k-quick {
+        flex-direction: column;
+    }
+
+    .dashboard .k-quickbtn {
+        min-width: unset;
+    }
+}
+
+/* ============================================================
+   NOUVEAUX BLOCS — خطوتك التالية · anneau · خريطة السور
+   · طابور التصحيح · entonnoir admin
+   ============================================================ */
+
+/* ── Carte « ta prochaine étape » ── */
+.dashboard .next-step-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: 1.625rem;
+    padding: 1.375rem;
+    color: #fff;
+    background: linear-gradient(140deg, #0d2d0d 0%, #1a3d1a 55%, #0a0a1a 100%);
+    box-shadow: 0 12px 30px rgba(13, 45, 13, 0.35);
+}
+
+.dashboard .next-step-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 15% 20%, rgba(212, 165, 116, 0.28), transparent 55%);
+    pointer-events: none;
+}
+
+.dashboard .next-step-card > * {
+    position: relative;
+}
+
+.dashboard .next-step-card .eyebrow {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    color: #e8c9a0;
+    margin-bottom: 0.5rem;
+}
+
+.dashboard .next-step-card .title {
+    font-size: 1.3125rem;
+    font-weight: 700;
+    line-height: 1.6;
+}
+
+.dashboard .next-step-card .meta {
+    font-size: 0.8125rem;
+    color: rgba(255, 255, 255, 0.62);
+    margin-top: 0.25rem;
+}
+
+.dashboard .next-step-card .btn {
+    display: block;
+    width: 100%;
+    margin-top: 1rem;
+    min-height: 48px;
+    border: none;
+    border-radius: 1rem;
+    font-family: inherit;
+    font-size: 1.0625rem;
+    font-weight: 700;
+    color: #0d2d0d;
+    cursor: pointer;
+    background: linear-gradient(135deg, #d4a574, #e8b86d);
+    animation: next-step-glow 3s ease infinite;
+}
+
+@keyframes next-step-glow {
+    0%,
+    100% {
+        box-shadow: 0 0 20px rgba(212, 165, 116, 0.35);
+    }
+    50% {
+        box-shadow: 0 0 42px rgba(212, 165, 116, 0.7);
+    }
+}
+
+/* ── Anneau de progression (conic-gradient piloté par --pct) ── */
+.dashboard .ring-stat {
+    --pct: 0;
+    width: 64px;
+    height: 64px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    background: conic-gradient(
+        #2d5016 0deg,
+        #d4a574 calc(var(--pct) * 3.6deg),
+        rgba(45, 80, 22, 0.12) calc(var(--pct) * 3.6deg)
+    );
+    transition: background 0.8s ease;
+}
+
+.dashboard .ring-stat > * {
+    width: 48px;
+    height: 48px;
+    border-radius: 999px;
+    background: var(--color-bg-primary, #fff);
+    display: grid;
+    place-items: center;
+    font-size: 0.9375rem !important;
+    font-weight: 800;
+    color: #2d5016;
+}
+
+/* ── خريطة السور — état réel de chaque sourate ── */
+.dashboard .surah-map {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+}
+
+.dashboard .surah-cell {
+    padding: 0.35rem 0.6rem;
+    border-radius: 0.625rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #fff;
+    background: #a3a3a3;
+}
+
+.dashboard .surah-cell.is-mastered {
+    background: #2d5016;
+}
+.dashboard .surah-cell.is-learning {
+    background: #d4a574;
+}
+.dashboard .surah-cell.is-weak {
+    background: #b45309;
+}
+
+.dashboard .surah-map-legend {
+    display: flex;
+    gap: 0.875rem;
+    margin-top: 0.875rem;
+    font-size: 0.75rem;
+    color: var(--color-text-secondary, #737373);
+}
+
+.dashboard .surah-map-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.dashboard .surah-map-legend i {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+}
+
+.dashboard .surah-map-legend i.is-mastered {
+    background: #2d5016;
+}
+.dashboard .surah-map-legend i.is-learning {
+    background: #d4a574;
+}
+.dashboard .surah-map-legend i.is-weak {
+    background: #b45309;
+}
+
+/* ── طابور التصحيح — carte de correction (professeur) ── */
+.dashboard .correction-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: 1.625rem;
+    padding: 1.25rem;
+    margin-bottom: 0.75rem;
+    color: #fff;
+    background: linear-gradient(140deg, #0d2d0d 0%, #1a3d1a 55%, #0a0a1a 100%);
+    box-shadow: 0 12px 30px rgba(13, 45, 13, 0.35);
+}
+
+.dashboard .correction-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 85% 15%, rgba(212, 165, 116, 0.24), transparent 52%);
+    pointer-events: none;
+}
+
+.dashboard .correction-card > * {
+    position: relative;
+}
+
+.dashboard .cc-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.dashboard .cc-who {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    min-width: 0;
+}
+
+.dashboard .cc-who .name {
+    font-size: 1.0625rem;
+    font-weight: 700;
+}
+
+.dashboard .cc-who .meta {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.58);
+}
+
+.dashboard .cc-count {
+    flex: none;
+    padding: 0.25rem 0.7rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    color: #fcd34d;
+    background: rgba(245, 158, 11, 0.16);
+    border: 1px solid rgba(245, 158, 11, 0.45);
+}
+
+.dashboard .correction-audio {
+    width: 100%;
+    margin-top: 1rem;
+    border-radius: 1rem;
+}
+
+.dashboard .correction-noaudio {
+    margin: 1rem 0 0;
+    font-size: 0.8125rem;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* Notation en un tap */
+.dashboard .grade-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.875rem;
+}
+
+.dashboard .grade-actions .btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    min-height: 52px;
+    padding: 0.6rem 0.4rem;
+    border-radius: 0.875rem;
+    font-family: inherit;
+    font-size: 0.9375rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.dashboard .grade-actions .btn small {
+    font-size: 0.625rem;
+    font-weight: 400;
+    opacity: 0.75;
+}
+
+.dashboard .btn-grade-good {
+    background: rgba(76, 175, 80, 0.18);
+    border: 1px solid rgba(76, 175, 80, 0.5);
+    color: #86efac;
+}
+.dashboard .btn-grade-good:hover {
+    background: #4caf50;
+    color: #fff;
+    transform: translateY(-2px);
+}
+
+.dashboard .btn-grade-ok {
+    background: rgba(212, 165, 116, 0.16);
+    border: 1px solid rgba(212, 165, 116, 0.5);
+    color: #e8c9a0;
+}
+.dashboard .btn-grade-ok:hover {
+    background: #d4a574;
+    color: #0d2d0d;
+    transform: translateY(-2px);
+}
+
+.dashboard .btn-grade-retry {
+    background: rgba(139, 38, 53, 0.22);
+    border: 1px solid rgba(139, 38, 53, 0.6);
+    color: #fca5a5;
+}
+.dashboard .btn-grade-retry:hover {
+    background: #8b2635;
+    color: #fff;
+    transform: translateY(-2px);
+}
+
+/* ── Entonnoir admin ── */
+.dashboard .funnel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.dashboard .funnel .bar {
+    display: flex;
+    align-items: center;
+    min-height: 30px;
+    padding: 0 0.75rem;
+    border-radius: 0.625rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #fff;
+    background: linear-gradient(135deg, #2d5016, #3d6b1f);
+    transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dashboard .funnel .bar:nth-child(3) {
+    background: linear-gradient(90deg, #4caf50, #d4a574);
+    color: #0d2d0d;
+}
+
+.dashboard .funnel .bar:nth-child(4) {
+    background: linear-gradient(135deg, #d4a574, #e8b86d);
+    color: #0d2d0d;
+}
