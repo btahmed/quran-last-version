@@ -14,7 +14,34 @@ function getEffectiveRole(user) {
     return user.role === 'admin' || user.is_superuser ? 'admin' : user.role;
 }
 
+// Filtre les données sensibles avant de stocker en localStorage
+function _safeUserData(user) {
+    return {
+        id: user.id,
+        role: user.role,
+        first_name: user.first_name,
+        username: user.username,
+        is_superuser: user.is_superuser,
+    };
+}
+
+// Drapeau pour distinguer logout intentionnel d'une expiration de session
+let _intentionalLogout = false;
+
 export async function initAuth() {
+    // Migration : nettoyer les données PII stockées par les versions précédentes
+    try {
+        const _raw = localStorage.getItem('quranreview_user');
+        if (_raw) {
+            const _old = JSON.parse(_raw);
+            if (_old && ('phone' in _old || 'email' in _old || 'created_at' in _old)) {
+                localStorage.setItem('quranreview_user', JSON.stringify(_safeUserData(_old)));
+            }
+        }
+    } catch (e) {
+        /* ignore si JSON invalide */
+    }
+
     try {
         const { data, error } = await SupabaseAuth.getSession();
         if (error || !data?.session) {
@@ -31,7 +58,7 @@ export async function initAuth() {
         const user = profile;
 
         state.user = user;
-        localStorage.setItem('quranreview_user', JSON.stringify(user));
+        localStorage.setItem('quranreview_user', JSON.stringify(_safeUserData(user)));
         updateAuthUI(true);
         buildNav(getEffectiveRole(user));
         // Ré-enregistrer l'abonnement push si session restaurée sans re-login
@@ -48,6 +75,12 @@ export async function initAuth() {
             localStorage.removeItem('quranreview_user');
             updateAuthUI(false);
             buildNav('visitor');
+            if (!_intentionalLogout) {
+                // Session expirée (pas un logout volontaire) — informer et ré-ouvrir le login
+                showNotification('انتهت صلاحية الجلسة — يرجى تسجيل الدخول مجدداً', 'warning');
+                setTimeout(() => showAuthModal(), 800);
+            }
+            _intentionalLogout = false;
         } else if (event === 'TOKEN_REFRESHED' && session) {
             // Le SDK Supabase conserve et rafraîchit la session. Aucun token
             // d'accès n'est recopié dans le stockage applicatif.
@@ -155,7 +188,7 @@ export async function performLogin(username, password) {
 
         // Stocker comme si c'était une vraie connexion
         state.user = demoUser;
-        localStorage.setItem('quranreview_user', JSON.stringify(demoUser));
+        localStorage.setItem('quranreview_user', JSON.stringify(_safeUserData(demoUser)));
         hideAuthModal();
         updateAuthUI(true);
         buildNav(getEffectiveRole(demoUser));
@@ -186,7 +219,7 @@ export async function performLogin(username, password) {
         const { data: profile, error: profileError } = await SupabaseAuth.getCurrentUser();
         if (profileError || !profile) throw new Error('Profil Supabase introuvable');
         state.user = profile;
-        localStorage.setItem('quranreview_user', JSON.stringify(state.user));
+        localStorage.setItem('quranreview_user', JSON.stringify(_safeUserData(state.user)));
 
         hideAuthModal();
         updateAuthUI(true);
@@ -413,6 +446,7 @@ export async function refreshToken() {
 }
 
 export async function logout() {
+    _intentionalLogout = true;
     destroyNotificationCenter();
     const { error } = await SupabaseAuth.signOut();
 

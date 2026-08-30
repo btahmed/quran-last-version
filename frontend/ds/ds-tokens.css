@@ -7,7 +7,7 @@
  * Chargé dans index.html après style.css — override les valeurs legacy.
  */
 
-@import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600;700;800&display=swap');
+/* Google Fonts chargé dans index.html — pas ici (évite le double download) */
 
 :root {
     /* ── Typographie ─────────────────────────────────────────── */
@@ -298,7 +298,7 @@
     width: 60%;
 }
 
-/* ── Dark mode ───────────────────────────────────────────── */
+/* ── Dark mode manuel ────────────────────────────────────── */
 [data-theme='dark'] {
     --color-primary: var(--green-400);
     --color-primary-light: var(--green-300);
@@ -315,4 +315,25 @@
     --glass-bg: rgba(30, 30, 30, 0.7);
     --glass-bg-strong: rgba(30, 30, 30, 0.95);
     --glass-border: rgba(255, 255, 255, 0.1);
+}
+
+/* ── Dark mode système ───────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) {
+        --color-primary: var(--green-400);
+        --color-primary-light: var(--green-300);
+
+        --text-primary: #f5f5f5;
+        --text-secondary: #a3a3a3;
+
+        --surface-page: #0a0a0a;
+        --surface-raised: #171717;
+        --surface-card: #1a1a2e;
+        --cream: #1a1a1a;
+        --border-subtle: #262626;
+
+        --glass-bg: rgba(30, 30, 30, 0.7);
+        --glass-bg-strong: rgba(30, 30, 30, 0.95);
+        --glass-border: rgba(255, 255, 255, 0.1);
+    }
 }

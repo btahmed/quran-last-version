@@ -52,7 +52,7 @@ const pages = {
     progress: ProgressPage,
 };
 
-export function navigateTo(pageName) {
+export function navigateTo(pageName, { replace = false } = {}) {
     Logger.nav(state.currentPage, pageName);
     AudioManager.stopAll();
     if (state.currentPage && state.currentPage !== pageName) {
@@ -66,8 +66,44 @@ export function navigateTo(pageName) {
     if (activeLink) activeLink.classList.add('active');
 
     state.currentPage = pageName;
-    setActiveTab(pageName); // synchronise l'onglet nav actif
+    setActiveTab(pageName);
+
+    // Bouton retour Android : maintenir l'historique de navigation
+    if (replace) {
+        history.replaceState({ page: pageName }, '', '#' + pageName);
+    } else {
+        history.pushState({ page: pageName }, '', '#' + pageName);
+    }
+
     renderPage(pageName);
+}
+
+// Listener bouton retour Android (popstate)
+window.addEventListener('popstate', e => {
+    const page = e.state?.page || 'home';
+    // Rendre la page sans repousser dans l'historique
+    Logger.nav(state.currentPage, page + ' (back)');
+    AudioManager.stopAll();
+    state.previousPage = state.currentPage;
+    state.currentPage = page;
+    setActiveTab(page);
+    document
+        .querySelectorAll('.nav-link, .nav-link-pro')
+        .forEach(link => link.classList.remove('active'));
+    const activeLink = document.querySelector(`[data-page="${page}"]`);
+    if (activeLink) activeLink.classList.add('active');
+    renderPage(page);
+});
+
+let _renderGen = 0;
+
+/** Utilitaire pour les pages async : retourne vrai si une navigation
+ *  a eu lieu PENDANT l'init, ce qui signifie que cette init est périmée. */
+export function isStaleRender(gen) {
+    return _renderGen !== gen;
+}
+export function getRenderGen() {
+    return _renderGen;
 }
 
 export function renderPage(pageName) {
@@ -78,11 +114,19 @@ export function renderPage(pageName) {
     }
     const app = document.getElementById('app');
     if (!app) return;
+
+    const myGen = ++_renderGen;
     app.innerHTML = page.render();
-    // init peut être async
-    Promise.resolve(page.init()).catch(err =>
-        Logger.error('ROUTER', `init error on ${pageName}`, err)
-    );
+    Promise.resolve(page.init())
+        .then(() => {
+            if (_renderGen !== myGen) {
+                Logger.warn(
+                    'ROUTER',
+                    `[stale] init() terminé pour ${pageName} après navigation — DOM et état possiblement périmés`
+                );
+            }
+        })
+        .catch(err => Logger.error('ROUTER', `init error on ${pageName}`, err));
 }
 
 export function setupNavigation() {

@@ -77,8 +77,29 @@ async function init() {
     // Auto-save
     setupAutoSave();
 
-    // Render page initiale
-    renderPage('home');
+    // Render page initiale — lit le hash URL pour le deep linking
+    // (ex : rechargement sur #hifz repart sur hifz, pas sur home)
+    const _validPages = new Set([
+        'home',
+        'hifz',
+        'revision',
+        'soumettre',
+        'profil',
+        'teacher',
+        'devoirs',
+        'soumissions',
+        'eleves',
+        'admin',
+        'admin-users',
+        'admin-classes',
+        'admin-stats',
+        'notifications',
+        'competition',
+    ]);
+    const _hashPage = location.hash ? location.hash.slice(1) : 'home';
+    const initialPage = _validPages.has(_hashPage) ? _hashPage : 'home';
+    history.replaceState({ page: initialPage }, '', '#' + initialPage);
+    renderPage(initialPage);
 
     // Fermer student-detail-panel sur clic overlay
     const studentPanel = document.getElementById('student-detail-panel');

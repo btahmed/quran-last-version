@@ -400,17 +400,17 @@ export async function handleCreateTask(event) {
         if (body.assign_all) {
             // Créer pour tous les étudiants
             const { data: students } = await supabaseAdmin.getMyStudents();
-            if (students?.length) {
-                const results = await Promise.all(
-                    students.map(s => supabaseTasks.createTask({ ...body, user_id: s.id }))
-                );
-                const failed = results.filter(r => r.error).length;
-                if (failed) showNotification(`فشل إنشاء ${failed} مهمة`, 'error');
-                // Envoyer UNE notification push par élève
-                students.forEach(s =>
-                    supabaseTasks.notifyStudentNewTask(s.id, body.title, body.type)
-                );
+            if (!students?.length) {
+                showNotification('لا يوجد طلاب في فصلك — أضف طلاباً أولاً', 'error');
+                return;
             }
+            const results = await Promise.all(
+                students.map(s => supabaseTasks.createTask({ ...body, user_id: s.id }))
+            );
+            const failed = results.filter(r => r.error).length;
+            if (failed) showNotification(`فشل إنشاء ${failed} مهمة`, 'error');
+            // Envoyer UNE notification push par élève
+            students.forEach(s => supabaseTasks.notifyStudentNewTask(s.id, body.title, body.type));
         } else {
             // Créer pour les étudiants sélectionnés
             for (const studentId of studentIds) {

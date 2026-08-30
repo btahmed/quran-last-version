@@ -8,7 +8,9 @@
     overflow-x: auto;
     scrollbar-width: none; /* Firefox */
 }
-.week-calendar::-webkit-scrollbar { display: none; }
+.week-calendar::-webkit-scrollbar {
+    display: none;
+}
 
 .week-day {
     flex: 1;
@@ -31,13 +33,21 @@
     font-weight: 700;
 }
 
-.week-day--done    { background: rgba(22, 163, 74,  0.08); }
-.week-day--missed  { background: rgba(220, 38, 38,  0.08); }
-.week-day--pending { background: rgba(217, 119, 6,  0.08); }
-.week-day--empty   { background: var(--card-bg, #f8f9fa); }
+.week-day--done {
+    background: rgba(22, 163, 74, 0.08);
+}
+.week-day--missed {
+    background: rgba(220, 38, 38, 0.08);
+}
+.week-day--pending {
+    background: rgba(217, 119, 6, 0.08);
+}
+.week-day--empty {
+    background: var(--card-bg, #f8f9fa);
+}
 
 .week-day-label {
-    font-size: 0.65rem;
+    font-size: 0.7rem;
     color: var(--text-secondary);
     font-weight: 500;
 }
@@ -52,9 +62,9 @@
 }
 
 /* Dark mode */
-[data-theme="dark"] .week-day {
-    background: rgba(255,255,255,0.05);
+[data-theme='dark'] .week-day {
+    background: rgba(255, 255, 255, 0.05);
 }
-[data-theme="dark"] .week-day--today {
+[data-theme='dark'] .week-day--today {
     background: rgba(45, 80, 22, 0.2);
 }

@@ -81,7 +81,7 @@
     --glass-blur: blur(20px);
 }
 
-/* Dark Theme */
+/* Dark Theme manuel */
 [data-theme='dark'] {
     --color-primary: #4ade80;
     --color-primary-light: #86efac;
@@ -97,6 +97,26 @@
     --color-bg-primary: #0a0a0a;
     --color-bg-secondary: #171717;
     --color-border: #262626;
+}
+
+/* Dark Theme système — suit l'OS si aucun choix manuel */
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) {
+        --color-primary: #4ade80;
+        --color-primary-light: #86efac;
+        --color-primary-dark: #22c55e;
+
+        --color-cream: #1a1a1a;
+
+        --glass-bg: rgba(30, 30, 30, 0.7);
+        --glass-border: rgba(255, 255, 255, 0.1);
+
+        --color-text-primary: #f5f5f5;
+        --color-text-secondary: #a3a3a3;
+        --color-bg-primary: #0a0a0a;
+        --color-bg-secondary: #171717;
+        --color-border: #262626;
+    }
 }
 
 /* Light Theme (default) */
