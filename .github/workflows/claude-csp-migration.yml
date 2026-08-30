@@ -1,0 +1,54 @@
+name: Auto-migrate CSP inline handlers (Claude)
+
+# Migre progressivement les onclick="QuranReview.*" vers addEventListener
+# dans frontend/src/, pour pouvoir retirer 'unsafe-inline' de script-src
+# dans frontend/vercel.json une fois terminé.
+#
+# ⚠️ Nécessite le secret ANTHROPIC_API_KEY (Settings → Secrets and variables
+# → Actions). Claude ne pousse jamais directement sur main : il commit sur
+# une branche dédiée et ouvre un lien de création de PR (humain garde la main).
+
+on:
+  schedule:
+    - cron: '23 */6 * * *' # toutes les 6h
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  id-token: write
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            REPO: ${{ github.repository }}
+
+            Dans frontend/src/pages/*.js et frontend/src/components/*.js, migre les
+            handlers inline onclick="QuranReview.*" vers addEventListener.
+
+            Règles :
+            1. Traite au maximum 1-2 fichiers par exécution (petits lots reviewables).
+            2. Vérifie avec grep -c "onclick=\"QuranReview" sur chaque fichier traité
+               qu'il n'en reste plus.
+            3. Ne casse aucun comportement existant — même logique, juste le
+               mécanisme d'attachement de l'event.
+            4. Une fois TOUS les fichiers de frontend/src/pages/ et
+               frontend/src/components/ migrés (vérifiable via
+               `grep -rl 'onclick="QuranReview' frontend/src` qui ne retourne rien),
+               retire 'unsafe-inline' de script-src dans frontend/vercel.json.
+            5. Committe sur une nouvelle branche, n'écris jamais directement sur main.
+
+            Si aucun onclick="QuranReview" ne reste dans le repo, ne fais rien et
+            termine sans créer de commit.
+          claude_args: |
+            --allowedTools "Read,Edit,Grep,Glob,Bash(git:*)"

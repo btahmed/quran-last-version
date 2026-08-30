@@ -1,0 +1,38 @@
+name: Deploy Frontend to Vercel
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/deploy-frontend.yml'
+  workflow_dispatch:
+
+# Le projet Vercel "quranreview-frontend" n'a pas d'intégration Git native
+# (root directory = frontend/, lié uniquement en local via `vercel --prod`).
+# Ce workflow reproduit ce déploiement CLI de façon automatique à chaque push.
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      # IDs de projet — pas des secrets, juste des identifiants publics Vercel
+      VERCEL_ORG_ID: team_GDaVXKOQnxpCEEWfN0dMF6IU
+      VERCEL_PROJECT_ID: prj_ZEbEGjKK1fZ5wifCUhoFN35B7Qo9
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Pull Vercel environment info
+        working-directory: frontend
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build project (Vite)
+        working-directory: frontend
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy prebuilt output to Vercel
+        working-directory: frontend
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
