@@ -209,13 +209,13 @@ export function renderCompetitionBoard(o = {}) {
     <div class="cb-rank">
         <div class="cb-medal">${esc(r.medal || '🏅')}</div>
         <div class="cb-rank-title">رتبتك: <span>${esc(r.label)}</span></div>
-        ${r.points ? `<div class="cb-points">لديك <strong>${num(r.points)}</strong> نقطة</div>` : ''}
+        ${typeof r.points === 'number' ? `<div class="cb-points">لديك <strong>${num(r.points)}</strong> نقطة</div>` : ''}
         ${
             typeof r.progress === 'number'
                 ? `<div class="ph-track"><div class="ph-fill" style="width:${Math.max(0, Math.min(100, r.progress))}%"></div></div>`
                 : ''
         }
-        ${r.nextAt ? `<div class="cb-next">${num(r.nextAt)} نقطة للرتبة التالية</div>` : ''}
+        ${typeof r.nextAt === 'number' ? `<div class="cb-next">${num(r.nextAt)} نقطة للرتبة التالية</div>` : ''}
     </div>`
         : '';
 
