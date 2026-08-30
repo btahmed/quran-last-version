@@ -135,14 +135,14 @@ function initLanding() {
 
     document.querySelectorAll('.stat-number[data-target]').forEach(el => observer.observe(el));
 
-    // Stats live depuis Supabase
+    // Stats live depuis Supabase — la lecture directe de `profiles` est bloquée
+    // par RLS pour un visiteur anonyme (normal, ce sont des données utilisateur).
+    // On passe donc par une fonction RPC dédiée qui ne renvoie qu'un COUNT.
     (async function fetchLiveStats() {
         try {
             const { supabaseClient } = await import('../services/supabase-client.js');
-            const { count: students } = await supabaseClient
-                .from('profiles')
-                .select('*', { count: 'exact', head: true })
-                .eq('role', 'student');
+            const { data: students, error } = await supabaseClient.rpc('get_public_student_count');
+            if (error) throw error;
             const el = document.querySelector('.stat-number[data-target="224"]');
             if (el && students != null) el.textContent = '+' + students;
         } catch {
