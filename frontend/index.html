@@ -135,16 +135,18 @@
     <!-- Base Styles -->
     <link rel="stylesheet" href="style.css">
 
-    <!-- Pro Styles -->
-    <link rel="stylesheet" href="style-pro.css">
-    <link rel="stylesheet" href="src/core/NavManager.css">
-    <link rel="stylesheet" href="src/pages/HomePage.css">
-    <link rel="stylesheet" href="src/pages/RevisionPage.css">
-
     <!-- Design System (Claude Design tokens + composants) -->
     <link rel="stylesheet" href="ds/ds-tokens.css">
     <link rel="stylesheet" href="ds/kit.css">
     <link rel="stylesheet" href="ds/hifi.css">
+
+    <!-- Pro Styles — chargé APRÈS ds/ pour que ses tokens (ombres, glass, radius…)
+         gagnent la cascade sur les :root dupliqués de ds-tokens.css (sinon la refonte
+         visuelle "Pro Edition" est silencieusement aplatie par les valeurs de ds/) -->
+    <link rel="stylesheet" href="style-pro.css">
+    <link rel="stylesheet" href="src/core/NavManager.css">
+    <link rel="stylesheet" href="src/pages/HomePage.css">
+    <link rel="stylesheet" href="src/pages/RevisionPage.css">
 
     <style>
         /* Additional custom styles */
