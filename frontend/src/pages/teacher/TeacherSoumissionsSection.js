@@ -138,6 +138,61 @@ async function _loadPendingSubmissions() {
     }
 }
 
+/** Carte de tête de file — mise en avant visuelle, vraies données uniquement */
+function _headCardHtml(s, total) {
+    const taskTitle = s.task?.title || s.tasks?.title || 'تسليم';
+    const studentName = s.profiles?.first_name || s.profiles?.username || 'طالب';
+    const initial = escapeHtml(studentName.charAt(0) || '؟');
+    const sid = escapeHtml(String(s.id));
+    const audioSrc =
+        s.audio_url && s.audio_url.startsWith('https://') ? escapeHtml(s.audio_url) : null;
+    const audio = audioSrc
+        ? `<audio controls preload="metadata" src="${audioSrc}" style="width:100%;margin-top:var(--space-3)"></audio>`
+        : '<p style="opacity:.7;font-size:var(--text-xs);margin-top:var(--space-3)">لا يوجد ملف صوتي 🎙</p>';
+
+    return `<div class="month-story-card" style="margin-bottom:var(--space-3)">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--space-3)">
+            <div style="display:flex;align-items:center;gap:var(--space-3);min-width:0">
+                <span class="k-avatar" style="background:var(--gradient-gold);color:#3a2a0d">${initial}</span>
+                <div style="min-width:0">
+                    <div style="font-weight:700">${escapeHtml(studentName)}</div>
+                    <div style="font-size:var(--text-xs);opacity:.8">${escapeHtml(taskTitle)}</div>
+                </div>
+            </div>
+            <span style="font-size:var(--text-xs);opacity:.8;flex-shrink:0">⏳ 1/${total}</span>
+        </div>
+        ${audio}
+        <div class="grade-actions" style="margin-top:var(--space-3)">
+            <button class="btn btn-grade-good" onclick="QuranReview.approveSubmission(&quot;${sid}&quot;,5)">🌟<small>ممتاز</small></button>
+            <button class="btn btn-grade-ok" onclick="QuranReview.approveSubmission(&quot;${sid}&quot;,3)">🙂<small>جيد</small></button>
+            <button class="btn btn-grade-retry" onclick="QuranReview.openRejectModal(&quot;${sid}&quot;,&quot;${escapeHtml(escapeJs(studentName))}&quot;)">↺<small>إعادة</small></button>
+        </div>
+    </div>`;
+}
+
+/** Ligne compacte pour le reste de la file d'attente */
+function _queueRowHtml(s) {
+    const taskTitle = s.task?.title || s.tasks?.title || 'تسليم';
+    const studentName = s.profiles?.first_name || s.profiles?.username || 'طالب';
+    const initial = escapeHtml(studentName.charAt(0) || '؟');
+    const time = s.submitted_at
+        ? new Date(s.submitted_at).toLocaleTimeString('ar-SA', {
+              hour: '2-digit',
+              minute: '2-digit',
+          })
+        : '';
+    return `<div class="k-row">
+        <div class="rl">
+            <span class="k-avatar">${initial}</span>
+            <div>
+                <div class="name">${escapeHtml(studentName)}</div>
+                <div class="meta">${escapeHtml(taskTitle)}</div>
+            </div>
+        </div>
+        ${time ? `<span style="color:var(--text-secondary);font-size:var(--text-xs)">${escapeHtml(time)}</span>` : ''}
+    </div>`;
+}
+
 function _cardHtml(s, showActions) {
     const date = new Date(s.submitted_at).toLocaleDateString('ar-SA');
     const taskTitle = s.task?.title || s.tasks?.title || 'تسليم';
@@ -225,7 +280,15 @@ function _renderPendingList(allSubmissions) {
             let html = '';
             if (pending.length) {
                 html += `<h4 style="margin:0 0 var(--space-3);color:var(--color-text-secondary);font-size:0.9rem;font-weight:600">⏳ بانتظار التصحيح (${pending.length})</h4>`;
-                html += pending.map(s => _cardHtml(s, true)).join('');
+                // Tête de file mise en avant (طابور التصحيح) — le reste en liste compacte
+                html += _headCardHtml(pending[0], pending.length);
+                if (pending.length > 1) {
+                    html += `<h4 style="margin:var(--space-4) 0 var(--space-2);color:var(--color-text-secondary);font-size:0.85rem;font-weight:600">التالي في الطابور</h4>`;
+                    html += pending
+                        .slice(1)
+                        .map(s => _queueRowHtml(s))
+                        .join('');
+                }
             } else {
                 html +=
                     '<p class="empty-state" style="padding:var(--space-3) 0">لا توجد تسليمات بانتظار التصحيح 🎉</p>';
