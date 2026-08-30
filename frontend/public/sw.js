@@ -1,0 +1,161 @@
+// QuranReview — Service Worker (version ES Modules / Vercel)
+const CACHE_NAME = 'quranreview-frontend-v2';
+
+// Assets statiques à précacher
+const STATIC_ASSETS = [
+    '/',
+    '/index.html',
+    '/src/main.js',
+    '/src/core/config.js',
+    '/src/core/state.js',
+    '/src/core/router.js',
+    '/src/core/ui.js',
+    '/src/core/logger.js',
+    '/manifest.json',
+    '/assets/logo-192.png',
+    '/assets/logo-512.png',
+    '/assets/favicon.ico',
+];
+
+// ── Install : précacher les assets statiques ───────────────────────────────
+self.addEventListener('install', (event) => {
+    event.waitUntil(
+        caches.open(CACHE_NAME)
+            .then((cache) => cache.addAll(STATIC_ASSETS))
+            .catch((err) => console.warn('[SW] Précachage partiel :', err))
+    );
+    self.skipWaiting();
+});
+
+// ── Activate : nettoyer les anciens caches ─────────────────────────────────
+self.addEventListener('activate', (event) => {
+    event.waitUntil(
+        caches.keys().then((names) =>
+            Promise.all([
+                ...names
+                    .filter((n) => n !== CACHE_NAME)
+                    .map((n) => caches.delete(n)),
+                self.clients.claim(),
+            ])
+        )
+    );
+});
+
+// ── Fetch : stratégie hybride ──────────────────────────────────────────────
+self.addEventListener('fetch', (event) => {
+    const { request } = event;
+    const url = new URL(request.url);
+
+    // Ne pas intercepter les requêtes non-GET
+    if (request.method !== 'GET') return;
+
+    // Ne pas intercepter les appels API backend (Vercel API)
+    if (url.hostname.includes('quranreview-api.vercel.app')) return;
+    if (url.pathname.startsWith('/api/')) return;
+
+    // Ne pas intercepter les ressources externes (CDN audio, etc.)
+    if (url.origin !== self.location.origin) return;
+
+    // Stratégie : Network First pour les navigations (HTML toujours frais)
+    if (request.mode === 'navigate') {
+        event.respondWith(
+            fetch(request)
+                .then((res) => {
+                    if (!res || res.status !== 200) return res;
+                    const clone = res.clone();
+                    caches.open(CACHE_NAME).then((c) => c.put(request, clone));
+                    return res;
+                })
+                .catch(() => caches.match('/index.html').then(r => r || new Response('Offline', { status: 503 })))
+        );
+        return;
+    }
+
+    // Stratégie : Network First pour les modules JS (évite le cache obsolète)
+    if (url.pathname.startsWith('/src/') || url.pathname.endsWith('.js')) {
+        event.respondWith(
+            fetch(request)
+                .then((res) => {
+                    if (!res || res.status !== 200 || res.type !== 'basic') return res;
+                    const clone = res.clone();
+                    caches.open(CACHE_NAME).then((c) => c.put(request, clone));
+                    return res;
+                })
+                .catch(() => caches.match(request).then(r => r || new Response('// offline', { status: 503 })))
+        );
+        return;
+    }
+
+    // Stratégie : Cache First pour les autres assets statiques (images, fonts, etc.)
+    event.respondWith(
+        caches.match(request).then((cached) => {
+            if (cached) return cached;
+            return fetch(request)
+                .then((res) => {
+                    if (!res || res.status !== 200 || res.type !== 'basic') return res;
+                    const clone = res.clone();
+                    caches.open(CACHE_NAME).then((c) => c.put(request, clone));
+                    return res;
+                })
+                .catch(() => new Response('Offline', { status: 503, statusText: 'Service Unavailable' }));
+        })
+    );
+});
+
+// ──────────────────────────────────────────────────
+// Background Sync — offline submission queue
+// ──────────────────────────────────────────────────
+
+// Déclenché par Chrome/Android quand la connectivité est restaurée.
+// Le SW ne peut pas accéder à Supabase (pas de token) → on demande au client de traiter.
+self.addEventListener('sync', event => {
+    if (event.tag === 'submission-sync') {
+        event.waitUntil(
+            self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
+                clientList.forEach(client => {
+                    client.postMessage({ type: 'SYNC_OFFLINE_QUEUE' });
+                });
+            })
+        );
+    }
+});
+
+// ──────────────────────────────────────────────────
+// Notifications Push Web Push API
+// ──────────────────────────────────────────────────
+
+self.addEventListener('push', event => {
+    const data = event.data?.json() ?? {
+        title: 'مراجعة القرآن',
+        body: 'لديك تحديث جديد',
+        url: '/',
+    };
+    event.waitUntil(
+        self.registration.showNotification(data.title, {
+            body: data.body,
+            icon: '/icon-192.png',
+            badge: '/icon-72.png',
+            dir: 'rtl',
+            lang: 'ar',
+            tag: 'quran-review-push',
+            renotify: true,
+            data: { url: data.url ?? '/' },
+        })
+    );
+});
+
+self.addEventListener('notificationclick', event => {
+    event.notification.close();
+    const targetUrl = event.notification.data?.url ?? '/';
+    event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
+            for (const client of clientList) {
+                if (client.url.includes(self.location.origin) && 'focus' in client) {
+                    client.navigate(targetUrl);
+                    return client.focus();
+                }
+            }
+            return clients.openWindow(targetUrl);
+        })
+    );
+});
