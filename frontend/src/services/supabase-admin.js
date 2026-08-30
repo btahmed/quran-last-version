@@ -276,8 +276,8 @@ export async function getMyStudents() {
 
         if (error || !data) return { data, error };
 
-        // Enrichir avec total_points et submissions_count en 2 requêtes batch
-        const [pointsRes, subsRes] = await Promise.all([
+        // Enrichir avec total_points, submissions_count et dernière activité en 3 requêtes batch
+        const [pointsRes, subsRes, lastActivityRes] = await Promise.all([
             supabaseClient
                 .from('points_log')
                 .select('student_id, delta')
@@ -287,6 +287,12 @@ export async function getMyStudents() {
                 .select('student_id')
                 .in('student_id', studentIds)
                 .eq('status', 'approved'),
+            // Toutes soumissions (peu importe le statut) — sert uniquement à dater
+            // la dernière activité réelle de l'élève, pas à compter ses points.
+            supabaseClient
+                .from('submissions')
+                .select('student_id, submitted_at')
+                .in('student_id', studentIds),
         ]);
         const pointsByStudent = {};
         (pointsRes.data || []).forEach(p => {
@@ -296,9 +302,18 @@ export async function getMyStudents() {
         (subsRes.data || []).forEach(s => {
             subsByStudent[s.student_id] = (subsByStudent[s.student_id] || 0) + 1;
         });
+        const lastActivityByStudent = {};
+        (lastActivityRes.data || []).forEach(s => {
+            if (!s.submitted_at) return;
+            const prev = lastActivityByStudent[s.student_id];
+            if (!prev || new Date(s.submitted_at) > new Date(prev)) {
+                lastActivityByStudent[s.student_id] = s.submitted_at;
+            }
+        });
         data.forEach(s => {
             s.total_points = pointsByStudent[s.id] || 0;
             s.submissions_count = subsByStudent[s.id] || 0;
+            s.last_submission_at = lastActivityByStudent[s.id] || null;
         });
 
         return { data, error: null };

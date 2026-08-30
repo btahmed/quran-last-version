@@ -73,6 +73,29 @@ async function _loadStudents() {
     }
 }
 
+/** Jours écoulés depuis une date ISO — null si la date est absente/invalide */
+function _daysSince(isoDate) {
+    if (!isoDate) return null;
+    const d = new Date(isoDate);
+    if (Number.isNaN(d.getTime())) return null;
+    return Math.max(0, Math.floor((Date.now() - d.getTime()) / 86400000));
+}
+
+/** Rادار : élèves triés par urgence réelle — jamais soumis, puis les plus
+ *  longtemps inactifs, en dernier les plus actifs. Basé uniquement sur
+ *  submissions_count/last_submission_at (aucune métrique inventée). */
+function _sortByUrgency(students) {
+    return [...students].sort((a, b) => {
+        const da = _daysSince(a.last_submission_at);
+        const db = _daysSince(b.last_submission_at);
+        // Jamais soumis (da === null) = priorité maximale
+        if (da === null && db === null) return 0;
+        if (da === null) return -1;
+        if (db === null) return 1;
+        return db - da; // le plus inactif (da grand) en premier
+    });
+}
+
 function _renderStudentsList(students) {
     const studentsList = document.getElementById('teacher-students-list');
     if (!studentsList) return;
@@ -82,7 +105,7 @@ function _renderStudentsList(students) {
         return;
     }
 
-    studentsList.innerHTML = students
+    studentsList.innerHTML = _sortByUrgency(students)
         .map(s => {
             const safeName = escapeHtml(s.first_name || s.username);
             const safeNameAttr = escapeHtml(escapeJs(s.first_name || s.username));
@@ -91,6 +114,13 @@ function _renderStudentsList(students) {
             const subs = s.submissions_count ?? 0;
             // Statut calculé depuis une vraie donnée (aucun élève n'a encore soumis = critique)
             const healthClass = subs === 0 ? 'is-critical' : subs < 3 ? 'is-warn' : 'is-ok';
+            const days = _daysSince(s.last_submission_at);
+            const activityLabel =
+                days === null
+                    ? 'لم يُسلَّم أي تسجيل بعد'
+                    : days === 0
+                      ? 'نشط اليوم'
+                      : `آخر تسليم منذ ${days} ${days === 1 ? 'يوم' : 'أيام'}`;
             return `
         <div class="health-card ${healthClass}" style="cursor:pointer;margin-bottom:var(--space-2)"
             onclick="QuranReview.viewStudentProgress('${sid}','${safeNameAttr}')">
@@ -101,7 +131,7 @@ function _renderStudentsList(students) {
                         <div class="name">🎓 ${safeName}</div>
                         <div class="meta">
                             🏆 ${escapeHtml(String(s.total_points ?? '—'))} نقطة ·
-                            📝 ${escapeHtml(String(subs))} تسليم
+                            📝 ${escapeHtml(String(subs))} تسليم · ${escapeHtml(activityLabel)}
                         </div>
                     </div>
                 </div>
