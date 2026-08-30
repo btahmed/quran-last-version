@@ -3,6 +3,8 @@
 import { state } from '../core/state.js';
 import { Logger } from '../core/logger.js';
 import { getMyPoints } from '../services/supabase-leaderboard.js';
+import { mountBlock, renderMushafMap } from '../components/PageBlocks.js';
+import { JUZ_DATA } from './RevisionPage.js';
 
 // Injection CSS
 if (!document.querySelector('link[href*="ProgressPage.css"]')) {
@@ -21,6 +23,9 @@ export function render() {
         <div id="progress-page" class="page active">
             <section class="k-section">
                 <h2 class="k-section-title" style="text-align:center;margin-bottom:var(--space-6);">📈 تقدمك في الحفظ</h2>
+
+                <!-- خريطة المصحف — visible seulement si un plan المراجعة est configuré -->
+                <div id="mushaf-host" style="margin-bottom:var(--space-6);"></div>
 
                 <!-- Stat cards principales -->
                 <div class="k-grid2" style="margin-bottom:var(--space-6);">
@@ -105,6 +110,52 @@ export async function init() {
     renderProgressStats();
     renderProgressChart();
     await loadPointsFromSupabase();
+    renderMushaf();
+}
+
+/** Carte du Mushaf (30 juz') — données réelles du plan المراجعة (même source
+ *  que RevisionPage.js), jamais state.memorizationData qui n'est pas peuplée
+ *  par le vrai parcours de l'app. */
+function renderMushaf() {
+    if (!state.user?.id) return;
+    try {
+        const raw = localStorage.getItem(`murajaa_student_${state.user.id}`);
+        if (!raw) return;
+        const parsed = JSON.parse(raw);
+        if (!parsed || !parsed.configured) return;
+
+        const ranges = Array.isArray(parsed.bunkerRanges) ? parsed.bunkerRanges : [];
+        const cycleSet = new Set(Array.isArray(parsed.cycleReviewed) ? parsed.cycleReviewed : []);
+        if (!ranges.length) return;
+
+        // Une case par juz' réel (JUZ_DATA, plages de pages vérifiées) — pas par
+        // numéro de sourate (imprécis pour les sourates à cheval sur 2 juz').
+        const states = JUZ_DATA.map(j => {
+            let coveredPages = 0;
+            let reviewedPages = 0;
+            for (let p = j.from; p <= j.to; p++) {
+                const inPlan = ranges.some(r => p >= Number(r.from) && p <= Number(r.to));
+                if (!inPlan) continue;
+                coveredPages++;
+                if (cycleSet.has(p)) reviewedPages++;
+            }
+            if (!coveredPages) return 'empty';
+            return reviewedPages === coveredPages ? 'mastered' : 'learning';
+        });
+
+        // o.surahs/o.ayahs attendent des unités précises (le composant ajoute
+        // lui-même "سورة"/"آية") — nos données réelles sont en pages, on ne les
+        // fournit donc pas plutôt que d'afficher une mauvaise unité.
+        mountBlock(
+            'mushaf-host',
+            renderMushafMap([], {
+                states,
+                percent: Math.round((states.filter(s => s === 'mastered').length / 30) * 100),
+            })
+        );
+    } catch (err) {
+        Logger.error('PROGRESS', 'Erreur renderMushaf', err);
+    }
 }
 
 async function loadPointsFromSupabase() {
