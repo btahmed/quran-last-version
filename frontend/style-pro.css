@@ -1605,7 +1605,7 @@ button,
 }
 
 /* ── 24.5 Onde sonore d'enregistrement ──
-   Usage : .wave-meter > 9 × <span> */
+   Usage : .wave-meter > 24 × <span> */
 .wave-meter {
     display: flex;
     align-items: center;
@@ -1662,6 +1662,22 @@ button,
 
 .record-btn:hover {
     transform: scale(1.06);
+}
+
+/* Le studio Ward est le téléprompteur ; le contrôle de capture historique
+   reste la source de vérité pour MediaRecorder et l'upload Supabase. */
+.recording-studio-host {
+    margin-bottom: var(--space-5);
+}
+
+.recording-studio-host .ws-controls {
+    display: none;
+}
+
+.recording-studio-host .ward-studio {
+    padding: 0;
+    background: transparent;
+    box-shadow: none;
 }
 
 /* Suivi karaoké de l'ayah pendant la récitation */

@@ -5,6 +5,7 @@ import { config } from '../core/config.js';
 import { showNotification } from '../core/ui.js';
 import { apiCache } from '../core/apiCache.js';
 import { getMyTasks } from '../services/supabase-tasks.js';
+import { enableHifzFocus, disableHifzFocus } from '../components/HifzFocus.js';
 
 // Instance audio unique pour la lecture de l'ayah courante
 let _audio = null;
@@ -63,6 +64,8 @@ export function render() {
             <!-- Jeu actif -->
             <div class="card-glass-pro hidden" id="hifz-active-container">
 
+                <div id="hifz-focus-chrome" aria-live="polite"></div>
+
                 <!-- En-tête score + info ayah + audio -->
                 <div class="hifz-game-header">
                     <div style="display:flex;gap:var(--space-2);">
@@ -120,6 +123,7 @@ export async function init() {
     if (!selectionDiv || !containerDiv) return;
 
     if (session?.isActive) {
+        enableHifzFocus();
         // Restaurer le lien vers le devoir (perdu si page rechargée)
         if (session.linkedTaskId && !competitionManager._hifzLinkedTaskId) {
             competitionManager._hifzLinkedTaskId = session.linkedTaskId;
@@ -136,6 +140,7 @@ export async function init() {
         _attachGameListeners();
         competitionManager._loadAyahWords(session.surahId, session.currentAyah);
     } else {
+        disableHifzFocus();
         selectionDiv.classList.remove('hidden');
         containerDiv.classList.add('hidden');
         _populateSurahSelect();

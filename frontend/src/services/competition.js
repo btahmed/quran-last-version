@@ -6,6 +6,7 @@ import { showNotification } from '../core/ui.js';
 import * as supabaseLeaderboard from './supabase-leaderboard.js';
 import * as supabaseTasks from './supabase-tasks.js';
 import * as supabaseSubmissions from './supabase-submissions.js';
+import { renderComboBar } from '../components/HifzFocus.js';
 
 export const competitionManager = {
     // Générer un défi
@@ -556,12 +557,37 @@ export const competitionManager = {
     _hifzBismillah: null, // texte bismillah extrait de l'ayah (affiché en déco, pas testé)
     _hifzLinkedTaskId: null, // ID du devoir lié (pour notifier le prof)
 
+    _updateHifzFocusChrome() {
+        const host = document.getElementById('hifz-focus-chrome');
+        const session = state.hifz.currentSession;
+        if (!host || !session?.isActive) return;
+
+        const surah = config.surahs.find(item => item.id === session.surahId);
+        const totalAyahs = Math.max(1, session.toAyah - session.fromAyah + 1);
+        const completed = (session.completedAyahs || []).length;
+        const wordProgress =
+            this._hifzWords?.length && this._hifzCurrentIdx
+                ? this._hifzCurrentIdx / this._hifzWords.length
+                : 0;
+        const progress = Math.round(
+            Math.min(1, (completed + wordProgress) / totalAyahs) * 100
+        );
+
+        host.innerHTML = renderComboBar({
+            surah: surah?.name || '',
+            ayah: session.currentAyah,
+            streak: session.streak || 0,
+            progress,
+        });
+    },
+
     _updateAyahTracker() {
         const tracker = document.getElementById('hifz-ayah-tracker');
         if (!tracker) return;
         const session = state.hifz.currentSession;
         if (!session?.isActive) return;
 
+        this._updateHifzFocusChrome();
         tracker.replaceChildren();
         for (let ayah = session.fromAyah; ayah <= session.toAyah; ayah++) {
             const chip = document.createElement('span');
@@ -586,6 +612,7 @@ export const competitionManager = {
             currentAyah: fromAyah,
             score: 0,
             completedAyahs: [],
+            streak: 0,
             startTime: Date.now(),
             linkedTaskId: this._hifzLinkedTaskId || null, // persisté pour permettre le resume
         };
@@ -826,7 +853,9 @@ export const competitionManager = {
                 feedback.className = 'hifz-feedback hifz-feedback--success';
             }
             session.score += 10;
+            session.streak = (session.streak || 0) + 1;
             saveData();
+            this._updateHifzFocusChrome();
             const scoreEl = document.getElementById('hifz-score');
             if (scoreEl) scoreEl.textContent = `النقاط: ${session.score}`;
 
@@ -839,7 +868,9 @@ export const competitionManager = {
                 feedback.className = 'hifz-feedback hifz-feedback--error';
             }
             session.score = Math.max(0, session.score - 3);
+            session.streak = 0;
             saveData();
+            this._updateHifzFocusChrome();
             const scoreEl = document.getElementById('hifz-score');
             if (scoreEl) scoreEl.textContent = `النقاط: ${session.score}`;
 
@@ -957,7 +988,9 @@ export const competitionManager = {
             this._hifzOrdering.scrambled[scrambledIdx].used = true;
             this._hifzOrdering.nextIdx++;
             session.score += 5;
+            session.streak = (session.streak || 0) + 1;
             saveData();
+            this._updateHifzFocusChrome();
             const scoreEl = document.getElementById('hifz-score');
             if (scoreEl) scoreEl.textContent = `النقاط: ${session.score}`;
 
@@ -973,7 +1006,9 @@ export const competitionManager = {
                 feedback.className = 'hifz-feedback hifz-feedback--error';
             }
             session.score = Math.max(0, session.score - 3);
+            session.streak = 0;
             saveData();
+            this._updateHifzFocusChrome();
             const scoreEl = document.getElementById('hifz-score');
             if (scoreEl) scoreEl.textContent = `النقاط: ${session.score}`;
 
@@ -997,6 +1032,7 @@ export const competitionManager = {
         }
         saveData();
         this._updateAyahTracker();
+        this._updateHifzFocusChrome();
 
         const display = document.getElementById('hifz-ayah-display');
         const quizPhase = document.getElementById('hifz-quiz-phase');

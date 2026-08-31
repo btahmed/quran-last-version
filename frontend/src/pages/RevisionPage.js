@@ -1,6 +1,7 @@
 // RevisionPage.js — Murajaa Tracker (جدول المراجعة)
 // Implémentation native ES module — aucun iframe, aucun framework externe.
 // Données Quran : source api.alquran.cloud / tanzil.net (données Hafs 'an 'Asim, 604 pages).
+import { mountMemoryOrbit } from '../components/MemoryOrbit.js';
 
 export function render() {
     return `<div id="mj-root" class="mj-page page active" dir="rtl" lang="ar"></div>`;
@@ -1114,6 +1115,7 @@ class MurajaaTracker {
         else this.container.removeAttribute('data-dark');
         this._wheelCleanup?.();
         this.bindEvents();
+        this._mountMemoryOrbit();
         if (this._wheelRaf) {
             cancelAnimationFrame(this._wheelRaf);
             this._wheelRaf = null;
@@ -1121,6 +1123,80 @@ class MurajaaTracker {
         if (this.state.wiz?.mode === 'build' && this.state.wiz?.tab !== 'page') {
             requestAnimationFrame(() => this._mountWheel());
         }
+    }
+
+    /**
+     * L’orbite reprend uniquement les plages réellement présentes dans le
+     * plan Murajaa local. Les dates proviennent de l’historique de ورد ; aucun
+     * score synthétique n’est créé lorsque l’utilisateur n’a pas encore révisé.
+     */
+    memoryOrbitItems() {
+        const d = this.state.d;
+        const ranges = Array.isArray(d?.bunkerRanges) ? d.bunkerRanges : [];
+        const cycleReviewed = new Set(d?.cycleReviewed || []);
+        const history = d?.history && typeof d.history === 'object' ? d.history : {};
+
+        return ranges
+            .map(range => {
+                const from = Number(range.from);
+                const to = Number(range.to);
+                if (!Number.isFinite(from) || !Number.isFinite(to) || from > to) return null;
+
+                const pages = Math.max(1, to - from + 1);
+                let lastReviewed = null;
+                for (const date of Object.keys(history).sort().reverse()) {
+                    const wirds = Array.isArray(history[date]?.wirds) ? history[date].wirds : [];
+                    if (
+                        wirds.some(item => {
+                            const itemFrom = Number(item.from);
+                            const itemTo = Number(item.to);
+                            return Number.isFinite(itemFrom) && Number.isFinite(itemTo) &&
+                                itemFrom <= to && itemTo >= from;
+                        })
+                    ) {
+                        lastReviewed = date;
+                        break;
+                    }
+                }
+
+                const reviewedPages = Array.from({ length: pages }, (_, i) => from + i).filter(
+                    page => cycleReviewed.has(page)
+                ).length;
+                const status =
+                    reviewedPages === pages
+                        ? 'mastered'
+                        : lastReviewed
+                          ? 'new'
+                          : 'weak';
+
+                return {
+                    surahName: range.label || `صفحات ${from}–${to}`,
+                    status,
+                    lastReviewed,
+                };
+            })
+            .filter(Boolean);
+    }
+
+    _mountMemoryOrbit() {
+        const host = this.container.querySelector('#mj-memory-orbit-host');
+        if (!host || !this.state.d?.configured) return;
+        const items = this.memoryOrbitItems();
+        if (items.length < 3) {
+            host.remove();
+            return;
+        }
+        mountMemoryOrbit('mj-memory-orbit-host', items, {
+            coreLabel: 'ابدأ ورد<br>اليوم',
+            onStart: () => {
+                this.state.tab = 'muta';
+                this.update();
+            },
+            onSelect: () => {
+                this.state.tab = 'muta';
+                this.update();
+            },
+        });
     }
 
     bindEvents() {
@@ -1663,6 +1739,9 @@ ${
         return `
 <div class="mj-inner">
   ${this.renderHeader()}
+  <section class="mj-orbit-section" aria-label="مدار الذاكرة">
+    <div id="mj-memory-orbit-host"></div>
+  </section>
   ${this.renderSummary(streak, overallPct, dayScore, win, reviewedToday, wirdDone, memDone, confDone)}
   ${this.state.selectedDay ? this.renderDayModal(this.state.selectedDay) : ''}
   ${this.renderTabNav()}
@@ -1686,8 +1765,8 @@ ${
   <div class="mj-header-left">
     <span style="font-size:30px;line-height:1" aria-hidden="true">🕌</span>
     <div style="display:flex;flex-direction:column;gap:3px">
-      <h1 class="mj-title">مراجعة القرآن</h1>
-      <p class="mj-subtitle">جدول المراجعة · ${dayLabel}</p>
+       <h1 class="mj-title">🔁 مدار الذاكرة</h1>
+       <p class="mj-subtitle">جدول المراجعة الذكي · ${dayLabel}</p>
     </div>
   </div>
   <div style="display:flex;gap:8px;align-items:center">

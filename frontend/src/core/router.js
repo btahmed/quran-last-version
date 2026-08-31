@@ -18,6 +18,7 @@ import * as SoumissionPage from '../pages/SoumissionPage.js';
 import * as ProfilPage from '../pages/ProfilPage.js';
 import * as NotificationsPage from '../pages/NotificationsPage.js';
 import { setActiveTab } from './NavManager.js';
+import { disableHifzFocus } from '../components/HifzFocus.js';
 
 const pages = {
     home: HomePage,
@@ -55,6 +56,7 @@ const pages = {
 export function navigateTo(pageName, { replace = false } = {}) {
     Logger.nav(state.currentPage, pageName);
     AudioManager.stopAll();
+    if (pageName !== 'hifz') disableHifzFocus();
     if (state.currentPage && state.currentPage !== pageName) {
         state.previousPage = state.currentPage;
     }
@@ -84,6 +86,7 @@ window.addEventListener('popstate', e => {
     // Rendre la page sans repousser dans l'historique
     Logger.nav(state.currentPage, page + ' (back)');
     AudioManager.stopAll();
+    if (page !== 'hifz') disableHifzFocus();
     state.previousPage = state.currentPage;
     state.currentPage = page;
     setActiveTab(page);
