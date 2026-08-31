@@ -27,6 +27,8 @@ import {
     stopRecording,
     submitRecording,
     openRecordModal,
+    previousRecordingAyah,
+    nextRecordingAyah,
 } from './components/AudioRecordModal.js';
 import { openUserEditModal, closeUserEditModal } from './components/UserEditModal.js';
 
@@ -193,6 +195,8 @@ window.QuranReview = {
     switchTaskTab: MyTasksPage.switchTaskTab,
     loadStudentDashboard: MyTasksPage.loadStudentDashboard,
     openRecordModal: openRecordModal,
+    previousRecordingAyah,
+    nextRecordingAyah,
 
     // MemorizationPage — fonctions manquantes de la façade
     playSurahAudio: MemorizationPage.playSurahAudio,

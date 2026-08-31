@@ -7,6 +7,7 @@ import { state } from '../core/state.js';
 import * as supabaseSubmissions from '../services/supabase-submissions.js';
 import * as offlineQueue from '../services/offline-queue.js';
 import { notifyTeacherNewSubmission } from '../services/supabase-tasks.js';
+import { renderWardStudio } from './PageBlocks.js';
 
 // Variables module-level (remplacent this._recorder, this._recordBlob, etc.)
 let _recorder = null;
@@ -15,16 +16,24 @@ let _recordBlob = null;
 let _recordTaskId = null;
 let _recordTimer = null;
 let _recordSeconds = 0;
+let _recordMeta = null;
+let _recordAyah = null;
 
 /**
  * Ouvre le modal d'enregistrement audio pour une tâche donnée.
  * @param {number|string} taskId - ID de la tâche
  * @param {string} taskTitle - Titre affiché dans le modal
  */
-export function openRecordModal(taskId, taskTitle) {
+export async function openRecordModal(taskId, taskTitle, encodedMeta = '') {
     _recordTaskId = taskId;
     _recordBlob = null;
     _recordSeconds = 0;
+    _recordAyah = null;
+    try {
+        _recordMeta = encodedMeta ? JSON.parse(decodeURIComponent(encodedMeta)) : null;
+    } catch {
+        _recordMeta = null;
+    }
     document.getElementById('recording-task-name').textContent = taskTitle;
     document.getElementById('recording-timer').textContent = '00:00';
     document.getElementById('recording-status').textContent = 'اضغط للتسجيل';
@@ -46,6 +55,67 @@ export function openRecordModal(taskId, taskTitle) {
     const modal = document.getElementById('audio-record-modal');
     modal.classList.remove('hidden');
     modal.classList.add('active');
+    await renderRecordingStudio();
+}
+
+async function renderRecordingStudio(playing = false) {
+    const host = document.getElementById('recording-studio');
+    if (!host) return;
+    const meta = _recordMeta;
+    if (!meta?.surah_id || !meta?.from_ayah || !meta?.to_ayah) {
+        host.replaceChildren();
+        host.classList.add('hidden');
+        return;
+    }
+
+    const index = _recordAyah || Number(meta.from_ayah);
+    const [ayahText, previousText] = await Promise.all([
+        window.QuranReview?.fetchAyahText?.(Number(meta.surah_id), index),
+        index > 1
+            ? window.QuranReview?.fetchAyahText?.(Number(meta.surah_id), index - 1)
+            : Promise.resolve(''),
+    ]);
+    if (!ayahText) {
+        host.replaceChildren();
+        host.classList.add('hidden');
+        return;
+    }
+    _recordAyah = index;
+    host.classList.remove('hidden');
+    host.innerHTML = renderWardStudio({
+        ayahText,
+        ayahBefore: previousText,
+        index,
+        total: Number(meta.to_ayah) - Number(meta.from_ayah) + 1,
+        playing,
+        timer: formatRecordTime(),
+        onPlay: 'QuranReview.toggleRecording()',
+        onPrev: 'QuranReview.previousRecordingAyah()',
+        onNext: 'QuranReview.nextRecordingAyah()',
+    });
+}
+
+function formatRecordTime() {
+    const mins = String(Math.floor(_recordSeconds / 60)).padStart(2, '0');
+    const secs = String(_recordSeconds % 60).padStart(2, '0');
+    return `${mins}:${secs}`;
+}
+
+function updateStudioTimer() {
+    const timer = document.querySelector('#recording-studio .ws-timer');
+    if (timer) timer.textContent = formatRecordTime();
+}
+
+export async function previousRecordingAyah() {
+    if (!_recordMeta || (_recorder && _recorder.state === 'recording')) return;
+    _recordAyah = Math.max(Number(_recordMeta.from_ayah), (_recordAyah || Number(_recordMeta.from_ayah)) - 1);
+    await renderRecordingStudio(false);
+}
+
+export async function nextRecordingAyah() {
+    if (!_recordMeta || (_recorder && _recorder.state === 'recording')) return;
+    _recordAyah = Math.min(Number(_recordMeta.to_ayah), (_recordAyah || Number(_recordMeta.from_ayah)) + 1);
+    await renderRecordingStudio(false);
 }
 
 /**
@@ -91,6 +161,7 @@ export async function toggleRecording() {
         document.getElementById('recording-btn').classList.add('recording-active');
         document.getElementById('recording-wave')?.classList.remove('hidden');
         document.getElementById('recording-status').textContent = 'جاري التسجيل...';
+        renderRecordingStudio(true);
 
         _recordTimer = setInterval(() => {
             _recordSeconds++;
@@ -102,6 +173,7 @@ export async function toggleRecording() {
             const mins = String(Math.floor(_recordSeconds / 60)).padStart(2, '0');
             const secs = String(_recordSeconds % 60).padStart(2, '0');
             document.getElementById('recording-timer').textContent = `${mins}:${secs}`;
+            updateStudioTimer();
         }, 1000);
     } catch {
         showNotification('لا يمكن الوصول إلى الميكروفون', 'error');
@@ -122,6 +194,7 @@ export function stopRecording(cancel) {
     }
     document.getElementById('recording-btn').classList.remove('recording-active');
     document.getElementById('recording-wave')?.classList.add('hidden');
+    renderRecordingStudio(false);
 
     if (cancel) {
         const modal = document.getElementById('audio-record-modal');
