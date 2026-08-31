@@ -1150,8 +1150,12 @@ class MurajaaTracker {
                         wirds.some(item => {
                             const itemFrom = Number(item.from);
                             const itemTo = Number(item.to);
-                            return Number.isFinite(itemFrom) && Number.isFinite(itemTo) &&
-                                itemFrom <= to && itemTo >= from;
+                            return (
+                                Number.isFinite(itemFrom) &&
+                                Number.isFinite(itemTo) &&
+                                itemFrom <= to &&
+                                itemTo >= from
+                            );
                         })
                     ) {
                         lastReviewed = date;
@@ -1162,12 +1166,7 @@ class MurajaaTracker {
                 const reviewedPages = Array.from({ length: pages }, (_, i) => from + i).filter(
                     page => cycleReviewed.has(page)
                 ).length;
-                const status =
-                    reviewedPages === pages
-                        ? 'mastered'
-                        : lastReviewed
-                          ? 'new'
-                          : 'weak';
+                const status = reviewedPages === pages ? 'mastered' : lastReviewed ? 'new' : 'weak';
 
                 return {
                     surahName: range.label || `صفحات ${from}–${to}`,
@@ -2192,54 +2191,6 @@ ${
 </section>`;
     }
 
-    // ── Orbite de mémoire — vue radiale des مقاطع sauvegardés (données réelles)
-    renderMemoryOrbit() {
-        const d = this.state.d;
-        const ranges = d.bunkerRanges || [];
-        if (!ranges.length) return '';
-
-        const cycleSet = new Set(d.cycleReviewed || []);
-        const totalPages = this.flattenPages(ranges).length;
-        const pct = Math.round((totalPages / 604) * 100);
-        const shown = ranges.slice(0, 8);
-
-        const chips = shown
-            .map((r, i) => {
-                const pages = this.flattenPages([r]);
-                const reviewed = pages.filter(p => cycleSet.has(p.page)).length;
-                const cls =
-                    reviewed === pages.length
-                        ? 'is-mastered'
-                        : reviewed > 0
-                          ? 'is-soon'
-                          : 'is-urgent';
-                const angle = (i / shown.length) * 2 * Math.PI - Math.PI / 2;
-                const x = Math.round(Math.cos(angle) * 130);
-                const y = Math.round(Math.sin(angle) * 130);
-                return `<button class="orbit-chip ${cls}" style="--x:${x}px;--y:${y}px" title="${escapeHtml(r.label)}">
-                    ${escapeHtml(r.label)} <span class="pct">${this.ar(reviewed)}/${this.ar(pages.length)}</span>
-                </button>`;
-            })
-            .join('');
-
-        return `
-<section class="mj-card" aria-label="orbite الحفظ" style="margin-bottom:16px">
-  <h2 class="mj-section-title">🪐 مدار الحفظ</h2>
-  <div class="memory-orbit">
-    <div class="orbit-ring orbit-ring--outer"></div>
-    <div class="orbit-ring orbit-ring--mid"></div>
-    <div class="orbit-ring orbit-ring--inner"></div>
-    <div class="orbit-core">${this.ar(pct)}٪</div>
-    ${chips}
-  </div>
-  <div class="orbit-legend">
-    <span><i style="background:var(--color-primary)"></i>ثابت هالدورة</span>
-    <span><i style="background:var(--color-gold)"></i>قيد المراجعة</span>
-    <span><i style="background:var(--color-danger,#ef4444)"></i>ما راجعتها بعد</span>
-  </div>
-</section>`;
-    }
-
     renderTablesTab() {
         const d = this.state.d;
         const bunkerRows = d.bunkerRanges || [];
@@ -2265,7 +2216,6 @@ ${
             .join('');
 
         return `
-${this.renderMemoryOrbit()}
 ${this.renderJuzMap()}
 <section class="mj-card" aria-label="التقدم">
   <h2 class="mj-section-title">🟢 جدول المراجعة — كل الثابت</h2>
