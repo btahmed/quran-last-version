@@ -311,12 +311,12 @@ export function switchTaskTab(tabName) {
             let chipHtml = '<span class="k-chip k-chip--info">لم يُسلَّم</span>';
             const safeId = escapeHtml(String(task.id));
             const safeTitle = escapeHtml(escapeJs(task.title));
-             const { hifz: _hifzMeta } = _parseTaskDesc(task.description);
-             const _encodedHifzMeta = _hifzMeta
-                 ? escapeJs(encodeURIComponent(JSON.stringify(_hifzMeta)))
-                 : '';
-             const _recordMetaArg = _encodedHifzMeta ? `, '${_encodedHifzMeta}'` : '';
-             let actionBtn = `<button class="k-quickbtn k-quickbtn--primary" style="min-width:auto;padding:var(--space-1) var(--space-3);font-size:var(--text-xs)" onclick="QuranReview.openRecordModal('${safeId}', '${safeTitle}'${_recordMetaArg})">🎤 تسجيل</button>`;
+            const { hifz: _hifzMeta } = _parseTaskDesc(task.description);
+            const _encodedHifzMeta = _hifzMeta
+                ? escapeJs(encodeURIComponent(JSON.stringify(_hifzMeta)))
+                : '';
+            const _recordMetaArg = _encodedHifzMeta ? `, '${_encodedHifzMeta}'` : '';
+            let actionBtn = `<button class="k-quickbtn k-quickbtn--primary" style="min-width:auto;padding:var(--space-1) var(--space-3);font-size:var(--text-xs)" onclick="QuranReview.openRecordModal('${safeId}', '${safeTitle}'${_recordMetaArg})">🎤 تسجيل</button>`;
 
             if (sub) {
                 if (sub.status === 'approved') {
@@ -326,7 +326,7 @@ export function switchTaskTab(tabName) {
                 } else if (sub.status === 'rejected') {
                     dotClass = 'k-dot--missed';
                     chipHtml = '<span class="k-chip k-chip--danger">مرفوض ✗</span>';
-                     actionBtn = `<button class="k-quickbtn k-quickbtn--primary" style="min-width:auto;padding:var(--space-1) var(--space-3);font-size:var(--text-xs)" onclick="QuranReview.openRecordModal('${safeId}', '${safeTitle}'${_recordMetaArg})">🎤 إعادة التسجيل</button>`;
+                    actionBtn = `<button class="k-quickbtn k-quickbtn--primary" style="min-width:auto;padding:var(--space-1) var(--space-3);font-size:var(--text-xs)" onclick="QuranReview.openRecordModal('${safeId}', '${safeTitle}'${_recordMetaArg})">🎤 إعادة التسجيل</button>`;
                 } else {
                     dotClass = 'k-dot--new';
                     chipHtml = '<span class="k-chip k-chip--warning">⏳ بانتظار</span>';
@@ -340,7 +340,7 @@ export function switchTaskTab(tabName) {
                 ? new Date(task.due_date).toLocaleDateString('ar-SA')
                 : '';
 
-             const { text: _descText } = _parseTaskDesc(task.description);
+            const { text: _descText } = _parseTaskDesc(task.description);
             const _surahName = _hifzMeta
                 ? config.surahs.find(s => s.id === _hifzMeta.surah_id)?.name || ''
                 : '';
