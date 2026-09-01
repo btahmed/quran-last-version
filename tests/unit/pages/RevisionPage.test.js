@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { HIZB_DATA, JUZ_DATA, MurajaaTracker } from '../../../frontend/src/pages/RevisionPage.js';
+import { HIZB_DATA, MurajaaTracker } from '../../../frontend/src/pages/RevisionPage.js';
 
 function makeTracker() {
     const tracker = new MurajaaTracker(document.createElement('div'));
@@ -9,6 +9,7 @@ function makeTracker() {
         expandedHizb: new Set(),
         selected: new Set(),
         selectedRanges: new Map(),
+        ranges: [],
         importText: '',
         importError: null,
         copied: false,
@@ -22,32 +23,27 @@ describe('RevisionPage — sélection exacte des Juz', () => {
 
         tracker.wizToggleJuz(1);
 
-        expect(tracker.state.wiz.selected).toEqual(new Set());
-        expect(tracker.state.wiz.selectedRanges.get('juz:1')).toEqual({
-            label: JUZ_DATA[0].label,
-            from: 1,
-            to: 21,
-        });
-        expect(tracker.juzCheckState(1)).toBe('all');
-        expect(tracker.juzCheckState(2)).toBe('none');
-        expect(tracker.hizbCheckState(1)).toBe('all');
-        expect(tracker.hizbCheckState(2)).toBe('all');
+        expect(tracker.state.wiz.ranges.length).toBe(2);
+        expect(tracker.juzSelectionState(1)).toBe('all');
+        expect(tracker.juzSelectionState(2)).toBe('none');
         expect(tracker.buildRangesFromSelected()).toEqual([
-            { label: JUZ_DATA[0].label, from: 1, to: 21 },
+            { from: 1, to: 11, label: HIZB_DATA[0].label },
+            { from: 12, to: 21, label: HIZB_DATA[1].label },
         ]);
     });
 
     it('sélectionne aussi une plage exacte pour un Hizb', () => {
         const tracker = makeTracker();
 
-        tracker.wizToggleHizb(1);
+        tracker.wizToggleRange(HIZB_DATA[0].from, HIZB_DATA[0].to, HIZB_DATA[0].label, 'hizb');
 
-        expect(tracker.state.wiz.selectedRanges.get('hizb:1')).toEqual({
+        expect(tracker.state.wiz.ranges[0]).toEqual({
             label: HIZB_DATA[0].label,
             from: HIZB_DATA[0].from,
             to: HIZB_DATA[0].to,
+            type: 'hizb',
         });
-        expect(tracker.juzCheckState(1)).toBe('partial');
+        expect(tracker.juzSelectionState(1)).toBe('partial');
         expect(tracker.buildRangesFromSelected()).toEqual([
             {
                 label: HIZB_DATA[0].label,
