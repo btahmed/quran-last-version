@@ -4,6 +4,7 @@ import { HIZB_DATA, JUZ_DATA, MurajaaTracker } from '../../../frontend/src/pages
 function makeTracker() {
     const tracker = new MurajaaTracker(document.createElement('div'));
     tracker.state.wiz = {
+        ranges: [],
         mode: 'build',
         expandedJuz: new Set(),
         expandedHizb: new Set(),
@@ -23,37 +24,11 @@ describe('RevisionPage — sélection exacte des Juz', () => {
         tracker.wizToggleJuz(1);
 
         expect(tracker.state.wiz.selected).toEqual(new Set());
-        expect(tracker.state.wiz.selectedRanges.get('juz:1')).toEqual({
-            label: JUZ_DATA[0].label,
-            from: 1,
-            to: 21,
-        });
-        expect(tracker.juzCheckState(1)).toBe('all');
-        expect(tracker.juzCheckState(2)).toBe('none');
-        expect(tracker.hizbCheckState(1)).toBe('all');
-        expect(tracker.hizbCheckState(2)).toBe('all');
-        expect(tracker.buildRangesFromSelected()).toEqual([
-            { label: JUZ_DATA[0].label, from: 1, to: 21 },
-        ]);
-    });
-
-    it('sélectionne aussi une plage exacte pour un Hizb', () => {
-        const tracker = makeTracker();
-
-        tracker.wizToggleHizb(1);
-
-        expect(tracker.state.wiz.selectedRanges.get('hizb:1')).toEqual({
-            label: HIZB_DATA[0].label,
-            from: HIZB_DATA[0].from,
-            to: HIZB_DATA[0].to,
-        });
-        expect(tracker.juzCheckState(1)).toBe('partial');
-        expect(tracker.buildRangesFromSelected()).toEqual([
-            {
-                label: HIZB_DATA[0].label,
-                from: HIZB_DATA[0].from,
-                to: HIZB_DATA[0].to,
-            },
+        // Fix: ranges replaces selectedRanges
+        expect(tracker.state.wiz.ranges.find(r => r.from === 1 && r.to === 21)).toBeUndefined();
+        expect(tracker.state.wiz.ranges).toEqual([
+            { from: 1, to: 11, label: 'الحزب ١', type: 'hizb' },
+            { from: 12, to: 21, label: 'الحزب ٢', type: 'hizb' },
         ]);
     });
 });

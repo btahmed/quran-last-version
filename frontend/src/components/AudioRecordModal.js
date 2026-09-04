@@ -108,13 +108,19 @@ function updateStudioTimer() {
 
 export async function previousRecordingAyah() {
     if (!_recordMeta || (_recorder && _recorder.state === 'recording')) return;
-    _recordAyah = Math.max(Number(_recordMeta.from_ayah), (_recordAyah || Number(_recordMeta.from_ayah)) - 1);
+    _recordAyah = Math.max(
+        Number(_recordMeta.from_ayah),
+        (_recordAyah || Number(_recordMeta.from_ayah)) - 1
+    );
     await renderRecordingStudio(false);
 }
 
 export async function nextRecordingAyah() {
     if (!_recordMeta || (_recorder && _recorder.state === 'recording')) return;
-    _recordAyah = Math.min(Number(_recordMeta.to_ayah), (_recordAyah || Number(_recordMeta.from_ayah)) + 1);
+    _recordAyah = Math.min(
+        Number(_recordMeta.to_ayah),
+        (_recordAyah || Number(_recordMeta.from_ayah)) + 1
+    );
     await renderRecordingStudio(false);
 }
 
