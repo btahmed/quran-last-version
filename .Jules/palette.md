@@ -1,0 +1,3 @@
+## 2024-10-18 - Restore native 'Enter' key submission in Vanilla JS forms
+**Learning:** In Vanilla JS applications, using `<button type="button" onclick="handler(event)">` inside a `<form>` breaks the native behavior where users can submit the form by pressing the 'Enter' key while focused on an input field.
+**Action:** When updating form UX or accessibility in the codebase (such as in `AuthModal.js`), prefer modifying these buttons to `<button type="submit">` and handling the submission via `onsubmit="handler(event)"` on the form element to restore native 'Enter' key submission functionality.
