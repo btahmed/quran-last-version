@@ -40,7 +40,6 @@ import * as HifzPage from './pages/HifzPage.js';
 import * as MyTasksPage from './pages/MyTasksPage.js';
 import * as TeacherPage from './pages/TeacherPage.js';
 import * as ProfilPage from './pages/ProfilPage.js';
-import * as NotificationsPage from './pages/NotificationsPage.js';
 import * as AdminPage from './pages/AdminPage.js';
 import { buildNav, setActiveTab } from './core/NavManager.js';
 import { apiCache } from './core/apiCache.js';
@@ -173,6 +172,12 @@ window.QuranReview = {
     updateWardAyahDisplay: WardPage.updateWardAyahDisplay,
     playWard: WardPage.playWard,
     stopWardPlayback: WardPage.stopWardPlayback,
+    updateWardReciter: WardPage.updateWardReciter,
+    updateWardAudioQuality: WardPage.updateWardAudioQuality,
+    updateWardAudioSource: WardPage.updateWardAudioSource,
+    updateWardImageQuality: WardPage.updateWardImageQuality,
+    updateWardAyahDelay: WardPage.updateWardAyahDelay,
+    updateWardAutoPlayNext: WardPage.updateWardAutoPlayNext,
 
     // SettingsPage
     saveSettings: SettingsPage.saveSettings,
