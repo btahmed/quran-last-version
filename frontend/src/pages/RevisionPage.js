@@ -423,7 +423,7 @@ class MurajaaTracker {
                     return data;
                 }
             }
-        } catch (e) {
+        } catch (__err) {
             /* ignore, use defaults */
         }
         return base;
@@ -432,7 +432,7 @@ class MurajaaTracker {
     persist() {
         try {
             localStorage.setItem(this.getUserKey(), JSON.stringify(this.state.d));
-        } catch (e) {
+        } catch (__err) {
             /* quota exceeded */
         }
     }
@@ -779,7 +779,7 @@ class MurajaaTracker {
             this.promoteByDate();
             this.ensureActiveTargets();
             this.commit();
-        } catch (_e) {
+        } catch (__err) {
             if (!this.state.wiz) {
                 this.state.wiz = {
                     mode: 'import',
