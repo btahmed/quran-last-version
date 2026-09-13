@@ -1,0 +1,3 @@
+## 2024-09-13 - Icon-Only Button Accessibility in Template Literals
+**Learning:** The application heavily relies on vanilla JS template literals to render UI components, and often uses native `<button>` elements with emojis as icon-only controls. Because these elements are dynamically generated as strings, they evade static HTML accessibility checkers, making them a frequent source of missing `aria-label` attributes.
+**Action:** When working in vanilla JS files (like `RevisionPage.js`), always proactively search for string literals like `<button...>` or `<button class="mj-...` and manually verify the presence of translated `aria-label` and `title` attributes.
