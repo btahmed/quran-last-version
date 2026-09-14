@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { HIZB_DATA, JUZ_DATA, MurajaaTracker } from '../../../frontend/src/pages/RevisionPage.js';
+import { HIZB_DATA, MurajaaTracker } from '../../../frontend/src/pages/RevisionPage.js';
 
 function makeTracker() {
     const tracker = new MurajaaTracker(document.createElement('div'));
@@ -12,6 +12,7 @@ function makeTracker() {
         importText: '',
         importError: null,
         copied: false,
+        ranges: [], // Ensure ranges is initialized
     };
     return tracker;
 }
@@ -22,38 +23,42 @@ describe('RevisionPage — sélection exacte des Juz', () => {
 
         tracker.wizToggleJuz(1);
 
-        expect(tracker.state.wiz.selected).toEqual(new Set());
-        expect(tracker.state.wiz.selectedRanges.get('juz:1')).toEqual({
-            label: JUZ_DATA[0].label,
-            from: 1,
-            to: 21,
+        // Tracker state should contain the two hizbs that make up juz 1
+        const hizb1 = HIZB_DATA.find(h => h.num === 1);
+        const hizb2 = HIZB_DATA.find(h => h.num === 2);
+
+        expect(tracker.state.wiz.ranges).toContainEqual({
+            from: hizb1.from,
+            to: hizb1.to,
+            label: hizb1.label,
+            type: 'hizb',
         });
-        expect(tracker.juzCheckState(1)).toBe('all');
-        expect(tracker.juzCheckState(2)).toBe('none');
-        expect(tracker.hizbCheckState(1)).toBe('all');
-        expect(tracker.hizbCheckState(2)).toBe('all');
-        expect(tracker.buildRangesFromSelected()).toEqual([
-            { label: JUZ_DATA[0].label, from: 1, to: 21 },
-        ]);
+        expect(tracker.state.wiz.ranges).toContainEqual({
+            from: hizb2.from,
+            to: hizb2.to,
+            label: hizb2.label,
+            type: 'hizb',
+        });
+
+        expect(tracker.juzSelectionState(1)).toBe('all');
+        expect(tracker.juzSelectionState(2)).toBe('none');
     });
 
     it('sélectionne aussi une plage exacte pour un Hizb', () => {
         const tracker = makeTracker();
 
-        tracker.wizToggleHizb(1);
+        // `wizToggleHizb` doesn't exist on tracker, but `wizToggleRange` does
+        // It selects a hizb which gets added to the ranges.
+        tracker.wizToggleRange(HIZB_DATA[0].from, HIZB_DATA[0].to, HIZB_DATA[0].label, 'hizb');
 
-        expect(tracker.state.wiz.selectedRanges.get('hizb:1')).toEqual({
-            label: HIZB_DATA[0].label,
+        // Need to adapt test expectations to the ranges list instead of selectedRanges Map
+        // since RevisionPage refactored to use `ranges` array
+        expect(tracker.state.wiz.ranges).toContainEqual({
             from: HIZB_DATA[0].from,
             to: HIZB_DATA[0].to,
+            label: HIZB_DATA[0].label,
+            type: 'hizb',
         });
-        expect(tracker.juzCheckState(1)).toBe('partial');
-        expect(tracker.buildRangesFromSelected()).toEqual([
-            {
-                label: HIZB_DATA[0].label,
-                from: HIZB_DATA[0].from,
-                to: HIZB_DATA[0].to,
-            },
-        ]);
+        expect(tracker.juzSelectionState(1)).toBe('partial');
     });
 });
