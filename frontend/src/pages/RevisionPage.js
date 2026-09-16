@@ -1484,7 +1484,7 @@ class MurajaaTracker {
 
         return `
 <div class="mj-wiz-nav">
-  <button class="mj-wiz-back" data-action="wiz-back">‹</button>
+  <button class="mj-wiz-back" data-action="wiz-back" aria-label="${fr ? 'Retour' : 'الرجوع'}" title="${fr ? 'Retour' : 'الرجوع'}">‹</button>
   <span class="mj-wiz-title">${fr ? 'Choisissez ce que vous avez mémorisé' : 'اختار ما حفظته'}</span>
   <div style="display:flex;gap:6px;align-items:center">
     ${selCount}
@@ -1700,7 +1700,7 @@ ${
         const w = this.state.wiz;
         return `
 <div class="mj-wiz-nav">
-  <button class="mj-wiz-back" data-action="wiz-back">‹</button>
+  <button class="mj-wiz-back" data-action="wiz-back" aria-label="الرجوع" title="الرجوع">‹</button>
   <span class="mj-wiz-title">استيراد جدول الأستاذ</span>
 </div>
 <div class="mj-card" style="display:flex;flex-direction:column;gap:10px">
@@ -1891,9 +1891,9 @@ ${
         const label =
             base.toLocaleDateString('ar', { month: 'long' }) + ' ' + this.ar(base.getFullYear());
         return `<div style="display:flex;align-items:center;gap:8px">
-  <button class="mj-modal-close" data-action="prev-month" style="width:30px;height:30px;border-radius:8px">›</button>
+  <button class="mj-modal-close" data-action="prev-month" style="width:30px;height:30px;border-radius:8px" aria-label="الشهر السابق" title="الشهر السابق">›</button>
    <span style="font-size:12.5px;font-weight:700">${escapeHtml(label)}</span>
-  <button class="mj-modal-close" data-action="next-month" style="width:30px;height:30px;border-radius:8px">‹</button>
+  <button class="mj-modal-close" data-action="next-month" style="width:30px;height:30px;border-radius:8px" aria-label="الشهر التالي" title="الشهر التالي">‹</button>
 </div>`;
     }
 
@@ -2010,7 +2010,7 @@ ${
   <div class="mj-modal" onclick="event.stopPropagation()">
     <div class="mj-flex-between">
       <h3 class="mj-modal-title">إنجاز ${title}</h3>
-      <button class="mj-modal-close" data-action="day-close">✕</button>
+      <button class="mj-modal-close" data-action="day-close" aria-label="إغلاق" title="إغلاق">✕</button>
     </div>
     <div style="display:flex;flex-direction:column;gap:6px">
       ${tasks
