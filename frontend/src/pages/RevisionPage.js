@@ -1440,7 +1440,7 @@ class MurajaaTracker {
             .map(
                 (r, i) => `<div class="mj-plage-chip">
   <span class="mj-chip-label">${escapeHtml(r.label || (fr ? `p.${r.from}–${r.to}` : `ص.${r.from}–${r.to}`))}</span>
-  <button class="mj-chip-remove" data-action="wiz-remove-range" data-arg="${i}">⊖</button>
+  <button class="mj-chip-remove" data-action="wiz-remove-range" data-arg="${i}" aria-label="${fr ? 'Retirer' : 'إزالة'}" title="${fr ? 'Retirer' : 'إزالة'}">⊖</button>
 </div>`
             )
             .join('');
@@ -1466,7 +1466,7 @@ class MurajaaTracker {
                     r => `<div class="mj-page-tag"><span>${fr ? `p.${r.from}–${r.to}` : `ص.${arN(r.from)}–${arN(r.to)}`}</span>
     <button class="mj-page-remove" data-action="wiz-toggle-range"
             data-from="${r.from}" data-to="${r.to}"
-            data-label="${escapeHtml(r.label)}" data-rtype="page">✕</button></div>`
+            data-label="${escapeHtml(r.label)}" data-rtype="page" aria-label="${fr ? 'Retirer' : 'إزالة'}" title="${fr ? 'Retirer' : 'إزالة'}">✕</button></div>`
                 )
                 .join('')}</div>`
           : ''
@@ -1484,11 +1484,11 @@ class MurajaaTracker {
 
         return `
 <div class="mj-wiz-nav">
-  <button class="mj-wiz-back" data-action="wiz-back">‹</button>
+  <button class="mj-wiz-back" data-action="wiz-back" aria-label="${fr ? 'Retour' : 'رجوع'}" title="${fr ? 'Retour' : 'رجوع'}">‹</button>
   <span class="mj-wiz-title">${fr ? 'Choisissez ce que vous avez mémorisé' : 'اختار ما حفظته'}</span>
   <div style="display:flex;gap:6px;align-items:center">
     ${selCount}
-    <button class="mj-lang-toggle" data-action="wiz-lang" data-arg="${fr ? 'ar' : 'fr'}">${fr ? 'ع' : 'FR'}</button>
+    <button class="mj-lang-toggle" data-action="wiz-lang" data-arg="${fr ? 'ar' : 'fr'}" aria-label="${fr ? 'Changer la langue' : 'تغيير اللغة'}" title="${fr ? 'Changer la langue' : 'تغيير اللغة'}">${fr ? 'ع' : 'FR'}</button>
   </div>
 </div>
 <div class="mj-wheel-wrap">
@@ -1700,7 +1700,7 @@ ${
         const w = this.state.wiz;
         return `
 <div class="mj-wiz-nav">
-  <button class="mj-wiz-back" data-action="wiz-back">‹</button>
+  <button class="mj-wiz-back" data-action="wiz-back" aria-label="رجوع" title="رجوع">‹</button>
   <span class="mj-wiz-title">استيراد جدول الأستاذ</span>
 </div>
 <div class="mj-card" style="display:flex;flex-direction:column;gap:10px">
@@ -1891,9 +1891,9 @@ ${
         const label =
             base.toLocaleDateString('ar', { month: 'long' }) + ' ' + this.ar(base.getFullYear());
         return `<div style="display:flex;align-items:center;gap:8px">
-  <button class="mj-modal-close" data-action="prev-month" style="width:30px;height:30px;border-radius:8px">›</button>
+  <button class="mj-modal-close" data-action="prev-month" style="width:30px;height:30px;border-radius:8px" aria-label="الشهر السابق" title="الشهر السابق">›</button>
    <span style="font-size:12.5px;font-weight:700">${escapeHtml(label)}</span>
-  <button class="mj-modal-close" data-action="next-month" style="width:30px;height:30px;border-radius:8px">‹</button>
+  <button class="mj-modal-close" data-action="next-month" style="width:30px;height:30px;border-radius:8px" aria-label="الشهر التالي" title="الشهر التالي">‹</button>
 </div>`;
     }
 
@@ -2010,7 +2010,7 @@ ${
   <div class="mj-modal" onclick="event.stopPropagation()">
     <div class="mj-flex-between">
       <h3 class="mj-modal-title">إنجاز ${title}</h3>
-      <button class="mj-modal-close" data-action="day-close">✕</button>
+      <button class="mj-modal-close" data-action="day-close" aria-label="إغلاق" title="إغلاق">✕</button>
     </div>
     <div style="display:flex;flex-direction:column;gap:6px">
       ${tasks
