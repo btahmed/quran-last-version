@@ -179,7 +179,7 @@ function updateWardAyahLimits() {
     Logger.log('WARD', `Updated ayah limits for Surah ${surahId}: 1-${surah.ayahs}`);
 }
 
-function updateWardReciter() {
+function updateWardReciter_unused() {
     const reciterSelector = document.getElementById('ward-reciter-selector');
     if (reciterSelector && window.QuranAudio) {
         const selectedReciter = reciterSelector.value;
