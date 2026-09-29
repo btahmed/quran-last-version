@@ -423,7 +423,7 @@ class MurajaaTracker {
                     return data;
                 }
             }
-        } catch (e) {
+        } catch (_e) {
             /* ignore, use defaults */
         }
         return base;
@@ -432,7 +432,7 @@ class MurajaaTracker {
     persist() {
         try {
             localStorage.setItem(this.getUserKey(), JSON.stringify(this.state.d));
-        } catch (e) {
+        } catch (_e) {
             /* quota exceeded */
         }
     }
