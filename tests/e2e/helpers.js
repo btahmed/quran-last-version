@@ -9,11 +9,7 @@ export async function waitForApp(page) {
     await page.waitForFunction(
         () => {
             const app = document.getElementById('app');
-            const loading = document.getElementById('loading-screen');
-            const loadingDone =
-                !loading ||
-                loading.classList.contains('hidden') ||
-                loading.style.display === 'none';
+
             return app && document.body;
         },
         { timeout: 8000 }
