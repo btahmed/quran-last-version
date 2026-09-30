@@ -70,7 +70,7 @@ export function render() {
                     <p style="color: var(--color-text-secondary);">أهلاً بك مجدداً في مراجعة القرآن</p>
                 </div>
 
-                <form id="login-form">
+                <form id="login-form" onsubmit="QuranReview.handleLogin(event)">
                     <div id="login-error" class="hidden" style="background: rgba(239, 68, 68, 0.1); color: var(--color-danger); padding: var(--space-3); border-radius: var(--radius-lg); margin-bottom: var(--space-4); text-align: center;"></div>
 
                     <div class="form-floating" style="margin-bottom: var(--space-4);">
@@ -83,7 +83,7 @@ export function render() {
                         <label for="login-password">كلمة المرور</label>
                     </div>
 
-                    <button type="button" class="btn btn-glow btn-full" id="login-submit-btn" onclick="QuranReview.handleLogin(event)">
+                    <button type="submit" class="btn btn-glow btn-full" id="login-submit-btn">
                         <span>🔐</span>
                         دخول
                     </button>
@@ -103,7 +103,7 @@ export function render() {
                     <p style="color: var(--color-text-secondary);">ابدأ رحلتك في حفظ القرآن</p>
                 </div>
 
-                <form id="register-form">
+                <form id="register-form" onsubmit="QuranReview.handleRegister(event)">
                     <div id="reg-error" class="hidden" style="background: rgba(239, 68, 68, 0.1); color: var(--color-danger); padding: var(--space-3); border-radius: var(--radius-lg); margin-bottom: var(--space-4); text-align: center;"></div>
 
                     <div class="form-floating" style="margin-bottom: var(--space-4);">
@@ -126,7 +126,7 @@ export function render() {
                         <label for="reg-password">كلمة المرور</label>
                     </div>
 
-                    <button type="button" class="btn btn-gradient btn-full" id="reg-submit-btn" onclick="QuranReview.handleRegister(event)">
+                    <button type="submit" class="btn btn-gradient btn-full" id="reg-submit-btn">
                         <span>✨</span>
                         إنشاء الحساب
                     </button>
