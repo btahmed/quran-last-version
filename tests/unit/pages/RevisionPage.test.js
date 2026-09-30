@@ -27,13 +27,13 @@ describe('RevisionPage — sélection exacte des Juz', () => {
             label: 'الحزب ١',
             from: 1,
             to: 11,
-            type: 'hizb'
+            type: 'hizb',
         });
         expect(tracker.state.wiz.ranges[1]).toEqual({
             label: 'الحزب ٢',
             from: 12,
             to: 21,
-            type: 'hizb'
+            type: 'hizb',
         });
         expect(tracker.juzSelectionState(1)).toBe('all');
         expect(tracker.juzSelectionState(2)).toBe('none');
@@ -49,7 +49,7 @@ describe('RevisionPage — sélection exacte des Juz', () => {
             label: HIZB_DATA[0].label,
             from: HIZB_DATA[0].from,
             to: HIZB_DATA[0].to,
-            type: 'hizb'
+            type: 'hizb',
         });
         expect(tracker.juzSelectionState(1)).toBe('partial');
     });
