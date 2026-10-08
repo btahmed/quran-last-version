@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest';
-import { HIZB_DATA, MurajaaTracker } from '../../../frontend/src/pages/RevisionPage.js';
+const fs = require('fs');
+const content = `import { describe, expect, it } from 'vitest';
+import { HIZB_DATA, JUZ_DATA, MurajaaTracker } from '../../../frontend/src/pages/RevisionPage.js';
 
 function makeTracker() {
     const tracker = new MurajaaTracker(document.createElement('div'));
@@ -35,12 +36,7 @@ describe('RevisionPage — sélection exacte des Juz', () => {
     it('sélectionne aussi une plage exacte pour un Hizb', () => {
         const tracker = makeTracker();
 
-        tracker.state.wiz.ranges.push({
-            from: HIZB_DATA[0].from,
-            to: HIZB_DATA[0].to,
-            label: HIZB_DATA[0].label,
-            type: 'hizb',
-        });
+        tracker.state.wiz.ranges.push({ from: HIZB_DATA[0].from, to: HIZB_DATA[0].to, label: HIZB_DATA[0].label, type: 'hizb' });
 
         expect(tracker.juzSelectionState(1)).toBe('partial');
         expect(tracker.buildRangesFromSelected()).toEqual([
@@ -52,3 +48,5 @@ describe('RevisionPage — sélection exacte des Juz', () => {
         ]);
     });
 });
+`;
+fs.writeFileSync('tests/unit/pages/RevisionPage.test.js', content);
