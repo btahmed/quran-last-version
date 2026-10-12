@@ -38,7 +38,7 @@ export async function initAuth() {
                 localStorage.setItem('quranreview_user', JSON.stringify(_safeUserData(_old)));
             }
         }
-    } catch (e) {
+    } catch (_e) {
         /* ignore si JSON invalide */
     }
 
