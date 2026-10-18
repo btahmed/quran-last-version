@@ -37,7 +37,7 @@ describe('RevisionPage — sélection exacte des Juz', () => {
                 label: HIZB_DATA[0].label,
                 from: HIZB_DATA[0].from,
                 to: HIZB_DATA[0].to,
-                type: 'hizb'
+                type: 'hizb',
             },
         ]);
         expect(tracker.juzSelectionState(1)).toBe('partial');
