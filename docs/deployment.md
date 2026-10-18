@@ -14,8 +14,6 @@
 
 ## 1. DEV LOCAL
 
-**Emplacement du projet :** `C:\Users\ahmad\Dev\Active\quran-last-version`
-
 **Option A — Python (port 3000) :**
 
 ```bash

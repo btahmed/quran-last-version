@@ -11,7 +11,7 @@
 | **Dev local**              | `frontend/` | http://localhost:3000                   | `python -m http.server` → Supabase cloud |
 | **Dev local** (alternatif) | `frontend/` | http://localhost:3456                   | `npm run serve:frontend`                 |
 
-> ✅ Branche active : **`main`** — projet : `C:\Users\ahmad\Dev\Active\quran-last-version`
+> ✅ Branche active : **`main`**
 
 ---
 
