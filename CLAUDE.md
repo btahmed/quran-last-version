@@ -1,48 +1,44 @@
 # QuranReview — Guide Claude (projet)
 
+> ✅ Migration Django → Supabase terminée (commit `60fd039`) : plus de backend Django. Architecture Supabase (Auth + DB + Storage) + frontend statique Vercel.
+
 ## Architecture du projet
 
-| Déploiement                | Fichiers       | URL                                     | Usage                           |
-| -------------------------- | -------------- | --------------------------------------- | ------------------------------- |
-| **Frontend Vercel** (prod) | `frontend/`    | https://quranreview-frontend.vercel.app | Site live actif                 |
-| **Backend Vercel** (prod)  | `backend/`     | https://quranreview-api.vercel.app      | API Django serverless           |
-| **Dev local** (port 3456)  | `frontend/`    | http://localhost:3456                   | python http.server → API Vercel |
-| **Dev local** (port 80)    | Docker Compose | http://localhost:80                     | nginx + Django + PostgreSQL     |
+| Déploiement                | Fichiers    | URL                                     | Usage                                    |
+| -------------------------- | ----------- | --------------------------------------- | ---------------------------------------- |
+| **Frontend Vercel** (prod) | `frontend/` | https://quranreview-frontend.vercel.app | Site live actif                          |
+| **Backend**                | —           | —                                       | Supprimé — remplacé par Supabase         |
+| **Dev local**              | `frontend/` | http://localhost:3000                   | `python -m http.server` → Supabase cloud |
+| **Dev local** (alternatif) | `frontend/` | http://localhost:3456                   | `npm run serve:frontend`                 |
 
-> ✅ Branche active : **`main`** — worktree local : `.claude/worktrees/main-local/`
+> ✅ Branche active : **`main`** — projet : `C:\Users\ahmad\Dev\Active\quran-last-version`
 
 ---
 
 ## Stack technique
 
-- **Frontend** : ES Modules natifs, `core/`, `services/`, `pages/`, `components/` — Vercel
-- **Backend** : Django 4.x + DRF, serverless Vercel via `api/index.py` (WSGI)
-- **Auth** : JWT (SimpleJWT) — endpoint : `/api/auth/token/` (**PAS** `/api/auth/login/` → 404)
-- **Base de données** : PostgreSQL Supabase — Transaction Pooler `aws-1-eu-west-1.pooler.supabase.com:6543`
-- **Stockage audio** : Cloudinary (`django-cloudinary-storage`) — upload auto sur POST `/api/submissions/`
+- **Frontend** : ES Modules natifs, `core/`, `services/`, `pages/`, `components/` — Vercel (statique)
+- **Auth** : Supabase Auth (email/password)
+- **Base de données** : Supabase PostgreSQL — via `supabase-js` (pas de connexion serveur directe)
+- **Stockage audio** : Supabase Storage (bucket `audio-submissions`)
 - **Nav** : `NavManager.js` — navigation dynamique par rôle (top nav + bottom bar mobile)
 
 ---
 
 ## Lancer l'application
 
-### Dev frontend rapide (port 3456 → API Vercel prod)
-
 ```bash
-cd .claude/worktrees/main-local
-python -m http.server 3456 --directory frontend
-# http://localhost:3456
-# ⚠️ Port 3000 bloqué par Docker Desktop sur cette machine → utiliser 3456
+cd frontend
+python -m http.server 3000
+# http://localhost:3000
 ```
 
-### Dev full-stack Docker (port 80, API locale)
-
 ```bash
-cd .claude/worktrees/main-local
-docker-compose up --build
-# Frontend → http://localhost:80
-# Backend API → http://localhost:8000
+npm run serve:frontend
+# http://localhost:3456 (si le port 3000 est occupé)
 ```
+
+L'URL et la clé anon Supabase sont dans `frontend/index.html` (`window.__SUPABASE_URL__`, `window.__SUPABASE_ANON_KEY__`).
 
 ### Production
 
@@ -56,40 +52,46 @@ docker-compose up --build
 
 ```
 frontend/
-├── index.html              # Shell HTML — nav injectée par NavManager
+├── index.html              # Shell HTML — nav injectée par NavManager + variables Supabase
 ├── style.css               # Styles de base
 ├── style-pro.css           # Styles Pro (glassmorphism, gradients)
 ├── style-pro-fixes.css     # Corrections et overrides
+├── vercel.json             # Rewrites SPA + headers sécurité (CSP)
 ├── src/
 │   ├── main.js             # Point d'entrée + façade window.QuranReview
 │   ├── core/
-│   │   ├── config.js       # API URL auto (Vercel prod / Docker / localhost)
+│   │   ├── config.js       # Config centrale (reliquat `API_BASE_URL` Django, plus utilisé ailleurs)
 │   │   ├── router.js       # Routes + setActiveTab(NavManager)
 │   │   ├── NavManager.js   # ⭐ Nav dynamique par rôle (top + bottom bar)
-│   │   ├── NavManager.css  # Bottom bar mobile + touch targets
 │   │   ├── state.js        # État global
+│   │   ├── apiCache.js     # Cache des requêtes
+│   │   ├── sanitize.js     # escapeHtml & co
+│   │   ├── validators.js
 │   │   ├── ui.js           # Notifications, date
 │   │   └── logger.js       # Logger centralisé
-│   ├── components/
-│   │   ├── AudioPlayer.js
-│   │   ├── AuthModal.js
-│   │   ├── AudioRecordModal.js
-│   │   └── UserEditModal.js
+│   ├── components/         # AudioPlayer, AuthModal, AudioRecordModal, UserEditModal,
+│   │                       # MemoryOrbit, HifzFocus, WeekCalendar, ClassHealth, StudentRadar, PageBlocks
 │   ├── services/
-│   │   ├── auth.js         # Login/logout + buildNav() après login
-│   │   ├── tasks.js
-│   │   ├── competition.js
-│   │   └── hifz.js
+│   │   ├── supabase-client.js       # Client Supabase singleton
+│   │   ├── supabase-auth.js         # signIn, signOut, createUser
+│   │   ├── supabase-tasks.js        # CRUD tâches
+│   │   ├── supabase-submissions.js  # Upload audio, soumissions, corrections
+│   │   ├── supabase-admin.js        # Gestion users, classes, étudiants
+│   │   ├── supabase-leaderboard.js  # Classement, points
+│   │   ├── auth.js                  # Login flow, localStorage, redirection, buildNav() après login
+│   │   ├── tasks.js                 # Façade tâches (legacy wrapper)
+│   │   ├── competition.js, hifz.js
+│   │   ├── offline-queue.js         # File d'attente hors-ligne (soumissions audio)
+│   │   └── push-notifications.js, notification-center.js
 │   └── pages/
 │       ├── HomePage.js     # Landing (visiteur) + Dashboards (étudiant/prof/admin)
-│       ├── HomePage.css
 │       ├── HifzPage.js     # Mémorisation (🎭 wضع الحفظ)
-│       ├── RevisionPage.js # = WardPage re-exporté (muraja'a)
+│       ├── RevisionPage.js # Révision / muraja'a (WardPage)
 │       ├── SoumissionPage.js # = MyTasksPage re-exporté (envoi audio)
 │       ├── ProfilPage.js   # Fusion ProgressPage + SettingsPage (onglets)
-│       ├── TeacherPage.js  # Tableau de bord enseignant
-│       ├── AdminPage.js    # Gestion utilisateurs admin
-│       └── [autres pages legacy avec alias rétrocompat]
+│       ├── TeacherPage.js  # Tableau de bord enseignant (+ teacher/*Section.js)
+│       ├── AdminPage.js    # Gestion admin (+ admin/*Section.js)
+│       └── [autres pages : Competition, Notifications, Radio… + alias rétrocompat]
 ```
 
 ---
@@ -138,34 +140,32 @@ frontend/
 
 ---
 
-## API Backend clés
+## Accès aux données (Supabase)
 
-```
-POST /api/auth/token/          → JWT login ✅ (NE PAS utiliser /api/auth/login/ → 404)
-POST /api/auth/token/refresh/  → refresh token
-GET  /api/auth/me/             → profil utilisateur courant
-GET  /api/tasks/               → liste des tâches
-POST /api/tasks/               → créer tâche (teacher)
-POST /api/submissions/         → soumettre audio (student) — stocké sur Cloudinary
-GET  /api/competition/         → données compétition
-GET  /api/hifz/                → progression hifz
-GET  /api/admin/users/         → liste utilisateurs (admin)
-```
+Plus d'API REST maison : tout passe par les services `supabase-*.js` (client `supabase-js`).
+
+| Table / vue     | Description                                                                  |
+| --------------- | ---------------------------------------------------------------------------- |
+| `profiles`      | Utilisateurs (id uuid, username, role, first_name, last_name, phone)         |
+| `tasks`         | Tâches (type: hifz/muraja/tilawa, assigned_by, user_id, surah, ayah, points) |
+| `submissions`   | Soumissions audio (task_id, student_id, audio_url, status, awarded_points)   |
+| `classes`       | Classes (name, teacher_id, time_slot, max_students)                          |
+| `class_members` | Relation classe ↔ étudiant (class_id, student_id)                            |
+| `points_log`    | Historique de points (student_id, delta, reason, submission_id)              |
+| `progress`      | Progression mémorisation (user_id, surah, ayah, accuracy, duration)          |
+| `leaderboard`   | Vue SQL : classement par total_points                                        |
+
+**Storage Bucket :** `audio-submissions` — path : `{user_id}/{task_id}/{uuid}.webm`
 
 ---
 
 ## Déploiement Vercel
 
 ```bash
-# Frontend : projet Vercel séparé → frontend/vercel.json (rewrites SPA)
-# Backend  : projet Vercel séparé → backend/vercel.json (rewrites → api/index.py)
-# Build command backend : pip install -r requirements.txt && python manage.py collectstatic --noinput
-# ⚠️ Ne PAS mettre de clé "builds" dans vercel.json → supprime le build command
+# Frontend statique uniquement → frontend/vercel.json (rewrites SPA + headers sécurité)
 ```
 
-Variables d'env Vercel (backend) : `DATABASE_URL`, `CLOUDINARY_URL`, `SECRET_KEY`, `DEBUG=False`
-
-CORS autorisé : `*.vercel.app`, `localhost:*` (tous ports — regex dans settings.py)
+CSP : voir `frontend/vercel.json` — `connect-src` / `media-src` autorisent `*.supabase.co`, `wss://*.supabase.co`, `everyayah.com`, `download.quranicaudio.com`.
 
 ---
 
@@ -175,18 +175,16 @@ CORS autorisé : `*.vercel.app`, `localhost:*` (tous ports — regex dans settin
 - **Façade** : toute nouvelle fonction de page doit être exportée ET ajoutée à `window.QuranReview` dans `main.js`
 - **GSAP** : loading screen avec timeout fallback 5s — peut bloquer le screenshot tool (page jamais "idle")
 - **ES Module cache** : par origine → ouvrir un **nouvel onglet** (pas reload) pour forcer rechargement des modules modifiés
-- **Port local** : port 3000 bloqué par Docker Desktop → utiliser **3456**
-- **Supabase** : utiliser Transaction Pooler (`port 6543`) — connexion directe IPv6-only incompatible Vercel
-- **`dj-database-url.parse()`** : NE PAS passer `ssl_require=True` → crash CI avec `DATABASE_URL=sqlite://`
-- **Vercel serverless** : pas de filesystem persistant → fichiers uploadés sur Cloudinary obligatoire
+- **Port local** : `python -m http.server 3000` ; si le port est occupé → `npm run serve:frontend` (3456)
 - **tasks.js** : seul `loadTasksFromApi` utilisé — `handleCreateTask`, `handleDeleteAllTasks`, `switchTaskTab` sont du code mort
 - **Service Worker** : toujours `return` après `event.respondWith()` — double appel = erreur silencieuse
 - **Audit façade** : `grep -rn "QuranReview\." src/ --include="*.js" | grep -oE "QuranReview\.[a-zA-Z_]+" | sort -u`
 - **GSAP CDN** : toujours garder `typeof gsap !== 'undefined'` avant tout appel GSAP — si le CDN est bloqué (ad-blocker), la page doit quand même s'afficher
-- **Signed URLs Supabase** : NE JAMAIS stocker une signed URL dans la DB — elle expire. Stocker le **path** Storage et générer une signed URL fraîche à l'affichage via `createSignedUrl(path, 3600)`
+- **Signed URLs Supabase** : NE JAMAIS stocker une signed URL dans la DB — elle expire. Stocker le **path** Storage et générer une signed URL fraîche à l'affichage via `createSignedUrl(path, 3600)`. ⚠️ Ce projet Supabase plafonne les signed URLs à **1 heure** max (même si on demande 7 jours). Pour migrer les anciennes URLs expirées déjà en DB, extraire le path via `/\/object\/sign\/audio-submissions\/(.+?)\?/` et régénérer
 - **MediaRecorder format** : NE PAS coder en dur `mimeType: 'audio/webm'` — Safari/iOS ne supporte que `audio/mp4`. Toujours détecter avec `MediaRecorder.isTypeSupported()` et laisser le navigateur choisir
 - **Audio src HTML** : NE PAS mettre `type="audio/webm"` dans `<source>` — ça bloque le navigateur si le format réel est différent. Utiliser `<audio src="...">` sans `type` ou avec plusieurs `<source>`
 - **URLs dans HTML** : toujours valider que l'URL commence par `https://` avant injection dans un attribut `src` — protège contre les URIs `javascript:`. Passer ensuite par `escapeHtml()` pour l'attribut
+- **CSP media-src** : quand tu ajoutes une nouvelle source audio/vidéo, la déclarer dans `media-src` de `frontend/vercel.json`. Supabase Storage → `*.supabase.co` ; blob URLs (preview MediaRecorder) → `blob:` ; Quran CDN → `everyayah.com download.quranicaudio.com`. L'oubli = audio muet sans message d'erreur visible côté JS
 
 ---
 
@@ -224,5 +222,5 @@ CORS autorisé : `*.vercel.app`, `localhost:*` (tous ports — regex dans settin
 | Plan refonte navigation     | `docs/plans/2026-03-15-navigation-refonte.md`        |
 | Design refonte navigation   | `docs/plans/2026-03-15-navigation-refonte-design.md` |
 | Plan refactoring ES modules | `docs/plans/2026-03-12-frontend-refactoring.md`      |
+| Fix Vercel/Supabase         | `docs/plans/2026-04-10-vercel-supabase-fix.md`       |
 | Guide déploiement           | `docs/deployment.md`                                 |
-| Audio CDN/local             | `docs/audio-setup.md`                                |

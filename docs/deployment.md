@@ -1,250 +1,112 @@
-# QuranReview - Guide de Deploiement Complet
+# QuranReview - Guide de Deploiement
+
+> Apres la migration Django -> Supabase (commit `60fd039`) : plus de backend Django. Architecture Supabase (Auth + DB + Storage) + frontend statique deploye sur Vercel.
 
 ## Resume du Projet
 
-| Composant | Statut | Emplacement |
-|-----------|--------|-------------|
-| Frontend | ✅ OK | `C:\dev\QuranReview\index.html` |
-| Backend Django | ✅ OK | `C:\dev\QuranReview\backend\` |
-| Docker | ✅ OK | `C:\dev\QuranReview\docker-compose.yml` |
-| GitHub Pages | ✅ OK | Workflow dans `.github\workflows\` |
+| Composant             | Statut      | Emplacement                                 |
+| --------------------- | ----------- | ------------------------------------------- |
+| Frontend (ES Modules) | ✅ OK       | `frontend/`                                 |
+| Backend               | ❌ Supprime | Remplace par Supabase (Auth + DB + Storage) |
+| Deploiement prod      | ✅ OK       | Vercel — auto-deploy sur push vers `main`   |
 
 ---
 
-## 1. TEST EN LOCAL (Sans Docker)
+## 1. DEV LOCAL
 
-### A. Frontend seul (Mode Demo)
+**Emplacement du projet :** `C:\Users\ahmad\Dev\Active\quran-last-version`
 
-**Emplacement:** `C:\dev\QuranReview\index.html`
+**Option A — Python (port 3000) :**
 
-**Lancement:**
-```powershell
-# Double-cliquer sur index.html
-# OU
-Start-Process "C:\dev\QuranReview\index.html"
+```bash
+cd frontend
+python -m http.server 3000
+# http://localhost:3000
 ```
 
-**Acces:** `file:///C:/dev/QuranReview/index.html`
+**Option B — npm (port 3456) :**
 
-> Mode Demo active automatiquement (badge orange en haut)
-
-### B. Backend Django
-
-**Emplacement:** `C:\dev\QuranReview\backend\`
-
-**Commandes:**
-```powershell
-cd C:\dev\QuranReview\backend
-
-# 1. Creer environnement virtuel
-python -m venv venv
-
-# 2. Activer
-.\venv\Scripts\activate
-
-# 3. Installer dependances
-pip install -r requirements.txt
-
-# 4. Migrer base de donnees
-python manage.py migrate
-
-# 5. Creer superutilisateur
-python manage.py createsuperuser
-
-# 6. Lancer serveur
-python manage.py runserver
+```bash
+npm run serve:frontend
+# http://localhost:3456
 ```
 
-**Acces Backend:** http://127.0.0.1:8000
+Dans les deux cas le frontend parle au projet Supabase cloud. L'URL et la cle anon sont definies en fallback dans `frontend/index.html` (`window.__SUPABASE_URL__`, `window.__SUPABASE_ANON_KEY__`).
 
-**API Endpoints:**
-- POST http://127.0.0.1:8000/api/token/ (login)
-- POST http://127.0.0.1:8000/api/register/ (register)
-- GET  http://127.0.0.1:8000/api/dashboard/ (stats)
+**Comptes de test :** voir `README.md`.
 
 ---
 
-## 2. TEST AVEC DOCKER
+## 2. PRODUCTION (Vercel)
 
-### Prerequis
-- Docker Desktop installe et demarre
+- **Repository :** https://github.com/btahmed/quran-last-version
+- **Frontend :** https://quranreview-frontend.vercel.app
+- **Deploiement :** automatique a chaque push sur `main` (GitHub -> Vercel)
 
-### Emplacement fichier Docker
-`C:\dev\QuranReview\docker-compose.yml`
-
-### Commandes Docker
-
-```powershell
-cd C:\dev\QuranReview
-
-# Lancer tous les services
-docker-compose up --build
-
-# Lancer en arriere-plan
-docker-compose up -d --build
-
-# Arreter
-docker-compose down
-
-# Voir logs
-docker-compose logs -f
-
-# Rebuild complet
-docker-compose down -v
-docker-compose up --build
-```
-
-### Acces avec Docker
-
-| Service | URL |
-|---------|-----|
-| Frontend (nginx) | http://localhost |
-| Backend Django | http://localhost:8000 |
-| Admin Django | http://localhost:8000/admin |
-
----
-
-## 3. GITHUB PAGES (Production)
-
-### Repository GitHub
-**URL:** https://github.com/[USERNAME]/QuranReview
-
-### Deploiement automatique
-Le workflow deploye automatiquement sur push vers `main`:
-
-```powershell
-cd C:\dev\QuranReview
-
-git add .
-git commit -m "Deployment ready"
+```bash
 git push origin main
 ```
 
-### URL GitHub Pages
-**Production:** https://[USERNAME].github.io/QuranReview/
+> ⚠️ Un push sur `main` met le site live a jour : verifier la checklist de `CLAUDE.md` avant.
 
-**Domaine perso (si configure):** https://quranreview.ma
+### Variables d'environnement
 
-### Configurer domaine perso
-1. Editer fichier `CNAME`:
-```
-quranreview.ma
-```
-2. Dans GitHub repo > Settings > Pages > Custom domain
-3. Ajouter DNS chez registrar:
-   - Type A: `@` -> `185.199.108.153`
-   - Type A: `@` -> `185.199.109.153`
-   - Type A: `@` -> `185.199.110.153`
-   - Type A: `@` -> `185.199.111.153`
+Valeurs Supabase definies dans le Dashboard Vercel (Project Settings > Environment Variables), avec le fallback de `frontend/index.html` pour le dev local.
+
+### Config Vercel
+
+`frontend/vercel.json` — rewrites SPA + headers de securite (CSP, X-Frame-Options, etc.). Si une nouvelle source audio/video est ajoutee, la declarer dans `media-src` (voir gotchas CSP de `CLAUDE.md`).
 
 ---
 
-## 4. STRUCTURE DES FICHIERS
+## 3. STRUCTURE DES FICHIERS
 
 ```
-C:\dev\QuranReview\
-│
-├── 📁 frontend\              → Docker nginx
-│   └── 📁 nginx\             → Config nginx
-│
-├── 📁 backend\               → Django API
-│   ├── 📁 authentication\    → Auth JWT
-│   │   ├── models.py
-│   │   ├── views.py
-│   │   ├── serializers.py
-│   │   └── urls.py
-│   │
-│   ├── 📁 api\               → Core API
-│   │   ├── models.py        → Task, Progress, Competition
-│   │   ├── views.py
-│   │   ├── serializers.py
-│   │   └── urls.py
-│   │
-│   ├── 📁 quranreview\        → Config Django
-│   │   ├── settings.py
-│   │   └── urls.py
-│   │
-│   ├── manage.py
-│   ├── requirements.txt
-│   └── Dockerfile
-│
-├── 📁 .github\workflows\      → CI/CD
-│   └── deploy.yml            → GitHub Pages auto-deploy
-│
-├── docker-compose.yml         → Orchestration
-├── index.html                 → Frontend principal
-├── script.js                  → Logique app
-├── style.css                  → Styles
-├── sw.js                      → Service Worker PWA
-├── manifest.json              → PWA manifest
-└── CNAME                      → Domaine perso
+quran-last-version/
+├── frontend/                 → Deploye sur Vercel (statique)
+│   ├── index.html            → Shell SPA + variables Supabase (fallback dev)
+│   ├── vercel.json           → Rewrites SPA + headers securite
+│   ├── sw.js                 → Service Worker PWA
+│   └── src/
+│       ├── main.js           → Point d'entree + facade window.QuranReview
+│       ├── core/             → config, router, NavManager, state, ui, logger
+│       ├── components/       → AudioPlayer, AuthModal, AudioRecordModal, UserEditModal
+│       ├── services/         → supabase-*.js, auth, tasks, competition, hifz,
+│       │                       offline-queue, push-notifications, notification-center
+│       └── pages/            → HomePage, HifzPage, WardPage/RevisionPage, SoumissionPage,
+│                               ProfilPage, TeacherPage, AdminPage, NotificationsPage, ...
+├── supabase/                 → Migrations / config Supabase
+├── tests/                    → Tests unitaires (vitest) + e2e (Playwright)
+├── docs/                     → Documentation (ce fichier, plans/)
+├── CLAUDE.md                 → Guide architecture pour Claude Code
+└── README.md                 → Presentation, stack, tables Supabase
 ```
 
 ---
 
-## 5. COMMANDES RAPIDES
+## 4. TABLES SUPABASE
 
-### Lancer tout (Docker)
-```powershell
-cd C:\dev\QuranReview; docker-compose up -d --build
-```
-
-### Arreter tout
-```powershell
-cd C:\dev\QuranReview; docker-compose down
-```
-
-### Voir etat
-```powershell
-docker ps
-```
-
-### Logs
-```powershell
-cd C:\dev\QuranReview; docker-compose logs -f backend
-cd C:\dev\QuranReview; docker-compose logs -f frontend
-```
+Voir `README.md` (section "Tables Supabase") : `profiles`, `tasks`, `submissions`, `classes`, `class_members`, `points_log`, `progress`, vue `leaderboard`, et bucket Storage `audio-submissions`.
 
 ---
 
-## 6. TESTS POST-DEPLOIEMENT
+## 5. DEPANNAGE
 
-### Verifier GitHub Pages
-```powershell
-Invoke-RestMethod -Uri "https://[USERNAME].github.io/QuranReview/" -Method Head
-```
-
-### Verifier Backend Local
-```powershell
-Invoke-RestMethod -Uri "http://localhost:8000/api/token/" -Method Post -Body '{"username":"test","password":"test"}' -ContentType "application/json"
-```
-
-### Verifier Docker
-```powershell
-docker-compose ps
-```
-
----
-
-## 7. DEPANNAGE
-
-| Probleme | Solution |
-|----------|----------|
-| Port 80 occupe | `docker-compose down` ou changer ports dans docker-compose.yml |
-| Erreur migrations | `docker-compose exec backend python manage.py migrate` |
-| Static files manquants | `docker-compose exec backend python manage.py collectstatic` |
-| Cache navigateur | Ctrl+F5 ou vider cache |
-| Service Worker ancien | DevTools > Application > Service Workers > Unregister |
+| Probleme                    | Solution                                                                                                 |
+| --------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Port 3000 occupe            | Utiliser `npm run serve:frontend` (port 3456)                                                            |
+| Module JS pas a jour        | Ouvrir un **nouvel onglet** (le cache ES Module est par origine) ou Ctrl+F5                              |
+| Service Worker ancien       | DevTools > Application > Service Workers > Unregister                                                    |
+| Audio muet sans erreur JS   | Verifier `media-src` dans `frontend/vercel.json`                                                         |
+| Signed URL Supabase expiree | Ne jamais stocker une signed URL en DB : stocker le `path` et regenerer via `createSignedUrl()` (max 1h) |
 
 ---
 
 ## Resume URLs
 
-| Environnement | URL |
-|---------------|-----|
-| Local Frontend (Demo) | `file:///C:/dev/QuranReview/index.html` |
-| Local Backend | http://localhost:8000 |
-| Docker Frontend | http://localhost |
-| Docker Backend | http://localhost:8000 |
-| GitHub Pages | https://[USERNAME].github.io/QuranReview/ |
-| Domaine Perso | https://quranreview.ma |
+| Environnement       | URL                                           |
+| ------------------- | --------------------------------------------- |
+| Dev local (Python)  | http://localhost:3000                         |
+| Dev local (npm)     | http://localhost:3456                         |
+| Production (Vercel) | https://quranreview-frontend.vercel.app       |
+| Repository          | https://github.com/btahmed/quran-last-version |
