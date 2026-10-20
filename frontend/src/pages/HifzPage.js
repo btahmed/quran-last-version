@@ -150,7 +150,7 @@ export async function init() {
             try {
                 const { data } = await getMyTasks();
                 if (data) apiCache.set('tasks', data);
-            } catch (_) {
+            } catch (_err) {
                 /* silencieux — on affiche quand même les devoirs en pause */
             }
         }
@@ -228,7 +228,7 @@ function _showHomeworkShortcuts() {
         try {
             const parsed = JSON.parse(task.description);
             if (parsed?._hifz) hifzTasks.push({ task, meta: parsed._hifz });
-        } catch (_) {
+        } catch (_err) {
             /* description non-JSON, ignorer */
         }
     }
