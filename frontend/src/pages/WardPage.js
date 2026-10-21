@@ -179,7 +179,7 @@ function updateWardAyahLimits() {
     Logger.log('WARD', `Updated ayah limits for Surah ${surahId}: 1-${surah.ayahs}`);
 }
 
-function updateWardReciter() {
+export function _updateWardReciter() {
     const reciterSelector = document.getElementById('ward-reciter-selector');
     if (reciterSelector && window.QuranAudio) {
         const selectedReciter = reciterSelector.value;
@@ -192,7 +192,7 @@ function updateWardReciter() {
     }
 }
 
-function updateWardAudioQuality() {
+export function _updateWardAudioQuality() {
     const audioQualitySelector = document.getElementById('ward-audio-quality');
     if (audioQualitySelector) {
         state.settings.audioBitrate = parseInt(audioQualitySelector.value);
@@ -201,7 +201,7 @@ function updateWardAudioQuality() {
     }
 }
 
-function updateWardAudioSource() {
+export function _updateWardAudioSource() {
     const audioSourceSelector = document.getElementById('ward-audio-source');
     if (audioSourceSelector) {
         state.settings.audioSource = audioSourceSelector.value;
@@ -210,7 +210,7 @@ function updateWardAudioSource() {
     }
 }
 
-function updateWardImageQuality() {
+export function _updateWardImageQuality() {
     const imageQualitySelector = document.getElementById('ward-image-quality');
     if (imageQualitySelector) {
         state.imageQuality = imageQualitySelector.value;
@@ -218,7 +218,7 @@ function updateWardImageQuality() {
     }
 }
 
-function updateWardAyahDelay() {
+export function _updateWardAyahDelay() {
     const ayahDelaySelector = document.getElementById('ward-ayah-delay');
     if (ayahDelaySelector) {
         state.settings.ayahDelay = parseFloat(ayahDelaySelector.value);
@@ -227,7 +227,7 @@ function updateWardAyahDelay() {
     }
 }
 
-function updateWardAutoPlayNext() {
+export function _updateWardAutoPlayNext() {
     const autoPlayNextCheckbox = document.getElementById('ward-autoplay-next');
     if (autoPlayNextCheckbox) {
         state.settings.autoPlayNext = autoPlayNextCheckbox.checked;
