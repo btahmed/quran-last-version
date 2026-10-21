@@ -672,7 +672,7 @@ class MurajaaTracker {
 
     // ── Logique wizard ────────────────────────────────────────
     isRangeSelected(from, to) {
-        return this.state.wiz.ranges.some(r => r.from === from && r.to === to);
+        return this.state.wiz.ranges?.some(r => r.from === from && r.to === to);
     }
 
     // 'all' | 'partial' | 'none' selon les hizbs sélectionnés
