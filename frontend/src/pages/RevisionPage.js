@@ -672,7 +672,7 @@ class MurajaaTracker {
 
     // ── Logique wizard ────────────────────────────────────────
     isRangeSelected(from, to) {
-        return this.state.wiz.ranges.some(r => r.from === from && r.to === to);
+        return (this.state.wiz.ranges || []).some(r => r.from === from && r.to === to);
     }
 
     // 'all' | 'partial' | 'none' selon les hizbs sélectionnés
@@ -718,6 +718,14 @@ class MurajaaTracker {
         if (idx >= 0) w.ranges.splice(idx, 1);
         else w.ranges.push({ from, to, label, type });
         this.update();
+    }
+
+    wizToggleHizb(hizbNum) {
+        const h = HIZB_DATA.find(x => x.num === hizbNum);
+        if (!h) return;
+        const fr = (this.state.wiz.lang || 'ar') === 'fr';
+        const label = fr ? `Hizb ${h.num}` : h.label;
+        this.wizToggleRange(h.from, h.to, label, 'hizb');
     }
 
     buildRangesFromSelected() {
