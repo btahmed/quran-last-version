@@ -1,0 +1,3 @@
+## 2025-01-20 - Use Native HTML Form Submission for Better Accessibility
+**Learning:** In a vanilla HTML/JS environment, binding `onclick` to a `button type="button"` inside a form prevents users from hitting 'Enter' to submit the form, harming keyboard accessibility. Standardizing forms to use `onsubmit` on the `<form>` element combined with `button type="submit"` fixes this natively without needing custom keydown event listeners.
+**Action:** Always prefer native `<form onsubmit="...">` with `<button type="submit">` over `<button onclick="...">` when building or refactoring forms for robust keyboard accessibility out-of-the-box.
