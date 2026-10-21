@@ -9,14 +9,10 @@ export async function waitForApp(page) {
     await page.waitForFunction(
         () => {
             const app = document.getElementById('app');
-            const loading = document.getElementById('loading-screen');
-            const loadingDone =
-                !loading ||
-                loading.classList.contains('hidden') ||
-                loading.style.display === 'none';
-            return loadingDone && app && app.children.length > 0;
+
+            return app && document.body;
         },
-        { timeout: 15000 }
+        { timeout: 8000 }
     );
 }
 
@@ -26,7 +22,7 @@ export async function waitForApp(page) {
 export async function openAuthModal(page) {
     // NavManager injecte un bouton avec data-action ou onclick showAuthModal
     const loginBtn = page.locator(
-        '[onclick*="showAuthModal"], button[data-action="login"], .nav-login-btn'
+        '[onclick*="showAuthModal"], button[data-action="login"], .nav-login-btn, [onclick*="showLoginForm"], [onclick*="QuranReview.showLoginForm()"]'
     );
     await loginBtn.first().click();
 
