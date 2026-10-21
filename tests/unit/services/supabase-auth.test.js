@@ -1,16 +1,19 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const signInWithPassword = vi.fn();
-
-vi.mock('../../../frontend/src/services/supabase-client.js', () => ({
-    supabaseClient: {
-        auth: {
-            signInWithPassword,
+vi.mock('../../../frontend/src/services/supabase-client.js', () => {
+    const signInWithPassword = vi.fn();
+    return {
+        supabaseClient: {
+            auth: {
+                signInWithPassword,
+            },
         },
-    },
-}));
+        _mockSignInWithPassword: signInWithPassword,
+    };
+});
 
 import { signIn } from '../../../frontend/src/services/supabase-auth.js';
+import { _mockSignInWithPassword as signInWithPassword } from '../../../frontend/src/services/supabase-client.js';
 
 beforeEach(() => {
     vi.clearAllMocks();
