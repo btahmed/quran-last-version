@@ -3,6 +3,7 @@ import { HIZB_DATA, JUZ_DATA, MurajaaTracker } from '../../../frontend/src/pages
 
 function makeTracker() {
     const tracker = new MurajaaTracker(document.createElement('div'));
+    tracker.update = () => {};
     tracker.state.wiz = {
         mode: 'build',
         expandedJuz: new Set(),
@@ -12,6 +13,8 @@ function makeTracker() {
         importText: '',
         importError: null,
         copied: false,
+        ranges: [],
+        tab: 'wizard',
     };
     return tracker;
 }
