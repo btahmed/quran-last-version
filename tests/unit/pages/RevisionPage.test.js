@@ -32,7 +32,7 @@ describe('RevisionPage — sélection exacte des Juz', () => {
         // In the current codebase, wizToggleJuz pushes directly to tracker.state.wiz.ranges
         expect(tracker.state.wiz.ranges).toEqual([
             { label: 'الحزب ١', from: 1, to: 11, type: 'hizb' },
-            { label: 'الحزب ٢', from: 12, to: 21, type: 'hizb' }
+            { label: 'الحزب ٢', from: 12, to: 21, type: 'hizb' },
         ]);
     });
 
@@ -42,7 +42,12 @@ describe('RevisionPage — sélection exacte des Juz', () => {
         tracker.wizToggleRange(HIZB_DATA[0].from, HIZB_DATA[0].to, HIZB_DATA[0].label, 'hizb');
 
         expect(tracker.state.wiz.ranges).toEqual([
-            { label: HIZB_DATA[0].label, from: HIZB_DATA[0].from, to: HIZB_DATA[0].to, type: 'hizb' },
+            {
+                label: HIZB_DATA[0].label,
+                from: HIZB_DATA[0].from,
+                to: HIZB_DATA[0].to,
+                type: 'hizb',
+            },
         ]);
     });
 });
