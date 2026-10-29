@@ -1891,9 +1891,9 @@ ${
         const label =
             base.toLocaleDateString('ar', { month: 'long' }) + ' ' + this.ar(base.getFullYear());
         return `<div style="display:flex;align-items:center;gap:8px">
-  <button class="mj-modal-close" data-action="prev-month" style="width:30px;height:30px;border-radius:8px">›</button>
+  <button class="mj-modal-close" data-action="prev-month" aria-label="الشهر السابق" title="الشهر السابق" style="width:30px;height:30px;border-radius:8px">›</button>
    <span style="font-size:12.5px;font-weight:700">${escapeHtml(label)}</span>
-  <button class="mj-modal-close" data-action="next-month" style="width:30px;height:30px;border-radius:8px">‹</button>
+  <button class="mj-modal-close" data-action="next-month" aria-label="الشهر التالي" title="الشهر التالي" style="width:30px;height:30px;border-radius:8px">‹</button>
 </div>`;
     }
 
@@ -2010,7 +2010,7 @@ ${
   <div class="mj-modal" onclick="event.stopPropagation()">
     <div class="mj-flex-between">
       <h3 class="mj-modal-title">إنجاز ${title}</h3>
-      <button class="mj-modal-close" data-action="day-close">✕</button>
+      <button class="mj-modal-close" data-action="day-close" aria-label="إغلاق" title="إغلاق">✕</button>
     </div>
     <div style="display:flex;flex-direction:column;gap:6px">
       ${tasks
