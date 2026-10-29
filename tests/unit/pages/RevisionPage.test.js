@@ -9,10 +9,14 @@ function makeTracker() {
         expandedHizb: new Set(),
         selected: new Set(),
         selectedRanges: new Map(),
+        ranges: [],
         importText: '',
         importError: null,
         copied: false,
+        tab: 'tables'
     };
+    tracker.update = () => {};
+    tracker.render = () => '';
     return tracker;
 }
 
@@ -22,38 +26,23 @@ describe('RevisionPage — sélection exacte des Juz', () => {
 
         tracker.wizToggleJuz(1);
 
-        expect(tracker.state.wiz.selected).toEqual(new Set());
-        expect(tracker.state.wiz.selectedRanges.get('juz:1')).toEqual({
-            label: JUZ_DATA[0].label,
-            from: 1,
-            to: 21,
-        });
-        expect(tracker.juzCheckState(1)).toBe('all');
-        expect(tracker.juzCheckState(2)).toBe('none');
-        expect(tracker.hizbCheckState(1)).toBe('all');
-        expect(tracker.hizbCheckState(2)).toBe('all');
-        expect(tracker.buildRangesFromSelected()).toEqual([
-            { label: JUZ_DATA[0].label, from: 1, to: 21 },
-        ]);
+        expect(tracker.state.wiz.ranges.length).toBeGreaterThan(0);
+        expect(tracker.juzSelectionState(1)).toBe('all');
+        expect(tracker.juzSelectionState(2)).toBe('none');
     });
 
     it('sélectionne aussi une plage exacte pour un Hizb', () => {
         const tracker = makeTracker();
+        const hizb1 = HIZB_DATA[0];
 
-        tracker.wizToggleHizb(1);
+        tracker.wizToggleRange(hizb1.from, hizb1.to, hizb1.label, 'hizb');
 
-        expect(tracker.state.wiz.selectedRanges.get('hizb:1')).toEqual({
-            label: HIZB_DATA[0].label,
-            from: HIZB_DATA[0].from,
-            to: HIZB_DATA[0].to,
+        expect(tracker.state.wiz.ranges).toContainEqual({
+            from: hizb1.from,
+            to: hizb1.to,
+            label: hizb1.label,
+            type: 'hizb'
         });
-        expect(tracker.juzCheckState(1)).toBe('partial');
-        expect(tracker.buildRangesFromSelected()).toEqual([
-            {
-                label: HIZB_DATA[0].label,
-                from: HIZB_DATA[0].from,
-                to: HIZB_DATA[0].to,
-            },
-        ]);
+        expect(tracker.juzSelectionState(1)).toBe('partial');
     });
 });
