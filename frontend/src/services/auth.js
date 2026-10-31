@@ -343,7 +343,7 @@ export async function handleRegister(event) {
     errorEl?.classList.add('hidden');
     if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span>⏳</span> جاري التسجيل...';
+        submitBtn.classList.add('btn-loading');
     }
 
     // Mode DÉMO
@@ -380,7 +380,7 @@ export async function handleRegister(event) {
     } finally {
         if (submitBtn) {
             submitBtn.disabled = false;
-            submitBtn.innerHTML = '<span>✨</span> إنشاء الحساب';
+            submitBtn.classList.remove('btn-loading');
         }
     }
 }
@@ -407,7 +407,6 @@ export async function handleLogin(event) {
     if (submitBtn) {
         submitBtn.disabled = true;
         submitBtn.classList.add('btn-loading');
-        submitBtn.innerHTML = '<span>⏳</span> جاري الدخول...';
     }
 
     try {
@@ -422,7 +421,6 @@ export async function handleLogin(event) {
         if (submitBtn) {
             submitBtn.disabled = false;
             submitBtn.classList.remove('btn-loading');
-            submitBtn.innerHTML = '<span>🔐</span> دخول';
         }
     }
 }
