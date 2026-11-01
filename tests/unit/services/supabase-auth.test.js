@@ -1,6 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 
-const signInWithPassword = vi.fn();
+const { signInWithPassword } = vi.hoisted(() => {
+    return { signInWithPassword: vi.fn() };
+});
 
 vi.mock('../../../frontend/src/services/supabase-client.js', () => ({
     supabaseClient: {
