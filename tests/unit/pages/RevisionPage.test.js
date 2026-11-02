@@ -9,7 +9,7 @@ function makeTracker() {
         expandedHizb: new Set(),
         selected: new Set(),
         selectedRanges: new Map(),
-        importText: '',
+        ranges: [], tab: 'page', importText: '',
         importError: null,
         copied: false,
     };
@@ -40,7 +40,7 @@ describe('RevisionPage — sélection exacte des Juz', () => {
     it('sélectionne aussi une plage exacte pour un Hizb', () => {
         const tracker = makeTracker();
 
-        tracker.wizToggleHizb(1);
+        tracker.wizToggleRange(1);
 
         expect(tracker.state.wiz.selectedRanges.get('hizb:1')).toEqual({
             label: HIZB_DATA[0].label,
