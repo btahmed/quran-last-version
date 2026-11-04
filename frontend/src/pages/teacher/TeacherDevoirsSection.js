@@ -383,7 +383,7 @@ export async function handleCreateTask(event) {
     const submitBtn = event.target?.querySelector('[type="submit"]');
     if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.textContent = '⏳ جاري الإنشاء...';
+        submitBtn.classList.add('btn-loading');
     }
 
     const body = {
@@ -432,7 +432,7 @@ export async function handleCreateTask(event) {
         _creating = false;
         if (submitBtn) {
             submitBtn.disabled = false;
-            submitBtn.textContent = 'إنشاء المهمة';
+            submitBtn.classList.remove('btn-loading');
         }
     }
 }

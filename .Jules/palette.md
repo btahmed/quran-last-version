@@ -1,0 +1,2 @@
+## 2024-01-01 - Initial Setup\n**Learning:** Started journal\n**Action:** Keep journaling
+\n## 2026-11-04 - Use CSS for button loading states\n**Learning:** Replaced manual `innerHTML`/`textContent` modification with `btn-loading` CSS class for button loading states to avoid breaking CSS-based spinner UI (which hides original text via transparent color).\n**Action:** Only use `btn-loading` and `disabled=true` to show loading state on buttons; do not change the HTML content.
