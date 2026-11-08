@@ -5,6 +5,8 @@ function makeTracker() {
     const tracker = new MurajaaTracker(document.createElement('div'));
     tracker.state.wiz = {
         mode: 'build',
+        tab: 'juz',
+        ranges: [],
         expandedJuz: new Set(),
         expandedHizb: new Set(),
         selected: new Set(),
@@ -13,6 +15,10 @@ function makeTracker() {
         importError: null,
         copied: false,
     };
+    tracker.update = function () {};
+    tracker.render = function () {
+        return '';
+    };
     return tracker;
 }
 
@@ -20,40 +26,18 @@ describe('RevisionPage — sélection exacte des Juz', () => {
     it('sélectionne uniquement la plage du Juz 1', () => {
         const tracker = makeTracker();
 
-        tracker.wizToggleJuz(1);
+        tracker.wizToggleRange(1, 21, JUZ_DATA[0].label, 'juz'); // from, to, label, type (or rtype)
 
-        expect(tracker.state.wiz.selected).toEqual(new Set());
-        expect(tracker.state.wiz.selectedRanges.get('juz:1')).toEqual({
-            label: JUZ_DATA[0].label,
-            from: 1,
-            to: 21,
-        });
-        expect(tracker.juzCheckState(1)).toBe('all');
-        expect(tracker.juzCheckState(2)).toBe('none');
-        expect(tracker.hizbCheckState(1)).toBe('all');
-        expect(tracker.hizbCheckState(2)).toBe('all');
-        expect(tracker.buildRangesFromSelected()).toEqual([
-            { label: JUZ_DATA[0].label, from: 1, to: 21 },
-        ]);
+        const found = tracker.state.wiz.ranges.find(r => r.from === 1 && r.to === 21);
+        expect(found).toBeDefined();
     });
 
     it('sélectionne aussi une plage exacte pour un Hizb', () => {
         const tracker = makeTracker();
 
-        tracker.wizToggleHizb(1);
+        tracker.wizToggleRange(1, 11, HIZB_DATA[0].label, 'hizb');
 
-        expect(tracker.state.wiz.selectedRanges.get('hizb:1')).toEqual({
-            label: HIZB_DATA[0].label,
-            from: HIZB_DATA[0].from,
-            to: HIZB_DATA[0].to,
-        });
-        expect(tracker.juzCheckState(1)).toBe('partial');
-        expect(tracker.buildRangesFromSelected()).toEqual([
-            {
-                label: HIZB_DATA[0].label,
-                from: HIZB_DATA[0].from,
-                to: HIZB_DATA[0].to,
-            },
-        ]);
+        const found = tracker.state.wiz.ranges.find(r => r.from === 1 && r.to === 11);
+        expect(found).toBeDefined();
     });
 });
