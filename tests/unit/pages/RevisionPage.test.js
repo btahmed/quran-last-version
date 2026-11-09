@@ -3,15 +3,13 @@ import { HIZB_DATA, JUZ_DATA, MurajaaTracker } from '../../../frontend/src/pages
 
 function makeTracker() {
     const tracker = new MurajaaTracker(document.createElement('div'));
+    tracker.update = () => {};
+    tracker.render = () => '';
     tracker.state.wiz = {
         mode: 'build',
-        expandedJuz: new Set(),
-        expandedHizb: new Set(),
-        selected: new Set(),
-        selectedRanges: new Map(),
-        importText: '',
+        tab: 'juz',
+        ranges: [],
         importError: null,
-        copied: false,
     };
     return tracker;
 }
@@ -22,38 +20,21 @@ describe('RevisionPage — sélection exacte des Juz', () => {
 
         tracker.wizToggleJuz(1);
 
-        expect(tracker.state.wiz.selected).toEqual(new Set());
-        expect(tracker.state.wiz.selectedRanges.get('juz:1')).toEqual({
-            label: JUZ_DATA[0].label,
-            from: 1,
-            to: 21,
-        });
-        expect(tracker.juzCheckState(1)).toBe('all');
-        expect(tracker.juzCheckState(2)).toBe('none');
-        expect(tracker.hizbCheckState(1)).toBe('all');
-        expect(tracker.hizbCheckState(2)).toBe('all');
-        expect(tracker.buildRangesFromSelected()).toEqual([
-            { label: JUZ_DATA[0].label, from: 1, to: 21 },
-        ]);
+        expect(tracker.juzSelectionState(1)).toBe('all');
+        expect(tracker.juzSelectionState(2)).toBe('none');
+
+        // Un juz est découpé en 2 hizbs
+        expect(tracker.state.wiz.ranges.length).toBe(2);
+        expect(tracker.state.wiz.ranges[0].type).toBe('hizb');
     });
 
     it('sélectionne aussi une plage exacte pour un Hizb', () => {
         const tracker = makeTracker();
 
-        tracker.wizToggleHizb(1);
+        // Remplacé wizToggleHizb par wizToggleRange
+        tracker.wizToggleRange(HIZB_DATA[0].from, HIZB_DATA[0].to, HIZB_DATA[0].label, 'hizb');
 
-        expect(tracker.state.wiz.selectedRanges.get('hizb:1')).toEqual({
-            label: HIZB_DATA[0].label,
-            from: HIZB_DATA[0].from,
-            to: HIZB_DATA[0].to,
-        });
-        expect(tracker.juzCheckState(1)).toBe('partial');
-        expect(tracker.buildRangesFromSelected()).toEqual([
-            {
-                label: HIZB_DATA[0].label,
-                from: HIZB_DATA[0].from,
-                to: HIZB_DATA[0].to,
-            },
-        ]);
+        expect(tracker.isRangeSelected(HIZB_DATA[0].from, HIZB_DATA[0].to)).toBe(true);
+        expect(tracker.juzSelectionState(1)).toBe('partial');
     });
 });

@@ -569,9 +569,7 @@ export const competitionManager = {
             this._hifzWords?.length && this._hifzCurrentIdx
                 ? this._hifzCurrentIdx / this._hifzWords.length
                 : 0;
-        const progress = Math.round(
-            Math.min(1, (completed + wordProgress) / totalAyahs) * 100
-        );
+        const progress = Math.round(Math.min(1, (completed + wordProgress) / totalAyahs) * 100);
 
         host.innerHTML = renderComboBar({
             surah: surah?.name || '',
