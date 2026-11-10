@@ -12,7 +12,11 @@ function makeTracker() {
         importText: '',
         importError: null,
         copied: false,
+        ranges: [],
+        tab: 'new',
     };
+    tracker.update = () => {};
+    tracker.render = () => '';
     return tracker;
 }
 
@@ -22,38 +26,32 @@ describe('RevisionPage — sélection exacte des Juz', () => {
 
         tracker.wizToggleJuz(1);
 
-        expect(tracker.state.wiz.selected).toEqual(new Set());
-        expect(tracker.state.wiz.selectedRanges.get('juz:1')).toEqual({
-            label: JUZ_DATA[0].label,
-            from: 1,
-            to: 21,
-        });
-        expect(tracker.juzCheckState(1)).toBe('all');
-        expect(tracker.juzCheckState(2)).toBe('none');
-        expect(tracker.hizbCheckState(1)).toBe('all');
-        expect(tracker.hizbCheckState(2)).toBe('all');
-        expect(tracker.buildRangesFromSelected()).toEqual([
-            { label: JUZ_DATA[0].label, from: 1, to: 21 },
+        expect(tracker.state.wiz.ranges).toEqual([
+            {
+                from: 1,
+                label: 'الحزب ١',
+                to: 11,
+                type: 'hizb',
+            },
+            {
+                from: 12,
+                label: 'الحزب ٢',
+                to: 21,
+                type: 'hizb',
+            },
         ]);
     });
 
     it('sélectionne aussi une plage exacte pour un Hizb', () => {
         const tracker = makeTracker();
 
-        tracker.wizToggleHizb(1);
+        tracker.wizToggleRange(HIZB_DATA[0].from, HIZB_DATA[0].to, HIZB_DATA[0].label, 'hizb');
 
-        expect(tracker.state.wiz.selectedRanges.get('hizb:1')).toEqual({
+        expect(tracker.state.wiz.ranges).toContainEqual({
             label: HIZB_DATA[0].label,
             from: HIZB_DATA[0].from,
             to: HIZB_DATA[0].to,
+            type: 'hizb',
         });
-        expect(tracker.juzCheckState(1)).toBe('partial');
-        expect(tracker.buildRangesFromSelected()).toEqual([
-            {
-                label: HIZB_DATA[0].label,
-                from: HIZB_DATA[0].from,
-                to: HIZB_DATA[0].to,
-            },
-        ]);
     });
 });
